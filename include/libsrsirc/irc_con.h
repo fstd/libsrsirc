@@ -1,0 +1,35 @@
+/* irc_con.h - Semi back-end interface. Can also be front-end w/ ltd. use
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
+ * See README for contact-, COPYING for license information.  */
+
+#ifndef SRS_IRC_CON_H
+#define SRS_IRC_CON_H 1
+
+#include <stdbool.h>
+#include <sys/types.h>
+
+typedef struct ichnd* ichnd_t;
+
+ichnd_t irccon_init(void);
+bool irccon_reset(ichnd_t hnd);
+bool irccon_dispose(ichnd_t hnd);
+bool irccon_connect(ichnd_t hnd, unsigned long to_us);
+bool irccon_canceled(ichnd_t hnd);
+void irccon_cancel(ichnd_t hnd);
+int irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us);
+bool irccon_write(ichnd_t hnd, const char *line);
+bool irccon_online(ichnd_t hnd);
+bool irccon_valid(ichnd_t hnd);
+const char *irccon_get_host(ichnd_t hnd);
+unsigned short irccon_get_port(ichnd_t hnd);
+const char *irccon_get_proxy_host(ichnd_t hnd);
+unsigned short irccon_get_proxy_port(ichnd_t hnd);
+int irccon_get_proxy_type(ichnd_t hnd);
+bool irccon_set_server(ichnd_t hnd, const char *host, unsigned short port);
+bool irccon_set_proxy(ichnd_t hnd, const char *host, unsigned short port, int ptype);
+
+void irccon_log_set_loglvl(int loglevel);
+void irccon_log_set_target(FILE *str);
+void irccon_log_set_fancy(bool fancy);
+
+#endif /* SRS_IRC_CON_H */

@@ -1,0 +1,17 @@
+This is libsrsirc, version 0.0.0
+A lightweight IRC library
+
+Quickstart:
+run ./autogen.sh to setup the autohell
+afterwards, usual ./configure ; make ; make install stuff applies
+
+libsrsirc/irc_basic.h is what you usually want to #include when using
+  the lib, libsrsirc/irc_util.h is useful, too. 
+  see src/icat.c for an example application of the lib.
+
+See INSTALL for generic autohell compile/install instructions.
+
+(C) 2012 Timo Buhrmester <van.fisted@googlemail.com>
+Contact: #fstd on irc.freenode.org
+
+See COPYING for license information
