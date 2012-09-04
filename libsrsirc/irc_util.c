@@ -146,6 +146,36 @@ istrncasecmp(const char *n1, const char *n2, size_t len, int casemap)
 	return c1 < c2 ? -1 : 1;
 }
 
+void
+itolower(char *dest, size_t destsz, const char *str, int casemap)
+{
+	int rangeinc;
+	switch (casemap)
+	{
+	case CASEMAPPING_RFC1459:
+		rangeinc = 4;
+		break;
+	case CASEMAPPING_STRICT_RFC1459:
+		rangeinc = 3;
+		break;
+	default:
+		rangeinc = 0;
+	}
+
+	size_t c = 0;
+	while(c < destsz) {
+		if (*str >= 'A' && *str <= ('Z'+rangeinc))
+			*dest++ = *str + ('a'-'A');
+		else
+			*dest++ = *str;
+		
+		if (!*str)
+			break;
+		str++;
+	}
+
+	dest[destsz-1] = '\0';
+}
 
 bool
 parse_pxspec(char *pxtypestr, size_t pxtypestr_sz, char *hoststr,
