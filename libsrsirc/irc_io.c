@@ -92,7 +92,7 @@ static int writeall(int sck, const char* buf); //write a full string
 int
 ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len, unsigned long to_us)
 {
-	int64_t tsend = to_us ? timestamp_us() + to_us : 0;
+	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	//D("invoke(sck:%d, tokbuf: %p, tokbuf_sz: %zu, workbuf: %p, workbuf_sz: %zu, mehptr: %p (*:%p), to_us: %lu, tsend: %lld)", sck, tokbuf, tokbuf_sz, workbuf, workbuf_sz, mehptr, *mehptr, to_us, tsend);
 	if (!*mehptr) {
 		//D("fresh invoke (*mehptr is NULL). initializing workbuf, pointing *mehptr to it");
@@ -138,7 +138,7 @@ ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbu
 			for(;;) {
 				struct timeval tout;
 				if (tsend) {
-					int64_t trem = tsend - timestamp_us();
+					int64_t trem = tsend - ic_timestamp_us();
 					if (trem > 1000000)
 						trem = 1000000; //limiting time spent in read so we can cancel w/o much delay
 					if (trem <= 0) {
@@ -146,7 +146,7 @@ ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbu
 						return 0;
 					}
 
-					tconv(&tout, &trem, false);
+					ic_tconv(&tout, &trem, false);
 				}
 				fd_set fds;
 				FD_ZERO(&fds);
@@ -220,7 +220,7 @@ ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbu
 //		return -1;
 //	//D("(sck:%d) wanna read (timeout: %lu)", sck, to_us);
 //
-//	int64_t tsend = to_us ? timestamp_us() + to_us : 0;
+//	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 //	/* read a \r\n terminated line into buf */
 //	size_t c = strlen(overbuf);
 //	int r;
@@ -232,7 +232,7 @@ ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbu
 //				FD_ZERO(&fds);
 //				FD_SET(sck, &fds);
 //
-//				int64_t trem = tsend - timestamp_us();
+//				int64_t trem = tsend - ic_timestamp_us();
 //				if (trem > 500000)
 //					trem = 500000; //limiting time spent in read so we can cancel w/o much delay
 //				if (trem <= 0) {
@@ -244,7 +244,7 @@ ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbu
 //				struct timeval tout;
 //				tout.tv_sec = 0;
 //				tout.tv_usec = 0;
-//				tconv(&tout, &trem, false);
+//				ic_tconv(&tout, &trem, false);
 //
 //				errno = 0;
 //				//D("selecting");

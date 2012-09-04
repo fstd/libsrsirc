@@ -64,6 +64,7 @@ void handle_stdin(char *line);
 void handle_irc(char **tok, size_t ntok);
 void init(int *argc, char ***argv, struct settings_s *sett);
 int iprintf(const char *fmt, ...);
+void strNcat(char *dest, const char *src, size_t destsz);
 bool conread(char **msg, size_t msg_len, void *tag);
 void log_reinit(void);
 void usage(FILE *str, const char *a0, int ec, bool sh);
@@ -417,6 +418,22 @@ iprintf(const char *fmt, ...)
 	ptr->next = NULL;
 	ptr->line = strdup(buf);
 	return r;
+}
+
+
+void
+strNcat(char *dest, const char *src, size_t destsz)
+{
+	size_t len = strlen(dest);
+	if (len + 1 >= destsz)
+		return;
+	size_t rem = destsz - (len + 1);
+
+	char *ptr = dest + len;
+	while(rem-- && *src) {
+		*ptr++ = *src++;
+	}
+	*ptr = '\0';
 }
 
 

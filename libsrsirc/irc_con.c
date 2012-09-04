@@ -55,6 +55,14 @@
 #define HOST_IPV6 1
 #define HOST_DNS 2
 
+
+#define XCALLOC(num) ic_xcalloc(1, num)
+#define XMALLOC(num) ic_xmalloc(num)
+#define XREALLOC(p, num) ic_xrealloc((p),(num))
+#define XFREE(p) do{  if(p) free(p); p=0;  }while(0)
+#define XSTRDUP(s) ic_xstrdup(s)
+
+
 struct ichnd
 {
 	char *host;
@@ -193,7 +201,7 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 	pthread_mutex_lock(&hnd->cancelmtx);
 	hnd->cancel = false;
 	pthread_mutex_unlock(&hnd->cancelmtx);
-	int64_t tsend = to_us ? timestamp_us() + to_us : 0;
+	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	char *host = hnd->ptype != -1 ? hnd->phost : hnd->host;
 	unsigned short port = hnd->ptype != -1 ? hnd->pport : hnd->port;
 
@@ -215,10 +223,10 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 
 	struct sockaddr sa;
 	size_t addrlen;
-	int sck = mksocket(host, port, &sa, &addrlen);
+	int sck = ic_mksocket(host, port, &sa, &addrlen);
 
 	if (sck < 0) {
-		W("(%p) failed to mksocket for %s:%hu", hnd, host, port);
+		W("(%p) failed to ic_mksocket for %s:%hu", hnd, host, port);
 		return false;
 	}
 	D("(%p) created socket %d for %s:%hu", hnd, sck, host, port);
@@ -274,7 +282,7 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 
 		if (tsend)
 		{
-			trem = tsend - timestamp_us();
+			trem = tsend - ic_timestamp_us();
 			if (trem > 500000)
 				trem = 500000; //limiting time spent in read so we can cancel w/o much delay
 			if (trem <= 0) {
@@ -283,7 +291,7 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 				return false;
 			}
 
-			tconv(&tout, &trem, false);
+			ic_tconv(&tout, &trem, false);
 		}
 
 		errno = 0;
@@ -317,7 +325,7 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 
 	if (hnd->ptype != -1) {
 		if (tsend) {
-			trem = tsend - timestamp_us();
+			trem = tsend - ic_timestamp_us();
 			if (trem <= 0) {
 				W("(%p) timeout *after* select() was done, odd", hnd);
 				close(sck);
@@ -367,7 +375,7 @@ irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 	if (!hnd || hnd->state != ON)
 		return -1;
 
-	int64_t tsend = to_us ? timestamp_us() + to_us : 0;
+	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	//D("(%p) wanna read (timeout: %lu)", hnd, to_us);
 
 	int n;
@@ -377,7 +385,7 @@ irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 		int64_t trem;
 		if (tsend)
 		{
-			trem = tsend - timestamp_us();
+			trem = tsend - ic_timestamp_us();
 			if (trem <= 0) {
 				//W("(%p) timeout hit", hnd);
 				return 0;
@@ -528,7 +536,7 @@ irccon_get_port(ichnd_t hnd)
 
 static bool pxlogon_http(ichnd_t hnd, unsigned long to_us)
 {
-	int64_t tsend = to_us ? timestamp_us() + to_us : 0;
+	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	char buf[256];
 	snprintf(buf, sizeof buf, "CONNECT %s:%d HTTP/1.0\r\nHost: %s:%d\r\n\r\n", hnd->host, hnd->port, hnd->host, hnd->port);
 
@@ -560,7 +568,7 @@ static bool pxlogon_http(ichnd_t hnd, unsigned long to_us)
 					W("(%p) pxlogon canceled", hnd);
 					return false;
 				}
-				if (tsend && timestamp_us() < tsend) {
+				if (tsend && ic_timestamp_us() < tsend) {
 					usleep(10000);
 					continue;
 				}
@@ -590,7 +598,7 @@ static bool pxlogon_http(ichnd_t hnd, unsigned long to_us)
 
 static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us) //SOCKS doesntsupport ipv6
 {
-	int64_t tsend = to_us ? timestamp_us() + to_us : 0;
+	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	unsigned char logon[14];
 	uint16_t port = htons(hnd->port);
 	uint32_t ip = inet_addr(hnd->host); //XXX FIXME this doesntwork if hnd->host is not an ipv4 addr but dns
@@ -641,7 +649,7 @@ static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us) //SOCKS doesntsuppo
 					W("(%p) pxlogon canceled", hnd);
 					return false;
 				}
-				if (tsend && timestamp_us() < tsend) {
+				if (tsend && ic_timestamp_us() < tsend) {
 					usleep(10000);
 					continue;
 				}
@@ -660,7 +668,7 @@ static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us) //SOCKS doesntsuppo
 
 static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 {
-	int64_t tsend = to_us ? timestamp_us() + to_us : 0;
+	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	unsigned char logon[14];
 
 	if(!(1 <= hnd->port && hnd->port <= 65535)) {
@@ -701,7 +709,7 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 					W("(%p) pxlogon canceled", hnd);
 					return false;
 				}
-				if (tsend && timestamp_us() < tsend) {
+				if (tsend && ic_timestamp_us() < tsend) {
 					usleep(10000);
 					continue;
 				}
@@ -793,7 +801,7 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 					W("(%p) pxlogon canceled", hnd);
 					return false;
 				}
-				if (tsend && timestamp_us() < tsend) {
+				if (tsend && ic_timestamp_us() < tsend) {
 					usleep(10000);
 					continue;
 				}
@@ -845,7 +853,7 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 					W("(%p) pxlogon canceled", hnd);
 					return false;
 				}
-				if (tsend && timestamp_us() < tsend) {
+				if (tsend && ic_timestamp_us() < tsend) {
 					usleep(10000);
 					continue;
 				}

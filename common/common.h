@@ -14,23 +14,17 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 
-#define XCALLOC(num) xcalloc(1, num)
-#define XMALLOC(num) xmalloc(num)
-#define XREALLOC(p, num) xrealloc((p),(num))
-#define XFREE(p) do{  if(p) free(p); p=0;  }while(0)
-#define XSTRDUP(s) xstrdup(s)
+void ic_strNcat(char *dest, const char *src, size_t destsz);
+char* ic_strNcpy(char *dst, const char *src, size_t len);
 
-void strNcat(char *dest, const char *src, size_t destsz);
+void *ic_xcalloc(size_t num, size_t size);
+void *ic_xmalloc(size_t num);
+void *ic_xrealloc(void *p, size_t num);
+char *ic_xstrdup(const char *string);
 
-void *xcalloc(size_t num, size_t size);
-void *xmalloc(size_t num);
-void *xrealloc(void *p, size_t num);
-char *xstrdup(const char *string);
+int64_t ic_timestamp_us();
+void ic_tconv(struct timeval *tv, int64_t *ts, bool tv_to_ts);
 
-int64_t timestamp_us();
-void tconv(struct timeval *tv, int64_t *ts, bool tv_to_ts);
-char* strNcpy(char *dst, const char *src, size_t len);
-
-int mksocket(const char *host, unsigned short port,
+int ic_mksocket(const char *host, unsigned short port,
 		struct sockaddr *sockaddr, size_t *addrlen);
 #endif /* SRS_COMMON_H */

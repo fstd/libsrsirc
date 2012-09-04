@@ -35,6 +35,12 @@
 #define DEF_UMODES "iswo"
 #define DEF_CMODES "opsitnml"
 
+#define XCALLOC(num) ic_xcalloc(1, num)
+#define XMALLOC(num) ic_xmalloc(num)
+#define XREALLOC(p, num) ic_xrealloc((p),(num))
+#define XFREE(p) do{  if(p) free(p); p=0;  }while(0)
+#define XSTRDUP(s) ic_xstrdup(s)
+
 
 struct ibhnd
 {
@@ -180,7 +186,7 @@ ircbas_dispose(ibhnd_t hnd)
 bool 
 ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 {
-	int64_t tsend = to_us ? timestamp_us() + to_us : 0;
+	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	XFREE(hnd->lasterr);
 	hnd->lasterr = NULL;
 	XFREE(hnd->banmsg);
@@ -213,7 +219,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 			return false;
 		}
 		if(tsend) {
-			trem = tsend - timestamp_us();
+			trem = tsend - ic_timestamp_us();
 			if (trem <= 0) {
 				W("(%p) timeout hit while waiting for 004", hnd);
 				ircbas_reset(hnd);

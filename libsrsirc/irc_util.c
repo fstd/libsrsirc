@@ -190,20 +190,20 @@ bool parse_identity(char *nick, size_t nicksz, char *uname, size_t unamesz,
 		char *fname, size_t fnamesz, const char *identity)
 {
 	char ident[256];
-	strNcpy(ident, identity, sizeof ident);
+	ic_strNcpy(ident, identity, sizeof ident);
 
 	char *p = strchr(ident, ' ');
 	if (p)
-		strNcpy(fname, (*p = '\0', p + 1), fnamesz);
+		ic_strNcpy(fname, (*p = '\0', p + 1), fnamesz);
 	else
 		return false;
 	p = strchr(ident, '!');
 	if (p)
-		strNcpy(uname, (*p = '\0', p + 1), unamesz);
+		ic_strNcpy(uname, (*p = '\0', p + 1), unamesz);
 	else
 		return false;
 
-	strNcpy(nick, ident, nicksz);
+	ic_strNcpy(nick, ident, nicksz);
 	return true;
 }
 
@@ -216,9 +216,9 @@ sndumpmsg(char *dest, size_t dest_sz, void *tag, char **msg, size_t msg_len)
 	for(size_t i = 2; i < msg_len; i++) {
 		if (!msg[i])
 			break;
-		strNcat(dest, " '", dest_sz);
-		strNcat(dest, msg[i], dest_sz);
-		strNcat(dest, "'", dest_sz);
+		ic_strNcat(dest, " '", dest_sz);
+		ic_strNcat(dest, msg[i], dest_sz);
+		ic_strNcat(dest, "'", dest_sz);
 	}
 }
 

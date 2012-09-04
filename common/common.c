@@ -22,7 +22,7 @@
 #include <netdb.h>
 
 void
-strNcat(char *dest, const char *src, size_t destsz)
+ic_strNcat(char *dest, const char *src, size_t destsz)
 {
 	size_t len = strlen(dest);
 	if (len + 1 >= destsz)
@@ -37,7 +37,7 @@ strNcat(char *dest, const char *src, size_t destsz)
 }
 
 void*
-xmalloc(size_t num)
+ic_xmalloc(size_t num)
 {
 	void *new = malloc(num);
 	if (!new)
@@ -46,12 +46,12 @@ xmalloc(size_t num)
 }
 
 void*
-xrealloc(void *p, size_t num)
+ic_xrealloc(void *p, size_t num)
 {
 	void *new;
 
 	if (!p)
-		return xmalloc(num);
+		return ic_xmalloc(num);
 
 	new = realloc(p, num);
 	if (!new)
@@ -61,33 +61,33 @@ xrealloc(void *p, size_t num)
 }
 
 void*
-xcalloc(size_t num, size_t size)
+ic_xcalloc(size_t num, size_t size)
 {
-	void *new = xmalloc(num * size);
+	void *new = ic_xmalloc(num * size);
 	memset(new, 0, num * size);
 	return new;
 }
 
 char*
-xstrdup(const char *str)
+ic_xstrdup(const char *str)
 {
 	if (str)
-		return strcpy(xmalloc(strlen(str) + 1), str);
+		return strcpy(ic_xmalloc(strlen(str) + 1), str);
 	return NULL;
 }
 
 int64_t
-timestamp_us()
+ic_timestamp_us()
 {
 	struct timeval t;
 	int64_t ts;
 	gettimeofday(&t, NULL);
-	tconv(&t, &ts, true);
+	ic_tconv(&t, &ts, true);
 	return ts;
 }
 
 void
-tconv(struct timeval *tv, int64_t *ts, bool tv_to_ts)
+ic_tconv(struct timeval *tv, int64_t *ts, bool tv_to_ts)
 {
 	if (tv_to_ts)
 		*ts = (int64_t)tv->tv_sec * 1000000 + tv->tv_usec;
@@ -99,7 +99,7 @@ tconv(struct timeval *tv, int64_t *ts, bool tv_to_ts)
 }
 
 char*
-strNcpy(char *dst, const char *src, size_t len)
+ic_strNcpy(char *dst, const char *src, size_t len)
 {
 	char *r = strncpy(dst, src, len);
 	dst[len-1] = '\0';
@@ -107,7 +107,7 @@ strNcpy(char *dst, const char *src, size_t len)
 }
 
 
-int mksocket(const char *host, unsigned short port,
+int ic_mksocket(const char *host, unsigned short port,
 		struct sockaddr *sockaddr, size_t *addrlen)
 {
 	struct addrinfo *ai_list = NULL;
