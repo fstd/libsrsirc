@@ -5,6 +5,8 @@
 #ifndef SRS_IRC_IO_H
 #define SRS_IRC_IO_H 1
 
+#define _GNU_SOURCE 1
+
 #include <stdbool.h>
 #include <stddef.h>
 

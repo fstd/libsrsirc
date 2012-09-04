@@ -6,6 +6,8 @@
 # include <config.h>
 #endif
 
+#define _GNU_SOURCE 1
+
 #include <libsrsirc/irc_util.h>
 
 #include <common.h>

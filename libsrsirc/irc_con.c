@@ -6,6 +6,8 @@
 # include <config.h>
 #endif
 
+#define _GNU_SOURCE 1
+
 /* pub if */
 #include <libsrsirc/irc_con.h>
 
@@ -32,6 +34,7 @@
 
 #include <pthread.h>
 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>

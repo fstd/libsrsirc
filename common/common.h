@@ -5,7 +5,8 @@
 #ifndef SRS_COMMON_H
 #define SRS_COMMON_H 1
 
-#define _POSIX_SOURCE 1
+#define _GNU_SOURCE 1
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
