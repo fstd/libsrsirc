@@ -34,14 +34,11 @@ struct pxspec
 int pxtypeno(const char *typestr);
 const char *pxtypestr(int type);
 /* resolve and connect */
-int connect_socket(const char *host, unsigned short port);
 bool pfx_extract_nick(char *dest, size_t dest_sz, const char *pfx);
 bool pfx_extract_uname(char *dest, size_t dest_sz, const char *pfx);
 bool pfx_extract_host(char *dest, size_t dest_sz, const char *pfx);
 int istrcasecmp(const char *n1, const char *n2, int casemapping);
 int istrncasecmp(const char *n1, const char *n2, size_t len, int casemap);
-int mksocket(const char *host, unsigned short port,
-		struct sockaddr *sockaddr, size_t *addrlen);
 bool parse_pxspec(char *pxtypestr, size_t pxtypestr_sz, char *hoststr,
 		size_t hoststr_sz, unsigned short *port, const char *line);
 

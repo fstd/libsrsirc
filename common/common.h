@@ -5,9 +5,12 @@
 #ifndef SRS_COMMON_H
 #define SRS_COMMON_H 1
 
-#include <sys/types.h>
-#include <sys/time.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdbool.h>
+
+#include <sys/socket.h>
+#include <sys/time.h>
 
 #define XCALLOC(num) xcalloc(1, num)
 #define XMALLOC(num) xmalloc(num)
@@ -25,4 +28,7 @@ char *xstrdup(const char *string);
 int64_t timestamp_us();
 void tconv(struct timeval *tv, int64_t *ts, bool tv_to_ts);
 char* strNcpy(char *dst, const char *src, size_t len);
+
+int mksocket(const char *host, unsigned short port,
+		struct sockaddr *sockaddr, size_t *addrlen);
 #endif /* SRS_COMMON_H */

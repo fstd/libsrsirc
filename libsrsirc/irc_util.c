@@ -6,21 +6,18 @@
 # include <config.h>
 #endif
 
-#define _POSIX_C_SOURCE 200809l
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <strings.h>
-#include <errno.h>
-/* POSIX */
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+#include <libsrsirc/irc_util.h>
 
 #include <common.h>
-#include <libsrsirc/irc_util.h>
+
+
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
+#include <strings.h>
+#include <limits.h>
 
 int pxtypeno(const char *typestr)
 {
@@ -34,54 +31,6 @@ const char *pxtypestr(int type)
 	return (type == IRCPX_HTTP) ? "HTTP" :
 	       (type == IRCPX_SOCKS4) ? "SOCKS4" :
 	       (type == IRCPX_SOCKS5) ? "SOCKS5" : "unknown";
-}
-
-int mksocket(const char *host, unsigned short port,
-		struct sockaddr *sockaddr, size_t *addrlen)
-{
-	struct addrinfo *ai_list = NULL;
-	struct addrinfo hints;
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = 0;
-	hints.ai_flags = AI_NUMERICSERV;
-	char portstr[6];
-	snprintf(portstr, sizeof portstr, "%hu", port);
-
-	int r = getaddrinfo(host, portstr, &hints, &ai_list);
-
-	if (r != 0) {
-		//warnx("%s", gai_strerror(r));
-		return -1;
-	}
-
-	if (!ai_list) {
-		//warnx("result address list empty");
-		return -1;
-	}
-
-	int sck = -1;
-
-	for (struct addrinfo *ai = ai_list; ai; ai = ai->ai_next)
-	{
-		sck = socket(ai->ai_family, ai->ai_socktype,
-				ai->ai_protocol);
-		if (sck < 0) {
-			//warn("cannot create socket");
-			continue;
-		}
-		if (sockaddr)
-			*sockaddr = *(ai->ai_addr);
-		if (addrlen)
-			*addrlen = ai->ai_addrlen;
-
-		break;
-	}
-
-	freeaddrinfo(ai_list);
-
-	return sck;
 }
 
 bool pfx_extract_nick(char *dest, size_t dest_sz, const char *pfx)

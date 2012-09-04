@@ -12,6 +12,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <errno.h>
+/* POSIX */
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
 void
 strNcat(char *dest, const char *src, size_t destsz)
 {
@@ -97,4 +104,52 @@ strNcpy(char *dst, const char *src, size_t len)
 	return r;
 }
 
+
+int mksocket(const char *host, unsigned short port,
+		struct sockaddr *sockaddr, size_t *addrlen)
+{
+	struct addrinfo *ai_list = NULL;
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = 0;
+	hints.ai_flags = AI_NUMERICSERV;
+	char portstr[6];
+	snprintf(portstr, sizeof portstr, "%hu", port);
+
+	int r = getaddrinfo(host, portstr, &hints, &ai_list);
+
+	if (r != 0) {
+		//warnx("%s", gai_strerror(r));
+		return -1;
+	}
+
+	if (!ai_list) {
+		//warnx("result address list empty");
+		return -1;
+	}
+
+	int sck = -1;
+
+	for (struct addrinfo *ai = ai_list; ai; ai = ai->ai_next)
+	{
+		sck = socket(ai->ai_family, ai->ai_socktype,
+				ai->ai_protocol);
+		if (sck < 0) {
+			//warn("cannot create socket");
+			continue;
+		}
+		if (sockaddr)
+			*sockaddr = *(ai->ai_addr);
+		if (addrlen)
+			*addrlen = ai->ai_addrlen;
+
+		break;
+	}
+
+	freeaddrinfo(ai_list);
+
+	return sck;
+}
 
