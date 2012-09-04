@@ -6,7 +6,7 @@
 #define SRS_IRC_UTIL_H 1
 
 #include <stdbool.h>
-#include <sys/types.h>
+#include <stddef.h>
 
 #define CASEMAPPING_RFC1459 0
 #define CASEMAPPING_STRICT_RFC1459 1

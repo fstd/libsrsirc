@@ -6,17 +6,17 @@
 # include <config.h>
 #endif
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <strings.h>
+#include <libsrsirc/irc_basic.h>
 
 #include <common.h>
 #include <libsrsirc/irc_con.h>
 #include <libsrsirc/irc_util.h>
-#include <log.h>
+#include <libsrslog/log.h>
 
-#include <libsrsirc/irc_basic.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <strings.h>
 
 #define MAX_IRCARGS ((size_t)15)
 
@@ -75,24 +75,6 @@ static bool send_logon(ibhnd_t hnd);
 
 static bool onread(ibhnd_t hnd, char **tok, size_t tok_len);
 
-void
-ircbas_log_set_loglvl(int loglevel)
-{
-	LOG_LEVEL(loglevel);
-}
-
-void
-ircbas_log_set_target(FILE *str)
-{
-	LOG_TARGET(str);
-}
-
-void
-ircbas_log_set_fancy(bool fancy)
-{
-	LOG_COLORS(fancy);
-}
-
 bool 
 ircbas_regcb_mutnick(ibhnd_t hnd, fp_mut_nick cb)
 {
@@ -115,8 +97,6 @@ ircbas_regcb_conread(ibhnd_t hnd, fp_con_read cb, void *tag)
 ibhnd_t 
 ircbas_init(void)
 {
-	if (!LOG_ISINIT())
-		LOG_INITX("irc_bas", LOGLVL_WARN, stderr, false);
 	ichnd_t con = irccon_init();
 	if (!con)
 		return NULL;

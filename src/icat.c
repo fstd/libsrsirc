@@ -24,7 +24,7 @@
 #include <libsrsirc/irc_io.h>
 #include <libsrsirc/irc_util.h>
 
-#include <log.h>
+#include <libsrslog/log.h>
 
 #define DEF_PORT 6667
 #define MAX_CHANS 32
@@ -361,7 +361,6 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 void
 init(int *argc, char ***argv, struct settings_s *sett)
 {
-	LOG_INITX("icat", LOGLVL_ERR, stderr, false);
 	g_irc = ircbas_init();
 
 	ircbas_set_nick(g_irc, "icat");
@@ -434,14 +433,11 @@ conread(char **msg, size_t msg_len, void *tag)
 void
 log_reinit(void)
 {
-	LOG_COLORS(g_sett.fancy);
-	LOG_LEVEL(g_sett.verb);
-	ircbas_log_set_fancy(g_sett.fancy);
-	irccon_log_set_fancy(g_sett.fancy);
-	ircio_log_set_fancy(g_sett.fancy);
-	ircbas_log_set_loglvl(g_sett.verb);
-	irccon_log_set_loglvl(g_sett.verb);
-	ircio_log_set_loglvl(g_sett.verb);
+	int n = log_count_mods();
+	for(int i = 0; i < n; i++) {
+		log_set_level(log_get_mod(i), g_sett.verb);
+		log_set_fancy(log_get_mod(i), g_sett.verb);
+	}
 }
 
 

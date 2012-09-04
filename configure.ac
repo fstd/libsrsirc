@@ -23,7 +23,8 @@ AM_PROG_CC_C_O
 # Checks for header files (1).
 AC_HEADER_STDC
 
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdbool.h stdlib.h string.h strings.h sys/socket.h sys/time.h sys/types.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdbool.h stddef.h stdlib.h string.h strings.h sys/socket.h sys/time.h sys/types.h unistd.h])
+AC_CHECK_LIB([srslog], [log_is_fancy], [], [AC_MSG_ERROR([libsrslog not installed?])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_INT64_T

@@ -6,6 +6,13 @@
 # include <config.h>
 #endif
 
+/* pub if */
+#include <libsrsirc/irc_io.h>
+
+/* locals */
+#include <common.h>
+#include <libsrslog/log.h>
+
 /* C */
 #include <stdlib.h>
 #include <string.h>
@@ -16,11 +23,6 @@
 /* POSIX */
 #include <unistd.h>
 #include <sys/socket.h>
-
-#include <common.h>
-#include <log.h>
-/* pub if */
-#include <libsrsirc/irc_io.h>
 
 #define ISDELIM(C) ((C)=='\n' || (C) == '\r')
 
@@ -389,27 +391,4 @@ skip2lws(char *s, bool tab_is_ws)
 	while(*s && (!isspace(*s) || (*s == '\t' && !tab_is_ws)))
 		s++;
 	return *s ? s : NULL;
-}
-
-void
-ircio_log_init(void)
-{
-	if (!LOG_ISINIT())
-		LOG_INITX("irc_io", LOGLVL_WARN, stderr, false);
-}
-
-void
-ircio_log_set_loglvl(int loglevel)
-{
-	LOG_LEVEL(loglevel);
-}
-void
-ircio_log_set_target(FILE *str)
-{
-	LOG_TARGET(str);
-}
-void
-ircio_log_set_fancy(bool fancy)
-{
-	LOG_COLORS(fancy);
 }

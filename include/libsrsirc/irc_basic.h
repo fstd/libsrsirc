@@ -6,7 +6,7 @@
 #define SRS_IRC_BASIC_H 1
 
 #include <stdbool.h>
-#include <sys/types.h>
+#include <stddef.h>
 
 typedef struct ibhnd* ibhnd_t;
 
@@ -62,10 +62,5 @@ const char *ircbas_get_service_info(ibhnd_t hnd);
 const char *ircbas_get_proxy_host(ibhnd_t hnd);
 unsigned short ircbas_get_proxy_port(ibhnd_t hnd);
 int ircbas_get_proxy_type(ibhnd_t hnd);
-
-void ircbas_log_set_loglvl(int loglevel);
-void ircbas_log_set_target(FILE *str);
-void ircbas_log_set_fancy(bool fancy);
-
 
 #endif /* SRS_IRC_BASIC_H */

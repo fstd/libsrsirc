@@ -6,7 +6,16 @@
 # include <config.h>
 #endif
 
-#define _BSD_SOURCE 1
+/* pub if */
+#include <libsrsirc/irc_con.h>
+
+/* locals */
+#include <common.h>
+#include <libsrsirc/irc_io.h>
+#include <libsrsirc/irc_util.h>
+#include <libsrslog/log.h>
+
+//#define _BSD_SOURCE 1
 
 /* C */
 #include <stdio.h>
@@ -24,18 +33,9 @@
 #include <pthread.h>
 
 #include <sys/socket.h>
-#include <unistd.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-/* locals */
-#include <libsrsirc/irc_io.h>
-#include <libsrsirc/irc_util.h>
-#include <log.h>
-
-/* pub if */
-#include <common.h>
-#include <libsrsirc/irc_con.h>
 
 #define RXBUF_SZ 4096
 #define LINEBUF_SZ 1024
@@ -82,24 +82,16 @@ irccon_log_set_loglvl(int loglevel)
 {
 	LOG_LEVEL(loglevel);
 }
-void
-irccon_log_set_target(FILE *str)
-{
-	LOG_TARGET(str);
-}
+
 void
 irccon_log_set_fancy(bool fancy)
 {
-	LOG_COLORS(fancy);
+	LOG_FANCY(fancy);
 }
 
 ichnd_t
 irccon_init(void)
 {
-	if (!LOG_ISINIT()) {
-		ircio_log_init();
-		LOG_INITX("irc_con", LOGLVL_WARN, stderr, false);
-	}
 	ichnd_t r = XMALLOC(sizeof (*(ichnd_t)0)); // XXX
 
 	if (!r) {

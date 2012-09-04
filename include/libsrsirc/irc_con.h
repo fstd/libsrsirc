@@ -6,7 +6,7 @@
 #define SRS_IRC_CON_H 1
 
 #include <stdbool.h>
-#include <sys/types.h>
+#include <stddef.h>
 
 typedef struct ichnd* ichnd_t;
 
@@ -27,9 +27,5 @@ unsigned short irccon_get_proxy_port(ichnd_t hnd);
 int irccon_get_proxy_type(ichnd_t hnd);
 bool irccon_set_server(ichnd_t hnd, const char *host, unsigned short port);
 bool irccon_set_proxy(ichnd_t hnd, const char *host, unsigned short port, int ptype);
-
-void irccon_log_set_loglvl(int loglevel);
-void irccon_log_set_target(FILE *str);
-void irccon_log_set_fancy(bool fancy);
 
 #endif /* SRS_IRC_CON_H */
