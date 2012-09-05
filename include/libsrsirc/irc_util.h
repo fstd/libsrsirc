@@ -56,5 +56,6 @@ void sndumpmsg(char *dest, size_t dest_sz, void *tag, char **msg, size_t msg_len
 void dumpmsg(void *tag, char **msg, size_t msg_len);
 
 bool cr(char **msg, size_t msg_len, void *tag);
+char** parse_chanmodes(const char *const *arr, size_t argcount, size_t *num, const char *modepfx005chr, const char *const *chmodes);
 
 #endif /* SRS_IRC_UTIL_H */

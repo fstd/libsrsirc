@@ -9,6 +9,7 @@
 #define _GNU_SOURCE 1
 
 #include <libsrsirc/irc_util.h>
+#include <libsrslog/log.h>
 
 #include <common.h>
 
@@ -20,6 +21,13 @@
 #include <string.h>
 #include <strings.h>
 #include <limits.h>
+
+#define CHANMODE_CLASS_A 1 /*do not change these, see int classify_chanmode(char)*/
+#define CHANMODE_CLASS_B 2
+#define CHANMODE_CLASS_C 3
+#define CHANMODE_CLASS_D 4
+
+static int classify_chanmode(char c, const char *const *chmodes);
 
 int pxtypeno(const char *typestr)
 {
@@ -234,4 +242,90 @@ cr(char **msg, size_t msg_len, void *tag)
 {
 	dumpmsg(tag, msg, msg_len);
 	return true;
+}
+
+char**
+parse_chanmodes(const char *const *arr, size_t argcount, size_t *num, const char *modepfx005chr, const char *const *chmodes)
+{
+	char *modes = strdup(arr[0]);
+	const char *arg;
+	size_t nummodes = strlen(modes) - (ic_strCchr(modes,'-') + ic_strCchr(modes,'+'));
+	char **modearr = malloc(nummodes * sizeof *modearr);
+	size_t i = 1;
+	int j = 0, cl;
+	char *ptr = modes;
+	int enable = 1;
+	D("modes: '%s', nummodes: %zu, modepfx005chr: '%s'", modes, nummodes, modepfx005chr);
+	while (*ptr) {
+		char c = *ptr;
+		D("next modechar is '%c', enable ATM: %d", c, enable);
+		arg = NULL;
+		switch (c) {
+		case '+':
+			enable = 1;
+			ptr++;
+			continue;
+		case '-':
+			enable = 0;
+			ptr++;
+			continue;
+		default:
+			cl = classify_chanmode(c, chmodes);
+			D("classified mode '%c' to class %d", c, cl);
+			switch (cl) {
+			case CHANMODE_CLASS_A:
+				/*i>=argcount: this may happen when requesting modes outside of that channel
+				 * so we get mode +tmnk instead of +tmnk <key>*/
+				//XXX maybe i actually did mean '>=' here, as stated in the comment. test it. not tested it but considered its okay. we did mean > indeed.
+				arg = (i > argcount) ? ("*") : arr[i++];
+				break;
+			case CHANMODE_CLASS_B:
+				arg = (i > argcount) ? ("*") : arr[i++];
+				break;
+			case CHANMODE_CLASS_C:
+				if (enable)
+					arg = (i > argcount) ? ("*") : arr[i++];
+				break;
+			case CHANMODE_CLASS_D:
+				break;
+			default:/*error?*/
+				if (strchr(modepfx005chr, c)) {
+					arg = (i > argcount) ? ("*") : arr[i++];
+				} else {
+					W("unknown chanmode '%c' (0x%X)\n",c,(unsigned)c);
+					ptr++;
+					continue;
+				}
+			}
+		}
+		if (arg)
+			D("arg is '%s'", arg);
+		modearr[j] = malloc((3 + ((arg != NULL) ? strlen(arg) + 1 : 0)));
+		modearr[j][0] = enable ? '+' : '-';
+		modearr[j][1] = c;
+		modearr[j][2] = arg ? ' ' : '\0';
+		if (arg) {
+			strcpy(modearr[j] + 3, arg);
+		}
+		j++;
+		ptr++;
+	}
+	D("done parsing, result:");
+	for(size_t i = 0; i < nummodes; i++) {
+		D("modearr[%zu]: '%s'", i, modearr[i]);
+	}
+
+	*num = nummodes;
+	free(modes);
+	return modearr;
+}
+
+static int
+classify_chanmode(char c, const char *const *chmodes)
+{
+    for (int z = 0; z < 4; ++z) {
+        if ((chmodes[z]) && (strchr(chmodes[z], c) != NULL))
+		return z+1;/*XXX this locks the chantype class constants */
+    }
+    return 0;
 }
