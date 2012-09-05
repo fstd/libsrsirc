@@ -68,6 +68,8 @@ struct ibhnd
 	long serv_type;
 	char *serv_info;
 
+	char **logonconv[4];
+
 	fp_con_read cb_con_read;
 	void *tag_con_read;
 	fp_mut_nick cb_mut_nick;
@@ -82,6 +84,7 @@ static char *strmdup(const char *str, size_t minlen);
 static bool send_logon(ibhnd_t hnd);
 
 static bool onread(ibhnd_t hnd, char **tok, size_t tok_len);
+static char** clonearr(char **arr, size_t nelem);
 
 bool 
 ircbas_regcb_mutnick(ibhnd_t hnd, fp_mut_nick cb)
@@ -141,6 +144,9 @@ ircbas_init(void)
 	r->cb_con_read = NULL;
 	r->tag_con_read = NULL;
 	r->cb_mut_nick = mutilate_nick;
+
+	for(int i = 0; i < 4; i++)
+		r->logonconv[i] = NULL;
 
 	N("(%p) irc_bas initialized (backend: %p)", r, r->con);
 	return r;
@@ -249,6 +255,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 
 		if (strcmp(msg[1], "001") == 0)
 		{
+			hnd->logonconv[0] = clonearr(msg, MAX_IRCARGS);
 			XFREE(hnd->mynick);
 			hnd->mynick = XSTRDUP(msg[2]);
 			char *tmp;
@@ -268,8 +275,17 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 			hnd->ver = XSTRDUP("");
 			hnd->service = false;
 		}
+		else if (strcmp(msg[1], "002") == 0)
+		{
+			hnd->logonconv[1] = clonearr(msg, MAX_IRCARGS);
+		}
+		else if (strcmp(msg[1], "003") == 0)
+		{
+			hnd->logonconv[2] = clonearr(msg, MAX_IRCARGS);
+		}
 		else if (strcmp(msg[1], "004") == 0)
 		{
+			hnd->logonconv[3] = clonearr(msg, MAX_IRCARGS);
 			XFREE(hnd->myhost);//XXX ensure argcount
 			hnd->myhost = XSTRDUP(msg[3]);
 			XFREE(hnd->umodes);
@@ -798,4 +814,23 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 		}
 	}
 	return true;
+}
+
+/* FIXME it's [stupid but still] possible to change the logonconv array
+ * through the return value of this. yet we cannot use const char *const*
+ */
+char **
+ircbas_logonconv(ibhnd_t hnd, int i)
+{
+	return hnd->logonconv[i];
+}
+
+static char**
+clonearr(char **arr, size_t nelem)
+{
+	char **res = malloc((nelem+1) * sizeof *arr);
+	for(size_t i = 0; i < nelem; i++)
+		res[i] = arr[i] ? strdup(arr[i]) : NULL;
+	res[nelem] = NULL;
+	return res;
 }
