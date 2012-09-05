@@ -36,6 +36,16 @@ ic_strNcat(char *dest, const char *src, size_t destsz)
 	*ptr = '\0';
 }
 
+size_t
+ic_strCchr(const char *dst, char c)
+{
+	size_t r = 0;
+	while(*dst)
+		if (*dst++ == c)
+			r++;
+	return c;
+}
+
 void*
 ic_xmalloc(size_t num)
 {

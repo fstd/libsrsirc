@@ -16,6 +16,7 @@
 
 void ic_strNcat(char *dest, const char *src, size_t destsz);
 char* ic_strNcpy(char *dst, const char *src, size_t len);
+size_t ic_strCchr(const char *dst, char c);
 
 void *ic_xcalloc(size_t num, size_t size);
 void *ic_xmalloc(size_t num);
