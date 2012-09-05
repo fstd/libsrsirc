@@ -450,10 +450,12 @@ conread(char **msg, size_t msg_len, void *tag)
 void
 log_reinit(void)
 {
+	log_set_deflevel(g_sett.verb);
+	log_set_deffancy(g_sett.fancy);
 	int n = log_count_mods();
 	for(int i = 0; i < n; i++) {
 		log_set_level(log_get_mod(i), g_sett.verb);
-		log_set_fancy(log_get_mod(i), g_sett.verb);
+		log_set_fancy(log_get_mod(i), g_sett.fancy);
 	}
 }
 
