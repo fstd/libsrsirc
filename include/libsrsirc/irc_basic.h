@@ -65,6 +65,8 @@ const char *ircbas_get_proxy_host(ibhnd_t hnd);
 unsigned short ircbas_get_proxy_port(ibhnd_t hnd);
 int ircbas_get_proxy_type(ibhnd_t hnd);
 
-char ** ircbas_logonconv(ibhnd_t hnd, int i);
+const char* const* const* ircbas_logonconv(ibhnd_t hnd);
+const char* const* ircbas_005chanmodes(ibhnd_t hnd);
+const char* const* ircbas_005modepfx(ibhnd_t hnd);
 
 #endif /* SRS_IRC_BASIC_H */

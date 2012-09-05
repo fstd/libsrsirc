@@ -69,6 +69,8 @@ struct ibhnd
 	char *serv_info;
 
 	char **logonconv[4];
+	char *m005chanmodes[4];
+	char *m005modepfx[2];
 
 	fp_con_read cb_con_read;
 	void *tag_con_read;
@@ -147,6 +149,14 @@ ircbas_init(void)
 
 	for(int i = 0; i < 4; i++)
 		r->logonconv[i] = NULL;
+
+	r->m005chanmodes[0] = XSTRDUP("b");
+	r->m005chanmodes[1] = XSTRDUP("k");
+	r->m005chanmodes[2] = XSTRDUP("l");
+	r->m005chanmodes[3] = XSTRDUP("psitnm");
+
+	r->m005modepfx[0] = XSTRDUP("ov");
+	r->m005modepfx[1] = XSTRDUP("@+");
 
 	N("(%p) irc_bas initialized (backend: %p)", r, r->con);
 	return r;
@@ -811,19 +821,65 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 					hnd->casemapping = CASEMAPPING_RFC1459;
 				}
 			}
+			else if (strncasecmp(tok[z], "PREFIX=", 7) == 0)
+			{
+				char *str = strdup(tok[z] + 8);
+				char *p = strchr(str, ')');
+				*p++ = '\0';
+				XFREE(hnd->m005modepfx[0]);
+				hnd->m005modepfx[0] = XSTRDUP(str);
+
+				XFREE(hnd->m005modepfx[1]);
+				hnd->m005modepfx[1] = XSTRDUP(p);
+
+				free(str);
+			}
+			else if (strncasecmp(tok[z], "CHANMODES=", 10) == 0)
+			{
+				for (int z = 0; z < 4; ++z) {
+					XFREE(hnd->m005chanmodes[z]);
+					hnd->m005chanmodes[z] = NULL;
+				}
+
+				int c = 0;
+				char* argbuf = strdup(tok[z] + 10);
+				char *ptr = strtok(argbuf, ",");
+
+				while (ptr) {
+					if (c < 4)
+						hnd->m005chanmodes[c++]=XSTRDUP(ptr);
+					ptr = strtok(NULL, ",");
+				}
+
+				if (c != 4) {
+					W("005 chanmodes parse element: expected 4 parameters, got %i. arg is: \"%s\"", c, tok[z] + 10);
+				}
+
+				free(argbuf);
+			}
 		}
 	}
 	return true;
 }
 
-/* FIXME it's [stupid but still] possible to change the logonconv array
- * through the return value of this. yet we cannot use const char *const*
- */
-char **
-ircbas_logonconv(ibhnd_t hnd, int i)
+const char* const* const*
+ircbas_logonconv(ibhnd_t hnd)
 {
-	return hnd->logonconv[i];
+	return (const char* const* const*)hnd->logonconv;
 }
+
+const char* const*
+ircbas_005chanmodes(ibhnd_t hnd)
+{
+	return (const char* const*)hnd->m005chanmodes;
+}
+
+const char* const*
+ircbas_005modepfx(ibhnd_t hnd)
+{
+	return (const char* const*)hnd->m005modepfx;
+}
+
 
 static char**
 clonearr(char **arr, size_t nelem)
