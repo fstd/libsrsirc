@@ -105,45 +105,13 @@ istrncasecmp(const char *n1, const char *n2, size_t len, int casemap)
 	if (len == 0)
 		return 0;
 
-	char c1, c2;
-	int rangeinc, offset = 'a' - 'A';
+	char *d1 = strdup(n1);
+	char *d2 = strdup(n2);
 
-	switch (casemap)
-	{
-	case CASEMAPPING_RFC1459:
-		rangeinc = 4;
-		break;
-	case CASEMAPPING_STRICT_RFC1459:
-		rangeinc = 3;
-		break;
-	default:
-		rangeinc = 0;
-	}
-	size_t pos = 0;
-	while((pos < len) && ((c1 = (*n1)) & (c2 = (*n2))))
-	{
-		if (c1 != c2) {
-			if ((c1 >= 'A') && (c1 <= ('Z' + rangeinc)))
-			{
-				if ((c1 + offset) != c2)
-					return c1 < c2 ? -1 : 1;
-			}
-			else if ((c1 >= 'a') && (c1 <= ('z' + rangeinc)))
-			{
-				if ((c1 - offset) != c2)
-					return c1 < c2 ? -1 : 1;
-			}
-			else
-				return c1 < c2 ? -1 : 1;
-		}
-		n1++;
-		n2++;
-		pos++;
-	}
-	if (c1 == c2)
-		return 0;
+	itolower(d1, strlen(d1) + 1, n1, casemap);
+	itolower(d2, strlen(d2) + 1, n2, casemap);
 
-	return c1 < c2 ? -1 : 1;
+	return strncmp(d1, d2, len);
 }
 
 void
