@@ -43,7 +43,7 @@ ic_strCchr(const char *dst, char c)
 	while(*dst)
 		if (*dst++ == c)
 			r++;
-	return c;
+	return r;
 }
 
 void*
