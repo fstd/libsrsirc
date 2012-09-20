@@ -87,6 +87,7 @@ static bool send_logon(ibhnd_t hnd);
 
 static bool onread(ibhnd_t hnd, char **tok, size_t tok_len);
 static char** clonearr(char **arr, size_t nelem);
+static void freearr(char **arr, size_t nelem);
 
 bool 
 ircbas_regcb_mutnick(ibhnd_t hnd, fp_mut_nick cb)
@@ -208,6 +209,12 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 	XFREE(hnd->banmsg);
 	hnd->banmsg = NULL;
 	hnd->banned = false;
+
+	for(int i = 0; i < 4; i++) {
+		freearr(hnd->logonconv[i], MAX_IRCARGS);
+		hnd->logonconv[i] = NULL;
+	}
+
 	N("(%p) wanna connect, connecting backend (timeout: %lu)", hnd, to_us);
 	if (!irccon_connect(hnd->con, to_us)) {
 		W("(%p) backend failed to establish connection", hnd);
@@ -889,4 +896,15 @@ clonearr(char **arr, size_t nelem)
 		res[i] = arr[i] ? strdup(arr[i]) : NULL;
 	res[nelem] = NULL;
 	return res;
+}
+
+
+static void
+freearr(char **arr, size_t nelem)
+{
+	if (arr) {
+		for(size_t i = 0; i < nelem; i++)
+			free(arr[i]);
+		free(arr);
+	}
 }
