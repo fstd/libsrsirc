@@ -119,7 +119,11 @@ istrncasecmp(const char *n1, const char *n2, size_t len, int casemap)
 	itolower(d1, strlen(d1) + 1, n1, casemap);
 	itolower(d2, strlen(d2) + 1, n2, casemap);
 
-	return strncmp(d1, d2, len);
+	int i = strncmp(d1, d2, len);
+
+	free(d1);
+	free(d2);
+	return i;
 }
 
 void
@@ -139,11 +143,12 @@ itolower(char *dest, size_t destsz, const char *str, int casemap)
 	}
 
 	size_t c = 0;
+	char *ptr = dest;
 	while(c < destsz) {
 		if (*str >= 'A' && *str <= ('Z'+rangeinc))
-			*dest++ = *str + ('a'-'A');
+			*ptr++ = *str + ('a'-'A');
 		else
-			*dest++ = *str;
+			*ptr++ = *str;
 		
 		if (!*str)
 			break;
