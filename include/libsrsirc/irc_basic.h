@@ -20,7 +20,7 @@ bool ircbas_reset(ibhnd_t hnd);
 bool ircbas_dispose(ibhnd_t hnd);
 bool ircbas_connect(ibhnd_t hnd, unsigned long to_us);
 void ircbas_cancel(ibhnd_t hnd);
-int ircbas_read(ibhnd_t hnd, char **tok, size_t tok_len, unsigned long to_us);
+int ircbas_read(ibhnd_t hnd, char **tok, size_t tok_len, bool *colonTrail, unsigned long to_us);
 bool ircbas_write(ibhnd_t hnd, const char *line);
 bool ircbas_online(ibhnd_t hnd);
 

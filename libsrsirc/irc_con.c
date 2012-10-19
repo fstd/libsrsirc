@@ -370,7 +370,7 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 }
 
 int
-irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
+irccon_read(ichnd_t hnd, char **tok, size_t tok_len, bool *colonTrail, unsigned long to_us)
 {
 	if (!hnd || hnd->state != ON)
 		return -1;
@@ -392,7 +392,7 @@ irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 			}
 		}
 
-		n = ircio_read(hnd->sck, hnd->linebuf, LINEBUF_SZ, hnd->overbuf, OVERBUF_SZ, &hnd->mehptr, tok, tok_len, tsend?(unsigned long)trem:0);
+		n = ircio_read(hnd->sck, hnd->linebuf, LINEBUF_SZ, hnd->overbuf, OVERBUF_SZ, &hnd->mehptr, tok, tok_len, colonTrail, tsend?(unsigned long)trem:0);
 		if (n < 0) //read error
 		{
 			W("(%p) read failed", hnd);

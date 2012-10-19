@@ -75,7 +75,7 @@ int ircio_write(int sck, const char *line);
  */
 //int ircio_read(int sck, char *buf, char *overbuf, size_t bufoverbuf_sz, char **tok, size_t tok_len, unsigned long to_us);
 
-int ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len, unsigned long to_us);
+int ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len, bool *colonTrail, unsigned long to_us);
 /* ircio_write - write one (or perhaps multiple) lines to socket
  * 
  * If multiple lines are to be written, they must be separated by "\r\n".
