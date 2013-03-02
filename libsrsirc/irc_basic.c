@@ -617,6 +617,11 @@ ircbas_banned(ibhnd_t hnd)
 		return false;
 	return hnd->banned;
 }
+bool
+ircbas_colon_trail(ibhnd_t hnd)
+{
+	return irccon_colon_trail(hnd->con);
+}
 
 const char*
 ircbas_get_proxy_host(ibhnd_t hnd)

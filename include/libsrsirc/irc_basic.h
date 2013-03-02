@@ -34,6 +34,7 @@ const char *ircbas_version(ibhnd_t hnd);
 const char *ircbas_lasterror(ibhnd_t hnd);
 const char *ircbas_banmsg(ibhnd_t hnd);
 bool ircbas_banned(ibhnd_t hnd);
+bool ircbas_colon_trail(ibhnd_t hnd);
 
 bool ircbas_regcb_conread(ibhnd_t hnd, fp_con_read cb, void *tag);
 bool ircbas_regcb_mutnick(ibhnd_t hnd, fp_mut_nick);

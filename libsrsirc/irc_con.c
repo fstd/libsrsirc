@@ -79,6 +79,7 @@ struct ichnd
 	char *overbuf;
 	char *mehptr;
 	bool cancel;
+	bool colon_trail;
 
 	pthread_mutex_t cancelmtx;
 };
@@ -126,6 +127,7 @@ irccon_init(void)
 	r->overbuf = XCALLOC(OVERBUF_SZ);
 	r->mehptr = NULL;
 	r->cancel = false;
+	r->colon_trail = false;
 
 	N("(%p) irc_con initialized", r);
 
@@ -401,6 +403,12 @@ irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 		}
 	} while(n == 0);
 
+	size_t last = 0;
+	for(; last < tok_len && tok[last]; last++);
+
+	if (last > 0)
+		hnd->colon_trail = tok[last-1] == ':';
+
 	//D("(%p) done reading", hnd);
 
 	return 1;
@@ -448,6 +456,15 @@ irccon_valid(ichnd_t hnd)
 		return false;
 
 	return true;
+}
+
+bool
+irccon_colon_trail(ichnd_t hnd)
+{
+	if (!hnd || hnd->state != ON)
+		return false;
+	
+	return hnd->colon_trail;
 }
 
 bool

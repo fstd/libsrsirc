@@ -368,7 +368,6 @@ tokenize(char *buf, char **tok, size_t tok_len)
 		//D("iter (argc: %zu) buf is: %s", argc, buf);
 		if (*buf == ':')
 		{
-			*buf = '\0';
 			tok[argc++] = buf + 1;
 			//D("extracted trailing (len: %zu), arg[%zu]: %s", strlen(buf+1), argc-1, tok[argc-1]);
 			break;

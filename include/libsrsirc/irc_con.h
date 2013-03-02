@@ -22,6 +22,7 @@ int irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us);
 bool irccon_write(ichnd_t hnd, const char *line);
 bool irccon_online(ichnd_t hnd);
 bool irccon_valid(ichnd_t hnd);
+bool irccon_colon_trail(ichnd_t hnd);
 const char *irccon_get_host(ichnd_t hnd);
 unsigned short irccon_get_port(ichnd_t hnd);
 const char *irccon_get_proxy_host(ichnd_t hnd);
