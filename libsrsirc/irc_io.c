@@ -29,7 +29,7 @@
 #define ISDELIM(C) ((C)=='\n' || (C) == '\r')
 
 /* local helpers */
-static int tokenize(char *buf, char **tok, size_t tok_len, bool *colonTrail); //tokenize proto msg
+static int tokenize(char *buf, char **tok, size_t tok_len); //tokenize proto msg
 static char *skip2lws(char *s, bool tab_is_ws); //forward pointer until whitespace
 static int writeall(int sck, const char* buf); //write a full string
 
@@ -90,7 +90,7 @@ static int writeall(int sck, const char* buf); //write a full string
 //}
 
 int
-ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len, bool *colonTrail, unsigned long to_us)
+ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len, unsigned long to_us)
 {
 	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	//D("invoke(sck:%d, tokbuf: %p, tokbuf_sz: %zu, workbuf: %p, workbuf_sz: %zu, mehptr: %p (*:%p), to_us: %lu, tsend: %lld)", sck, tokbuf, tokbuf_sz, workbuf, workbuf_sz, mehptr, *mehptr, to_us, tsend);
@@ -209,7 +209,7 @@ ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbu
 	*mehptr = end+1;
 	//D("first ten of *mehptr: '%.10s'", *mehptr);
 	//D("tokenizing, then done!");
-	return tokenize(tokbuf, tok, tok_len, colonTrail);
+	return tokenize(tokbuf, tok, tok_len);
 }
 /* pub if implementation */
 
@@ -324,7 +324,7 @@ writeall(int sck, const char* buf)
 }
 
 static int
-tokenize(char *buf, char **tok, size_t tok_len, bool *colonTrail)
+tokenize(char *buf, char **tok, size_t tok_len)
 {
 	if (!buf || !tok || tok_len < 2)
 		return -1;
@@ -362,9 +362,6 @@ tokenize(char *buf, char **tok, size_t tok_len, bool *colonTrail)
 	}
 	//D("extracted cmd: %s, rest: %s", tok[1], buf);
 
-	if (colonTrail)
-		*colonTrail = false;
-
 	size_t argc = 2;
 	while(buf && *buf && argc < tok_len)
 	{
@@ -373,8 +370,6 @@ tokenize(char *buf, char **tok, size_t tok_len, bool *colonTrail)
 		{
 			*buf = '\0';
 			tok[argc++] = buf + 1;
-			if (colonTrail)
-				*colonTrail = true;
 			//D("extracted trailing (len: %zu), arg[%zu]: %s", strlen(buf+1), argc-1, tok[argc-1]);
 			break;
 		}

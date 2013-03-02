@@ -118,7 +118,7 @@ process_irc(void)
 		nexthb = time(NULL) + g_sett.heartbeat;
 	char *tok[IRC_MAXARGS];
 
-	int r = ircbas_read(g_irc, tok, IRC_MAXARGS, NULL, 100);
+	int r = ircbas_read(g_irc, tok, IRC_MAXARGS, 100);
 
 	if (r == -1) {
 		W("irc read failed");
