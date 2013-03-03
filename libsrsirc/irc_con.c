@@ -403,11 +403,11 @@ irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 		}
 	} while(n == 0);
 
-	size_t last = 0;
+	size_t last = 2;
 	for(; last < tok_len && tok[last]; last++);
 
-	if (last > 0)
-		hnd->colon_trail = tok[last-1] == ':';
+	if (last > 2)
+		hnd->colon_trail = tok[last-1][-1] == ':';
 
 	//D("(%p) done reading", hnd);
 
