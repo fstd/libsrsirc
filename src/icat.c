@@ -15,6 +15,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdarg.h>
+#include <errno.h>
 
 #include <unistd.h>
 
@@ -80,11 +81,20 @@ process_stdin(void)
 	FD_ZERO(&fds);
 	FD_SET(fileno(stdin), &fds);
 
-	int r = select(fileno(stdin)+1, &fds, NULL, NULL, &tout);
+	int r;
 
-	if (r == -1) {
-		W("select failed");
-		return -1;
+	for(;;) {
+		errno=0;
+		r = select(fileno(stdin)+1, &fds, NULL, NULL, &tout);
+
+		if (r == -1) {
+			if (errno == EINTR)
+				continue; //suppress warning, retry
+			WE("select failed");
+			return -1;
+		}
+
+		break;
 	}
 
 	if (r == 1) {
@@ -118,7 +128,7 @@ process_irc(void)
 		nexthb = time(NULL) + g_sett.heartbeat;
 	char *tok[IRC_MAXARGS];
 
-	int r = ircbas_read(g_irc, tok, IRC_MAXARGS, 100);
+	int r = ircbas_read(g_irc, tok, IRC_MAXARGS, 100000);
 
 	if (r == -1) {
 		W("irc read failed");
