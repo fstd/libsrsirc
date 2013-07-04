@@ -15,7 +15,6 @@
 #include <common.h>
 #include <libsrsirc/irc_io.h>
 #include <libsrsirc/irc_util.h>
-#include <libsrslog/log.h>
 
 //#define _BSD_SOURCE 1
 
@@ -39,6 +38,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+#include "debug.h"
 
 #define RXBUF_SZ 4096
 #define LINEBUF_SZ 1024
@@ -89,30 +89,18 @@ static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us);
 static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us);
 static int guess_hosttype(const char *host);
 
-void
-irccon_log_set_loglvl(int loglevel)
-{
-	LOG_LEVEL(loglevel);
-}
-
-void
-irccon_log_set_fancy(bool fancy)
-{
-	LOG_FANCY(fancy);
-}
-
 ichnd_t
 irccon_init(void)
 {
 	ichnd_t r = XMALLOC(sizeof (*(ichnd_t)0)); // XXX
 
 	if (!r) {
-		W("couldn't allocate memory");
+		WX("couldn't allocate memory");
 		return NULL;
 	}
 
 	if (pthread_mutex_init(&r->cancelmtx, NULL) != 0) {
-		W("couldn't init mutex");
+		WX("couldn't init mutex");
 		return NULL;
 	}
 
@@ -129,7 +117,7 @@ irccon_init(void)
 	r->cancel = false;
 	r->colon_trail = false;
 
-	N("(%p) irc_con initialized", r);
+	WVX("(%p) irc_con initialized", r);
 
 	return r;
 }
@@ -146,7 +134,7 @@ irccon_canceled(ichnd_t hnd)
 void
 irccon_cancel(ichnd_t hnd)
 {
-	N("(%p) async cancel requested", hnd);
+	WX("(%p) async cancel requested", hnd);
 	pthread_mutex_lock(&hnd->cancelmtx);
 	hnd->cancel = true;
 	pthread_mutex_unlock(&hnd->cancelmtx);
@@ -158,10 +146,10 @@ irccon_reset(ichnd_t hnd)
 	if (!hnd || hnd->state == INV)
 		return false;
 
-	N("(%p) resetting", hnd);
+	WVX("(%p) resetting", hnd);
 
 	if (hnd->sck != -1) {
-		D("(%p) closing socket %d", hnd, hnd->sck);
+		WVX("(%p) closing socket %d", hnd, hnd->sck);
 		close(hnd->sck);
 	}
 
@@ -189,7 +177,7 @@ irccon_dispose(ichnd_t hnd)
 	hnd->state = INV;
 
 	pthread_mutex_destroy(&hnd->cancelmtx);
-	N("(%p) disposed", hnd);
+	WVX("(%p) disposed", hnd);
 	XFREE(hnd);
 
 	return true;
@@ -219,7 +207,7 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 		if (to > 1000000*60) { unit[0] = 'm'; unit[1] = '\0'; to /= 1000000*60; }
 		else if (to > 1000000) { unit[0] = 's'; unit[1] = '\0'; to /= 1000000; }
 		else if (to > 1000) { unit[0] = 'm'; to /= 1000; }
-		N("(%p) wanna connect to %s:%hu%s, timeout: %lu%s",
+		WVX("(%p) wanna connect to %s:%hu%s, timeout: %lu%s",
 		           hnd, hnd->host, hnd->port, pxspec, to, unit);
 	}
 
@@ -228,10 +216,10 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 	int sck = ic_mksocket(host, port, &sa, &addrlen);
 
 	if (sck < 0) {
-		W("(%p) failed to ic_mksocket for %s:%hu", hnd, host, port);
+		WX("(%p) failed to ic_mksocket for %s:%hu", hnd, host, port);
 		return false;
 	}
-	D("(%p) created socket %d for %s:%hu", hnd, sck, host, port);
+	WVX("(%p) created socket %d for %s:%hu", hnd, sck, host, port);
 
 	int opt = 1;
 	socklen_t optlen = sizeof opt;
@@ -240,26 +228,26 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 /*#ifdef BSDCODEZ
 	errno = 0;
 	if (setsockopt(sck, SOL_SOCKET, SO_NOSIGPIPE, &opt, optlen) != 0) {
-		WE("(%p) setsockopt failed", hnd);
+		W("(%p) setsockopt failed", hnd);
 		close(sck);
 		return false;
 	}
-	D("(%p) done setsockopt()", hnd);
+	WVX("(%p) done setsockopt()", hnd);
 #endif*/
 
 	errno = 0;
 	if (fcntl(sck, F_SETFL, O_NONBLOCK) == -1) {
-		WE("(%p) failed to enable nonblocking mode", hnd);
+		W("(%p) failed to enable nonblocking mode", hnd);
 		close(sck);
 		return false;
 	}
 	
-	D("(%p) set to nonblocking mode, calling connect() now", hnd);
+	WVX("(%p) set to nonblocking mode, calling connect() now", hnd);
 	errno = 0;
 	int r = connect(sck, &sa, addrlen);
 
 	if (r == -1 && (errno != EINPROGRESS)) {
-		WE("(%p) connect() failed", hnd);
+		W("(%p) connect() failed", hnd);
 		close(sck);
 		return false;
 	}
@@ -274,7 +262,7 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 		bool cnc = hnd->cancel;
 		pthread_mutex_unlock(&hnd->cancelmtx);
 		if (cnc) {
-			W("(%p) cancel requested", hnd);
+			WX("(%p) cancel requested", hnd);
 			close(sck);
 			return false;
 		}
@@ -288,7 +276,7 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 			if (trem > 500000)
 				trem = 500000; //limiting time spent in read so we can cancel w/o much delay
 			if (trem <= 0) {
-				W("(%p) timeout reached while in 3WHS", hnd);
+				WX("(%p) timeout reached while in 3WHS", hnd);
 				close(sck);
 				return false;
 			}
@@ -300,7 +288,7 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 		r = select(sck+1, NULL, &fds, NULL, tsend ? &tout : NULL);
 		if (r < 0)
 		{
-			WE("(%p) select() failed", hnd);
+			W("(%p) select() failed", hnd);
 			close(sck);
 			return false;
 		}
@@ -310,15 +298,15 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 	}
 
 	if (getsockopt(sck, SOL_SOCKET, SO_ERROR, &opt, &optlen) != 0) {
-		W("(%p) getsockopt failed", hnd);
+		WX("(%p) getsockopt failed", hnd);
 		close(sck);
 		return false;
 	}
 
 	if (opt == 0)
-		D("(%p) socket connected!", hnd);
+		WVX("(%p) socket connected!", hnd);
 	else {
-		WC(opt, "(%p) could not connect socket (%d)", hnd, opt);
+		WX("(%p) could not connect socket (%d)", hnd, opt);
 		close(sck);
 		return false;
 	}
@@ -329,14 +317,14 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 		if (tsend) {
 			trem = tsend - ic_timestamp_us();
 			if (trem <= 0) {
-				W("(%p) timeout *after* select() was done, odd", hnd);
+				WX("(%p) timeout *after* select() was done, odd", hnd);
 				close(sck);
 				hnd->sck = -1;
 				return false;
 			}
 		}
 		bool ok = false;
-		D("(%p) logging on to proxy", hnd);
+		WVX("(%p) logging on to proxy", hnd);
 		if (hnd->ptype == IRCPX_HTTP)
 			ok = pxlogon_http(hnd, (unsigned long)trem);
 		else if (hnd->ptype == IRCPX_SOCKS4)
@@ -346,18 +334,18 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 		
 		if (!ok)
 		{
-			W("(%p) proxy logon failed", hnd);
+			WX("(%p) proxy logon failed", hnd);
 			close(sck);
 			hnd->sck = -1;
 			return false;
 		}
-		D("(%p) sent proxy logon sequence", hnd);
+		WVX("(%p) sent proxy logon sequence", hnd);
 	}
 
-	D("(%p) setting to blocking mode", hnd);
+	WVX("(%p) setting to blocking mode", hnd);
 	errno = 0;
 	if (fcntl(sck, F_SETFL, 0) == -1) {
-		WE("(%p) failed to clear nonblocking mode", hnd);
+		W("(%p) failed to clear nonblocking mode", hnd);
 		close(sck);
 		hnd->sck = -1;
 		return false;
@@ -366,7 +354,7 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 
 	hnd->state = ON;
 
-	N("(%p) %s connection to ircd established", hnd, hnd->ptype == -1?"TCP":"proxy");
+	WVX("(%p) %s connection to ircd established", hnd, hnd->ptype == -1?"TCP":"proxy");
 
 	return true;
 }
@@ -378,7 +366,7 @@ irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 		return -1;
 
 	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
-	//D("(%p) wanna read (timeout: %lu)", hnd, to_us);
+	//WVX("(%p) wanna read (timeout: %lu)", hnd, to_us);
 
 	int n;
 	/* read a line, ignoring empty lines */
@@ -389,7 +377,7 @@ irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 		{
 			trem = tsend - ic_timestamp_us();
 			if (trem <= 0) {
-				//W("(%p) timeout hit", hnd);
+				//WX("(%p) timeout hit", hnd);
 				return 0;
 			}
 		}
@@ -397,7 +385,7 @@ irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 		n = ircio_read(hnd->sck, hnd->linebuf, LINEBUF_SZ, hnd->overbuf, OVERBUF_SZ, &hnd->mehptr, tok, tok_len, tsend?(unsigned long)trem:0);
 		if (n < 0) //read error
 		{
-			W("(%p) read failed", hnd);
+			WX("(%p) read failed", hnd);
 			irccon_reset(hnd);
 			return -1;
 		}
@@ -409,7 +397,7 @@ irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 	if (last > 2)
 		hnd->colon_trail = tok[last-1][-1] == ':';
 
-	//D("(%p) done reading", hnd);
+	//WVX("(%p) done reading", hnd);
 
 	return 1;
 }
@@ -423,7 +411,7 @@ irccon_write(ichnd_t hnd, const char *line)
 
 	if (ircio_write(hnd->sck, line) == -1)
 	{
-		W("(%p) failed to write '%s'", hnd, line);
+		WX("(%p) failed to write '%s'", hnd, line);
 		irccon_reset(hnd);
 		return false;
 	}
@@ -435,7 +423,7 @@ irccon_write(ichnd_t hnd, const char *line)
 	while(endptr >= buf && (*endptr == '\r' || *endptr == '\n'))
 		*endptr-- = '\0';
 
-	D("(%p) wrote a line: '%s'", hnd, buf);
+	WVX("(%p) wrote a line: '%s'", hnd, buf);
 	return true;
 
 }
@@ -560,38 +548,38 @@ static bool pxlogon_http(ichnd_t hnd, unsigned long to_us)
 	errno = 0;
 	ssize_t n = write(hnd->sck, buf, strlen(buf));
 	if (n == -1) {
-		WE("(%p) write() failed", hnd);
+		W("(%p) write() failed", hnd);
 		return false;
 	} else if (n < (ssize_t)strlen(buf)) {
-		W("(%p) didn't send everything (%zd/%zu)", hnd, n, strlen(buf));
+		WX("(%p) didn't send everything (%zd/%zu)", hnd, n, strlen(buf));
 		return false;
 	}
 
 	memset(buf, 0, sizeof buf);
 
-	D("(%p) wrote HTTP CONNECT, reading response", hnd);
+	WVX("(%p) wrote HTTP CONNECT, reading response", hnd);
 	size_t c = 0;
 	while(c < sizeof buf && (c < 4 || buf[c - 4] != '\r' || buf[c - 3] != '\n' || buf[c - 2] != '\r' || buf[c - 1] != '\n')) {
 		errno = 0;
 		n = read(hnd->sck, &buf[c], 1);
 		if (n <= 0) {
 			if (n == 0)
-				W("(%p) unexpected EOF", hnd);
+				WX("(%p) unexpected EOF", hnd);
 			else if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				pthread_mutex_lock(&hnd->cancelmtx);
 				bool cnc = hnd->cancel;
 				pthread_mutex_unlock(&hnd->cancelmtx);
 				if (cnc) {
-					W("(%p) pxlogon canceled", hnd);
+					WX("(%p) pxlogon canceled", hnd);
 					return false;
 				}
 				if (tsend && ic_timestamp_us() < tsend) {
 					usleep(10000);
 					continue;
 				}
-				W("(%p) timeout hit", hnd);
+				WX("(%p) timeout hit", hnd);
 			} else 
-				WE("(%p) read failed", hnd);
+				W("(%p) read failed", hnd);
 			return false;
 		}
 		c++;
@@ -599,17 +587,17 @@ static bool pxlogon_http(ichnd_t hnd, unsigned long to_us)
 	char *ctx; //context ptr for strtok_r
 	char *tok = strtok_r(buf, " ", &ctx);
 	if (!tok) {
-		W("(%p) parse error 1 (buf: '%s')", hnd, buf);
+		WX("(%p) parse error 1 (buf: '%s')", hnd, buf);
 		return false;
 	}
 
 	tok = strtok_r(NULL, " ", &ctx);
 	if (!tok) {
-		W("(%p) parse error 2 (buf: '%s')", hnd, buf);
+		WX("(%p) parse error 2 (buf: '%s')", hnd, buf);
 		return false;
 	}
 
-	D("(%p) http response: '%.3s' (should be '200')", hnd, tok);
+	WVX("(%p) http response: '%.3s' (should be '200')", hnd, tok);
 	return strncmp(tok, "200", 3) == 0;
 }
 
@@ -625,7 +613,7 @@ static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us) //SOCKS doesntsuppo
 	name[sizeof name - 1] = '\0';
 
 	if (ip == INADDR_NONE || !(1 <= port && port <= 65535)) {
-		W("(%p) srsly what?", hnd);
+		WX("(%p) srsly what?", hnd);
 		return false;
 	}
 	
@@ -643,14 +631,14 @@ static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us) //SOCKS doesntsuppo
 	errno = 0;
 	ssize_t n = write(hnd->sck, logon, c);
 	if (n == -1) {
-		WE("(%p) write() failed", hnd);
+		W("(%p) write() failed", hnd);
 		return false;
 	} else if (n < (ssize_t)c) {
-		W("(%p) didn't send everything (%zd/%zu)", hnd, n, c);
+		WX("(%p) didn't send everything (%zd/%zu)", hnd, n, c);
 		return false;
 	}
 	
-	D("(%p) wrote SOCKS4 logon sequence, reading response", hnd);
+	WVX("(%p) wrote SOCKS4 logon sequence, reading response", hnd);
 	char resp[8];
 	c = 0;
 	while(c < 8)
@@ -663,23 +651,23 @@ static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us) //SOCKS doesntsuppo
 				bool cnc = hnd->cancel;
 				pthread_mutex_unlock(&hnd->cancelmtx);
 				if (cnc) {
-					W("(%p) pxlogon canceled", hnd);
+					WX("(%p) pxlogon canceled", hnd);
 					return false;
 				}
 				if (tsend && ic_timestamp_us() < tsend) {
 					usleep(10000);
 					continue;
 				}
-				W("(%p) timeout hit", hnd);
+				WX("(%p) timeout hit", hnd);
 			} else if (n == 0) {
-				W("(%p) unexpected EOF", hnd);
+				WX("(%p) unexpected EOF", hnd);
 			} else 
-				WE("(%p) read failed", hnd);
+				W("(%p) read failed", hnd);
 			return false;
 		}
 		c += n;
 	}
-	D("(%p) socks4 response: %hhx %hhx (should be: 0x00 0x5a)", hnd, resp[0], resp[1]);
+	WVX("(%p) socks4 response: %hhx %hhx (should be: 0x00 0x5a)", hnd, resp[0], resp[1]);
 	return resp[0] == 0 && resp[1] == 0x5a;
 }
 
@@ -689,7 +677,7 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 	unsigned char logon[14];
 
 	if(!(1 <= hnd->port && hnd->port <= 65535)) {
-		W("(%p) srsly what?!", hnd);
+		WX("(%p) srsly what?!", hnd);
 		return false;
 	}
 
@@ -703,14 +691,14 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 	errno = 0;
 	ssize_t n = write(hnd->sck, logon, c);
 	if (n == -1) {
-		WE("(%p) write() failed", hnd);
+		W("(%p) write() failed", hnd);
 		return false;
 	} else if (n < (ssize_t)c) {
-		W("(%p) didn't send everything (%zd/%zu)", hnd, n, c);
+		WX("(%p) didn't send everything (%zd/%zu)", hnd, n, c);
 		return false;
 	}
 	
-	D("(%p) wrote SOCKS5 logon sequence 1, reading response", hnd);
+	WVX("(%p) wrote SOCKS5 logon sequence 1, reading response", hnd);
 	char resp[128];
 	c = 0;
 	while(c < 2)
@@ -723,32 +711,32 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 				bool cnc = hnd->cancel;
 				pthread_mutex_unlock(&hnd->cancelmtx);
 				if (cnc) {
-					W("(%p) pxlogon canceled", hnd);
+					WX("(%p) pxlogon canceled", hnd);
 					return false;
 				}
 				if (tsend && ic_timestamp_us() < tsend) {
 					usleep(10000);
 					continue;
 				}
-				W("(%p) timeout 1 hit", hnd);
+				WX("(%p) timeout 1 hit", hnd);
 			} else if (n == 0) {
-				W("(%p) unexpected EOF", hnd);
+				WX("(%p) unexpected EOF", hnd);
 			} else 
-				WE("(%p) read failed", hnd);
+				W("(%p) read failed", hnd);
 			return false;
 		}
 		c += n;
 	}
 
 	if(resp[0] != 5) {
-		W("(%p) unexpected response %hhx %hhx (no socks5?)", hnd, resp[0], resp[1]);
+		WX("(%p) unexpected response %hhx %hhx (no socks5?)", hnd, resp[0], resp[1]);
 		return false;
 	}
 	if (resp[1] != 0) {
-		W("(%p) socks5 denied (%hhx %hhx)", hnd, resp[0], resp[1]);
+		WX("(%p) socks5 denied (%hhx %hhx)", hnd, resp[0], resp[1]);
 		return false;
 	}
-	D("(%p) socks5 let us in", hnd);
+	WVX("(%p) socks5 let us in", hnd);
 	
 	c = 0;
 	char connect[128];
@@ -763,11 +751,11 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 		connect[c++] = 1;
 		n = inet_pton(AF_INET, hnd->host, &ia4);
 		if (n == -1) {
-			WE("(%p) inet_pton failed", hnd);
+			W("(%p) inet_pton failed", hnd);
 			return false;
 		}
 		if (n == 0) {
-			W("(%p) illegal ipv4 address: '%s'", hnd, hnd->host);
+			WX("(%p) illegal ipv4 address: '%s'", hnd, hnd->host);
 			return false;
 		}
 		memcpy(connect+c, &ia4.s_addr, 4); c +=4;
@@ -776,11 +764,11 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 		connect[c++] = 4;
 		n = inet_pton(AF_INET6, hnd->host, &ia6);
 		if (n == -1) {
-			WE("(%p) inet_pton failed", hnd);
+			W("(%p) inet_pton failed", hnd);
 			return false;
 		}
 		if (n == 0) {
-			W("(%p) illegal ipv6 address: '%s'", hnd, hnd->host);
+			WX("(%p) illegal ipv6 address: '%s'", hnd, hnd->host);
 			return false;
 		}
 		memcpy(connect+c, &ia6.s6_addr, 16); c +=16;
@@ -795,13 +783,13 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 	errno = 0;
 	n = write(hnd->sck, connect, c);
 	if (n == -1) {
-		WE("(%p) write() failed", hnd);
+		W("(%p) write() failed", hnd);
 		return false;
 	} else if (n < (ssize_t)c) {
-		W("(%p) didn't send everything (%zd/%zu)", hnd, n, c);
+		WX("(%p) didn't send everything (%zd/%zu)", hnd, n, c);
 		return false;
 	}
-	D("(%p) wrote SOCKS5 logon sequence 2, reading response", hnd);
+	WVX("(%p) wrote SOCKS5 logon sequence 2, reading response", hnd);
 	
 	size_t l = 4;
 	c = 0;
@@ -815,25 +803,25 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 				bool cnc = hnd->cancel;
 				pthread_mutex_unlock(&hnd->cancelmtx);
 				if (cnc) {
-					W("(%p) pxlogon canceled", hnd);
+					WX("(%p) pxlogon canceled", hnd);
 					return false;
 				}
 				if (tsend && ic_timestamp_us() < tsend) {
 					usleep(10000);
 					continue;
 				}
-				W("(%p) timeout 2 hit", hnd);
+				WX("(%p) timeout 2 hit", hnd);
 			} else if (n == 0) {
-				W("(%p) unexpected EOF", hnd);
+				WX("(%p) unexpected EOF", hnd);
 			} else 
-				WE("(%p) read failed", hnd);
+				W("(%p) read failed", hnd);
 			return false;
 		}
 		c += n;
 	}
 
 	if (resp[0] != 5 || resp[1] != 0) {
-		W("(%p) socks5 denied/failed (%hhx %hhx %hhx %hhx)", hnd, resp[0], resp[1],
+		WX("(%p) socks5 denied/failed (%hhx %hhx %hhx %hhx)", hnd, resp[0], resp[1],
 		                                            resp[2], resp[3]);
 		return false;
 	}
@@ -851,7 +839,7 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 		l = 1; //length
 		break;
 	default:
-		W("(%p) socks returned illegal addresstype %d", hnd, resp[3]);
+		WX("(%p) socks returned illegal addresstype %d", hnd, resp[3]);
 		return false;
 	}
 
@@ -867,18 +855,18 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 				bool cnc = hnd->cancel;
 				pthread_mutex_unlock(&hnd->cancelmtx);
 				if (cnc) {
-					W("(%p) pxlogon canceled", hnd);
+					WX("(%p) pxlogon canceled", hnd);
 					return false;
 				}
 				if (tsend && ic_timestamp_us() < tsend) {
 					usleep(10000);
 					continue;
 				}
-				W("(%p) timeout 2 hit", hnd);
+				WX("(%p) timeout 2 hit", hnd);
 			} else if (n == 0) {
-				W("(%p) unexpected EOF", hnd);
+				WX("(%p) unexpected EOF", hnd);
 			} else 
-				WE("(%p) read failed", hnd);
+				W("(%p) read failed", hnd);
 			return false;
 		}
 		if (!c && dns)
@@ -889,7 +877,7 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 	/* not that we'd care about what we just have read but we want to make sure to
 	 * read the correct amount of characters */
 	
-	D("(%p) socks5 success (apparently)", hnd);
+	WVX("(%p) socks5 success (apparently)", hnd);
 	return true;
 }
 

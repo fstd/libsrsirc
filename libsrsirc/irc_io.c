@@ -13,7 +13,6 @@
 
 /* locals */
 #include <common.h>
-#include <libsrslog/log.h>
 
 /* C */
 #include <stdlib.h>
@@ -25,6 +24,8 @@
 /* POSIX */
 #include <unistd.h>
 #include <sys/socket.h>
+
+#include "debug.h"
 
 #define ISDELIM(C) ((C)=='\n' || (C) == '\r')
 
@@ -46,7 +47,7 @@ static int writeall(int sck, const char* buf); //write a full string
 //
 //	buf.pData   = (char *)pAddress;
 //	buf.lSize   = lSize;
-//	D("hexdump '%s'", name);
+//	WVX("hexdump '%s'", name);
 //
 //	while (buf.lSize > 0)
 //	{
@@ -86,25 +87,25 @@ static int writeall(int sck, const char* buf); //write a full string
 //		buf.pData   += lOutLen;
 //		buf.lSize   -= lOutLen;
 //	}
-//	D("end of hexdump '%s'", name);
+//	WVX("end of hexdump '%s'", name);
 //}
 
 int
 ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len, unsigned long to_us)
 {
 	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
-	//D("invoke(sck:%d, tokbuf: %p, tokbuf_sz: %zu, workbuf: %p, workbuf_sz: %zu, mehptr: %p (*:%p), to_us: %lu, tsend: %lld)", sck, tokbuf, tokbuf_sz, workbuf, workbuf_sz, mehptr, *mehptr, to_us, tsend);
+	//WVX("invoke(sck:%d, tokbuf: %p, tokbuf_sz: %zu, workbuf: %p, workbuf_sz: %zu, mehptr: %p (*:%p), to_us: %lu, tsend: %lld)", sck, tokbuf, tokbuf_sz, workbuf, workbuf_sz, mehptr, *mehptr, to_us, tsend);
 	if (!*mehptr) {
-		//D("fresh invoke (*mehptr is NULL). initializing workbuf, pointing *mehptr to it");
+		//WVX("fresh invoke (*mehptr is NULL). initializing workbuf, pointing *mehptr to it");
 		*mehptr = workbuf;
 		workbuf[0] = '\0';
 	} else {
-		//D("first ten of *mehptr: '%.10s'", *mehptr);
+		//WVX("first ten of *mehptr: '%.10s'", *mehptr);
 		//hexdump(workbuf, workbuf_sz, "workbuf");
 	}
 
 	while(ISDELIM(**mehptr)) {
-		//D("skipping a leading delim");
+		//WVX("skipping a leading delim");
 		(*mehptr)++;
 	}
 	
@@ -114,25 +115,25 @@ ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbu
 		end++;
 
 	if (!*end) {
-		//D("didn't find delim in workbuf, need moar dataz");
+		//WVX("didn't find delim in workbuf, need moar dataz");
 		size_t len = (size_t)(end - *mehptr);
-		//D("%zu bytes already in workbuf", len);
+		//WVX("%zu bytes already in workbuf", len);
 		if (*mehptr != workbuf) {
 			size_t mehdist = (size_t)(*mehptr - workbuf);
-			//D("*mehptr doesn't point at workbuf's start (dist: %zu), shifting %zu bytes to the beginning", mehdist, len);
+			//WVX("*mehptr doesn't point at workbuf's start (dist: %zu), shifting %zu bytes to the beginning", mehdist, len);
 			//hexdump(workbuf, workbuf_sz, "workbuf before shift");
 			memmove(workbuf, *mehptr, len);
-			//D("zeroing %zu bytes", workbuf_sz - len);
+			//WVX("zeroing %zu bytes", workbuf_sz - len);
 			memset(workbuf + len, 0, workbuf_sz - len);
 			*mehptr = workbuf;
 			end -= mehdist;
-			//D("end is %p (%hhx (%c))", end, *end, *end);
+			//WVX("end is %p (%hhx (%c))", end, *end, *end);
 			//hexdump(workbuf, workbuf_sz, "workbuf after shift");
 		}
 
 		for(;;) {
 			if (len + 1 >= workbuf_sz) {
-				W("(sck:%d) input too long", sck);
+				WX("(sck:%d) input too long", sck);
 				return -1;
 			}
 			for(;;) {
@@ -142,7 +143,7 @@ ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbu
 					if (trem > 1000000)
 						trem = 1000000; //limiting time spent in read so we can cancel w/o much delay
 					if (trem <= 0) {
-						//D("(sck:%d) timeout reached while selecting for read", sck);
+						//WVX("(sck:%d) timeout reached while selecting for read", sck);
 						return 0;
 					}
 
@@ -152,35 +153,35 @@ ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbu
 				FD_ZERO(&fds);
 				FD_SET(sck, &fds);
 				errno = 0;
-				//D("selecting...");
+				//WVX("selecting...");
 				int r = select(sck+1, &fds, NULL, NULL, tsend ? &tout : NULL);
 				if (r < 0) {
 					if (errno == EINTR) {
-						NE("(sck:%d) received signal while selecting", sck);
+						W("(sck:%d) received signal while selecting", sck);
 						return 0;
 					}
-					WE("(sck:%d) select() failed", sck);
+					W("(sck:%d) select() failed", sck);
 					return -1;
 				} else if (r == 1) {
 					break;
 				} else if (r != 0)
-					W("wtf select returned %d", r);
+					WX("wtf select returned %d", r);
 			}
-			//D("reading max %zu byte", workbuf_sz - len - 1);
+			//WVX("reading max %zu byte", workbuf_sz - len - 1);
 			errno = 0;
 			ssize_t n = read(sck, end, workbuf_sz - len - 1);
 			if (n <= 0) {
-				if (n == 0) W("(sck%d) read: EOF", sck);
-				else        WE("(sck%d) read failed (%d)", sck, n);
+				if (n == 0) WX("(sck%d) read: EOF", sck);
+				else        W("(sck%d) read failed (%zd)", sck, n);
 				return -1;
 			}
-			//D("read returned %d", n);
+			//WVX("read returned %d", n);
 			bool gotdelim = false;
 			char *delim = NULL;
 			while(n--) {
 				if (!gotdelim && ISDELIM(*end)) {
 					delim = end;
-					//D("found a delim");
+					//WVX("found a delim");
 					gotdelim = true;
 				}
 
@@ -193,22 +194,22 @@ ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbu
 				end = delim;
 				break;
 			}
-			//D("no delim found so far");
+			//WVX("no delim found so far");
 		}
 	}
 	//hexdump(workbuf, workbuf_sz, "workbuf aftr both loops");
 		
 	assert (*end);
 	size_t len = (size_t)(end - *mehptr);
-	//D("got %zu bytes till delim in workbuf", len);
+	//WVX("got %zu bytes till delim in workbuf", len);
 	if (len + 1 >= tokbuf_sz)
 		len = tokbuf_sz - 1;
-	//D("copying %zu bytes into tokbuf", len);
+	//WVX("copying %zu bytes into tokbuf", len);
 	strncpy(tokbuf, *mehptr, len);
 	tokbuf[len] = '\0';
 	*mehptr = end+1;
-	//D("first ten of *mehptr: '%.10s'", *mehptr);
-	//D("tokenizing, then done!");
+	//WVX("first ten of *mehptr: '%.10s'", *mehptr);
+	//WVX("tokenizing, then done!");
 	return tokenize(tokbuf, tok, tok_len);
 }
 /* pub if implementation */
@@ -218,7 +219,7 @@ ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbu
 //{
 //	if (sck < 0 || !buf || !bufoverbuf_sz || tok_len < 2)
 //		return -1;
-//	//D("(sck:%d) wanna read (timeout: %lu)", sck, to_us);
+//	//WVX("(sck:%d) wanna read (timeout: %lu)", sck, to_us);
 //
 //	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 //	/* read a \r\n terminated line into buf */
@@ -237,7 +238,7 @@ ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbu
 //					trem = 500000; //limiting time spent in read so we can cancel w/o much delay
 //				if (trem <= 0) {
 //					if (c > 0)
-//						W("(sck:%d) timeout reached while selecting for read, we already had %zu bytes:/", sck, c);
+//						WX("(sck:%d) timeout reached while selecting for read, we already had %zu bytes:/", sck, c);
 //					return 0;
 //				}
 //
@@ -247,42 +248,42 @@ ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbu
 //				ic_tconv(&tout, &trem, false);
 //
 //				errno = 0;
-//				//D("selecting");
+//				//WVX("selecting");
 //				r = select(sck+1, &fds, NULL, NULL, tsend ? &tout : NULL);
-//				//D("select: %d", r);
+//				//WVX("select: %d", r);
 //				if (r < 0)
 //				{
-//					WE("(sck:%d) select() failed", sck);
+//					W("(sck:%d) select() failed", sck);
 //					return -1;
 //				}
 //				if (r == 1) {
 //					break;
 //				}
 //				if (r != 0)
-//					W("wtf select returned %d", r);
+//					WX("wtf select returned %d", r);
 //			}
 //		}
-//		//D("read()ing a byte");
+//		//WVX("read()ing a byte");
 //		errno = 0;
 //		if ((r = read(sck, &overbuf[c++], 1)) <= 0) {
-//			if (r == 0) W("(sck%d) read: EOF", sck);
-//			else        WE("(sck%d) read failed (%d)", sck, r);
+//			if (r == 0) WX("(sck%d) read: EOF", sck);
+//			else        W("(sck%d) read failed (%d)", sck, r);
 //			return -1;
 //		}// else
-//			//D("read returned %d (%hhx (%c))", r, overbuf[c-1], overbuf[c-1]);
+//			//WVX("read returned %d (%hhx (%c))", r, overbuf[c-1], overbuf[c-1]);
 //	}
-//	//D("(sck%d) done reading", sck);
+//	//WVX("(sck%d) done reading", sck);
 //	if (c == bufoverbuf_sz) {
 //		char last = overbuf[c-1];
 //		overbuf[c-1] = '\0';
-//		W("line too long: '%s' (last char was %hhx (%c))", overbuf, last, last);
+//		WX("line too long: '%s' (last char was %hhx (%c))", overbuf, last, last);
 //		return -1;
 //	}
 //	
 //	overbuf[c - 2] = '\0'; // cut off \r\n
 //	strcpy(buf, overbuf);
 //	overbuf[0] = '\0';
-//	D("read a line: '%s'", buf);
+//	WVX("read a line: '%s'", buf);
 //	return tokenize(buf, tok, tok_len);
 //}
 
@@ -296,7 +297,7 @@ ircio_write(int sck, const char *line)
 	int needbr = len < 2 || line[len - 2] != '\r' || line[len - 1] != '\n';
 
 	if (!writeall(sck, line) || (needbr && !writeall(sck, "\r\n"))) {
-		W("(sck%d) writeall() failed", sck);
+		WX("(sck%d) writeall() failed", sck);
 		return -1;
 	}
 
@@ -315,7 +316,7 @@ writeall(int sck, const char* buf)
 		errno = 0;
 		ssize_t n = send(sck, buf + cnt, len - cnt, MSG_NOSIGNAL);
 		if (n < 0) {
-			WE("(sck%d) send() failed", sck);
+			W("(sck%d) send() failed", sck);
 			return 0;
 		}
 		cnt += n;
@@ -329,7 +330,7 @@ tokenize(char *buf, char **tok, size_t tok_len)
 	if (!buf || !tok || tok_len < 2)
 		return -1;
 	
-	//D("tokenizing: %s", buf);
+	//WVX("tokenizing: %s", buf);
 	for(size_t i = 0; i < tok_len; ++i)
 		tok[i] = NULL;
 
@@ -337,7 +338,7 @@ tokenize(char *buf, char **tok, size_t tok_len)
 		*buf++ = '\0';
 
 	size_t len = strlen(buf);
-	//D("len is %zu, jumped over ws: %s", len, buf);
+	//WVX("len is %zu, jumped over ws: %s", len, buf);
 	if (len == 0)
 		return 0;
 
@@ -346,12 +347,12 @@ tokenize(char *buf, char **tok, size_t tok_len)
 		tok[0] = buf + 1;
 		buf = skip2lws(buf, true);
 		if (!buf) {
-			W("parse erro, pfx but no cmd");
+			WX("parse erro, pfx but no cmd");
 			return -1;//parse err, pfx but no cmd
 		}
 		while(isspace(*buf))
 			*buf++ = '\0';
-		//D("extracted pfx: %s, rest: %s", tok[0], buf);
+		//WVX("extracted pfx: %s, rest: %s", tok[0], buf);
 	}
 
 	tok[1] = buf;
@@ -360,16 +361,16 @@ tokenize(char *buf, char **tok, size_t tok_len)
 		while(isspace(*buf))
 			*buf++ = '\0';
 	}
-	//D("extracted cmd: %s, rest: %s", tok[1], buf);
+	//WVX("extracted cmd: %s, rest: %s", tok[1], buf);
 
 	size_t argc = 2;
 	while(buf && *buf && argc < tok_len)
 	{
-		//D("iter (argc: %zu) buf is: %s", argc, buf);
+		//WVX("iter (argc: %zu) buf is: %s", argc, buf);
 		if (*buf == ':')
 		{
 			tok[argc++] = buf + 1;
-			//D("extracted trailing (len: %zu), arg[%zu]: %s", strlen(buf+1), argc-1, tok[argc-1]);
+			//WVX("extracted trailing (len: %zu), arg[%zu]: %s", strlen(buf+1), argc-1, tok[argc-1]);
 			break;
 		}
 		tok[argc++] = buf;
@@ -377,12 +378,12 @@ tokenize(char *buf, char **tok, size_t tok_len)
 		if (buf) {
 			while(isspace(*buf))
 				*buf++ = '\0';
-			//D("jumped over ws: %s", buf);
+			//WVX("jumped over ws: %s", buf);
 		}
-		//D("extracted arg[%zu]: %s, rest: %s", argc-1, tok[argc-1], buf);
+		//WVX("extracted arg[%zu]: %s, rest: %s", argc-1, tok[argc-1], buf);
 	}
 
-	//D("done!");
+	//WVX("done!");
 	return 1;
 }
 

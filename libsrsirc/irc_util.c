@@ -9,7 +9,6 @@
 #define _GNU_SOURCE 1
 
 #include <libsrsirc/irc_util.h>
-#include <libsrslog/log.h>
 
 #include <common.h>
 
@@ -21,6 +20,8 @@
 #include <string.h>
 #include <strings.h>
 #include <limits.h>
+
+#include "debug.h"
 
 #define CHANMODE_CLASS_A 1 /*do not change these, see int classify_chanmode(char)*/
 #define CHANMODE_CLASS_B 2
@@ -260,10 +261,10 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num, const char
 	int j = 0, cl;
 	char *ptr = modes;
 	int enable = 1;
-	D("modes: '%s', nummodes: %zu, modepfx005chr: '%s'", modes, nummodes, modepfx005chr);
+	WVX("modes: '%s', nummodes: %zu, modepfx005chr: '%s'", modes, nummodes, modepfx005chr);
 	while (*ptr) {
 		char c = *ptr;
-		D("next modechar is '%c', enable ATM: %d", c, enable);
+		WVX("next modechar is '%c', enable ATM: %d", c, enable);
 		arg = NULL;
 		switch (c) {
 		case '+':
@@ -276,7 +277,7 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num, const char
 			continue;
 		default:
 			cl = classify_chanmode(c, chmodes);
-			D("classified mode '%c' to class %d", c, cl);
+			WVX("classified mode '%c' to class %d", c, cl);
 			switch (cl) {
 			case CHANMODE_CLASS_A:
 				/*i>=argcount: this may happen when requesting modes outside of that channel
@@ -297,14 +298,14 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num, const char
 				if (strchr(modepfx005chr, c)) {
 					arg = (i > argcount) ? ("*") : arr[i++];
 				} else {
-					W("unknown chanmode '%c' (0x%X)\n",c,(unsigned)c);
+					WX("unknown chanmode '%c' (0x%X)\n",c,(unsigned)c);
 					ptr++;
 					continue;
 				}
 			}
 		}
 		if (arg)
-			D("arg is '%s'", arg);
+			WVX("arg is '%s'", arg);
 		modearr[j] = malloc((3 + ((arg != NULL) ? strlen(arg) + 1 : 0)));
 		modearr[j][0] = enable ? '+' : '-';
 		modearr[j][1] = c;
@@ -315,9 +316,9 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num, const char
 		j++;
 		ptr++;
 	}
-	D("done parsing, result:");
+	WVX("done parsing, result:");
 	for(size_t i = 0; i < nummodes; i++) {
-		D("modearr[%zu]: '%s'", i, modearr[i]);
+		WVX("modearr[%zu]: '%s'", i, modearr[i]);
 	}
 
 	*num = nummodes;

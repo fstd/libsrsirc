@@ -24,8 +24,6 @@ AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdbool.h st
 
 AC_HEADER_STDBOOL
 
-AC_CHECK_LIB([srslog], [log_is_fancy], [], [AC_MSG_ERROR([libsrslog not installed?])])
-
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_INT64_T
 AC_TYPE_SIZE_T

@@ -13,12 +13,13 @@
 #include <common.h>
 #include <libsrsirc/irc_con.h>
 #include <libsrsirc/irc_util.h>
-#include <libsrslog/log.h>
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
+
+#include "debug.h"
 
 #define MAX_IRCARGS ((size_t)15)
 
@@ -159,14 +160,14 @@ ircbas_init(void)
 	r->m005modepfx[0] = XSTRDUP("ov");
 	r->m005modepfx[1] = XSTRDUP("@+");
 
-	N("(%p) irc_bas initialized (backend: %p)", r, r->con);
+	WVX("(%p) irc_bas initialized (backend: %p)", r, r->con);
 	return r;
 }
 
 bool 
 ircbas_reset(ibhnd_t hnd)
 {
-	N("(%p) resetting backend", hnd);
+	WVX("(%p) resetting backend", hnd);
 	if (!irccon_reset(hnd->con))
 		return false;
 
@@ -194,7 +195,7 @@ ircbas_dispose(ibhnd_t hnd)
 	XFREE(hnd->serv_dist);
 	XFREE(hnd->serv_info);
 
-	N("(%p) disposed", hnd);
+	WVX("(%p) disposed", hnd);
 	XFREE(hnd);
 
 	return true;
@@ -215,20 +216,20 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 		hnd->logonconv[i] = NULL;
 	}
 
-	N("(%p) wanna connect, connecting backend (timeout: %lu)", hnd, to_us);
+	WVX("(%p) wanna connect, connecting backend (timeout: %lu)", hnd, to_us);
 	if (!irccon_connect(hnd->con, to_us)) {
-		W("(%p) backend failed to establish connection", hnd);
+		WX("(%p) backend failed to establish connection", hnd);
 		return false;
 	}
 
-	D("(%p) sending IRC logon sequence", hnd);
+	WVX("(%p) sending IRC logon sequence", hnd);
 	if (!send_logon(hnd)) {
-		W("(%p) failed writing IRC logon sequence", hnd);
+		WX("(%p) failed writing IRC logon sequence", hnd);
 		ircbas_reset(hnd);
 		return false;
 	}
 
-	D("(%p) connection established, IRC logon sequence sent", hnd);
+	WVX("(%p) connection established, IRC logon sequence sent", hnd);
 	char *msg[MAX_IRCARGS];
 	XFREE(hnd->mynick);
 	hnd->mynick = strmdup(hnd->nick, 9);
@@ -237,14 +238,14 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 	for(;;)
 	{
 		if (irccon_canceled(hnd->con)) {
-			W("(%p) cancel requested", hnd);
+			WX("(%p) cancel requested", hnd);
 			ircbas_reset(hnd);
 			return false;
 		}
 		if(tsend) {
 			trem = tsend - ic_timestamp_us();
 			if (trem <= 0) {
-				W("(%p) timeout hit while waiting for 004", hnd);
+				WX("(%p) timeout hit while waiting for 004", hnd);
 				ircbas_reset(hnd);
 				return false;
 			}
@@ -256,7 +257,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 		int r = irccon_read(hnd->con, msg, MAX_IRCARGS, (unsigned long)trem);
 		if (r < 0)
 		{
-			W("(%p) irccon_read() failed", hnd);
+			WX("(%p) irccon_read() failed", hnd);
 			ircbas_reset(hnd);
 			return false;
 		}
@@ -265,7 +266,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 			continue;
 
 		if (hnd->cb_con_read && !hnd->cb_con_read(msg, MAX_IRCARGS, hnd->tag_con_read)) {
-			W("(%p) further logon prohibited by conread", hnd);
+			WX("(%p) further logon prohibited by conread", hnd);
 			ircbas_reset(hnd);
 			return false;
 		}
@@ -311,7 +312,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 			hnd->cmodes = XSTRDUP(msg[6]);
 			XFREE(hnd->ver);
 			hnd->ver = XSTRDUP(msg[4]);
-			D("(%p) got beloved 004", hnd);
+			WVX("(%p) got beloved 004", hnd);
 			break;
 		}
 		else if (strcmp(msg[1], "PING") == 0)
@@ -320,7 +321,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 			snprintf(buf, sizeof buf, "PONG :%s\r\n", msg[2]);
 			if (!irccon_write(hnd->con, buf))
 			{
-				W("(%p) write failed (1)", hnd);
+				WX("(%p) write failed (1)", hnd);
 				ircbas_reset(hnd);
 				return false;
 			}
@@ -332,7 +333,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 		{
 			if (!hnd->cb_mut_nick)
 			{
-				W("(%p) got no mutnick, wat do? (failing)", hnd);
+				WX("(%p) got no mutnick, wat do? (failing)", hnd);
 				ircbas_reset(hnd);
 				return false;
 			}
@@ -341,7 +342,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 			snprintf(buf,sizeof buf,"NICK %s\r\n",hnd->mynick);
 			if (!irccon_write(hnd->con, buf))
 			{
-				W("(%p) write failed (2)", hnd);
+				WX("(%p) write failed (2)", hnd);
 				ircbas_reset(hnd);
 				return false;
 			}
@@ -349,7 +350,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 		else if (strcmp(msg[1], "464") == 0)/*ERR_PASSWDMISMATCH*/
 		{
 			ircbas_reset(hnd);
-			W("(%p) wrong server password", hnd);
+			WX("(%p) wrong server password", hnd);
 			return false;
 		}
 		else if (strcmp(msg[1], "383") == 0)/*RPL_YOURESERVICE*/
@@ -376,48 +377,48 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 		}
 		else if (strcmp(msg[1], "465") == 0)//ERR_YOUREBANNEDCREEP
 		{
-			W("(%p) we're banned", hnd);
+			WX("(%p) we're banned", hnd);
 			hnd->banned = true;
 			XFREE(hnd->banmsg);
 			hnd->banmsg = XSTRDUP(msg[3]?msg[3]:"");
 		}
 		else if (strcmp(msg[1], "466") == 0)//ERR_YOUWILLBEBANNED
 		{
-			W("(%p) we will be banned", hnd); //XXX not strictly part of irc
+			WX("(%p) we will be banned", hnd); //XXX not strictly part of irc
 		}
 		else if (strcmp(msg[1], "ERROR") == 0)/*ERR_RESTRICTED*/
 		{
 			XFREE(hnd->lasterr);
 			hnd->lasterr = XSTRDUP(msg[2]?msg[2]:"");
-			W("(%p) received error while logging on: %s", hnd, msg[2]);
+			WX("(%p) received error while logging on: %s", hnd, msg[2]);
 			ircbas_reset(hnd);
 			return false;
 		}
 	}
-	N("(%p) irc logon finished, U R online", hnd);
+	WVX("(%p) irc logon finished, U R online", hnd);
 	return true;
 }
 
 void
 ircbas_cancel(ibhnd_t hnd)
 {
-	N("(%p) async cancel requested", hnd);
+	WVX("(%p) async cancel requested", hnd);
 	irccon_cancel(hnd->con);
 }
 
 int 
 ircbas_read(ibhnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 {
-	//D("(%p) wanna read (timeout: %lu)", hnd, to_us);
+	//WVX("(%p) wanna read (timeout: %lu)", hnd, to_us);
 	int r = irccon_read(hnd->con, tok, tok_len, to_us);
 
 	if (r == -1 || (r != 0 && !onread(hnd, tok, tok_len)))
 	{
-		W("(%p) irccon_read() failed or onread() denied (r:%d)", hnd, r);
+		WX("(%p) irccon_read() failed or onread() denied (r:%d)", hnd, r);
 		ircbas_reset(hnd);
 		return -1;
 	}
-	//D("(%p) done reading", hnd);
+	//WVX("(%p) done reading", hnd);
 
 	return r;
 }
@@ -428,7 +429,7 @@ ircbas_write(ibhnd_t hnd, const char *line)
 	bool r = irccon_write(hnd->con, line);
 
 	if (!r) {
-		W("(%p) irccon_write() failed", hnd);
+		WX("(%p) irccon_write() failed", hnd);
 		ircbas_reset(hnd);
 	}
 
@@ -864,7 +865,7 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 				}
 
 				if (c != 4) {
-					W("005 chanmodes parse element: expected 4 parameters, got %i. arg is: \"%s\"", c, tok[z] + 10);
+					WX("005 chanmodes parse element: expected 4 parameters, got %i. arg is: \"%s\"", c, tok[z] + 10);
 				}
 
 				free(argbuf);
