@@ -6,17 +6,20 @@
 # include <config.h>
 #endif
 
+#define _GNU_SOURCE 1
+
+#include <libsrsirc/irc_basic.h>
+
+#include <common.h>
+#include <libsrsirc/irc_con.h>
+#include <libsrsirc/irc_util.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
 
-#include <common.h>
-#include <libsrsirc/irc_con.h>
-#include <libsrsirc/irc_util.h>
-#include <log.h>
-
-#include <libsrsirc/irc_basic.h>
+#include "debug.h"
 
 #define MAX_IRCARGS ((size_t)15)
 
@@ -32,6 +35,12 @@
 #define DEF_SERV_INFO "serious business irc service"
 #define DEF_UMODES "iswo"
 #define DEF_CMODES "opsitnml"
+
+#define XCALLOC(num) ic_xcalloc(1, num)
+#define XMALLOC(num) ic_xmalloc(num)
+#define XREALLOC(p, num) ic_xrealloc((p),(num))
+#define XFREE(p) do{  if(p) free(p); p=0;  }while(0)
+#define XSTRDUP(s) ic_xstrdup(s)
 
 
 struct ibhnd
@@ -60,6 +69,10 @@ struct ibhnd
 	long serv_type;
 	char *serv_info;
 
+	char **logonconv[4];
+	char *m005chanmodes[4];
+	char *m005modepfx[2];
+
 	fp_con_read cb_con_read;
 	void *tag_con_read;
 	fp_mut_nick cb_mut_nick;
@@ -74,24 +87,8 @@ static char *strmdup(const char *str, size_t minlen);
 static bool send_logon(ibhnd_t hnd);
 
 static bool onread(ibhnd_t hnd, char **tok, size_t tok_len);
-
-void
-ircbas_log_set_loglvl(int loglevel)
-{
-	LOG_LEVEL(loglevel);
-}
-
-void
-ircbas_log_set_target(FILE *str)
-{
-	LOG_TARGET(str);
-}
-
-void
-ircbas_log_set_fancy(bool fancy)
-{
-	LOG_COLORS(fancy);
-}
+static char** clonearr(char **arr, size_t nelem);
+static void freearr(char **arr, size_t nelem);
 
 bool 
 ircbas_regcb_mutnick(ibhnd_t hnd, fp_mut_nick cb)
@@ -115,8 +112,6 @@ ircbas_regcb_conread(ibhnd_t hnd, fp_con_read cb, void *tag)
 ibhnd_t 
 ircbas_init(void)
 {
-	if (!LOG_ISINIT())
-		LOG_INITX("irc_bas", LOGLVL_WARN, stderr, false);
 	ichnd_t con = irccon_init();
 	if (!con)
 		return NULL;
@@ -154,14 +149,25 @@ ircbas_init(void)
 	r->tag_con_read = NULL;
 	r->cb_mut_nick = mutilate_nick;
 
-	N("(%p) irc_bas initialized (backend: %p)", r, r->con);
+	for(int i = 0; i < 4; i++)
+		r->logonconv[i] = NULL;
+
+	r->m005chanmodes[0] = XSTRDUP("b");
+	r->m005chanmodes[1] = XSTRDUP("k");
+	r->m005chanmodes[2] = XSTRDUP("l");
+	r->m005chanmodes[3] = XSTRDUP("psitnm");
+
+	r->m005modepfx[0] = XSTRDUP("ov");
+	r->m005modepfx[1] = XSTRDUP("@+");
+
+	WVX("(%p) irc_bas initialized (backend: %p)", r, r->con);
 	return r;
 }
 
 bool 
 ircbas_reset(ibhnd_t hnd)
 {
-	N("(%p) resetting backend", hnd);
+	WVX("(%p) resetting backend", hnd);
 	if (!irccon_reset(hnd->con))
 		return false;
 
@@ -189,7 +195,7 @@ ircbas_dispose(ibhnd_t hnd)
 	XFREE(hnd->serv_dist);
 	XFREE(hnd->serv_info);
 
-	N("(%p) disposed", hnd);
+	WVX("(%p) disposed", hnd);
 	XFREE(hnd);
 
 	return true;
@@ -198,26 +204,32 @@ ircbas_dispose(ibhnd_t hnd)
 bool 
 ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 {
-	int64_t tsend = to_us ? timestamp_us() + to_us : 0;
+	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	XFREE(hnd->lasterr);
 	hnd->lasterr = NULL;
 	XFREE(hnd->banmsg);
 	hnd->banmsg = NULL;
 	hnd->banned = false;
-	N("(%p) wanna connect, connecting backend (timeout: %lu)", hnd, to_us);
+
+	for(int i = 0; i < 4; i++) {
+		freearr(hnd->logonconv[i], MAX_IRCARGS);
+		hnd->logonconv[i] = NULL;
+	}
+
+	WVX("(%p) wanna connect, connecting backend (timeout: %lu)", hnd, to_us);
 	if (!irccon_connect(hnd->con, to_us)) {
-		W("(%p) backend failed to establish connection", hnd);
+		WX("(%p) backend failed to establish connection", hnd);
 		return false;
 	}
 
-	D("(%p) sending IRC logon sequence", hnd);
+	WVX("(%p) sending IRC logon sequence", hnd);
 	if (!send_logon(hnd)) {
-		W("(%p) failed writing IRC logon sequence", hnd);
+		WX("(%p) failed writing IRC logon sequence", hnd);
 		ircbas_reset(hnd);
 		return false;
 	}
 
-	D("(%p) connection established, IRC logon sequence sent", hnd);
+	WVX("(%p) connection established, IRC logon sequence sent", hnd);
 	char *msg[MAX_IRCARGS];
 	XFREE(hnd->mynick);
 	hnd->mynick = strmdup(hnd->nick, 9);
@@ -226,14 +238,14 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 	for(;;)
 	{
 		if (irccon_canceled(hnd->con)) {
-			W("(%p) cancel requested", hnd);
+			WX("(%p) cancel requested", hnd);
 			ircbas_reset(hnd);
 			return false;
 		}
 		if(tsend) {
-			trem = tsend - timestamp_us();
+			trem = tsend - ic_timestamp_us();
 			if (trem <= 0) {
-				W("(%p) timeout hit while waiting for 004", hnd);
+				WX("(%p) timeout hit while waiting for 004", hnd);
 				ircbas_reset(hnd);
 				return false;
 			}
@@ -245,7 +257,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 		int r = irccon_read(hnd->con, msg, MAX_IRCARGS, (unsigned long)trem);
 		if (r < 0)
 		{
-			W("(%p) irccon_read() failed", hnd);
+			WX("(%p) irccon_read() failed", hnd);
 			ircbas_reset(hnd);
 			return false;
 		}
@@ -254,13 +266,14 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 			continue;
 
 		if (hnd->cb_con_read && !hnd->cb_con_read(msg, MAX_IRCARGS, hnd->tag_con_read)) {
-			W("(%p) further logon prohibited by conread", hnd);
+			WX("(%p) further logon prohibited by conread", hnd);
 			ircbas_reset(hnd);
 			return false;
 		}
 
 		if (strcmp(msg[1], "001") == 0)
 		{
+			hnd->logonconv[0] = clonearr(msg, MAX_IRCARGS);
 			XFREE(hnd->mynick);
 			hnd->mynick = XSTRDUP(msg[2]);
 			char *tmp;
@@ -280,8 +293,17 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 			hnd->ver = XSTRDUP("");
 			hnd->service = false;
 		}
+		else if (strcmp(msg[1], "002") == 0)
+		{
+			hnd->logonconv[1] = clonearr(msg, MAX_IRCARGS);
+		}
+		else if (strcmp(msg[1], "003") == 0)
+		{
+			hnd->logonconv[2] = clonearr(msg, MAX_IRCARGS);
+		}
 		else if (strcmp(msg[1], "004") == 0)
 		{
+			hnd->logonconv[3] = clonearr(msg, MAX_IRCARGS);
 			XFREE(hnd->myhost);//XXX ensure argcount
 			hnd->myhost = XSTRDUP(msg[3]);
 			XFREE(hnd->umodes);
@@ -290,7 +312,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 			hnd->cmodes = XSTRDUP(msg[6]);
 			XFREE(hnd->ver);
 			hnd->ver = XSTRDUP(msg[4]);
-			D("(%p) got beloved 004", hnd);
+			WVX("(%p) got beloved 004", hnd);
 			break;
 		}
 		else if (strcmp(msg[1], "PING") == 0)
@@ -299,7 +321,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 			snprintf(buf, sizeof buf, "PONG :%s\r\n", msg[2]);
 			if (!irccon_write(hnd->con, buf))
 			{
-				W("(%p) write failed (1)", hnd);
+				WX("(%p) write failed (1)", hnd);
 				ircbas_reset(hnd);
 				return false;
 			}
@@ -311,7 +333,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 		{
 			if (!hnd->cb_mut_nick)
 			{
-				W("(%p) got no mutnick, wat do? (failing)", hnd);
+				WX("(%p) got no mutnick, wat do? (failing)", hnd);
 				ircbas_reset(hnd);
 				return false;
 			}
@@ -320,7 +342,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 			snprintf(buf,sizeof buf,"NICK %s\r\n",hnd->mynick);
 			if (!irccon_write(hnd->con, buf))
 			{
-				W("(%p) write failed (2)", hnd);
+				WX("(%p) write failed (2)", hnd);
 				ircbas_reset(hnd);
 				return false;
 			}
@@ -328,7 +350,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 		else if (strcmp(msg[1], "464") == 0)/*ERR_PASSWDMISMATCH*/
 		{
 			ircbas_reset(hnd);
-			W("(%p) wrong server password", hnd);
+			WX("(%p) wrong server password", hnd);
 			return false;
 		}
 		else if (strcmp(msg[1], "383") == 0)/*RPL_YOURESERVICE*/
@@ -355,48 +377,48 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 		}
 		else if (strcmp(msg[1], "465") == 0)//ERR_YOUREBANNEDCREEP
 		{
-			W("(%p) we're banned", hnd);
+			WX("(%p) we're banned", hnd);
 			hnd->banned = true;
 			XFREE(hnd->banmsg);
 			hnd->banmsg = XSTRDUP(msg[3]?msg[3]:"");
 		}
 		else if (strcmp(msg[1], "466") == 0)//ERR_YOUWILLBEBANNED
 		{
-			W("(%p) we will be banned", hnd); //XXX not strictly part of irc
+			WX("(%p) we will be banned", hnd); //XXX not strictly part of irc
 		}
 		else if (strcmp(msg[1], "ERROR") == 0)/*ERR_RESTRICTED*/
 		{
 			XFREE(hnd->lasterr);
 			hnd->lasterr = XSTRDUP(msg[2]?msg[2]:"");
-			W("(%p) received error while logging on: %s", hnd, msg[2]);
+			WX("(%p) received error while logging on: %s", hnd, msg[2]);
 			ircbas_reset(hnd);
 			return false;
 		}
 	}
-	N("(%p) irc logon finished, U R online", hnd);
+	WVX("(%p) irc logon finished, U R online", hnd);
 	return true;
 }
 
 void
 ircbas_cancel(ibhnd_t hnd)
 {
-	N("(%p) async cancel requested", hnd);
+	WVX("(%p) async cancel requested", hnd);
 	irccon_cancel(hnd->con);
 }
 
 int 
 ircbas_read(ibhnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 {
-	//D("(%p) wanna read (timeout: %lu)", hnd, to_us);
+	//WVX("(%p) wanna read (timeout: %lu)", hnd, to_us);
 	int r = irccon_read(hnd->con, tok, tok_len, to_us);
 
 	if (r == -1 || (r != 0 && !onread(hnd, tok, tok_len)))
 	{
-		W("(%p) irccon_read() failed or onread() denied (r:%d)", hnd, r);
+		WX("(%p) irccon_read() failed or onread() denied (r:%d)", hnd, r);
 		ircbas_reset(hnd);
 		return -1;
 	}
-	//D("(%p) done reading", hnd);
+	//WVX("(%p) done reading", hnd);
 
 	return r;
 }
@@ -407,7 +429,7 @@ ircbas_write(ibhnd_t hnd, const char *line)
 	bool r = irccon_write(hnd->con, line);
 
 	if (!r) {
-		W("(%p) irccon_write() failed", hnd);
+		WX("(%p) irccon_write() failed", hnd);
 		ircbas_reset(hnd);
 	}
 
@@ -595,6 +617,11 @@ ircbas_banned(ibhnd_t hnd)
 	if (!irccon_valid(hnd->con))
 		return false;
 	return hnd->banned;
+}
+bool
+ircbas_colon_trail(ibhnd_t hnd)
+{
+	return irccon_colon_trail(hnd->con);
 }
 
 const char*
@@ -807,7 +834,83 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 					hnd->casemapping = CASEMAPPING_RFC1459;
 				}
 			}
+			else if (strncasecmp(tok[z], "PREFIX=", 7) == 0)
+			{
+				char *str = strdup(tok[z] + 8);
+				char *p = strchr(str, ')');
+				*p++ = '\0';
+				XFREE(hnd->m005modepfx[0]);
+				hnd->m005modepfx[0] = XSTRDUP(str);
+
+				XFREE(hnd->m005modepfx[1]);
+				hnd->m005modepfx[1] = XSTRDUP(p);
+
+				free(str);
+			}
+			else if (strncasecmp(tok[z], "CHANMODES=", 10) == 0)
+			{
+				for (int z = 0; z < 4; ++z) {
+					XFREE(hnd->m005chanmodes[z]);
+					hnd->m005chanmodes[z] = NULL;
+				}
+
+				int c = 0;
+				char* argbuf = strdup(tok[z] + 10);
+				char *ptr = strtok(argbuf, ",");
+
+				while (ptr) {
+					if (c < 4)
+						hnd->m005chanmodes[c++]=XSTRDUP(ptr);
+					ptr = strtok(NULL, ",");
+				}
+
+				if (c != 4) {
+					WX("005 chanmodes parse element: expected 4 parameters, got %i. arg is: \"%s\"", c, tok[z] + 10);
+				}
+
+				free(argbuf);
+			}
 		}
 	}
 	return true;
+}
+
+const char* const* const*
+ircbas_logonconv(ibhnd_t hnd)
+{
+	return (const char* const* const*)hnd->logonconv;
+}
+
+const char* const*
+ircbas_005chanmodes(ibhnd_t hnd)
+{
+	return (const char* const*)hnd->m005chanmodes;
+}
+
+const char* const*
+ircbas_005modepfx(ibhnd_t hnd)
+{
+	return (const char* const*)hnd->m005modepfx;
+}
+
+
+static char**
+clonearr(char **arr, size_t nelem)
+{
+	char **res = malloc((nelem+1) * sizeof *arr);
+	for(size_t i = 0; i < nelem; i++)
+		res[i] = arr[i] ? strdup(arr[i]) : NULL;
+	res[nelem] = NULL;
+	return res;
+}
+
+
+static void
+freearr(char **arr, size_t nelem)
+{
+	if (arr) {
+		for(size_t i = 0; i < nelem; i++)
+			free(arr[i]);
+		free(arr);
+	}
 }

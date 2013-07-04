@@ -5,24 +5,27 @@
 #ifndef SRS_COMMON_H
 #define SRS_COMMON_H 1
 
-#include <sys/types.h>
-#include <sys/time.h>
+#define _GNU_SOURCE 1
+
+#include <stddef.h>
+#include <stdint.h>
 #include <stdbool.h>
 
-#define XCALLOC(num) xcalloc(1, num)
-#define XMALLOC(num) xmalloc(num)
-#define XREALLOC(p, num) xrealloc((p),(num))
-#define XFREE(p) do{  if(p) free(p); p=0;  }while(0)
-#define XSTRDUP(s) xstrdup(s)
+#include <sys/socket.h>
+#include <sys/time.h>
 
-void strNcat(char *dest, const char *src, size_t destsz);
+void ic_strNcat(char *dest, const char *src, size_t destsz);
+char* ic_strNcpy(char *dst, const char *src, size_t len);
+size_t ic_strCchr(const char *dst, char c);
 
-void *xcalloc(size_t num, size_t size);
-void *xmalloc(size_t num);
-void *xrealloc(void *p, size_t num);
-char *xstrdup(const char *string);
+void *ic_xcalloc(size_t num, size_t size);
+void *ic_xmalloc(size_t num);
+void *ic_xrealloc(void *p, size_t num);
+char *ic_xstrdup(const char *string);
 
-int64_t timestamp_us();
-void tconv(struct timeval *tv, int64_t *ts, bool tv_to_ts);
-char* strNcpy(char *dst, const char *src, size_t len);
+int64_t ic_timestamp_us();
+void ic_tconv(struct timeval *tv, int64_t *ts, bool tv_to_ts);
+
+int ic_mksocket(const char *host, unsigned short port,
+		struct sockaddr *sockaddr, size_t *addrlen);
 #endif /* SRS_COMMON_H */

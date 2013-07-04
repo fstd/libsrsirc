@@ -15,8 +15,11 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdarg.h>
+#include <errno.h>
 
+#include <time.h>
 #include <unistd.h>
+#include <err.h>
 
 #include <common.h>
 #include <libsrsirc/irc_basic.h>
@@ -24,13 +27,28 @@
 #include <libsrsirc/irc_io.h>
 #include <libsrsirc/irc_util.h>
 
-#include <log.h>
-
 #define DEF_PORT 6667
 #define MAX_CHANS 32
 #define IRC_MAXARGS 16
 #define MAX_CHANLIST 512
 #define STRACAT(DSTARR, STR) strNcat((DSTARR), (STR), sizeof (DSTARR))
+
+#define W_(FNC, THR, FMT, A...) do {                                  \
+		if (g_sett.verb < THR) break; \
+		FNC("%s:%d:%s() - " FMT, __FILE__, __LINE__, __func__, ##A);  \
+		} while(0)
+
+#define W(FMT, A...) W_(warn, 1, FMT, ##A)
+#define WV(FMT, A...) W_(warn, 2, FMT, ##A)
+
+#define WX(FMT, A...) W_(warnx, 1, FMT, ##A)
+#define WVX(FMT, A...) W_(warnx, 2, FMT, ##A)
+
+#define E(FMT, A...) do { W_(warn, 0, FMT, ##A); \
+		exit(EXIT_FAILURE);} while(0)
+
+#define EX(FMT, A...) do { W_(warnx, 0, FMT, ##A); \
+		exit(EXIT_FAILURE);} while(0)
 
 struct settings_s {
 	bool trgmode;
@@ -44,7 +62,7 @@ struct settings_s {
 	bool reconnect;
 	bool flush;
 	bool nojoin;
-	bool fancy;
+	//bool fancy;
 	bool notices;
 	int verb;
 	char chanlist[MAX_CHANLIST];
@@ -64,8 +82,8 @@ void handle_stdin(char *line);
 void handle_irc(char **tok, size_t ntok);
 void init(int *argc, char ***argv, struct settings_s *sett);
 int iprintf(const char *fmt, ...);
+void strNcat(char *dest, const char *src, size_t destsz);
 bool conread(char **msg, size_t msg_len, void *tag);
-void log_reinit(void);
 void usage(FILE *str, const char *a0, int ec, bool sh);
 int main(int argc, char **argv);
 
@@ -79,11 +97,20 @@ process_stdin(void)
 	FD_ZERO(&fds);
 	FD_SET(fileno(stdin), &fds);
 
-	int r = select(fileno(stdin)+1, &fds, NULL, NULL, &tout);
+	int r;
 
-	if (r == -1) {
-		W("select failed");
-		return -1;
+	for(;;) {
+		errno=0;
+		r = select(fileno(stdin)+1, &fds, NULL, NULL, &tout);
+
+		if (r == -1) {
+			if (errno == EINTR)
+				continue; //suppress warning, retry
+			W("select failed");
+			return -1;
+		}
+
+		break;
 	}
 
 	if (r == 1) {
@@ -95,10 +122,10 @@ process_stdin(void)
 			free(line);
 		} else if (linelen == -1) {
 			if (feof(stdin)) {
-				N("got EOF on stdin");
+				WVX("got EOF on stdin");
 				return 0;
 			} else {
-				W("read from stdin failed");
+				WX("read from stdin failed");
 				return -1;
 			}
 		}
@@ -117,15 +144,15 @@ process_irc(void)
 		nexthb = time(NULL) + g_sett.heartbeat;
 	char *tok[IRC_MAXARGS];
 
-	int r = ircbas_read(g_irc, tok, IRC_MAXARGS, 100);
+	int r = ircbas_read(g_irc, tok, IRC_MAXARGS, 100000);
 
 	if (r == -1) {
-		W("irc read failed");
+		WX("irc read failed");
 		return -1;
 	} else if (r == 1) {
 		char buf[1024];
 		sndumpmsg(buf, sizeof buf, NULL, tok, IRC_MAXARGS);
-		D("%s", buf);
+		WVX("%s", buf);
 		handle_irc(tok, IRC_MAXARGS);
 	} else {
 		if (g_sett.heartbeat && nexthb <= time(NULL)) {
@@ -138,7 +165,7 @@ process_irc(void)
 		if (g_sett.freelines > 0 || nextsend <= time(NULL)) {
 			struct outline_s *ptr = g_outQ;
 			if (!ircbas_write(g_irc, ptr->line)) {
-				W("write failed");
+				WX("write failed");
 				return -1;
 			}
 			g_outQ = g_outQ->next;
@@ -177,24 +204,24 @@ life(void)
 		r = process_irc();
 		if (r == -1) {
 			if (g_quitat) {
-				N("irc connection closed");
+				WVX("irc connection closed");
 				return;
 			}
 
-			W("irc connection reset");
+			WX("irc connection reset");
 			if (!stdineof && g_sett.reconnect) {
-				N("reconnecting");
+				WVX("reconnecting");
 				if(!ircbas_connect(g_irc,
 				              g_sett.conto_s * 1000000UL)) {
-					N("sleeping %d sec",
+					WVX("sleeping %d sec",
 					              g_sett.confailwait_s);
 					sleep(g_sett.confailwait_s);
 					continue;
 				}
-				N("connected again!");
+				WVX("connected again!");
 				iprintf("JOIN %s %s",
 				           g_sett.chanlist, g_sett.keylist);
-				D("recommencing operation");
+				WVX("recommencing operation");
 				continue;
 			}
 
@@ -202,7 +229,7 @@ life(void)
 		}
 
 		if (quitat && time(NULL) > quitat) {
-			W("forcefully terminating irc connection");
+			WX("forcefully terminating irc connection");
 			break;
 		}
 
@@ -280,18 +307,18 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			int typeno;
 			if (!parse_pxspec(typestr, sizeof typestr, host,
 					sizeof host, &port, optarg))
-				E("failed to parse pxspec '%s'", optarg);
+				EX("failed to parse pxspec '%s'", optarg);
 			if ((typeno = pxtypeno(typestr)) == -1)
-				E("unknown proxy type '%s'", typestr);
+				EX("unknown proxy type '%s'", typestr);
 
 			ircbas_set_proxy(g_irc, host, port, typeno);
 			}
 		break;case 't':
-			D("enabled target mode");
+			WVX("enabled target mode");
 			sett->trgmode = true;
 		break;case 'T':
 			sett->conto_s = (unsigned)strtol(optarg, NULL, 10);
-			D("set connect timeout to %u ms");
+			WVX("set connect timeout to %ds", sett->conto_s);
 		break;case 'C':
 			{
 			char *str = strdup(optarg);
@@ -318,13 +345,13 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			}
 		break;case 'l':
 			sett->linedelay = (int)strtol(optarg, NULL, 10);
-			D("set linedelay to %d sec/line", sett->linedelay);
+			WVX("set linedelay to %d sec/line", sett->linedelay);
 		break;case 'L':
 			sett->freelines = (int)strtol(optarg, NULL, 10);
-			D("set freelines to %d", sett->freelines);
+			WVX("set freelines to %d", sett->freelines);
 		break;case 'w':
 			sett->waitquit_s = (int)strtol(optarg, NULL, 10);
-			D("set waitquit time to %d sec", sett->waitquit_s);
+			WVX("set waitquit time to %d sec", sett->waitquit_s);
 		break;case 'k':
 			sett->keeptrying = true;
 		break;case 'W':
@@ -337,15 +364,11 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			sett->flush = true;
 		break;case 'j':
 			sett->nojoin = true;
-		break;case 'c':
-			sett->fancy = true;
-			log_reinit();
 		break;case 'N':
 			sett->notices = true;
-			D("switched to NOTICE mode");
+			WVX("switched to NOTICE mode");
 		break;case 'v':
 			sett->verb++;
-			log_reinit();
 		break;case 'H':
 			usage(stdout, a0, EXIT_SUCCESS, false);
 		break;case 'h':
@@ -361,7 +384,6 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 void
 init(int *argc, char ***argv, struct settings_s *sett)
 {
-	LOG_INITX("icat", LOGLVL_ERR, stderr, false);
 	g_irc = ircbas_init();
 
 	ircbas_set_nick(g_irc, "icat");
@@ -373,10 +395,10 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	process_args(argc, argv, sett);
 
 	if (!*argc)
-		E("no server given");
+		EX("no server given");
 
 	if (*argc > 1)
-		E("too many args. use 'srv:port' instead of 'srv port'");
+		EX("too many args. use 'srv:port' instead of 'srv port'");
 
 	char host[256];
 	unsigned short port;
@@ -385,13 +407,13 @@ init(int *argc, char ***argv, struct settings_s *sett)
 		port = DEF_PORT;
 
 	ircbas_set_server(g_irc, host, port);
-	D("set server to '%s:%hu'", ircbas_get_host(g_irc),
+	WVX("set server to '%s:%hu'", ircbas_get_host(g_irc),
 			ircbas_get_port(g_irc));
 
 	if (!sett->trgmode && strlen(sett->chanlist) == 0)
-		E("no targetmode and no chans given. i can't fap to that.");
+		EX("no targetmode and no chans given. i can't fap to that.");
 
-	D("initialized");
+	WVX("initialized");
 }
 
 
@@ -421,27 +443,29 @@ iprintf(const char *fmt, ...)
 }
 
 
+void
+strNcat(char *dest, const char *src, size_t destsz)
+{
+	size_t len = strlen(dest);
+	if (len + 1 >= destsz)
+		return;
+	size_t rem = destsz - (len + 1);
+
+	char *ptr = dest + len;
+	while(rem-- && *src) {
+		*ptr++ = *src++;
+	}
+	*ptr = '\0';
+}
+
+
 bool
 conread(char **msg, size_t msg_len, void *tag)
 {
 	char buf[1024];
 	sndumpmsg(buf, sizeof buf, tag, msg, msg_len);
-	D("%s", buf);
+	WVX("%s", buf);
 	return true;
-}
-
-
-void
-log_reinit(void)
-{
-	LOG_COLORS(g_sett.fancy);
-	LOG_LEVEL(g_sett.verb);
-	ircbas_log_set_fancy(g_sett.fancy);
-	irccon_log_set_fancy(g_sett.fancy);
-	ircio_log_set_fancy(g_sett.fancy);
-	ircbas_log_set_loglvl(g_sett.verb);
-	irccon_log_set_loglvl(g_sett.verb);
-	ircio_log_set_loglvl(g_sett.verb);
 }
 
 
@@ -516,20 +540,20 @@ main(int argc, char **argv)
 	bool failure = false;
 
 	for (;;) {
-		D("connecting...");
+		WVX("connecting...");
 		if (!ircbas_connect(g_irc, g_sett.conto_s*1000000UL)) {
-			W("failed to connect/logon (%s)",
+			WX("failed to connect/logon (%s)",
 			                           g_sett.keeptrying
 			                           ?"retrying":"giving up");
 			if (g_sett.keeptrying) {
-				N("sleeping %d sec", g_sett.confailwait_s);
+				WVX("sleeping %d sec", g_sett.confailwait_s);
 				sleep(g_sett.confailwait_s);
 				continue;
 			}
 			failure = true;
 			break;
 		}
-		N("logged on!");
+		WVX("logged on!");
 
 		iprintf("JOIN %s %s", g_sett.chanlist, g_sett.keylist);
 

@@ -1,29 +1,28 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.65])
-AC_INIT([libsrsirc], [0.0.0], [van.fisted@googlemail.com])
-# AC_SUBST([AM_CFLAGS], [-std=c99 -g -O0 -Wall -Wextra])
+AC_PREREQ([2.69])
+AC_INIT([libsrsirc], [0.0.1], [van.fisted@googlemail.com])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([src/icat.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
-m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
-LT_PREREQ([2.2])
+LT_PREREQ([2.4])
+AM_PROG_AR
 LT_INIT
 
-
 # Checks for programs.
-AC_PROG_CC
+AC_PROG_CC_C99
+AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
-AM_PROG_CC_C_O
 
-# Checks for header files (1).
 AC_HEADER_STDC
 
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdbool.h stdlib.h string.h strings.h sys/socket.h sys/time.h sys/types.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdbool.h stddef.h stdlib.h string.h strings.h sys/socket.h sys/time.h sys/types.h unistd.h])
+
+AC_HEADER_STDBOOL
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_INT64_T
@@ -33,8 +32,6 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 
 # Checks for library functions.
-AC_FUNC_MALLOC
-AC_FUNC_REALLOC
 AC_FUNC_STRERROR_R
 AC_CHECK_FUNCS([getaddrinfo gettimeofday memmove memset select socket strcasecmp strchr strdup strncasecmp strtol])
 

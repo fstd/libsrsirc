@@ -6,21 +6,29 @@
 # include <config.h>
 #endif
 
-#define _POSIX_C_SOURCE 200809l
+#define _GNU_SOURCE 1
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <strings.h>
-#include <errno.h>
-/* POSIX */
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+#include <libsrsirc/irc_util.h>
 
 #include <common.h>
-#include <libsrsirc/irc_util.h>
+
+
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
+#include <strings.h>
+#include <limits.h>
+
+#include "debug.h"
+
+#define CHANMODE_CLASS_A 1 /*do not change these, see int classify_chanmode(char)*/
+#define CHANMODE_CLASS_B 2
+#define CHANMODE_CLASS_C 3
+#define CHANMODE_CLASS_D 4
+
+static int classify_chanmode(char c, const char *const *chmodes);
 
 int pxtypeno(const char *typestr)
 {
@@ -34,54 +42,6 @@ const char *pxtypestr(int type)
 	return (type == IRCPX_HTTP) ? "HTTP" :
 	       (type == IRCPX_SOCKS4) ? "SOCKS4" :
 	       (type == IRCPX_SOCKS5) ? "SOCKS5" : "unknown";
-}
-
-int mksocket(const char *host, unsigned short port,
-		struct sockaddr *sockaddr, size_t *addrlen)
-{
-	struct addrinfo *ai_list = NULL;
-	struct addrinfo hints;
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = 0;
-	hints.ai_flags = AI_NUMERICSERV;
-	char portstr[6];
-	snprintf(portstr, sizeof portstr, "%hu", port);
-
-	int r = getaddrinfo(host, portstr, &hints, &ai_list);
-
-	if (r != 0) {
-		//warnx("%s", gai_strerror(r));
-		return -1;
-	}
-
-	if (!ai_list) {
-		//warnx("result address list empty");
-		return -1;
-	}
-
-	int sck = -1;
-
-	for (struct addrinfo *ai = ai_list; ai; ai = ai->ai_next)
-	{
-		sck = socket(ai->ai_family, ai->ai_socktype,
-				ai->ai_protocol);
-		if (sck < 0) {
-			//warn("cannot create socket");
-			continue;
-		}
-		if (sockaddr)
-			*sockaddr = *(ai->ai_addr);
-		if (addrlen)
-			*addrlen = ai->ai_addrlen;
-
-		break;
-	}
-
-	freeaddrinfo(ai_list);
-
-	return sck;
 }
 
 bool pfx_extract_nick(char *dest, size_t dest_sz, const char *pfx)
@@ -154,9 +114,23 @@ istrncasecmp(const char *n1, const char *n2, size_t len, int casemap)
 	if (len == 0)
 		return 0;
 
-	char c1, c2;
-	int rangeinc, offset = 'a' - 'A';
+	char *d1 = strdup(n1);
+	char *d2 = strdup(n2);
 
+	itolower(d1, strlen(d1) + 1, n1, casemap);
+	itolower(d2, strlen(d2) + 1, n2, casemap);
+
+	int i = strncmp(d1, d2, len);
+
+	free(d1);
+	free(d2);
+	return i;
+}
+
+void
+itolower(char *dest, size_t destsz, const char *str, int casemap)
+{
+	int rangeinc;
 	switch (casemap)
 	{
 	case CASEMAPPING_RFC1459:
@@ -168,33 +142,22 @@ istrncasecmp(const char *n1, const char *n2, size_t len, int casemap)
 	default:
 		rangeinc = 0;
 	}
-	size_t pos = 0;
-	while((pos < len) && ((c1 = (*n1)) & (c2 = (*n2))))
-	{
-		if (c1 != c2) {
-			if ((c1 >= 'A') && (c1 <= ('Z' + rangeinc)))
-			{
-				if ((c1 + offset) != c2)
-					return c1 < c2 ? -1 : 1;
-			}
-			else if ((c1 >= 'a') && (c1 <= ('z' + rangeinc)))
-			{
-				if ((c1 - offset) != c2)
-					return c1 < c2 ? -1 : 1;
-			}
-			else
-				return c1 < c2 ? -1 : 1;
-		}
-		n1++;
-		n2++;
-		pos++;
+
+	size_t c = 0;
+	char *ptr = dest;
+	while(c < destsz) {
+		if (*str >= 'A' && *str <= ('Z'+rangeinc))
+			*ptr++ = *str + ('a'-'A');
+		else
+			*ptr++ = *str;
+		
+		if (!*str)
+			break;
+		str++;
 	}
-	if (c1 == c2)
-		return 0;
 
-	return c1 < c2 ? -1 : 1;
+	dest[destsz-1] = '\0';
 }
-
 
 bool
 parse_pxspec(char *pxtypestr, size_t pxtypestr_sz, char *hoststr,
@@ -239,20 +202,20 @@ bool parse_identity(char *nick, size_t nicksz, char *uname, size_t unamesz,
 		char *fname, size_t fnamesz, const char *identity)
 {
 	char ident[256];
-	strNcpy(ident, identity, sizeof ident);
+	ic_strNcpy(ident, identity, sizeof ident);
 
 	char *p = strchr(ident, ' ');
 	if (p)
-		strNcpy(fname, (*p = '\0', p + 1), fnamesz);
+		ic_strNcpy(fname, (*p = '\0', p + 1), fnamesz);
 	else
 		return false;
 	p = strchr(ident, '!');
 	if (p)
-		strNcpy(uname, (*p = '\0', p + 1), unamesz);
+		ic_strNcpy(uname, (*p = '\0', p + 1), unamesz);
 	else
 		return false;
 
-	strNcpy(nick, ident, nicksz);
+	ic_strNcpy(nick, ident, nicksz);
 	return true;
 }
 
@@ -265,9 +228,9 @@ sndumpmsg(char *dest, size_t dest_sz, void *tag, char **msg, size_t msg_len)
 	for(size_t i = 2; i < msg_len; i++) {
 		if (!msg[i])
 			break;
-		strNcat(dest, " '", dest_sz);
-		strNcat(dest, msg[i], dest_sz);
-		strNcat(dest, "'", dest_sz);
+		ic_strNcat(dest, " '", dest_sz);
+		ic_strNcat(dest, msg[i], dest_sz);
+		ic_strNcat(dest, "'", dest_sz);
 	}
 }
 
@@ -285,4 +248,90 @@ cr(char **msg, size_t msg_len, void *tag)
 {
 	dumpmsg(tag, msg, msg_len);
 	return true;
+}
+
+char**
+parse_chanmodes(const char *const *arr, size_t argcount, size_t *num, const char *modepfx005chr, const char *const *chmodes)
+{
+	char *modes = strdup(arr[0]);
+	const char *arg;
+	size_t nummodes = strlen(modes) - (ic_strCchr(modes,'-') + ic_strCchr(modes,'+'));
+	char **modearr = malloc(nummodes * sizeof *modearr);
+	size_t i = 1;
+	int j = 0, cl;
+	char *ptr = modes;
+	int enable = 1;
+	WVX("modes: '%s', nummodes: %zu, modepfx005chr: '%s'", modes, nummodes, modepfx005chr);
+	while (*ptr) {
+		char c = *ptr;
+		WVX("next modechar is '%c', enable ATM: %d", c, enable);
+		arg = NULL;
+		switch (c) {
+		case '+':
+			enable = 1;
+			ptr++;
+			continue;
+		case '-':
+			enable = 0;
+			ptr++;
+			continue;
+		default:
+			cl = classify_chanmode(c, chmodes);
+			WVX("classified mode '%c' to class %d", c, cl);
+			switch (cl) {
+			case CHANMODE_CLASS_A:
+				/*i>=argcount: this may happen when requesting modes outside of that channel
+				 * so we get mode +tmnk instead of +tmnk <key>*/
+				//XXX maybe i actually did mean '>=' here, as stated in the comment. test it. not tested it but considered its okay. we did mean > indeed.
+				arg = (i > argcount) ? ("*") : arr[i++];
+				break;
+			case CHANMODE_CLASS_B:
+				arg = (i > argcount) ? ("*") : arr[i++];
+				break;
+			case CHANMODE_CLASS_C:
+				if (enable)
+					arg = (i > argcount) ? ("*") : arr[i++];
+				break;
+			case CHANMODE_CLASS_D:
+				break;
+			default:/*error?*/
+				if (strchr(modepfx005chr, c)) {
+					arg = (i > argcount) ? ("*") : arr[i++];
+				} else {
+					WX("unknown chanmode '%c' (0x%X)\n",c,(unsigned)c);
+					ptr++;
+					continue;
+				}
+			}
+		}
+		if (arg)
+			WVX("arg is '%s'", arg);
+		modearr[j] = malloc((3 + ((arg != NULL) ? strlen(arg) + 1 : 0)));
+		modearr[j][0] = enable ? '+' : '-';
+		modearr[j][1] = c;
+		modearr[j][2] = arg ? ' ' : '\0';
+		if (arg) {
+			strcpy(modearr[j] + 3, arg);
+		}
+		j++;
+		ptr++;
+	}
+	WVX("done parsing, result:");
+	for(size_t i = 0; i < nummodes; i++) {
+		WVX("modearr[%zu]: '%s'", i, modearr[i]);
+	}
+
+	*num = nummodes;
+	free(modes);
+	return modearr;
+}
+
+static int
+classify_chanmode(char c, const char *const *chmodes)
+{
+    for (int z = 0; z < 4; ++z) {
+        if ((chmodes[z]) && (strchr(chmodes[z], c) != NULL))
+		return z+1;/*XXX this locks the chantype class constants */
+    }
+    return 0;
 }

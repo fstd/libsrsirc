@@ -5,8 +5,10 @@
 #ifndef SRS_IRC_UTIL_H
 #define SRS_IRC_UTIL_H 1
 
+#define _GNU_SOURCE 1
+
 #include <stdbool.h>
-#include <sys/types.h>
+#include <stddef.h>
 
 #define CASEMAPPING_RFC1459 0
 #define CASEMAPPING_STRICT_RFC1459 1
@@ -34,14 +36,12 @@ struct pxspec
 int pxtypeno(const char *typestr);
 const char *pxtypestr(int type);
 /* resolve and connect */
-int connect_socket(const char *host, unsigned short port);
 bool pfx_extract_nick(char *dest, size_t dest_sz, const char *pfx);
 bool pfx_extract_uname(char *dest, size_t dest_sz, const char *pfx);
 bool pfx_extract_host(char *dest, size_t dest_sz, const char *pfx);
 int istrcasecmp(const char *n1, const char *n2, int casemapping);
 int istrncasecmp(const char *n1, const char *n2, size_t len, int casemap);
-int mksocket(const char *host, unsigned short port,
-		struct sockaddr *sockaddr, size_t *addrlen);
+void itolower(char *dest, size_t destsz, const char *str, int casemap);
 bool parse_pxspec(char *pxtypestr, size_t pxtypestr_sz, char *hoststr,
 		size_t hoststr_sz, unsigned short *port, const char *line);
 
@@ -56,5 +56,6 @@ void sndumpmsg(char *dest, size_t dest_sz, void *tag, char **msg, size_t msg_len
 void dumpmsg(void *tag, char **msg, size_t msg_len);
 
 bool cr(char **msg, size_t msg_len, void *tag);
+char** parse_chanmodes(const char *const *arr, size_t argcount, size_t *num, const char *modepfx005chr, const char *const *chmodes);
 
 #endif /* SRS_IRC_UTIL_H */

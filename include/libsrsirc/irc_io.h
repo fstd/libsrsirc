@@ -5,8 +5,10 @@
 #ifndef SRS_IRC_IO_H
 #define SRS_IRC_IO_H 1
 
+#define _GNU_SOURCE 1
+
 #include <stdbool.h>
-#include <sys/types.h>
+#include <stddef.h>
 
 /* overview
 int ircio_read(int sck, char *buf, size_t bsz, char **tok, size_t tlen);
@@ -91,10 +93,5 @@ int ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t wo
  *         if an error occurs, or invalid arguments were given, -1 is returned.
  */
 int ircio_write(int sck, const char *line);
-
-void ircio_log_set_loglvl(int loglevel);
-void ircio_log_set_target(FILE *str);
-void ircio_log_set_fancy(bool fancy);
-void ircio_log_init(void);
 
 #endif /* SRS_IRC_IO_H */

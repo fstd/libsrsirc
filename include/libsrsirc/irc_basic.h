@@ -5,8 +5,10 @@
 #ifndef SRS_IRC_BASIC_H
 #define SRS_IRC_BASIC_H 1
 
+#define _GNU_SOURCE 1
+
 #include <stdbool.h>
-#include <sys/types.h>
+#include <stddef.h>
 
 typedef struct ibhnd* ibhnd_t;
 
@@ -32,6 +34,7 @@ const char *ircbas_version(ibhnd_t hnd);
 const char *ircbas_lasterror(ibhnd_t hnd);
 const char *ircbas_banmsg(ibhnd_t hnd);
 bool ircbas_banned(ibhnd_t hnd);
+bool ircbas_colon_trail(ibhnd_t hnd);
 
 bool ircbas_regcb_conread(ibhnd_t hnd, fp_con_read cb, void *tag);
 bool ircbas_regcb_mutnick(ibhnd_t hnd, fp_mut_nick);
@@ -63,9 +66,8 @@ const char *ircbas_get_proxy_host(ibhnd_t hnd);
 unsigned short ircbas_get_proxy_port(ibhnd_t hnd);
 int ircbas_get_proxy_type(ibhnd_t hnd);
 
-void ircbas_log_set_loglvl(int loglevel);
-void ircbas_log_set_target(FILE *str);
-void ircbas_log_set_fancy(bool fancy);
-
+const char* const* const* ircbas_logonconv(ibhnd_t hnd);
+const char* const* ircbas_005chanmodes(ibhnd_t hnd);
+const char* const* ircbas_005modepfx(ibhnd_t hnd);
 
 #endif /* SRS_IRC_BASIC_H */
