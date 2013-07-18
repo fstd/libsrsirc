@@ -442,6 +442,12 @@ ircbas_online(ibhnd_t hnd)
 	return irccon_online(hnd->con);
 }
 
+int
+ircbas_sockfd(ibhnd_t hnd)
+{
+	return irccon_sockfd(hnd->con);
+}
+
 bool 
 ircbas_set_pass(ibhnd_t hnd, const char *srvpass)
 {

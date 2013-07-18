@@ -539,6 +539,15 @@ irccon_get_port(ichnd_t hnd)
 	return hnd->port;
 }
 
+int
+irccon_sockfd(ichnd_t hnd)
+{
+	if (!hnd || hnd->state != ON)
+		return -1;
+	
+	return hnd->sck;
+}
+
 static bool pxlogon_http(ichnd_t hnd, unsigned long to_us)
 {
 	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
