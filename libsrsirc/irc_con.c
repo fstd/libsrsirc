@@ -213,106 +213,19 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 
 	struct sockaddr sa;
 	size_t addrlen;
-	int sck = ic_mksocket(host, port, &sa, &addrlen);
+
+	int sck = ic_consocket(host, port, &sa, &addrlen, 3000000, 30000000);
 
 	if (sck < 0) {
-		WX("(%p) failed to ic_mksocket for %s:%hu", hnd, host, port);
-		return false;
-	}
-	WVX("(%p) created socket %d for %s:%hu", hnd, sck, host, port);
-
-	int opt = 1;
-	socklen_t optlen = sizeof opt;
-
-
-/*#ifdef BSDCODEZ
-	errno = 0;
-	if (setsockopt(sck, SOL_SOCKET, SO_NOSIGPIPE, &opt, optlen) != 0) {
-		W("(%p) setsockopt failed", hnd);
-		close(sck);
-		return false;
-	}
-	WVX("(%p) done setsockopt()", hnd);
-#endif*/
-
-	errno = 0;
-	if (fcntl(sck, F_SETFL, O_NONBLOCK) == -1) {
-		W("(%p) failed to enable nonblocking mode", hnd);
-		close(sck);
-		return false;
-	}
-	
-	WVX("(%p) set to nonblocking mode, calling connect() now", hnd);
-	errno = 0;
-	int r = connect(sck, &sa, addrlen);
-
-	if (r == -1 && (errno != EINPROGRESS)) {
-		W("(%p) connect() failed", hnd);
-		close(sck);
+		WX("(%p) failed to ic_consocket for %s:%hu", hnd, host, port);
 		return false;
 	}
 
-	struct timeval tout;
-	tout.tv_sec = 0;
-	tout.tv_usec = 0;
-	int64_t trem = 0;
-
-	for(;;) {
-		pthread_mutex_lock(&hnd->cancelmtx);
-		bool cnc = hnd->cancel;
-		pthread_mutex_unlock(&hnd->cancelmtx);
-		if (cnc) {
-			WX("(%p) cancel requested", hnd);
-			close(sck);
-			return false;
-		}
-		fd_set fds;
-		FD_ZERO(&fds);
-		FD_SET(sck, &fds);
-
-		if (tsend)
-		{
-			trem = tsend - ic_timestamp_us();
-			if (trem > 500000)
-				trem = 500000; //limiting time spent in read so we can cancel w/o much delay
-			if (trem <= 0) {
-				WX("(%p) timeout reached while in 3WHS", hnd);
-				close(sck);
-				return false;
-			}
-
-			ic_tconv(&tout, &trem, false);
-		}
-
-		errno = 0;
-		r = select(sck+1, NULL, &fds, NULL, tsend ? &tout : NULL);
-		if (r < 0)
-		{
-			W("(%p) select() failed", hnd);
-			close(sck);
-			return false;
-		}
-		if (r == 1) {
-			break;
-		}
-	}
-
-	if (getsockopt(sck, SOL_SOCKET, SO_ERROR, &opt, &optlen) != 0) {
-		WX("(%p) getsockopt failed", hnd);
-		close(sck);
-		return false;
-	}
-
-	if (opt == 0)
-		WVX("(%p) socket connected!", hnd);
-	else {
-		WX("(%p) could not connect socket (%d)", hnd, opt);
-		close(sck);
-		return false;
-	}
+	WVX("(%p) connected socket %d for %s:%hu", hnd, sck, host, port);
 
 	hnd->sck = sck; //must be set here for pxlogon
 
+	int64_t trem = 0;
 	if (hnd->ptype != -1) {
 		if (tsend) {
 			trem = tsend - ic_timestamp_us();

@@ -26,6 +26,7 @@ char *ic_xstrdup(const char *string);
 int64_t ic_timestamp_us();
 void ic_tconv(struct timeval *tv, int64_t *ts, bool tv_to_ts);
 
-int ic_mksocket(const char *host, unsigned short port,
-		struct sockaddr *sockaddr, size_t *addrlen);
+int ic_consocket(const char *host, unsigned short port,
+    struct sockaddr *sockaddr, size_t *addrlen,
+    unsigned long softto, unsigned long hardto);
 #endif /* SRS_COMMON_H */

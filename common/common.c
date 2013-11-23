@@ -14,12 +14,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <fcntl.h>
 #include <errno.h>
+
 /* POSIX */
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <arpa/inet.h>
+
 #include <debug.h>
 
 void
@@ -117,10 +121,13 @@ ic_strNcpy(char *dst, const char *src, size_t len)
 	return r;
 }
 
-
-int ic_mksocket(const char *host, unsigned short port,
-		struct sockaddr *sockaddr, size_t *addrlen)
+int ic_consocket(const char *host, unsigned short port,
+		struct sockaddr *sockaddr, size_t *addrlen,
+		unsigned long softto, unsigned long hardto)
 {
+	WVX("ic_consocket() called: host='%s', port=%hu, sto=%lu, hto=%lu)",
+	    host, port, softto, hardto);
+
 	struct addrinfo *ai_list = NULL;
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof hints);
@@ -131,38 +138,150 @@ int ic_mksocket(const char *host, unsigned short port,
 	char portstr[6];
 	snprintf(portstr, sizeof portstr, "%hu", port);
 
+	int64_t hardtsend = hardto ? ic_timestamp_us() + hardto : 0;
+
+	WVX("calling getaddrinfo on '%s:%s' (AF_UNSPEC, SOCK_STREAM)",
+			host, portstr);
+
 	int r = getaddrinfo(host, portstr, &hints, &ai_list);
 
 	if (r != 0) {
-		//warnx("%s", gai_strerror(r));
+		WX("getaddrinfo() failed: %s", gai_strerror(r));
 		return -1;
 	}
 
 	if (!ai_list) {
-		//warnx("result address list empty");
+		WX("result address list empty");
 		return -1;
 	}
 
 	int sck = -1;
 
-	for (struct addrinfo *ai = ai_list; ai; ai = ai->ai_next)
-	{
-		sck = socket(ai->ai_family, ai->ai_socktype,
-				ai->ai_protocol);
+	WVX("iterating over result list...");
+	for (struct addrinfo *ai = ai_list; ai; ai = ai->ai_next) {
+		int64_t softtsend = softto ? ic_timestamp_us() + softto : 0;
+
+		WVX("next result, creating socket (fam=%d, styp=%d, prot=%d)",
+		    ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+
+		sck = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 		if (sck < 0) {
-			//warn("cannot create socket");
+			W("cannot create socket");
 			continue;
 		}
-		if (sockaddr)
-			*sockaddr = *(ai->ai_addr);
-		if (addrlen)
-			*addrlen = ai->ai_addrlen;
 
-		break;
+		char peeraddr[64] = "(non-INET/INET6)";
+		unsigned short peerport = 0;
+
+		if (ai->ai_family == AF_INET) {
+			struct sockaddr_in *sin =
+			    (struct sockaddr_in*)ai->ai_addr;
+
+			inet_ntop(AF_INET, &sin->sin_addr,
+			    peeraddr, sizeof peeraddr);
+
+			peerport = ntohs(sin->sin_port);
+		} else if (ai->ai_family == AF_INET6) {
+			struct sockaddr_in6 *sin =
+			    (struct sockaddr_in6*)ai->ai_addr;
+
+			inet_ntop(AF_INET6, &sin->sin6_addr,
+			    peeraddr, sizeof peeraddr);
+
+			peerport = ntohs(sin->sin6_port);
+		}
+
+		char portstr[7];
+		snprintf(portstr, sizeof portstr, ":%hu", peerport);
+		ic_strNcat(peeraddr, portstr, sizeof peeraddr);
+
+		int opt = 1;
+		socklen_t optlen = sizeof opt;
+
+		WVX("peer addr is '%s'. going non-blocking", peeraddr);
+		if (fcntl(sck, F_SETFL, O_NONBLOCK) == -1) {
+			W("failed to enable nonblocking mode");
+			close(sck);
+			continue;
+		}
+
+		WVX("set to nonblocking mode, calling connect() now");
+		errno = 0;
+		int r = connect(sck, ai->ai_addr, ai->ai_addrlen);
+
+		if (r == -1 && (errno != EINPROGRESS)) {
+			W("connect() failed");
+			close(sck);
+			continue;
+		}
+
+		struct timeval tout;
+		tout.tv_sec = 0;
+		tout.tv_usec = 0;
+		int64_t trem = 0;
+
+		bool success = false;
+
+		for(;;) {
+			fd_set fds;
+			FD_ZERO(&fds);
+			FD_SET(sck, &fds);
+
+			if (hardtsend || softtsend)
+			{
+				trem = hardtsend < softtsend
+				    ? hardtsend : softtsend - ic_timestamp_us();
+
+				if (trem <= 0) {
+					WX("timeout reached while in 3WHS");
+					break;
+				}
+
+				ic_tconv(&tout, &trem, false);
+			}
+
+			errno = 0;
+			r = select(sck+1, NULL, &fds, NULL,
+			    hardtsend || softtsend ? &tout : NULL);
+			if (r < 0)
+			{
+				W("select() failed");
+				break;
+			}
+			if (r == 1) {
+				success = true;
+				WVX("selected!");
+				break;
+			}
+		}
+
+		if (!success) {
+			close(sck);
+			continue;
+		}
+
+		if (getsockopt(sck, SOL_SOCKET, SO_ERROR, &opt, &optlen) != 0) {
+			WX("getsockopt failed");
+			close(sck);
+			continue;
+		}
+
+		if (opt == 0) {
+			WVX("socket connected to '%s'!", peeraddr);
+			if (sockaddr)
+				*sockaddr = *(ai->ai_addr);
+			if (addrlen)
+				*addrlen = ai->ai_addrlen;
+
+			break;
+		} else {
+			WX("could not connect socket (%d)", opt);
+			close(sck);
+			continue;
+		}
 	}
 
 	freeaddrinfo(ai_list);
 
 	return sck;
 }
-
