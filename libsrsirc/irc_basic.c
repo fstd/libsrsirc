@@ -235,13 +235,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 	hnd->mynick = strmdup(hnd->nick, 9);
 
 	int64_t trem = 0;
-	for(;;)
-	{
-		if (irccon_canceled(hnd->con)) {
-			WX("(%p) cancel requested", hnd);
-			ircbas_reset(hnd);
-			return false;
-		}
+	for(;;) {
 		if(tsend) {
 			trem = tsend - ic_timestamp_us();
 			if (trem <= 0) {
@@ -251,12 +245,8 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 			}
 		}
 
-		if (trem > 500000)
-			trem = 500000; //limiting time spent in read so we can cancel w/o much delay
-
 		int r = irccon_read(hnd->con, msg, MAX_IRCARGS, (unsigned long)trem);
-		if (r < 0)
-		{
+		if (r < 0) {
 			WX("(%p) irccon_read() failed", hnd);
 			ircbas_reset(hnd);
 			return false;
@@ -399,14 +389,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 	return true;
 }
 
-void
-ircbas_cancel(ibhnd_t hnd)
-{
-	WVX("(%p) async cancel requested", hnd);
-	irccon_cancel(hnd->con);
-}
-
-int 
+int
 ircbas_read(ibhnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 {
 	//WVX("(%p) wanna read (timeout: %lu)", hnd, to_us);

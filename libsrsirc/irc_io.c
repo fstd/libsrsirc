@@ -140,8 +140,6 @@ ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbu
 				struct timeval tout;
 				if (tsend) {
 					int64_t trem = tsend - ic_timestamp_us();
-					if (trem > 1000000)
-						trem = 1000000; //limiting time spent in read so we can cancel w/o much delay
 					if (trem <= 0) {
 						//WVX("(sck:%d) timeout reached while selecting for read", sck);
 						return 0;

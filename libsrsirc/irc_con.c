@@ -78,10 +78,7 @@ struct ichnd
 	char *linebuf;
 	char *overbuf;
 	char *mehptr;
-	bool cancel;
 	bool colon_trail;
-
-	pthread_mutex_t cancelmtx;
 };
 
 static bool pxlogon_http(ichnd_t hnd, unsigned long to_us);
@@ -99,11 +96,6 @@ irccon_init(void)
 		return NULL;
 	}
 
-	if (pthread_mutex_init(&r->cancelmtx, NULL) != 0) {
-		WX("couldn't init mutex");
-		return NULL;
-	}
-
 	r->host = XSTRDUP(DEF_HOST);
 	r->port = DEF_PORT;
 	r->phost = NULL;
@@ -114,30 +106,11 @@ irccon_init(void)
 	r->linebuf = XCALLOC(LINEBUF_SZ);
 	r->overbuf = XCALLOC(OVERBUF_SZ);
 	r->mehptr = NULL;
-	r->cancel = false;
 	r->colon_trail = false;
 
 	WVX("(%p) irc_con initialized", r);
 
 	return r;
-}
-
-bool
-irccon_canceled(ichnd_t hnd)
-{
-	pthread_mutex_lock(&hnd->cancelmtx);
-	bool b = hnd->cancel;
-	pthread_mutex_unlock(&hnd->cancelmtx);
-	return b;
-}
-
-void
-irccon_cancel(ichnd_t hnd)
-{
-	WX("(%p) async cancel requested", hnd);
-	pthread_mutex_lock(&hnd->cancelmtx);
-	hnd->cancel = true;
-	pthread_mutex_unlock(&hnd->cancelmtx);
 }
 
 bool
@@ -176,7 +149,6 @@ irccon_dispose(ichnd_t hnd)
 	XFREE(hnd->overbuf);
 	hnd->state = INV;
 
-	pthread_mutex_destroy(&hnd->cancelmtx);
 	WVX("(%p) disposed", hnd);
 	XFREE(hnd);
 
@@ -188,9 +160,7 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 {
 	if (!hnd || hnd->state != OFF)
 		return false;
-	pthread_mutex_lock(&hnd->cancelmtx);
-	hnd->cancel = false;
-	pthread_mutex_unlock(&hnd->cancelmtx);
+
 	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	char *host = hnd->ptype != -1 ? hnd->phost : hnd->host;
 	unsigned short port = hnd->ptype != -1 ? hnd->pport : hnd->port;
@@ -488,13 +458,6 @@ static bool pxlogon_http(ichnd_t hnd, unsigned long to_us)
 			if (n == 0)
 				WX("(%p) unexpected EOF", hnd);
 			else if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				pthread_mutex_lock(&hnd->cancelmtx);
-				bool cnc = hnd->cancel;
-				pthread_mutex_unlock(&hnd->cancelmtx);
-				if (cnc) {
-					WX("(%p) pxlogon canceled", hnd);
-					return false;
-				}
 				if (tsend && ic_timestamp_us() < tsend) {
 					usleep(10000);
 					continue;
@@ -569,13 +532,6 @@ static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us) //SOCKS doesntsuppo
 		n = read(hnd->sck, &resp+c, 8-c);
 		if (n <= 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				pthread_mutex_lock(&hnd->cancelmtx);
-				bool cnc = hnd->cancel;
-				pthread_mutex_unlock(&hnd->cancelmtx);
-				if (cnc) {
-					WX("(%p) pxlogon canceled", hnd);
-					return false;
-				}
 				if (tsend && ic_timestamp_us() < tsend) {
 					usleep(10000);
 					continue;
@@ -629,13 +585,6 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 		n = read(hnd->sck, &resp+c, 2-c);
 		if (n <= 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				pthread_mutex_lock(&hnd->cancelmtx);
-				bool cnc = hnd->cancel;
-				pthread_mutex_unlock(&hnd->cancelmtx);
-				if (cnc) {
-					WX("(%p) pxlogon canceled", hnd);
-					return false;
-				}
 				if (tsend && ic_timestamp_us() < tsend) {
 					usleep(10000);
 					continue;
@@ -721,13 +670,6 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 		n = read(hnd->sck, resp + c, l - c);
 		if (n <= 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				pthread_mutex_lock(&hnd->cancelmtx);
-				bool cnc = hnd->cancel;
-				pthread_mutex_unlock(&hnd->cancelmtx);
-				if (cnc) {
-					WX("(%p) pxlogon canceled", hnd);
-					return false;
-				}
 				if (tsend && ic_timestamp_us() < tsend) {
 					usleep(10000);
 					continue;
@@ -773,13 +715,6 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 		n = read(hnd->sck, resp + c, c ? l - c : 1); //read the veryfirst byte seperately
 		if (n <= 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				pthread_mutex_lock(&hnd->cancelmtx);
-				bool cnc = hnd->cancel;
-				pthread_mutex_unlock(&hnd->cancelmtx);
-				if (cnc) {
-					WX("(%p) pxlogon canceled", hnd);
-					return false;
-				}
 				if (tsend && ic_timestamp_us() < tsend) {
 					usleep(10000);
 					continue;
