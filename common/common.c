@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <debug.h>
 
 void
 ic_strNcat(char *dest, const char *src, size_t destsz)

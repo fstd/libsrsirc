@@ -21,7 +21,7 @@
 #include <strings.h>
 #include <limits.h>
 
-#include "debug.h"
+#include <debug.h>
 
 #define CHANMODE_CLASS_A 1 /*do not change these, see int classify_chanmode(char)*/
 #define CHANMODE_CLASS_B 2

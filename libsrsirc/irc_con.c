@@ -38,7 +38,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-#include "debug.h"
+#include <debug.h>
 
 #define RXBUF_SZ 4096
 #define LINEBUF_SZ 1024

@@ -19,7 +19,7 @@
 #include <string.h>
 #include <strings.h>
 
-#include "debug.h"
+#include <debug.h>
 
 #define MAX_IRCARGS ((size_t)15)
 

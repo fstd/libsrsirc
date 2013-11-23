@@ -25,7 +25,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 
-#include "debug.h"
+#include <debug.h>
 
 #define ISDELIM(C) ((C)=='\n' || (C) == '\r')
 
