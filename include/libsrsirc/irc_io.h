@@ -25,7 +25,6 @@ int ircio_write(int sck, const char *line);
  * Nowadays, we read blockwise for performance and scalability reasons,
  *   which introduced a handful obscure context parameters.  I don't really
  *   remember how it works, too, but it works sort of well.
- *   be directly used by the user
  *
  * Blocks until there is some actual data available, or a timeout is
  *   reached. However, said data *can*, for broken ircds, or unit tests,
