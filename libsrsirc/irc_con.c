@@ -31,8 +31,6 @@
 #include <unistd.h>
 #include <sys/select.h>
 
-#include <pthread.h>
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
