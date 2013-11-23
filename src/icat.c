@@ -1,6 +1,6 @@
 /* icat.c - IRC netcat, the example application of libsrsirc
  * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
- * See README for contact-, COPYING for license information.  */
+ * See README for contact-, COPYING for license information. */
 
 #if HAVE_CONFIG_H
 # include <config.h>

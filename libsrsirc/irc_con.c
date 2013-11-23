@@ -1,6 +1,6 @@
 /* irc_io.c - Semi back-end (btw irc_io and irc_basic) implementation
  * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
- * See README for contact-, COPYING for license information.  */
+ * See README for contact-, COPYING for license information. */
 
 #if HAVE_CONFIG_H
 # include <config.h>
@@ -59,7 +59,7 @@
 #define XCALLOC(num) ic_xcalloc(1, num)
 #define XMALLOC(num) ic_xmalloc(num)
 #define XREALLOC(p, num) ic_xrealloc((p),(num))
-#define XFREE(p) do{  if(p) free(p); p=0;  }while(0)
+#define XFREE(p) do{if(p) free(p); p=0;}while(0)
 #define XSTRDUP(s) ic_xstrdup(s)
 
 
@@ -168,17 +168,12 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 	{
 		char pxspec[64];
 		pxspec[0] = '\0';
-		if (hnd->ptype != -1) {
+		if (hnd->ptype != -1)
 			snprintf(pxspec, sizeof pxspec, " via %s:%s:%hu",
-		                 pxtypestr(hnd->ptype), hnd->phost, hnd->pport);
-		}
-		unsigned long to = to_us;
-		char unit[3] = "us";
-		if (to > 1000000*60) { unit[0] = 'm'; unit[1] = '\0'; to /= 1000000*60; }
-		else if (to > 1000000) { unit[0] = 's'; unit[1] = '\0'; to /= 1000000; }
-		else if (to > 1000) { unit[0] = 'm'; to /= 1000; }
-		WVX("(%p) wanna connect to %s:%hu%s, timeout: %lu%s",
-		           hnd, hnd->host, hnd->port, pxspec, to, unit);
+			    pxtypestr(hnd->ptype), hnd->phost, hnd->pport);
+
+		WVX("(%p) wanna connect to %s:%hu%s, timeout: %luus",
+		    hnd, hnd->host, hnd->port, pxspec, to_us);
 	}
 
 	struct sockaddr sa;
@@ -200,12 +195,13 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 		if (tsend) {
 			trem = tsend - ic_timestamp_us();
 			if (trem <= 0) {
-				WX("(%p) timeout *after* select() was done, odd", hnd);
+				WX("(%p) timeout", hnd);
 				close(sck);
 				hnd->sck = -1;
 				return false;
 			}
 		}
+
 		bool ok = false;
 		WVX("(%p) logging on to proxy", hnd);
 		if (hnd->ptype == IRCPX_HTTP)
@@ -214,9 +210,8 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 			ok = pxlogon_socks4(hnd, (unsigned long)trem);
 		else if (hnd->ptype == IRCPX_SOCKS5)
 			ok = pxlogon_socks5(hnd, (unsigned long)trem);
-		
-		if (!ok)
-		{
+
+		if (!ok) {
 			WX("(%p) proxy logon failed", hnd);
 			close(sck);
 			hnd->sck = -1;
@@ -234,10 +229,10 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 		return false;
 	}
 
-
 	hnd->state = ON;
 
-	WVX("(%p) %s connection to ircd established", hnd, hnd->ptype == -1?"TCP":"proxy");
+	WVX("(%p) %s connection to ircd established",
+	    hnd, hnd->ptype == -1?"TCP":"proxy");
 
 	return true;
 }
@@ -253,11 +248,9 @@ irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 
 	int n;
 	/* read a line, ignoring empty lines */
-	do
-	{
+	do {
 		int64_t trem;
-		if (tsend)
-		{
+		if (tsend) {
 			trem = tsend - ic_timestamp_us();
 			if (trem <= 0) {
 				//WX("(%p) timeout hit", hnd);
@@ -265,9 +258,11 @@ irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 			}
 		}
 
-		n = ircio_read(hnd->sck, hnd->linebuf, LINEBUF_SZ, hnd->overbuf, OVERBUF_SZ, &hnd->mehptr, tok, tok_len, tsend?(unsigned long)trem:0);
-		if (n < 0) //read error
-		{
+		n = ircio_read(hnd->sck, hnd->linebuf, LINEBUF_SZ,
+		    hnd->overbuf, OVERBUF_SZ, &hnd->mehptr, tok, tok_len,
+		    tsend ? (unsigned long)trem : 0ul);
+
+		if (n < 0) { //read error
 			WX("(%p) read failed", hnd);
 			irccon_reset(hnd);
 			return -1;
@@ -292,8 +287,7 @@ irccon_write(ichnd_t hnd, const char *line)
 		return false;
 
 
-	if (ircio_write(hnd->sck, line) == -1)
-	{
+	if (ircio_write(hnd->sck, line) == -1) {
 		WX("(%p) failed to write '%s'", hnd, line);
 		irccon_reset(hnd);
 		return false;
@@ -334,7 +328,7 @@ irccon_colon_trail(ichnd_t hnd)
 {
 	if (!hnd || hnd->state != ON)
 		return false;
-	
+
 	return hnd->colon_trail;
 }
 
@@ -346,20 +340,19 @@ irccon_set_proxy(ichnd_t hnd, const char *host, unsigned short port, int ptype)
 
 	XFREE(hnd->phost);
 	hnd->phost = NULL;
-	switch(ptype)
-	{
-		case IRCPX_HTTP:
-		case IRCPX_SOCKS4:
-		case IRCPX_SOCKS5:
-			if (!host || !(1 <= port && port <= 65535))
-				return false;
+	switch(ptype) {
+	case IRCPX_HTTP:
+	case IRCPX_SOCKS4:
+	case IRCPX_SOCKS5:
+		if (!host || !(1 <= port && port <= 65535))
+			return false;
 
-			hnd->phost = XSTRDUP(host);
-			hnd->pport = port;
-			hnd->ptype = ptype;
-			break;
-		default:
-			hnd->ptype = -1;
+		hnd->phost = XSTRDUP(host);
+		hnd->pport = port;
+		hnd->ptype = ptype;
+		break;
+	default:
+		hnd->ptype = -1;
 	}
 
 	return true;
@@ -427,7 +420,7 @@ irccon_sockfd(ichnd_t hnd)
 {
 	if (!hnd || hnd->state != ON)
 		return -1;
-	
+
 	return hnd->sck;
 }
 
@@ -435,7 +428,8 @@ static bool pxlogon_http(ichnd_t hnd, unsigned long to_us)
 {
 	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	char buf[256];
-	snprintf(buf, sizeof buf, "CONNECT %s:%d HTTP/1.0\r\nHost: %s:%d\r\n\r\n", hnd->host, hnd->port, hnd->host, hnd->port);
+	snprintf(buf, sizeof buf, "CONNECT %s:%d HTTP/1.0\r\nHost: %s:%d"
+	    "\r\n\r\n", hnd->host, hnd->port, hnd->host, hnd->port);
 
 	errno = 0;
 	ssize_t n = write(hnd->sck, buf, strlen(buf));
@@ -443,7 +437,8 @@ static bool pxlogon_http(ichnd_t hnd, unsigned long to_us)
 		W("(%p) write() failed", hnd);
 		return false;
 	} else if (n < (ssize_t)strlen(buf)) {
-		WX("(%p) didn't send everything (%zd/%zu)", hnd, n, strlen(buf));
+		WX("(%p) didn't send everything (%zd/%zu)",
+		    hnd, n, strlen(buf));
 		return false;
 	}
 
@@ -451,7 +446,8 @@ static bool pxlogon_http(ichnd_t hnd, unsigned long to_us)
 
 	WVX("(%p) wrote HTTP CONNECT, reading response", hnd);
 	size_t c = 0;
-	while(c < sizeof buf && (c < 4 || buf[c - 4] != '\r' || buf[c - 3] != '\n' || buf[c - 2] != '\r' || buf[c - 1] != '\n')) {
+	while(c < sizeof buf && (c < 4 || buf[c - 4] != '\r' ||
+	    buf[c - 3] != '\n' || buf[c - 2] != '\r' || buf[c - 1] != '\n')) {
 		errno = 0;
 		n = read(hnd->sck, &buf[c], 1);
 		if (n <= 0) {
@@ -463,7 +459,7 @@ static bool pxlogon_http(ichnd_t hnd, unsigned long to_us)
 					continue;
 				}
 				WX("(%p) timeout hit", hnd);
-			} else 
+			} else
 				W("(%p) read failed", hnd);
 			return false;
 		}
@@ -486,12 +482,15 @@ static bool pxlogon_http(ichnd_t hnd, unsigned long to_us)
 	return strncmp(tok, "200", 3) == 0;
 }
 
-static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us) //SOCKS doesntsupport ipv6
+/* SOCKS4 doesntsupport ipv6 */
+static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us)
 {
 	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	unsigned char logon[14];
 	uint16_t port = htons(hnd->port);
-	uint32_t ip = inet_addr(hnd->host); //XXX FIXME this doesntwork if hnd->host is not an ipv4 addr but dns
+
+	/* XXX FIXME this doesntwork if hnd->host is not an ipv4 addr but dns */
+	uint32_t ip = inet_addr(hnd->host);
 	char name[6];
 	for(size_t i = 0; i < sizeof name - 1; i++)
 		name[i] = (char)(rand() % 26 + 'a');
@@ -501,7 +500,7 @@ static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us) //SOCKS doesntsuppo
 		WX("(%p) srsly what?", hnd);
 		return false;
 	}
-	
+
 
 	size_t c = 0;
 	logon[c++] = 4;
@@ -512,7 +511,7 @@ static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us) //SOCKS doesntsuppo
 
 	memcpy(logon+c, (unsigned char*)name, strlen(name) + 1);
 	c += strlen(name) + 1;
-	
+
 	errno = 0;
 	ssize_t n = write(hnd->sck, logon, c);
 	if (n == -1) {
@@ -522,12 +521,11 @@ static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us) //SOCKS doesntsuppo
 		WX("(%p) didn't send everything (%zd/%zu)", hnd, n, c);
 		return false;
 	}
-	
+
 	WVX("(%p) wrote SOCKS4 logon sequence, reading response", hnd);
 	char resp[8];
 	c = 0;
-	while(c < 8)
-	{
+	while(c < 8) {
 		errno = 0;
 		n = read(hnd->sck, &resp+c, 8-c);
 		if (n <= 0) {
@@ -539,13 +537,14 @@ static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us) //SOCKS doesntsuppo
 				WX("(%p) timeout hit", hnd);
 			} else if (n == 0) {
 				WX("(%p) unexpected EOF", hnd);
-			} else 
+			} else
 				W("(%p) read failed", hnd);
 			return false;
 		}
 		c += n;
 	}
-	WVX("(%p) socks4 response: %hhx %hhx (should be: 0x00 0x5a)", hnd, resp[0], resp[1]);
+	WVX("(%p) socks4 response: %hhx %hhx (should be: 0x00 0x5a)",
+	    hnd, resp[0], resp[1]);
 	return resp[0] == 0 && resp[1] == 0x5a;
 }
 
@@ -575,12 +574,11 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 		WX("(%p) didn't send everything (%zd/%zu)", hnd, n, c);
 		return false;
 	}
-	
+
 	WVX("(%p) wrote SOCKS5 logon sequence 1, reading response", hnd);
 	char resp[128];
 	c = 0;
-	while(c < 2)
-	{
+	while(c < 2) {
 		errno = 0;
 		n = read(hnd->sck, &resp+c, 2-c);
 		if (n <= 0) {
@@ -592,7 +590,7 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 				WX("(%p) timeout 1 hit", hnd);
 			} else if (n == 0) {
 				WX("(%p) unexpected EOF", hnd);
-			} else 
+			} else
 				W("(%p) read failed", hnd);
 			return false;
 		}
@@ -600,7 +598,8 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 	}
 
 	if(resp[0] != 5) {
-		WX("(%p) unexpected response %hhx %hhx (no socks5?)", hnd, resp[0], resp[1]);
+		WX("(%p) unexpected response %hhx %hhx (no socks5?)",
+		    hnd, resp[0], resp[1]);
 		return false;
 	}
 	if (resp[1] != 0) {
@@ -608,7 +607,7 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 		return false;
 	}
 	WVX("(%p) socks5 let us in", hnd);
-	
+
 	c = 0;
 	char connect[128];
 	connect[c++] = 5;
@@ -647,7 +646,8 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 	case HOST_DNS:
 		connect[c++] = 3;
 		connect[c++] = strlen(hnd->host);
-		memcpy(connect+c, hnd->host, strlen(hnd->host)); c += strlen(hnd->host);
+		memcpy(connect+c, hnd->host, strlen(hnd->host));
+		c += strlen(hnd->host);
 	}
 	memcpy(connect+c, &nport, 2); c += 2;
 
@@ -661,11 +661,10 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 		return false;
 	}
 	WVX("(%p) wrote SOCKS5 logon sequence 2, reading response", hnd);
-	
+
 	size_t l = 4;
 	c = 0;
-	while(c < l)
-	{
+	while(c < l) {
 		errno = 0;
 		n = read(hnd->sck, resp + c, l - c);
 		if (n <= 0) {
@@ -677,7 +676,7 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 				WX("(%p) timeout 2 hit", hnd);
 			} else if (n == 0) {
 				WX("(%p) unexpected EOF", hnd);
-			} else 
+			} else
 				W("(%p) read failed", hnd);
 			return false;
 		}
@@ -685,8 +684,8 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 	}
 
 	if (resp[0] != 5 || resp[1] != 0) {
-		WX("(%p) socks5 denied/failed (%hhx %hhx %hhx %hhx)", hnd, resp[0], resp[1],
-		                                            resp[2], resp[3]);
+		WX("(%p) socks5 denied/failed (%hhx %hhx %hhx %hhx)",
+		    hnd, resp[0], resp[1], resp[2], resp[3]);
 		return false;
 	}
 
@@ -709,10 +708,10 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 
 	c = 0;
 	l += 2; //port
-	while(c < l)
-	{
+	while(c < l) {
 		errno = 0;
-		n = read(hnd->sck, resp + c, c ? l - c : 1); //read the veryfirst byte seperately
+		/* read the very first byte seperately */
+		n = read(hnd->sck, resp + c, c ? l - c : 1);
 		if (n <= 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				if (tsend && ic_timestamp_us() < tsend) {
@@ -722,7 +721,7 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 				WX("(%p) timeout 2 hit", hnd);
 			} else if (n == 0) {
 				WX("(%p) unexpected EOF", hnd);
-			} else 
+			} else
 				W("(%p) read failed", hnd);
 			return false;
 		}
@@ -731,15 +730,16 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 		c += n;
 	}
 
-	/* not that we'd care about what we just have read but we want to make sure to
-	 * read the correct amount of characters */
-	
+	/* not that we'd care about what we just have read but we want to make
+	 * sure to read the correct amount of characters */
+
 	WVX("(%p) socks5 success (apparently)", hnd);
 	return true;
 }
 
+/*dumb heuristic to tell apart domain name/ip4/ip6 addr XXX FIXME */
 static int
-guess_hosttype(const char *host) //dumb heuristic to tell apart domain name/ip4/ip6 addr XXX FIXME
+guess_hosttype(const char *host)
 {
 	if (strchr(host, '['))
 		return HOST_IPV6;

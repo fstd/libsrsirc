@@ -1,6 +1,6 @@
 /* irc_util.c - Implementation of misc. functions related to IRC
  * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
- * See README for contact-, COPYING for license information.  */
+ * See README for contact-, COPYING for license information. */
 
 #if HAVE_CONFIG_H
 # include <config.h>
@@ -30,21 +30,24 @@
 
 static int classify_chanmode(char c, const char *const *chmodes);
 
-int pxtypeno(const char *typestr)
+int
+pxtypeno(const char *typestr)
 {
 	return (strcasecmp(typestr, "socks4") == 0) ? IRCPX_SOCKS4 :
 	       (strcasecmp(typestr, "socks5") == 0) ? IRCPX_SOCKS5 :
 	       (strcasecmp(typestr, "http") == 0) ? IRCPX_HTTP : -1;
 }
 
-const char *pxtypestr(int type)
+const char*
+pxtypestr(int type)
 {
 	return (type == IRCPX_HTTP) ? "HTTP" :
 	       (type == IRCPX_SOCKS4) ? "SOCKS4" :
 	       (type == IRCPX_SOCKS5) ? "SOCKS5" : "unknown";
 }
 
-bool pfx_extract_nick(char *dest, size_t dest_sz, const char *pfx)
+bool
+pfx_extract_nick(char *dest, size_t dest_sz, const char *pfx)
 {
 	if (!dest || !dest_sz || !pfx)
 		return false;
@@ -62,7 +65,8 @@ bool pfx_extract_nick(char *dest, size_t dest_sz, const char *pfx)
 	return true;
 }
 
-bool pfx_extract_uname(char *dest, size_t dest_sz, const char *pfx)
+bool
+pfx_extract_uname(char *dest, size_t dest_sz, const char *pfx)
 {
 	if (!dest || !dest_sz || !pfx)
 		return false;
@@ -82,7 +86,8 @@ bool pfx_extract_uname(char *dest, size_t dest_sz, const char *pfx)
 	return true;
 }
 
-bool pfx_extract_host(char *dest, size_t dest_sz, const char *pfx)
+bool
+pfx_extract_host(char *dest, size_t dest_sz, const char *pfx)
 {
 	if (!dest || !dest_sz || !pfx)
 		return false;
@@ -104,8 +109,7 @@ istrcasecmp(const char *n1, const char *n2, int casemap)
 	size_t l1 = strlen(n1);
 	size_t l2 = strlen(n2);
 
-	return istrncasecmp(n1, n2,
-			(l1 < l2) ? (l1 + 1) : (l2 + 1), casemap);
+	return istrncasecmp(n1, n2, (l1 < l2) ? (l1 + 1) : (l2 + 1), casemap);
 }
 
 int
@@ -150,7 +154,7 @@ itolower(char *dest, size_t destsz, const char *str, int casemap)
 			*ptr++ = *str + ('a'-'A');
 		else
 			*ptr++ = *str;
-		
+
 		if (!*str)
 			break;
 		str++;
@@ -161,7 +165,7 @@ itolower(char *dest, size_t destsz, const char *str, int casemap)
 
 bool
 parse_pxspec(char *pxtypestr, size_t pxtypestr_sz, char *hoststr,
-		size_t hoststr_sz, unsigned short *port, const char *line)
+    size_t hoststr_sz, unsigned short *port, const char *line)
 {
 	char linebuf[128];
 	strncpy(linebuf, line, sizeof linebuf);
@@ -170,10 +174,9 @@ parse_pxspec(char *pxtypestr, size_t pxtypestr_sz, char *hoststr,
 	char *ptr = strchr(linebuf, ':');
 	if (!ptr)
 		return false;
-	
-	size_t num = (size_t)(ptr - linebuf) < pxtypestr_sz
-			? (size_t)(ptr - linebuf)
-			: pxtypestr_sz - 1;
+
+	size_t num = (size_t)(ptr - linebuf) < pxtypestr_sz ?
+	    (size_t)(ptr - linebuf) : pxtypestr_sz - 1;
 
 	strncpy(pxtypestr, linebuf, num);
 	pxtypestr[num] = '\0';
@@ -183,8 +186,9 @@ parse_pxspec(char *pxtypestr, size_t pxtypestr_sz, char *hoststr,
 
 }
 
-void parse_hostspec(char *hoststr, size_t hoststr_sz, unsigned short *port,
-		const char *line)
+void
+parse_hostspec(char *hoststr, size_t hoststr_sz, unsigned short *port,
+    const char *line)
 {
 	strncpy(hoststr, line, hoststr_sz);
 	char *ptr = strchr(hoststr, ']');
@@ -198,8 +202,9 @@ void parse_hostspec(char *hoststr, size_t hoststr_sz, unsigned short *port,
 		*port = 0;
 }
 
-bool parse_identity(char *nick, size_t nicksz, char *uname, size_t unamesz,
-		char *fname, size_t fnamesz, const char *identity)
+bool
+parse_identity(char *nick, size_t nicksz, char *uname, size_t unamesz,
+    char *fname, size_t fnamesz, const char *identity)
 {
 	char ident[256];
 	ic_strNcpy(ident, identity, sizeof ident);
@@ -251,17 +256,20 @@ cr(char **msg, size_t msg_len, void *tag)
 }
 
 char**
-parse_chanmodes(const char *const *arr, size_t argcount, size_t *num, const char *modepfx005chr, const char *const *chmodes)
+parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
+    const char *modepfx005chr, const char *const *chmodes)
 {
 	char *modes = strdup(arr[0]);
 	const char *arg;
-	size_t nummodes = strlen(modes) - (ic_strCchr(modes,'-') + ic_strCchr(modes,'+'));
+	size_t nummodes = strlen(modes) - (ic_strCchr(modes,'-')
+	    + ic_strCchr(modes,'+'));
 	char **modearr = malloc(nummodes * sizeof *modearr);
 	size_t i = 1;
 	int j = 0, cl;
 	char *ptr = modes;
 	int enable = 1;
-	WVX("modes: '%s', nummodes: %zu, modepfx005chr: '%s'", modes, nummodes, modepfx005chr);
+	WVX("modes: '%s', nummodes: %zu, modepfx005chr: '%s'",
+	    modes, nummodes, modepfx005chr);
 	while (*ptr) {
 		char c = *ptr;
 		WVX("next modechar is '%c', enable ATM: %d", c, enable);
@@ -280,9 +288,6 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num, const char
 			WVX("classified mode '%c' to class %d", c, cl);
 			switch (cl) {
 			case CHANMODE_CLASS_A:
-				/*i>=argcount: this may happen when requesting modes outside of that channel
-				 * so we get mode +tmnk instead of +tmnk <key>*/
-				//XXX maybe i actually did mean '>=' here, as stated in the comment. test it. not tested it but considered its okay. we did mean > indeed.
 				arg = (i > argcount) ? ("*") : arr[i++];
 				break;
 			case CHANMODE_CLASS_B:
@@ -298,7 +303,8 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num, const char
 				if (strchr(modepfx005chr, c)) {
 					arg = (i > argcount) ? ("*") : arr[i++];
 				} else {
-					WX("unknown chanmode '%c' (0x%X)\n",c,(unsigned)c);
+					WX("unknown chanmode '%c' (0x%X)\n",
+					    c, (unsigned)c);
 					ptr++;
 					continue;
 				}
@@ -329,9 +335,10 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num, const char
 static int
 classify_chanmode(char c, const char *const *chmodes)
 {
-    for (int z = 0; z < 4; ++z) {
-        if ((chmodes[z]) && (strchr(chmodes[z], c) != NULL))
-		return z+1;/*XXX this locks the chantype class constants */
-    }
-    return 0;
+	for (int z = 0; z < 4; ++z) {
+		if ((chmodes[z]) && (strchr(chmodes[z], c) != NULL))
+			/*XXX this locks the chantype class constants */
+			return z+1;
+	}
+	return 0;
 }

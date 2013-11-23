@@ -1,6 +1,6 @@
 /* irc_con.h - Semi back-end interface. Can also be front-end w/ ltd. use
  * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
- * See README for contact-, COPYING for license information.  */
+ * See README for contact-, COPYING for license information. */
 
 #ifndef SRS_IRC_CON_H
 #define SRS_IRC_CON_H 1

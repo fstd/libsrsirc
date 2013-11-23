@@ -1,6 +1,6 @@
 /* irc_basic.h - Front-end (main) interface.
  * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
- * See README for contact-, COPYING for license information.  */
+ * See README for contact-, COPYING for license information. */
 
 #ifndef SRS_IRC_BASIC_H
 #define SRS_IRC_BASIC_H 1

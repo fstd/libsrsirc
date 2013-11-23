@@ -1,6 +1,6 @@
 /* common.c - routines commonly used throughout the lib
  * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
- * See README for contact-, COPYING for license information.  */
+ * See README for contact-, COPYING for license information. */
 
 #if HAVE_CONFIG_H
 # include <config.h>
@@ -55,8 +55,10 @@ void*
 ic_xmalloc(size_t num)
 {
 	void *new = malloc(num);
-	if (!new)
+	if (!new) {
+		W("malloc failed");
 		exit(1);
+	}
 	return new;
 }
 
@@ -65,12 +67,11 @@ ic_xrealloc(void *p, size_t num)
 {
 	void *new;
 
-	if (!p)
-		return ic_xmalloc(num);
-
 	new = realloc(p, num);
-	if (!new)
+	if (!new) {
+		W("realloc failed");
 		exit(1);
+	}
 
 	return new;
 }

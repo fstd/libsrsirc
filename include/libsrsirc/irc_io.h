@@ -1,6 +1,6 @@
 /* irc_io.h - Back-end interface.
  * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
- * See README for contact-, COPYING for license information.  */
+ * See README for contact-, COPYING for license information. */
 
 #ifndef SRS_IRC_IO_H
 #define SRS_IRC_IO_H 1
@@ -11,28 +11,42 @@
 #include <stddef.h>
 
 /* overview
-int ircio_read(int sck, char *buf, size_t bsz, char **tok, size_t tlen);
+ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
+    size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len,
+    unsigned long to_us)
+
 int ircio_write(int sck, const char *line);
 */
 
 /* ircio_read - attempt to read an IRC protocol message from socket
- * 
- * !! new parameter to_us not documented yet !!
  *
- * Blocks until there is some actual data available. However, said data *can*,
- *   for broken ircds, or unit tests, consist of only linear whitespace. In
- *   that case, no further attempt is made to read data, and 0 is returned.
+ * This function originally was meant to be suitable as both, irc_con's
+ *   backend, and directly usable.  It used to read bytewise.
+ * Nowadays, we read blockwise for performance and scalability reasons,
+ *   which introduced a handful obscure context parameters.  I don't really
+ *   remember how it works, too, but it works sort of well.
+ *   be directly used by the user
  *
- * params: 
- *   int    ``sck''     - socket to read from
- *   char*  ``buf''     - buffer to read the data into and tokenize it
- *   size_t ``buf_sz''  - size of ``buf'', in chars
- *   char** ``tok''     - pointer to array of char* to hold the tokenized result
+ * Blocks until there is some actual data available, or a timeout is
+ *   reached. However, said data *can*, for broken ircds, or unit tests,
+ *   consist of only linear whitespace. In that case, no further attempt
+ *   is made to read data, and 0 is returned.
+ *
+ * params:
+ *   int ``sck'' - socket to read from
+ *   char* ``tokbuf'' - data is read and tokenized here. access via ``tok''
+ *   size_t ``tokbuf_sz'' - size of ``tokbuf'', in chars
+ *   char* ``workbuf'' - context buffer for pending/incomplete data
+ *   size_t ``workbuf_sz'' - size of ``workbuf'', in chars
+ *   char** ``mehptr'' - obscure context pointer
+ *   char** ``tok'' - pointer to array of char* to hold the tokenized result
  *   size_t ``tok_len'' - no of elems of array pointed to by ``tok''.must be >=2
+ *   unsigned long ``to_us'' - timeout in microseconds
  *
- * return: 
+ * return:
  *    1 - success, a message has been read and tokenized
  *    0 - empty, the socket was readable, but all we got was an empty line
+ *          also returned when a timeout is hit
  *   -1 - an I/O- or parse error has occured, or given arguments are invalid
  *
  * example:
@@ -48,7 +62,7 @@ int ircio_write(int sck, const char *line);
  *
  *   The Examples show some possible combinations of prefix, command and a
  *     varying number of arguments.
- *   Such a line is first being read into ''buf``, possibly being truncated if
+ *   Such a line is first being read into ''tokbuf``, possibly being truncated if
  *     there is not enough space available in order to hold the entire line.
  *   After a full line was read, it is tokenized according to the IRC protocol,
  *     by zeroing out all whitespace which acts as a delimiter.
@@ -73,18 +87,19 @@ int ircio_write(int sck, const char *line);
  *    will do, empty lines are ignored, leading and trailing whitespace is
  *    stripped away (except for trail argument), etc.
  */
-//int ircio_read(int sck, char *buf, char *overbuf, size_t bufoverbuf_sz, char **tok, size_t tok_len, unsigned long to_us);
+int ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
+    size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len,
+    unsigned long to_us);
 
-int ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf, size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len, unsigned long to_us);
 /* ircio_write - write one (or perhaps multiple) lines to socket
- * 
+ *
  * If multiple lines are to be written, they must be separated by "\r\n".
  * The last (or only) line may or may not be terminated by "\r\n", if not,
  * it is automatically added.
  *
  * This function will make sure everything is sent.
  *
- * params: 
+ * params:
  *   int         ``sck''    - socket to write to
  *   const char  ``line''   - line to send, may or may not be terminated by \r\n
  *

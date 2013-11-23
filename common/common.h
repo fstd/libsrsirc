@@ -1,6 +1,6 @@
 /* common.h - Interface to routines of common use
  * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
- * See README for contact-, COPYING for license information.  */
+ * See README for contact-, COPYING for license information. */
 
 #ifndef SRS_COMMON_H
 #define SRS_COMMON_H 1
