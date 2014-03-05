@@ -190,10 +190,13 @@ void
 parse_hostspec(char *hoststr, size_t hoststr_sz, unsigned short *port,
     const char *line)
 {
-	strncpy(hoststr, line, hoststr_sz);
+	strncpy(hoststr, line + (line[0] == '['), hoststr_sz);
 	char *ptr = strchr(hoststr, ']');
 	if (!ptr)
 		ptr = hoststr;
+	else
+		*ptr++ = '\0';
+
 	ptr = strchr(ptr, ':');
 	if (ptr) {
 		*port = (unsigned short)strtol(ptr+1, NULL, 10);
