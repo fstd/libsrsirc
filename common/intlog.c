@@ -139,13 +139,6 @@ ircdbg_log(int lvl, int errn, const char *file, int line, const char *func,
 		    s_fancy ? lvlcol(lvl) : "", timebuf, lvlnam(lvl), file, line,
 		    func, fmt, errmsg, s_fancy ? COL_RST : "");
 
-	} else {
-		snprintf(buf, sizeof buf, "%s:%d:%s(): %s%s",
-		    file, line, func, fmt, errmsg);
-		vsyslog(lvl, buf, vl);
-	}
-
-	if (s_stderr) {
 		vsnprintf(buf2, sizeof buf2, buf, vl);
 		char *c = buf2;
 		while (*c) {
@@ -155,8 +148,9 @@ ircdbg_log(int lvl, int errn, const char *file, int line, const char *func,
 		}
 		*(c-1) = '\n';
 		fputs(buf2, stderr);
-
 	} else {
+		snprintf(buf, sizeof buf, "%s:%d:%s(): %s%s",
+		    file, line, func, fmt, errmsg);
 		vsyslog(lvl, buf, vl);
 	}
 
