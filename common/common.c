@@ -63,9 +63,7 @@ ic_xmalloc(size_t num)
 void*
 ic_xrealloc(void *p, size_t num)
 {
-	void *new;
-
-	new = realloc(p, num);
+	void *new = realloc(p, num);
 	if (!new)
 		CE("realloc failed");
 
