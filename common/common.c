@@ -24,7 +24,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
-#include <debug.h>
+#include <intlog.h>
 
 void
 ic_strNcat(char *dest, const char *src, size_t destsz)
@@ -55,10 +55,8 @@ void*
 ic_xmalloc(size_t num)
 {
 	void *new = malloc(num);
-	if (!new) {
-		W("malloc failed");
-		exit(1);
-	}
+	if (!new)
+		CE("malloc failed");
 	return new;
 }
 
@@ -68,10 +66,8 @@ ic_xrealloc(void *p, size_t num)
 	void *new;
 
 	new = realloc(p, num);
-	if (!new) {
-		W("realloc failed");
-		exit(1);
-	}
+	if (!new)
+		CE("realloc failed");
 
 	return new;
 }
@@ -126,7 +122,7 @@ int ic_consocket(const char *host, unsigned short port,
 		struct sockaddr *sockaddr, size_t *addrlen,
 		unsigned long softto, unsigned long hardto)
 {
-	WVX("ic_consocket() called: host='%s', port=%hu, sto=%lu, hto=%lu)",
+	D("ic_consocket() called: host='%s', port=%hu, sto=%lu, hto=%lu)",
 	    host, port, softto, hardto);
 
 	struct addrinfo *ai_list = NULL;
@@ -141,33 +137,33 @@ int ic_consocket(const char *host, unsigned short port,
 
 	int64_t hardtsend = hardto ? ic_timestamp_us() + hardto : 0;
 
-	WVX("calling getaddrinfo on '%s:%s' (AF_UNSPEC, SOCK_STREAM)",
+	D("calling getaddrinfo on '%s:%s' (AF_UNSPEC, SOCK_STREAM)",
 			host, portstr);
 
 	int r = getaddrinfo(host, portstr, &hints, &ai_list);
 
 	if (r != 0) {
-		WX("getaddrinfo() failed: %s", gai_strerror(r));
+		W("getaddrinfo() failed: %s", gai_strerror(r));
 		return -1;
 	}
 
 	if (!ai_list) {
-		WX("result address list empty");
+		W("result address list empty");
 		return -1;
 	}
 
 	int sck = -1;
 
-	WVX("iterating over result list...");
+	D("iterating over result list...");
 	for (struct addrinfo *ai = ai_list; ai; ai = ai->ai_next) {
 		int64_t softtsend = softto ? ic_timestamp_us() + softto : 0;
 
-		WVX("next result, creating socket (fam=%d, styp=%d, prot=%d)",
+		D("next result, creating socket (fam=%d, styp=%d, prot=%d)",
 		    ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 
 		sck = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 		if (sck < 0) {
-			W("cannot create socket");
+			WE("cannot create socket");
 			continue;
 		}
 
@@ -199,19 +195,19 @@ int ic_consocket(const char *host, unsigned short port,
 		int opt = 1;
 		socklen_t optlen = sizeof opt;
 
-		WVX("peer addr is '%s'. going non-blocking", peeraddr);
+		D("peer addr is '%s'. going non-blocking", peeraddr);
 		if (fcntl(sck, F_SETFL, O_NONBLOCK) == -1) {
-			W("failed to enable nonblocking mode");
+			WE("failed to enable nonblocking mode");
 			close(sck);
 			continue;
 		}
 
-		WVX("set to nonblocking mode, calling connect() now");
+		D("set to nonblocking mode, calling connect() now");
 		errno = 0;
 		int r = connect(sck, ai->ai_addr, ai->ai_addrlen);
 
 		if (r == -1 && (errno != EINPROGRESS)) {
-			W("connect() failed");
+			WE("connect() failed");
 			close(sck);
 			continue;
 		}
@@ -234,7 +230,7 @@ int ic_consocket(const char *host, unsigned short port,
 				    ? hardtsend : softtsend - ic_timestamp_us();
 
 				if (trem <= 0) {
-					WX("timeout reached while in 3WHS");
+					W("timeout reached while in 3WHS");
 					break;
 				}
 
@@ -246,12 +242,12 @@ int ic_consocket(const char *host, unsigned short port,
 			    hardtsend || softtsend ? &tout : NULL);
 			if (r < 0)
 			{
-				W("select() failed");
+				WE("select() failed");
 				break;
 			}
 			if (r == 1) {
 				success = true;
-				WVX("selected!");
+				D("selected!");
 				break;
 			}
 		}
@@ -262,13 +258,13 @@ int ic_consocket(const char *host, unsigned short port,
 		}
 
 		if (getsockopt(sck, SOL_SOCKET, SO_ERROR, &opt, &optlen) != 0) {
-			WX("getsockopt failed");
+			W("getsockopt failed");
 			close(sck);
 			continue;
 		}
 
 		if (opt == 0) {
-			WVX("socket connected to '%s'!", peeraddr);
+			D("socket connected to '%s'!", peeraddr);
 			if (sockaddr)
 				*sockaddr = *(ai->ai_addr);
 			if (addrlen)
@@ -276,7 +272,7 @@ int ic_consocket(const char *host, unsigned short port,
 
 			break;
 		} else {
-			WX("could not connect socket (%d)", opt);
+			W("could not connect socket (%d)", opt);
 			close(sck);
 			continue;
 		}

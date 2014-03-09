@@ -30,7 +30,7 @@
 # include <openssl/err.h>
 #endif
 
-#include <debug.h>
+#include <intlog.h>
 
 #define ISDELIM(C) ((C)=='\n' || (C) == '\r')
 
@@ -68,22 +68,22 @@ ircio_read_ex(int sck,
     unsigned long to_us)
 {
 	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
-	//WVX("invoke(sck:%d, tokbuf: %p, tokbuf_sz: %zu, workbuf: %p, "
+	//D("invoke(sck:%d, tokbuf: %p, tokbuf_sz: %zu, workbuf: %p, "
 	//    "workbuf_sz: %zu, mehptr: %p (*:%p), to_us: %lu, tsend: %lld)",
 	//    sck, tokbuf, tokbuf_sz, workbuf, workbuf_sz, mehptr, *mehptr,
 	//    to_us, tsend);
 	if (!*mehptr) {
-		//WVX("fresh invoke (*mehptr is NULL). init workbuf, "
+		//D("fresh invoke (*mehptr is NULL). init workbuf, "
 		//    "pointing *mehptr to it");
 		*mehptr = workbuf;
 		workbuf[0] = '\0';
 	} else {
-		//WVX("first ten of *mehptr: '%.10s'", *mehptr);
+		//D("first ten of *mehptr: '%.10s'", *mehptr);
 		//hexdump(workbuf, workbuf_sz, "workbuf");
 	}
 
 	while(ISDELIM(**mehptr)) {
-		//WVX("skipping a leading delim");
+		//D("skipping a leading delim");
 		(*mehptr)++;
 	}
 
@@ -93,28 +93,28 @@ ircio_read_ex(int sck,
 		end++;
 
 	if (!*end) {
-		//WVX("didn't find delim in workbuf, need moar dataz");
+		//D("didn't find delim in workbuf, need moar dataz");
 		size_t len = (size_t)(end - *mehptr);
-		//WVX("%zu bytes already in workbuf", len);
+		//D("%zu bytes already in workbuf", len);
 		if (*mehptr != workbuf) {
 			size_t mehdist = (size_t)(*mehptr - workbuf);
-			//WVX("*mehptr doesn't point at workbuf's start "
+			//D("*mehptr doesn't point at workbuf's start "
 			//    "(dist: %zu), shifting %zu bytes to the beginning",
 			//    mehdist, len);
 
 			//hexdump(workbuf, workbuf_sz, "workbuf before shift");
 			memmove(workbuf, *mehptr, len);
-			//WVX("zeroing %zu bytes", workbuf_sz - len);
+			//D("zeroing %zu bytes", workbuf_sz - len);
 			memset(workbuf + len, 0, workbuf_sz - len);
 			*mehptr = workbuf;
 			end -= mehdist;
-			//WVX("end is %p (%hhx (%c))", end, *end, *end);
+			//D("end is %p (%hhx (%c))", end, *end, *end);
 			//hexdump(workbuf, workbuf_sz, "workbuf after shift");
 		}
 
 		for(;;) {
 			if (len + 1 >= workbuf_sz) {
-				WX("(sck:%d) input too long", sck);
+				W("(sck:%d) input too long", sck);
 				return -1;
 			}
 			for(;;) {
@@ -122,7 +122,7 @@ ircio_read_ex(int sck,
 				if (tsend) {
 					int64_t trem = tsend - ic_timestamp_us();
 					if (trem <= 0) {
-						//WVX("(sck:%d) timeout reached"
+						//D("(sck:%d) timeout reached"
 						//    " while selecting for read",
 						//    sck);
 						return 0;
@@ -134,24 +134,24 @@ ircio_read_ex(int sck,
 				FD_ZERO(&fds);
 				FD_SET(sck, &fds);
 				errno = 0;
-				//WVX("selecting...");
+				//D("selecting...");
 				int r = select(sck+1, &fds, NULL, NULL,
 				    tsend ? &tout : NULL);
 
 				if (r < 0) {
 					if (errno == EINTR) {
-						W("(sck:%d) received signal "
+						WE("(sck:%d) received signal "
 						    "while selecting", sck);
 						return 0;
 					}
-					W("(sck:%d) select() failed", sck);
+					WE("(sck:%d) select() failed", sck);
 					return -1;
 				} else if (r == 1) {
 					break;
 				} else if (r != 0)
-					WX("wtf select returned %d", r);
+					W("wtf select returned %d", r);
 			}
-			//WVX("reading max %zu byte", workbuf_sz - len - 1);
+			//D("reading max %zu byte", workbuf_sz - len - 1);
 			ssize_t n;
 			errno = 0;
 #ifdef WITH_SSL
@@ -165,18 +165,18 @@ ircio_read_ex(int sck,
 #endif
 			if (n <= 0) {
 				if (n == 0)
-					WX("(sck%d) read: EOF", sck);
+					W("(sck%d) read: EOF", sck);
 				else
-					W("(sck%d) read failed (%zd)", sck, n);
+					WE("(sck%d) read failed (%zd)", sck, n);
 				return -1;
 			}
-			//WVX("read returned %d", n);
+			//D("read returned %d", n);
 			bool gotdelim = false;
 			char *delim = NULL;
 			while(n--) {
 				if (!gotdelim && ISDELIM(*end)) {
 					delim = end;
-					//WVX("found a delim");
+					//D("found a delim");
 					gotdelim = true;
 				}
 
@@ -189,22 +189,22 @@ ircio_read_ex(int sck,
 				end = delim;
 				break;
 			}
-			//WVX("no delim found so far");
+			//D("no delim found so far");
 		}
 	}
 	//hexdump(workbuf, workbuf_sz, "workbuf aftr both loops");
 
 	assert (*end);
 	size_t len = (size_t)(end - *mehptr);
-	//WVX("got %zu bytes till delim in workbuf", len);
+	//D("got %zu bytes till delim in workbuf", len);
 	if (len + 1 >= tokbuf_sz)
 		len = tokbuf_sz - 1;
-	//WVX("copying %zu bytes into tokbuf", len);
+	//D("copying %zu bytes into tokbuf", len);
 	strncpy(tokbuf, *mehptr, len);
 	tokbuf[len] = '\0';
 	*mehptr = end+1;
-	//WVX("first ten of *mehptr: '%.10s'", *mehptr);
-	//WVX("tokenizing, then done!");
+	//D("first ten of *mehptr: '%.10s'", *mehptr);
+	//D("tokenizing, then done!");
 	return tokenize(tokbuf, tok, tok_len);
 }
 
@@ -236,7 +236,7 @@ ircio_write_ex(int sck,
 #else
 	if (!writeall(sck, line) || (needbr && !writeall(sck, "\r\n"))) {
 #endif
-		WX("(sck%d) writeall() failed", sck);
+		W("(sck%d) writeall() failed", sck);
 		return -1;
 	}
 
@@ -267,7 +267,7 @@ writeall(int sck,
 		n = send(sck, buf + cnt, len - cnt, MSG_NOSIGNAL);
 #endif
 		if (n < 0) {
-			W("(sck%d) send() failed", sck);
+			WE("(sck%d) send() failed", sck);
 			return 0;
 		}
 		cnt += n;
@@ -281,7 +281,7 @@ tokenize(char *buf, char **tok, size_t tok_len)
 	if (!buf || !tok || tok_len < 2)
 		return -1;
 
-	//WVX("tokenizing: %s", buf);
+	//D("tokenizing: %s", buf);
 	for(size_t i = 0; i < tok_len; ++i)
 		tok[i] = NULL;
 
@@ -289,7 +289,7 @@ tokenize(char *buf, char **tok, size_t tok_len)
 		*buf++ = '\0';
 
 	size_t len = strlen(buf);
-	//WVX("len is %zu, jumped over ws: %s", len, buf);
+	//D("len is %zu, jumped over ws: %s", len, buf);
 	if (len == 0)
 		return 0;
 
@@ -298,12 +298,12 @@ tokenize(char *buf, char **tok, size_t tok_len)
 		tok[0] = buf + 1;
 		buf = skip2lws(buf, true);
 		if (!buf) {
-			WX("parse erro, pfx but no cmd");
+			W("parse erro, pfx but no cmd");
 			return -1;//parse err, pfx but no cmd
 		}
 		while(isspace(*buf))
 			*buf++ = '\0';
-		//WVX("extracted pfx: %s, rest: %s", tok[0], buf);
+		//D("extracted pfx: %s, rest: %s", tok[0], buf);
 	}
 
 	tok[1] = buf;
@@ -312,16 +312,16 @@ tokenize(char *buf, char **tok, size_t tok_len)
 		while(isspace(*buf))
 			*buf++ = '\0';
 	}
-	//WVX("extracted cmd: %s, rest: %s", tok[1], buf);
+	//D("extracted cmd: %s, rest: %s", tok[1], buf);
 
 	size_t argc = 2;
 	while(buf && *buf && argc < tok_len)
 	{
-		//WVX("iter (argc: %zu) buf is: %s", argc, buf);
+		//D("iter (argc: %zu) buf is: %s", argc, buf);
 		if (*buf == ':')
 		{
 			tok[argc++] = buf + 1;
-			//WVX("extracted trailing (len: %zu), arg[%zu]: %s",
+			//D("extracted trailing (len: %zu), arg[%zu]: %s",
 			//    strlen(buf+1), argc-1, tok[argc-1]);
 			break;
 		}
@@ -332,12 +332,12 @@ tokenize(char *buf, char **tok, size_t tok_len)
 		if (buf) {
 			while(isspace(*buf))
 				*buf++ = '\0';
-			//WVX("jumped over ws: %s", buf);
+			//D("jumped over ws: %s", buf);
 		}
-		//WVX("extracted arg[%zu]: %s, rest: %s", argc-1, tok[argc-1], buf);
+		//D("extracted arg[%zu]: %s, rest: %s", argc-1, tok[argc-1], buf);
 	}
 
-	//WVX("done!");
+	//D("done!");
 	return 1;
 }
 
@@ -362,7 +362,7 @@ skip2lws(char *s, bool tab_is_ws)
 //
 //	buf.pData   = (char *)pAddress;
 //	buf.lSize   = lSize;
-//	WVX("hexdump '%s'", name);
+//	D("hexdump '%s'", name);
 //
 //	while (buf.lSize > 0)
 //	{
@@ -402,6 +402,6 @@ skip2lws(char *s, bool tab_is_ws)
 //		buf.pData   += lOutLen;
 //		buf.lSize   -= lOutLen;
 //	}
-//	WVX("end of hexdump '%s'", name);
+//	D("end of hexdump '%s'", name);
 //}
 

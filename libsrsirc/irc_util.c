@@ -21,7 +21,7 @@
 #include <strings.h>
 #include <limits.h>
 
-#include <debug.h>
+#include <intlog.h>
 
 #define CHANMODE_CLASS_A 1 /*do not change these, see int classify_chanmode(char)*/
 #define CHANMODE_CLASS_B 2
@@ -271,11 +271,11 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
 	int j = 0, cl;
 	char *ptr = modes;
 	int enable = 1;
-	WVX("modes: '%s', nummodes: %zu, modepfx005chr: '%s'",
+	D("modes: '%s', nummodes: %zu, modepfx005chr: '%s'",
 	    modes, nummodes, modepfx005chr);
 	while (*ptr) {
 		char c = *ptr;
-		WVX("next modechar is '%c', enable ATM: %d", c, enable);
+		D("next modechar is '%c', enable ATM: %d", c, enable);
 		arg = NULL;
 		switch (c) {
 		case '+':
@@ -288,7 +288,7 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
 			continue;
 		default:
 			cl = classify_chanmode(c, chmodes);
-			WVX("classified mode '%c' to class %d", c, cl);
+			D("classified mode '%c' to class %d", c, cl);
 			switch (cl) {
 			case CHANMODE_CLASS_A:
 				arg = (i > argcount) ? ("*") : arr[i++];
@@ -306,7 +306,7 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
 				if (strchr(modepfx005chr, c)) {
 					arg = (i > argcount) ? ("*") : arr[i++];
 				} else {
-					WX("unknown chanmode '%c' (0x%X)\n",
+					W("unknown chanmode '%c' (0x%X)\n",
 					    c, (unsigned)c);
 					ptr++;
 					continue;
@@ -314,8 +314,8 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
 			}
 		}
 		if (arg)
-			WVX("arg is '%s'", arg);
 		modearr[j] = malloc((3 + ((arg != NULL) ? strlen(arg) + 1 : 0)));
+			D("arg is '%s'", arg);
 		modearr[j][0] = enable ? '+' : '-';
 		modearr[j][1] = c;
 		modearr[j][2] = arg ? ' ' : '\0';
@@ -325,9 +325,9 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
 		j++;
 		ptr++;
 	}
-	WVX("done parsing, result:");
+	D("done parsing, result:");
 	for(size_t i = 0; i < nummodes; i++) {
-		WVX("modearr[%zu]: '%s'", i, modearr[i]);
+		D("modearr[%zu]: '%s'", i, modearr[i]);
 	}
 
 	*num = nummodes;

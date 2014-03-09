@@ -19,7 +19,7 @@
 #include <string.h>
 #include <strings.h>
 
-#include <debug.h>
+#include <intlog.h>
 
 #define MAX_IRCARGS ((size_t)15)
 
@@ -160,14 +160,14 @@ ircbas_init(void)
 	r->m005modepfx[0] = XSTRDUP("ov");
 	r->m005modepfx[1] = XSTRDUP("@+");
 
-	WVX("(%p) irc_bas initialized (backend: %p)", r, r->con);
+	D("(%p) irc_bas initialized (backend: %p)", r, r->con);
 	return r;
 }
 
 bool
 ircbas_reset(ibhnd_t hnd)
 {
-	WVX("(%p) resetting backend", hnd);
+	D("(%p) resetting backend", hnd);
 	if (!irccon_reset(hnd->con))
 		return false;
 
@@ -195,7 +195,7 @@ ircbas_dispose(ibhnd_t hnd)
 	XFREE(hnd->serv_dist);
 	XFREE(hnd->serv_info);
 
-	WVX("(%p) disposed", hnd);
+	D("(%p) disposed", hnd);
 	XFREE(hnd);
 
 	return true;
@@ -216,20 +216,20 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 		hnd->logonconv[i] = NULL;
 	}
 
-	WVX("(%p) wanna connect, connecting backend (timeout: %lu)", hnd, to_us);
+	D("(%p) wanna connect, connecting backend (timeout: %lu)", hnd, to_us);
 	if (!irccon_connect(hnd->con, to_us)) {
-		WX("(%p) backend failed to establish connection", hnd);
+		W("(%p) backend failed to establish connection", hnd);
 		return false;
 	}
 
-	WVX("(%p) sending IRC logon sequence", hnd);
+	D("(%p) sending IRC logon sequence", hnd);
 	if (!send_logon(hnd)) {
-		WX("(%p) failed writing IRC logon sequence", hnd);
+		W("(%p) failed writing IRC logon sequence", hnd);
 		ircbas_reset(hnd);
 		return false;
 	}
 
-	WVX("(%p) connection established, IRC logon sequence sent", hnd);
+	D("(%p) connection established, IRC logon sequence sent", hnd);
 	char *msg[MAX_IRCARGS];
 	XFREE(hnd->mynick);
 	hnd->mynick = strmdup(hnd->nick, 9);
@@ -239,7 +239,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 		if(tsend) {
 			trem = tsend - ic_timestamp_us();
 			if (trem <= 0) {
-				WX("(%p) timeout hit while waiting for 004", hnd);
+				W("(%p) timeout hit while waiting for 004", hnd);
 				ircbas_reset(hnd);
 				return false;
 			}
@@ -247,7 +247,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 
 		int r = irccon_read(hnd->con, msg, MAX_IRCARGS, (unsigned long)trem);
 		if (r < 0) {
-			WX("(%p) irccon_read() failed", hnd);
+			W("(%p) irccon_read() failed", hnd);
 			ircbas_reset(hnd);
 			return false;
 		}
@@ -257,7 +257,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 
 		if (hnd->cb_con_read && !hnd->cb_con_read(msg, MAX_IRCARGS,
 		    hnd->tag_con_read)) {
-			WX("(%p) further logon prohibited by conread", hnd);
+			W("(%p) further logon prohibited by conread", hnd);
 			ircbas_reset(hnd);
 			return false;
 		}
@@ -296,13 +296,13 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 			hnd->cmodes = XSTRDUP(msg[6]);
 			XFREE(hnd->ver);
 			hnd->ver = XSTRDUP(msg[4]);
-			WVX("(%p) got beloved 004", hnd);
+			D("(%p) got beloved 004", hnd);
 			break;
 		} else if (strcmp(msg[1], "PING") == 0) {
 			char buf[64];
 			snprintf(buf, sizeof buf, "PONG :%s\r\n", msg[2]);
 			if (!irccon_write(hnd->con, buf)) {
-				WX("(%p) write failed (1)", hnd);
+				W("(%p) write failed (1)", hnd);
 				ircbas_reset(hnd);
 				return false;
 			}
@@ -311,7 +311,7 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 		    || (strcmp(msg[1], "436") == 0)//ERR_NICKCOLLISION
 		    || (strcmp(msg[1], "437") == 0)) {//ERR_UNAVAILRESOURCE
 			if (!hnd->cb_mut_nick) {
-				WX("(%p) got no mutnick, wat do? (failing)", hnd);
+				W("(%p) got no mutnick, wat do? (failing)", hnd);
 				ircbas_reset(hnd);
 				return false;
 			}
@@ -319,13 +319,13 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 			char buf[64];
 			snprintf(buf,sizeof buf,"NICK %s\r\n",hnd->mynick);
 			if (!irccon_write(hnd->con, buf)) {
-				WX("(%p) write failed (2)", hnd);
+				W("(%p) write failed (2)", hnd);
 				ircbas_reset(hnd);
 				return false;
 			}
 		} else if (strcmp(msg[1], "464") == 0) { /*ERR_PASSWDMISMATCH*/
 			ircbas_reset(hnd);
-			WX("(%p) wrong server password", hnd);
+			W("(%p) wrong server password", hnd);
 			return false;
 		} else if (strcmp(msg[1], "383") == 0) { /*RPL_YOURESERVICE*/
 			XFREE(hnd->mynick);
@@ -346,36 +346,36 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 		} else if (strcmp(msg[1], "484") == 0) { /*ERR_RESTRICTED*/
 			hnd->restricted = true;
 		} else if (strcmp(msg[1], "465") == 0) { //ERR_YOUREBANNEDCREEP
-			WX("(%p) we're banned", hnd);
+			W("(%p) we're banned", hnd);
 			hnd->banned = true;
 			XFREE(hnd->banmsg);
 			hnd->banmsg = XSTRDUP(msg[3]?msg[3]:"");
 		} else if (strcmp(msg[1], "466") == 0) { //ERR_YOUWILLBEBANNED
-			WX("(%p) we will be banned", hnd); //XXX not in RFC
+			W("(%p) we will be banned", hnd); //XXX not in RFC
 		} else if (strcmp(msg[1], "ERROR") == 0) { /*ERR_RESTRICTED*/
 			XFREE(hnd->lasterr);
 			hnd->lasterr = XSTRDUP(msg[2]?msg[2]:"");
-			WX("(%p) received error while logging on: %s", hnd, msg[2]);
+			W("(%p) received error while logging on: %s", hnd, msg[2]);
 			ircbas_reset(hnd);
 			return false;
 		}
 	}
-	WVX("(%p) irc logon finished, U R online", hnd);
+	D("(%p) irc logon finished, U R online", hnd);
 	return true;
 }
 
 int
 ircbas_read(ibhnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 {
-	//WVX("(%p) wanna read (timeout: %lu)", hnd, to_us);
+	//D("(%p) wanna read (timeout: %lu)", hnd, to_us);
 	int r = irccon_read(hnd->con, tok, tok_len, to_us);
 
 	if (r == -1 || (r != 0 && !onread(hnd, tok, tok_len))) {
-		WX("(%p) irccon_read() failed or onread() denied (r:%d)", hnd, r);
+		W("(%p) irccon_read() failed or onread() denied (r:%d)", hnd, r);
 		ircbas_reset(hnd);
 		return -1;
 	}
-	//WVX("(%p) done reading", hnd);
+	//D("(%p) done reading", hnd);
 
 	return r;
 }
@@ -386,7 +386,7 @@ ircbas_write(ibhnd_t hnd, const char *line)
 	bool r = irccon_write(hnd->con, line);
 
 	if (!r) {
-		WX("(%p) irccon_write() failed", hnd);
+		W("(%p) irccon_write() failed", hnd);
 		ircbas_reset(hnd);
 	}
 
@@ -821,7 +821,7 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 				}
 
 				if (c != 4) {
-					WX("005 chanmodes parse element: "
+					W("005 chanmodes parse element: "
 					    "expected 4 parameters, got %i. "
 					    "arg is: \"%s\"", c, tok[z] + 10);
 				}
