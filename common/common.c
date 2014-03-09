@@ -103,8 +103,7 @@ ic_tconv(struct timeval *tv, int64_t *ts, bool tv_to_ts)
 {
 	if (tv_to_ts)
 		*ts = (int64_t)tv->tv_sec * 1000000 + tv->tv_usec;
-	else
-	{
+	else {
 		tv->tv_sec = *ts / 1000000;
 		tv->tv_usec = *ts % 1000000;
 	}
@@ -224,8 +223,7 @@ int ic_consocket(const char *host, unsigned short port,
 			FD_ZERO(&fds);
 			FD_SET(sck, &fds);
 
-			if (hardtsend || softtsend)
-			{
+			if (hardtsend || softtsend) {
 				trem = hardtsend < softtsend
 				    ? hardtsend : softtsend - ic_timestamp_us();
 
@@ -240,8 +238,7 @@ int ic_consocket(const char *host, unsigned short port,
 			errno = 0;
 			r = select(sck+1, NULL, &fds, NULL,
 			    hardtsend || softtsend ? &tout : NULL);
-			if (r < 0)
-			{
+			if (r < 0) {
 				WE("select() failed");
 				break;
 			}

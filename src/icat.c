@@ -422,7 +422,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	ircbas_set_server(g_irc, host, port);
 	WVX("set server to '%s:%hu'", ircbas_get_host(g_irc),
 			ircbas_get_port(g_irc));
-	
+
 #ifdef WITH_SSL
 	if (sett->ssl && !ircbas_set_ssl(g_irc, true))
 		EX("failed to enable SSL");

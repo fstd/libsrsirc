@@ -19,7 +19,7 @@
 
 //[DINWE](): log with Debug, Info, Notice, Warn, Error severity.
 //[DINWE]E(): similar, but also append ``errno'' message
- 
+
 // ----- logging interface -----
 
 #define D(F,A...)                                               \

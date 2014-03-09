@@ -54,7 +54,7 @@ ircdbg_stderr(void)
 {
 	if (s_open)
 		closelog();
-	
+
 	s_stderr = true;
 }
 
@@ -148,7 +148,7 @@ ircdbg_log(int lvl, int errn, const char *file, int line, const char *func,
 }
 
 
-// ---- local helpers ---- 
+// ---- local helpers ----
 
 
 static const char*

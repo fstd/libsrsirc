@@ -113,7 +113,7 @@ ircbas_init(void)
 	if (!(con = irccon_init()))
 		goto ircbas_init_fail;
 
-	
+
 	/* no XMALLOC here because at this point we might as well
 	 * check and error instead of terminating */
 	if (!(r = malloc(sizeof (*(ibhnd_t)0))))

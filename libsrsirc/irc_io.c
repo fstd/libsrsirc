@@ -253,8 +253,7 @@ writeall(int sck,
 {
 	size_t cnt = 0;
 	size_t len = strlen(buf);
-	while(cnt < len)
-	{
+	while(cnt < len) {
 	//	int n = write(sck, buf + cnt, len - cnt);
 		errno = 0;
 		ssize_t n;
@@ -293,8 +292,7 @@ tokenize(char *buf, char **tok, size_t tok_len)
 	if (len == 0)
 		return 0;
 
-	if (*buf == ':')
-	{
+	if (*buf == ':') {
 		tok[0] = buf + 1;
 		buf = skip2lws(buf, true);
 		if (!buf) {
@@ -315,11 +313,9 @@ tokenize(char *buf, char **tok, size_t tok_len)
 	//D("extracted cmd: %s, rest: %s", tok[1], buf);
 
 	size_t argc = 2;
-	while(buf && *buf && argc < tok_len)
-	{
+	while(buf && *buf && argc < tok_len) {
 		//D("iter (argc: %zu) buf is: %s", argc, buf);
-		if (*buf == ':')
-		{
+		if (*buf == ':') {
 			tok[argc++] = buf + 1;
 			//D("extracted trailing (len: %zu), arg[%zu]: %s",
 			//    strlen(buf+1), argc-1, tok[argc-1]);

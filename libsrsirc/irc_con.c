@@ -112,11 +112,11 @@ irccon_init(void)
 	    || (!(r->overbuf = malloc(OVERBUF_SZ)))
 	    || (!(r->host = strdup(DEF_HOST))))
 		goto irccon_init_fail;
-	
+
 	/* these 2 neccessary? */
 	memset(r->linebuf, 0, LINEBUF_SZ);
 	memset(r->overbuf, 0, OVERBUF_SZ);
-	
+
 	errno = preverrno;
 	r->port = DEF_PORT;
 	r->phost = NULL;
@@ -466,7 +466,7 @@ irccon_set_ssl(ichnd_t hnd, bool on)
 {
 	if (!hnd || hnd->state == INV)
 		return false;
-	
+
 	if (!s_sslinit && on) {
 		SSL_load_error_strings();
 		SSL_library_init();

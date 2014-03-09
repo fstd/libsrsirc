@@ -135,8 +135,7 @@ void
 itolower(char *dest, size_t destsz, const char *str, int casemap)
 {
 	int rangeinc;
-	switch (casemap)
-	{
+	switch (casemap) {
 	case CASEMAPPING_RFC1459:
 		rangeinc = 4;
 		break;
