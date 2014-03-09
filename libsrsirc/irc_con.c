@@ -60,12 +60,6 @@
 #define HOST_DNS 2
 
 
-#define XCALLOC(num) ic_xcalloc(1, num)
-#define XMALLOC(num) ic_xmalloc(num)
-#define XREALLOC(p, num) ic_xrealloc((p),(num))
-#define XFREE(p) do{if(p) free(p); p=0;}while(0)
-#define XSTRDUP(s) ic_xstrdup(s)
-
 #ifdef WITH_SSL
 static bool s_sslinit;
 #endif
@@ -101,18 +95,35 @@ static int guess_hosttype(const char *host);
 ichnd_t
 irccon_init(void)
 {
-	ichnd_t r = XMALLOC(sizeof (*(ichnd_t)0)); // XXX
+	ichnd_t r = NULL;
+	int preverrno = errno;
+	errno = 0;
 
+	/* no XMALLOC here because at this point we might as well
+	 * check and error instead of terminating */
+	if (!(r = malloc(sizeof *r)))
+		goto irccon_init_fail;
 
-	r->host = XSTRDUP(DEF_HOST);
+	r->linebuf = NULL;
+	r->overbuf = NULL;
+	r->host = NULL;
+
+	if ((!(r->linebuf = malloc(LINEBUF_SZ)))
+	    || (!(r->overbuf = malloc(OVERBUF_SZ)))
+	    || (!(r->host = strdup(DEF_HOST))))
+		goto irccon_init_fail;
+	
+	/* these 2 neccessary? */
+	memset(r->linebuf, 0, LINEBUF_SZ);
+	memset(r->overbuf, 0, OVERBUF_SZ);
+	
+	errno = preverrno;
 	r->port = DEF_PORT;
 	r->phost = NULL;
 	r->pport = 0;
 	r->ptype = -1;
 	r->sck = -1;
 	r->state = OFF;
-	r->linebuf = XCALLOC(LINEBUF_SZ);
-	r->overbuf = XCALLOC(OVERBUF_SZ);
 	r->mehptr = NULL;
 	r->colon_trail = false;
 #ifdef WITH_SSL
@@ -124,6 +135,17 @@ irccon_init(void)
 	D("(%p) irc_con initialized", r);
 
 	return r;
+
+irccon_init_fail:
+	EE("failed to initialize irc_con handle");
+	if (r) {
+		free(r->host);
+		free(r->overbuf);
+		free(r->linebuf);
+		free(r);
+	}
+
+	return NULL;
 }
 
 bool
@@ -405,12 +427,18 @@ irccon_set_proxy(ichnd_t hnd, const char *host, unsigned short port, int ptype)
 		if (!host || !(1 <= port && port <= 65535))
 			return false;
 
-		hnd->phost = XSTRDUP(host);
+		if (!(n = strdup(host))) {
+			EE("strdup failed");
+			return false;
+		}
 		hnd->pport = port;
 		hnd->ptype = ptype;
+		XFREE(hnd->phost);
+		hnd->phost = n;
 		break;
 	default:
-		hnd->ptype = -1;
+		E("illegal proxy type %d", ptype);
+		return false;
 	}
 
 	return true;
@@ -422,8 +450,13 @@ irccon_set_server(ichnd_t hnd, const char *host, unsigned short port)
 	if (!hnd || hnd->state == INV)
 		return false;
 
+	char *n;
+	if (!(n = strdup(host?host:DEF_HOST))) {
+		EE("strdup failed");
+		return false;
+	}
 	XFREE(hnd->host);
-	hnd->host = XSTRDUP(host?host:DEF_HOST);
+	hnd->host = n;
 	hnd->port = (1 <= port && port <= 65535)?port:DEF_PORT;
 	return true;
 }

@@ -329,6 +329,8 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 		break;case 'C':
 			{
 			char *str = strdup(optarg);
+			if (!str)
+				E("strdup failed");
 			char *tok = strtok(str, " ");
 			bool first = true;
 			do {
@@ -445,17 +447,20 @@ iprintf(const char *fmt, ...)
 
 	struct outline_s *ptr = g_outQ;
 
-	if (!ptr)
-		ptr = g_outQ = malloc(sizeof *g_outQ);
-	else {
+	if (!ptr) {
+		if (!(ptr = g_outQ = malloc(sizeof *g_outQ)))
+			E("malloc failed");
+	} else {
 		while(ptr->next)
 			ptr = ptr->next;
-		ptr->next = malloc(sizeof *ptr->next);
+		if (!(ptr->next = malloc(sizeof *ptr->next)))
+			E("malloc failed");
 		ptr = ptr->next;
 	}
 
 	ptr->next = NULL;
-	ptr->line = strdup(buf);
+	if (!(ptr->line = strdup(buf)))
+		E("strdup failed");
 	return r;
 }
 

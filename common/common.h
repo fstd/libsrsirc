@@ -14,6 +14,12 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 
+#define XCALLOC(num) ic_xcalloc(1, num)
+#define XMALLOC(num) ic_xmalloc(num)
+#define XREALLOC(p, num) ic_xrealloc((p),(num))
+#define XFREE(p) do{if(p) free(p); p=0;}while(0)
+#define XSTRDUP(s) ic_xstrdup(s)
+
 void ic_strNcat(char *dest, const char *src, size_t destsz);
 char* ic_strNcpy(char *dst, const char *src, size_t len);
 size_t ic_strCchr(const char *dst, char c);

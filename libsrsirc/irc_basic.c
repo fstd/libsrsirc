@@ -36,12 +36,6 @@
 #define DEF_UMODES "iswo"
 #define DEF_CMODES "opsitnml"
 
-#define XCALLOC(num) ic_xcalloc(1, num)
-#define XMALLOC(num) ic_xmalloc(num)
-#define XREALLOC(p, num) ic_xrealloc((p),(num))
-#define XFREE(p) do{if(p) free(p); p=NULL;}while(0)
-#define XSTRDUP(s) ic_xstrdup(s)
-
 
 struct ibhnd
 {
@@ -112,12 +106,53 @@ ircbas_regcb_conread(ibhnd_t hnd, fp_con_read cb, void *tag)
 ibhnd_t
 ircbas_init(void)
 {
-	ichnd_t con = irccon_init();
-	if (!con)
-		return NULL;
+	ichnd_t con;
+	ibhnd_t r = NULL;
+	int preverrno = errno;
+	errno = 0;
+	if (!(con = irccon_init()))
+		goto ircbas_init_fail;
 
-	ibhnd_t r = XMALLOC(sizeof (*(ibhnd_t)0));
+	
+	/* no XMALLOC here because at this point we might as well
+	 * check and error instead of terminating */
+	if (!(r = malloc(sizeof (*(ibhnd_t)0))))
+		goto ircbas_init_fail;
 
+	r->pass = NULL;
+	r->nick = NULL;
+	r->uname = NULL;
+	r->fname = NULL;
+	r->serv_dist = NULL;
+	r->serv_info = NULL;
+	r->m005chanmodes[0] = NULL;
+	r->m005chanmodes[1] = NULL;
+	r->m005chanmodes[2] = NULL;
+	r->m005chanmodes[3] = NULL;
+	r->m005modepfx[0] = NULL;
+	r->m005modepfx[1] = NULL;
+
+	if (!(r->pass = strdup(DEF_PASS)))
+		goto ircbas_init_fail;
+
+	size_t len = strlen(DEF_NICK);
+	if (!(r->nick = malloc((len > 9 ? len : 9) + 1)))
+		goto ircbas_init_fail;
+	strcpy(r->nick, DEF_NICK);
+
+	if ((!(r->uname = strdup(DEF_UNAME)))
+	    || (!(r->fname = strdup(DEF_FNAME)))
+	    || (!(r->serv_dist = strdup(DEF_SERV_DIST)))
+	    || (!(r->serv_info = strdup(DEF_SERV_INFO)))
+	    || (!(r->m005chanmodes[0] = strdup("b")))
+	    || (!(r->m005chanmodes[1] = strdup("k")))
+	    || (!(r->m005chanmodes[2] = strdup("l")))
+	    || (!(r->m005chanmodes[3] = strdup("psitnm")))
+	    || (!(r->m005modepfx[0] = strdup("ov")))
+	    || (!(r->m005modepfx[1] = strdup("@+"))))
+		goto ircbas_init_fail;
+
+	errno = preverrno;
 
 	r->con = con;
 	/* persistent after reset */
@@ -135,15 +170,9 @@ ircbas_init(void)
 	r->banned = false;
 	r->banmsg = NULL;
 
-	r->pass = XSTRDUP(DEF_PASS);
-	r->nick = strmdup(DEF_NICK, 9); //ensure room for mutilate_nick
-	r->uname = XSTRDUP(DEF_UNAME);
-	r->fname = XSTRDUP(DEF_FNAME);
 	r->conflags = DEF_CONFLAGS;
 	r->serv_con = false;
-	r->serv_dist = XSTRDUP(DEF_SERV_DIST);
 	r->serv_type = DEF_SERV_TYPE;
-	r->serv_info = XSTRDUP(DEF_SERV_INFO);
 
 	r->cb_con_read = NULL;
 	r->tag_con_read = NULL;
@@ -152,16 +181,32 @@ ircbas_init(void)
 	for(int i = 0; i < 4; i++)
 		r->logonconv[i] = NULL;
 
-	r->m005chanmodes[0] = XSTRDUP("b");
-	r->m005chanmodes[1] = XSTRDUP("k");
-	r->m005chanmodes[2] = XSTRDUP("l");
-	r->m005chanmodes[3] = XSTRDUP("psitnm");
-
-	r->m005modepfx[0] = XSTRDUP("ov");
-	r->m005modepfx[1] = XSTRDUP("@+");
 
 	D("(%p) irc_bas initialized (backend: %p)", r, r->con);
 	return r;
+
+ircbas_init_fail:
+	EE("failed to initialize irc_basic handle");
+	if (r) {
+		free(r->pass);
+		free(r->nick);
+		free(r->uname);
+		free(r->fname);
+		free(r->serv_dist);
+		free(r->serv_info);
+		free(r->m005chanmodes[0]);
+		free(r->m005chanmodes[1]);
+		free(r->m005chanmodes[2]);
+		free(r->m005chanmodes[3]);
+		free(r->m005modepfx[0]);
+		free(r->m005modepfx[1]);
+		free(r);
+	}
+
+	if (con)
+		irccon_dispose(con);
+
+	return NULL;
 }
 
 bool
@@ -724,7 +769,7 @@ static char*
 strmdup(const char *str, size_t minlen)
 {
 	size_t len = strlen(str);
-	char *s = XCALLOC((len > minlen ? len : minlen) + 1);
+	char *s = XMALLOC((len > minlen ? len : minlen) + 1);
 	strcpy(s, str);
 	return s;
 }
@@ -794,7 +839,7 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 					hnd->casemapping = CASEMAPPING_RFC1459;
 				}
 			} else if (strncasecmp(tok[z], "PREFIX=", 7) == 0) {
-				char *str = strdup(tok[z] + 8);
+				char *str = XSTRDUP(tok[z] + 8);
 				char *p = strchr(str, ')');
 				*p++ = '\0';
 				XFREE(hnd->m005modepfx[0]);
@@ -803,7 +848,7 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 				XFREE(hnd->m005modepfx[1]);
 				hnd->m005modepfx[1] = XSTRDUP(p);
 
-				free(str);
+				XFREE(str);
 			} else if (strncasecmp(tok[z], "CHANMODES=", 10) == 0) {
 				for (int z = 0; z < 4; ++z) {
 					XFREE(hnd->m005chanmodes[z]);
@@ -811,7 +856,7 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 				}
 
 				int c = 0;
-				char* argbuf = strdup(tok[z] + 10);
+				char* argbuf = XSTRDUP(tok[z] + 10);
 				char *ptr = strtok(argbuf, ",");
 
 				while (ptr) {
@@ -826,7 +871,7 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 					    "arg is: \"%s\"", c, tok[z] + 10);
 				}
 
-				free(argbuf);
+				XFREE(argbuf);
 			}
 		}
 	}
@@ -857,7 +902,7 @@ clonearr(char **arr, size_t nelem)
 {
 	char **res = XMALLOC((nelem+1) * sizeof *arr);
 	for(size_t i = 0; i < nelem; i++)
-		res[i] = arr[i] ? strdup(arr[i]) : NULL;
+		res[i] = arr[i] ? XSTRDUP(arr[i]) : NULL;
 	res[nelem] = NULL;
 	return res;
 }
@@ -868,7 +913,7 @@ freearr(char **arr, size_t nelem)
 {
 	if (arr) {
 		for(size_t i = 0; i < nelem; i++)
-			free(arr[i]);
-		free(arr);
+			XFREE(arr[i]);
+		XFREE(arr);
 	}
 }
