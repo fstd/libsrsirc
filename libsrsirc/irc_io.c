@@ -15,6 +15,7 @@
 #include <common.h>
 
 /* C */
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -35,6 +36,7 @@
 #define ISDELIM(C) ((C)=='\n' || (C) == '\r')
 
 /* local helpers */
+static void hexdump(const void *pAddressIn, long  lSize, const char *name);
 static int tokenize(char *buf, char **tok, size_t tok_len); //tokenize proto msg
 static char *skip2lws(char *s, bool tab_is_ws); //fwd pointer until whitespace
 static int writeall(int sck,
@@ -68,22 +70,23 @@ ircio_read_ex(int sck,
     unsigned long to_us)
 {
 	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
-	//D("invoke(sck:%d, tokbuf: %p, tokbuf_sz: %zu, workbuf: %p, "
-	//    "workbuf_sz: %zu, mehptr: %p (*:%p), to_us: %lu, tsend: %lld)",
-	//    sck, tokbuf, tokbuf_sz, workbuf, workbuf_sz, mehptr, *mehptr,
-	//    to_us, tsend);
+	V("invoke(sck:%d, tokbuf: %p, tokbuf_sz: %zu, workbuf: %p, "
+	    "workbuf_sz: %zu, mehptr: %p (*:%p), to_us: %lu, tsend: %lld)",
+	    sck, tokbuf, tokbuf_sz, workbuf, workbuf_sz, mehptr, *mehptr,
+	    to_us, tsend);
 	if (!*mehptr) {
-		//D("fresh invoke (*mehptr is NULL). init workbuf, "
-		//    "pointing *mehptr to it");
+		V("fresh invoke (*mehptr is NULL). init workbuf, "
+		    "pointing *mehptr to it");
 		*mehptr = workbuf;
 		workbuf[0] = '\0';
 	} else {
-		//D("first ten of *mehptr: '%.10s'", *mehptr);
-		//hexdump(workbuf, workbuf_sz, "workbuf");
+		V("first ten of *mehptr: '%.10s'", *mehptr);
+		if (ircdbg_getlvl() == LOG_VIVI)
+			hexdump(workbuf, workbuf_sz, "workbuf");
 	}
 
 	while(ISDELIM(**mehptr)) {
-		//D("skipping a leading delim");
+		V("skipping a leading delim");
 		(*mehptr)++;
 	}
 
@@ -93,23 +96,25 @@ ircio_read_ex(int sck,
 		end++;
 
 	if (!*end) {
-		//D("didn't find delim in workbuf, need moar dataz");
+		V("didn't find delim in workbuf, need moar dataz");
 		size_t len = (size_t)(end - *mehptr);
-		//D("%zu bytes already in workbuf", len);
+		V("%zu bytes already in workbuf", len);
 		if (*mehptr != workbuf) {
 			size_t mehdist = (size_t)(*mehptr - workbuf);
-			//D("*mehptr doesn't point at workbuf's start "
-			//    "(dist: %zu), shifting %zu bytes to the beginning",
-			//    mehdist, len);
+			V("*mehptr doesn't point at workbuf's start "
+			    "(dist: %zu), shifting %zu bytes to the beginning",
+			    mehdist, len);
 
-			//hexdump(workbuf, workbuf_sz, "workbuf before shift");
+			if (ircdbg_getlvl() == LOG_VIVI)
+				hexdump(workbuf, workbuf_sz, "workbuf before shift");
 			memmove(workbuf, *mehptr, len);
-			//D("zeroing %zu bytes", workbuf_sz - len);
+			V("zeroing %zu bytes", workbuf_sz - len);
 			memset(workbuf + len, 0, workbuf_sz - len);
 			*mehptr = workbuf;
 			end -= mehdist;
-			//D("end is %p (%hhx (%c))", end, *end, *end);
-			//hexdump(workbuf, workbuf_sz, "workbuf after shift");
+			V("end is %p (%hhx (%c))", end, *end, *end);
+			if (ircdbg_getlvl() == LOG_VIVI)
+				hexdump(workbuf, workbuf_sz, "workbuf after shift");
 		}
 
 		for(;;) {
@@ -122,9 +127,9 @@ ircio_read_ex(int sck,
 				if (tsend) {
 					int64_t trem = tsend - ic_timestamp_us();
 					if (trem <= 0) {
-						//D("(sck:%d) timeout reached"
-						//    " while selecting for read",
-						//    sck);
+						V("(sck:%d) timeout reached"
+						    " while selecting for read",
+						    sck);
 						return 0;
 					}
 
@@ -134,7 +139,7 @@ ircio_read_ex(int sck,
 				FD_ZERO(&fds);
 				FD_SET(sck, &fds);
 				errno = 0;
-				//D("selecting...");
+				V("selecting...");
 				int r = select(sck+1, &fds, NULL, NULL,
 				    tsend ? &tout : NULL);
 
@@ -151,7 +156,7 @@ ircio_read_ex(int sck,
 				} else if (r != 0)
 					W("wtf select returned %d", r);
 			}
-			//D("reading max %zu byte", workbuf_sz - len - 1);
+			V("reading max %zu byte", workbuf_sz - len - 1);
 			ssize_t n;
 			errno = 0;
 #ifdef WITH_SSL
@@ -170,13 +175,13 @@ ircio_read_ex(int sck,
 					WE("(sck%d) read failed (%zd)", sck, n);
 				return -1;
 			}
-			//D("read returned %d", n);
+			V("read returned %d", n);
 			bool gotdelim = false;
 			char *delim = NULL;
 			while(n--) {
 				if (!gotdelim && ISDELIM(*end)) {
 					delim = end;
-					//D("found a delim");
+					V("found a delim");
 					gotdelim = true;
 				}
 
@@ -189,22 +194,23 @@ ircio_read_ex(int sck,
 				end = delim;
 				break;
 			}
-			//D("no delim found so far");
+			V("no delim found so far");
 		}
 	}
-	//hexdump(workbuf, workbuf_sz, "workbuf aftr both loops");
+	if (ircdbg_getlvl() == LOG_VIVI)
+		hexdump(workbuf, workbuf_sz, "workbuf aftr both loops");
 
 	assert (*end);
 	size_t len = (size_t)(end - *mehptr);
-	//D("got %zu bytes till delim in workbuf", len);
+	V("got %zu bytes till delim in workbuf", len);
 	if (len + 1 >= tokbuf_sz)
 		len = tokbuf_sz - 1;
-	//D("copying %zu bytes into tokbuf", len);
+	V("copying %zu bytes into tokbuf", len);
 	strncpy(tokbuf, *mehptr, len);
 	tokbuf[len] = '\0';
 	*mehptr = end+1;
-	//D("first ten of *mehptr: '%.10s'", *mehptr);
-	//D("tokenizing, then done!");
+	V("first ten of *mehptr: '%.10s'", *mehptr);
+	V("tokenizing, then done!");
 	return tokenize(tokbuf, tok, tok_len);
 }
 
@@ -225,6 +231,7 @@ ircio_write_ex(int sck,
 #endif
     const char *line)
 {
+	V("invoke(sck:%d, line: %s", sck, line);
 	if (sck < 0 || !line)
 		return -1;
 
@@ -236,7 +243,7 @@ ircio_write_ex(int sck,
 #else
 	if (!writeall(sck, line) || (needbr && !writeall(sck, "\r\n"))) {
 #endif
-		W("(sck%d) writeall() failed", sck);
+		W("(sck%d) writeall() failed for line: %s", sck, line);
 		return -1;
 	}
 
@@ -251,12 +258,14 @@ writeall(int sck,
 #endif
     const char* buf)
 {
+	V("invoke");
 	size_t cnt = 0;
 	size_t len = strlen(buf);
 	while(cnt < len) {
-	//	int n = write(sck, buf + cnt, len - cnt);
 		errno = 0;
 		ssize_t n;
+		V("calling send()/SSL_write(), num: %zu len: %zu",
+		    buf + cnt, len - cnt);
 #ifdef WITH_SSL
 		if (shnd)
 			n = (ssize_t)SSL_write(shnd, buf + cnt, len - cnt);
@@ -269,8 +278,10 @@ writeall(int sck,
 			WE("(sck%d) send() failed", sck);
 			return 0;
 		}
+		V("send/SSL_write() returned %zd", n);
 		cnt += n;
 	}
+	V("success");
 	return 1;
 }
 
@@ -280,7 +291,7 @@ tokenize(char *buf, char **tok, size_t tok_len)
 	if (!buf || !tok || tok_len < 2)
 		return -1;
 
-	//D("tokenizing: %s", buf);
+	V("tokenizing: %s", buf);
 	for(size_t i = 0; i < tok_len; ++i)
 		tok[i] = NULL;
 
@@ -288,7 +299,7 @@ tokenize(char *buf, char **tok, size_t tok_len)
 		*buf++ = '\0';
 
 	size_t len = strlen(buf);
-	//D("len is %zu, jumped over ws: %s", len, buf);
+	V("len is %zu, jumped over ws: %s", len, buf);
 	if (len == 0)
 		return 0;
 
@@ -301,7 +312,7 @@ tokenize(char *buf, char **tok, size_t tok_len)
 		}
 		while(isspace(*buf))
 			*buf++ = '\0';
-		//D("extracted pfx: %s, rest: %s", tok[0], buf);
+		V("extracted pfx: %s, rest: %s", tok[0], buf);
 	}
 
 	tok[1] = buf;
@@ -310,15 +321,15 @@ tokenize(char *buf, char **tok, size_t tok_len)
 		while(isspace(*buf))
 			*buf++ = '\0';
 	}
-	//D("extracted cmd: %s, rest: %s", tok[1], buf);
+	V("extracted cmd: %s, rest: %s", tok[1], buf);
 
 	size_t argc = 2;
 	while(buf && *buf && argc < tok_len) {
-		//D("iter (argc: %zu) buf is: %s", argc, buf);
+		V("iter (argc: %zu) buf is: %s", argc, buf);
 		if (*buf == ':') {
 			tok[argc++] = buf + 1;
-			//D("extracted trailing (len: %zu), arg[%zu]: %s",
-			//    strlen(buf+1), argc-1, tok[argc-1]);
+			V("extracted trailing (len: %zu), arg[%zu]: %s",
+			    strlen(buf+1), argc-1, tok[argc-1]);
 			break;
 		}
 		tok[argc++] = buf;
@@ -328,12 +339,12 @@ tokenize(char *buf, char **tok, size_t tok_len)
 		if (buf) {
 			while(isspace(*buf))
 				*buf++ = '\0';
-			//D("jumped over ws: %s", buf);
+			V("jumped over ws: %s", buf);
 		}
-		//D("extracted arg[%zu]: %s, rest: %s", argc-1, tok[argc-1], buf);
+		V("extracted arg[%zu]: %s, rest: %s", argc-1, tok[argc-1], buf);
 	}
 
-	//D("done!");
+	V("done!");
 	return 1;
 }
 
@@ -346,58 +357,58 @@ skip2lws(char *s, bool tab_is_ws)
 }
 
 /*not-quite-ravomavain's h4xdump*/
-//static void hexdump(const void *pAddressIn, long  lSize, const char *name)
-//{
-//	char szBuf[100];
-//	long lIndent = 1;
-//	long lOutLen, lIndex, lIndex2, lOutLen2;
-//	long lRelPos;
-//	struct { char *pData; unsigned long lSize; } buf;
-//	unsigned char *pTmp,ucTmp;
-//	unsigned char *pAddress = (unsigned char *)pAddressIn;
-//
-//	buf.pData   = (char *)pAddress;
-//	buf.lSize   = lSize;
-//	D("hexdump '%s'", name);
-//
-//	while (buf.lSize > 0)
-//	{
-//		pTmp     = (unsigned char *)buf.pData;
-//		lOutLen  = (int)buf.lSize;
-//		if (lOutLen > 16)
-//			lOutLen = 16;
-//
-//		/* create a 64-character formatted output line: */
-//		sprintf(szBuf, " |                            "
-//				"                      "
-//				"    %08lX", (long unsigned int)(pTmp-pAddress));
-//		lOutLen2 = lOutLen;
-//
-//		for(lIndex = 1+lIndent, lIndex2 = 53-15+lIndent, lRelPos = 0;
-//				lOutLen2;
-//				lOutLen2--, lIndex += 2, lIndex2++
-//		   )
-//		{
-//			ucTmp = *pTmp++;
-//
-//			sprintf(szBuf + lIndex, "%02X ", (unsigned short)ucTmp);
-//			if(!isprint(ucTmp))  ucTmp = '.'; /* nonprintable char */
-//			szBuf[lIndex2] = ucTmp;
-//
-//			if (!(++lRelPos & 3))     /* extra blank after 4 bytes */
-//			{  lIndex++; szBuf[lIndex+2] = ' '; }
-//		}
-//
-//		if (!(lRelPos & 3)) lIndex--;
-//
-//		szBuf[lIndex  ]   = '|';
-//		szBuf[lIndex+1]   = ' ';
-//
-//		fprintf(stderr, "%s\n", szBuf);
-//
-//		buf.pData   += lOutLen;
-//		buf.lSize   -= lOutLen;
-//	}
-//	D("end of hexdump '%s'", name);
-//}
+static void hexdump(const void *pAddressIn, long  lSize, const char *name)
+{
+	char szBuf[100];
+	long lIndent = 1;
+	long lOutLen, lIndex, lIndex2, lOutLen2;
+	long lRelPos;
+	struct { char *pData; unsigned long lSize; } buf;
+	unsigned char *pTmp,ucTmp;
+	unsigned char *pAddress = (unsigned char *)pAddressIn;
+
+	buf.pData   = (char *)pAddress;
+	buf.lSize   = lSize;
+	V("hexdump '%s'", name);
+
+	while (buf.lSize > 0)
+	{
+		pTmp     = (unsigned char *)buf.pData;
+		lOutLen  = (int)buf.lSize;
+		if (lOutLen > 16)
+			lOutLen = 16;
+
+		/* create a 64-character formatted output line: */
+		sprintf(szBuf, " |                            "
+				"                      "
+				"    %08lX", (long unsigned int)(pTmp-pAddress));
+		lOutLen2 = lOutLen;
+
+		for(lIndex = 1+lIndent, lIndex2 = 53-15+lIndent, lRelPos = 0;
+				lOutLen2;
+				lOutLen2--, lIndex += 2, lIndex2++
+		   )
+		{
+			ucTmp = *pTmp++;
+
+			sprintf(szBuf + lIndex, "%02X ", (unsigned short)ucTmp);
+			if(!isprint(ucTmp))  ucTmp = '.'; /* nonprintable char */
+			szBuf[lIndex2] = ucTmp;
+
+			if (!(++lRelPos & 3))     /* extra blank after 4 bytes */
+			{  lIndex++; szBuf[lIndex+2] = ' '; }
+		}
+
+		if (!(lRelPos & 3)) lIndex--;
+
+		szBuf[lIndex  ]   = '|';
+		szBuf[lIndex+1]   = ' ';
+
+		V("%s", szBuf);
+
+		buf.pData   += lOutLen;
+		buf.lSize   -= lOutLen;
+	}
+	V("end of hexdump '%s'", name);
+}
 

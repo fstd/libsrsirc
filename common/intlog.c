@@ -22,6 +22,7 @@
 #define COL_WHITE "\033[37;01m"
 #define COL_WHITEINV "\033[07;37;01m"
 #define COL_GRAY "\033[30;01m"
+#define COL_GRAYINV "\033[07;30;01m"
 #define COL_RST "\033[0m"
 
 
@@ -112,6 +113,7 @@ ircdbg_log(int lvl, int errn, const char *file, int line, const char *func,
 		return;
 
 	char buf[4096];
+	char buf2[4096];
 
 	va_list vl;
 	va_start(vl, fmt);
@@ -136,11 +138,25 @@ ircdbg_log(int lvl, int errn, const char *file, int line, const char *func,
 		snprintf(buf, sizeof buf, "%s%s: libsrsirc: %s: %s:%d:%s(): %s%s%s\n",
 		    s_fancy ? lvlcol(lvl) : "", timebuf, lvlnam(lvl), file, line,
 		    func, fmt, errmsg, s_fancy ? COL_RST : "");
-		vfprintf(stderr, buf, vl);
 
 	} else {
 		snprintf(buf, sizeof buf, "%s:%d:%s(): %s%s",
 		    file, line, func, fmt, errmsg);
+		vsyslog(lvl, buf, vl);
+	}
+
+	if (s_stderr) {
+		vsnprintf(buf2, sizeof buf2, buf, vl);
+		char *c = buf2;
+		while (*c) {
+			if (*c == '\n' || *c == '\r')
+				*c = '$';
+			c++;
+		}
+		*(c-1) = '\n';
+		fputs(buf2, stderr);
+
+	} else {
 		vsyslog(lvl, buf, vl);
 	}
 
@@ -155,6 +171,7 @@ static const char*
 lvlnam(int lvl)
 {
 	return lvl == LOG_DEBUG ? "DBG" :
+	       lvl == LOG_VIVI ? "VIV" :
 	       lvl == LOG_INFO ? "INF" :
 	       lvl == LOG_NOTICE ? "NOT" :
 	       lvl == LOG_WARNING ? "WRN" :
@@ -166,6 +183,7 @@ static const char*
 lvlcol(int lvl)
 {
 	return lvl == LOG_DEBUG ? COL_GRAY :
+	       lvl == LOG_VIVI ? COL_GRAYINV :
 	       lvl == LOG_INFO ? COL_WHITE :
 	       lvl == LOG_NOTICE ? COL_GREEN :
 	       lvl == LOG_WARNING ? COL_YELLOW :

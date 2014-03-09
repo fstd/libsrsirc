@@ -147,7 +147,7 @@ int ic_consocket(const char *host, unsigned short port,
 	}
 
 	if (!ai_list) {
-		W("result address list empty");
+		W("getaddrinfo result address list empty");
 		return -1;
 	}
 
@@ -157,7 +157,7 @@ int ic_consocket(const char *host, unsigned short port,
 	for (struct addrinfo *ai = ai_list; ai; ai = ai->ai_next) {
 		int64_t softtsend = softto ? ic_timestamp_us() + softto : 0;
 
-		D("next result, creating socket (fam=%d, styp=%d, prot=%d)",
+		I("next result, creating socket (fam=%d, styp=%d, prot=%d)",
 		    ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 
 		sck = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
@@ -261,7 +261,7 @@ int ic_consocket(const char *host, unsigned short port,
 		}
 
 		if (opt == 0) {
-			D("socket connected to '%s'!", peeraddr);
+			I("socket connected to '%s'!", peeraddr);
 			if (sockaddr)
 				*sockaddr = *(ai->ai_addr);
 			if (addrlen)

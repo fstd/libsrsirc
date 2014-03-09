@@ -22,6 +22,14 @@
 
 // ----- logging interface -----
 
+#define LOG_VIVI (LOG_DEBUG+1)
+
+#define V(F,A...)                                               \
+    ircdbg_log(LOG_VIVI,-1,__FILE__,__LINE__,__func__,F,##A)
+
+#define VE(F,A...)                                              \
+    ircdbg_log(LOG_VIVI,errno,__FILE__,__LINE__,__func__,F,##A)
+
 #define D(F,A...)                                               \
     ircdbg_log(LOG_DEBUG,-1,__FILE__,__LINE__,__func__,F,##A)
 

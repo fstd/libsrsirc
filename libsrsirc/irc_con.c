@@ -317,7 +317,7 @@ irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 		return -1;
 
 	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
-	//D("(%p) wanna read (timeout: %lu)", hnd, to_us);
+	D("(%p) wanna read (timeout: %lu)", hnd, to_us);
 
 	int n;
 	/* read a line, ignoring empty lines */
@@ -326,7 +326,7 @@ irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 		if (tsend) {
 			trem = tsend - ic_timestamp_us();
 			if (trem <= 0) {
-				//W("(%p) timeout hit", hnd);
+				V("(%p) timeout hit", hnd);
 				return 0;
 			}
 		}
@@ -351,7 +351,7 @@ irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 	if (last > 2)
 		hnd->colon_trail = tok[last-1][-1] == ':';
 
-	//D("(%p) done reading", hnd);
+	D("(%p) done reading", hnd);
 
 	return 1;
 }
