@@ -418,8 +418,7 @@ irccon_set_proxy(ichnd_t hnd, const char *host, unsigned short port, int ptype)
 	if (!hnd || hnd->state == INV)
 		return false;
 
-	XFREE(hnd->phost);
-	hnd->phost = NULL;
+	char *n = NULL;
 	switch(ptype) {
 	case IRCPX_HTTP:
 	case IRCPX_SOCKS4:
