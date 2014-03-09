@@ -25,6 +25,11 @@
 #include <unistd.h>
 #include <sys/socket.h>
 
+#ifdef WITH_SSL
+/* ssl */
+# include <openssl/err.h>
+#endif
+
 #include <debug.h>
 
 #define ISDELIM(C) ((C)=='\n' || (C) == '\r')
@@ -32,11 +37,33 @@
 /* local helpers */
 static int tokenize(char *buf, char **tok, size_t tok_len); //tokenize proto msg
 static char *skip2lws(char *s, bool tab_is_ws); //fwd pointer until whitespace
-static int writeall(int sck, const char* buf); //write a full string
+static int writeall(int sck,
+#ifdef WITH_SSL
+    SSL *shnd,
+#endif
+    const char* buf); //write a full string
 
 /* pub if implementation */
 int
 ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
+    size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len,
+    unsigned long to_us)
+{
+#ifdef WITH_SSL
+	return ircio_read_ex(sck, NULL, tokbuf, tokbuf_sz, workbuf,
+	    workbuf_sz, mehptr, tok, tok_len, to_us);
+#else
+	return ircio_read_ex(sck, tokbuf, tokbuf_sz, workbuf,
+	    workbuf_sz, mehptr, tok, tok_len, to_us);
+#endif
+}
+
+int
+ircio_read_ex(int sck,
+#ifdef WITH_SSL
+    SSL *shnd,
+#endif
+    char *tokbuf, size_t tokbuf_sz, char *workbuf,
     size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len,
     unsigned long to_us)
 {
@@ -125,8 +152,17 @@ ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
 					WX("wtf select returned %d", r);
 			}
 			//WVX("reading max %zu byte", workbuf_sz - len - 1);
+			ssize_t n;
 			errno = 0;
-			ssize_t n = read(sck, end, workbuf_sz - len - 1);
+#ifdef WITH_SSL
+			if (shnd)
+				n = (ssize_t)SSL_read(shnd, end,
+				    workbuf_sz - len - 1);
+			else
+				n = read(sck, end, workbuf_sz - len - 1);
+#else
+			n = read(sck, end, workbuf_sz - len - 1);
+#endif
 			if (n <= 0) {
 				if (n == 0)
 					WX("(sck%d) read: EOF", sck);
@@ -175,13 +211,31 @@ ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
 int
 ircio_write(int sck, const char *line)
 {
+#ifdef WITH_SSL
+	return ircio_write_ex(sck, NULL, line);
+#else
+	return ircio_write_ex(sck, line);
+#endif
+}
+
+int
+ircio_write_ex(int sck,
+#ifdef WITH_SSL
+    SSL *shnd,
+#endif
+    const char *line)
+{
 	if (sck < 0 || !line)
 		return -1;
 
 	size_t len = strlen(line);
 	int needbr = len < 2 || line[len - 2] != '\r' || line[len - 1] != '\n';
 
+#ifdef WITH_SSL
+	if (!writeall(sck, shnd, line) || (needbr && !writeall(sck, shnd, "\r\n"))) {
+#else
 	if (!writeall(sck, line) || (needbr && !writeall(sck, "\r\n"))) {
+#endif
 		WX("(sck%d) writeall() failed", sck);
 		return -1;
 	}
@@ -191,7 +245,11 @@ ircio_write(int sck, const char *line)
 
 /* local helpers implementation */
 static int
-writeall(int sck, const char* buf)
+writeall(int sck,
+#ifdef WITH_SSL
+    SSL *shnd,
+#endif
+    const char* buf)
 {
 	size_t cnt = 0;
 	size_t len = strlen(buf);
@@ -199,7 +257,15 @@ writeall(int sck, const char* buf)
 	{
 	//	int n = write(sck, buf + cnt, len - cnt);
 		errno = 0;
-		ssize_t n = send(sck, buf + cnt, len - cnt, MSG_NOSIGNAL);
+		ssize_t n;
+#ifdef WITH_SSL
+		if (shnd)
+			n = (ssize_t)SSL_write(shnd, buf + cnt, len - cnt);
+		else
+			n = send(sck, buf + cnt, len - cnt, MSG_NOSIGNAL);
+#else
+		n = send(sck, buf + cnt, len - cnt, MSG_NOSIGNAL);
+#endif
 		if (n < 0) {
 			W("(sck%d) send() failed", sck);
 			return 0;

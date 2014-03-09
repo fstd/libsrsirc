@@ -36,6 +36,12 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+#ifdef WITH_SSL
+/* ssl */
+# include <openssl/ssl.h>
+# include <openssl/err.h>
+#endif
+
 #include <debug.h>
 
 #define RXBUF_SZ 4096
@@ -60,6 +66,9 @@
 #define XFREE(p) do{if(p) free(p); p=0;}while(0)
 #define XSTRDUP(s) ic_xstrdup(s)
 
+#ifdef WITH_SSL
+static bool s_sslinit;
+#endif
 
 struct ichnd
 {
@@ -77,6 +86,11 @@ struct ichnd
 	char *overbuf;
 	char *mehptr;
 	bool colon_trail;
+#ifdef WITH_SSL
+	bool ssl;
+	SSL_CTX *sctx;
+	SSL *shnd;
+#endif
 };
 
 static bool pxlogon_http(ichnd_t hnd, unsigned long to_us);
@@ -105,6 +119,11 @@ irccon_init(void)
 	r->overbuf = XCALLOC(OVERBUF_SZ);
 	r->mehptr = NULL;
 	r->colon_trail = false;
+#ifdef WITH_SSL
+	r->ssl = false;
+	r->shnd = NULL;
+	r->sctx = NULL;
+#endif
 
 	WVX("(%p) irc_con initialized", r);
 
@@ -118,6 +137,15 @@ irccon_reset(ichnd_t hnd)
 		return false;
 
 	WVX("(%p) resetting", hnd);
+
+#ifdef WITH_SSL
+	if (hnd->shnd) {
+		WVX("(%p) shutting down ssl", hnd);
+		SSL_shutdown(hnd->shnd);
+		SSL_free(hnd->shnd);
+		hnd->shnd = NULL;
+	}
+#endif
 
 	if (hnd->sck != -1) {
 		WVX("(%p) closing socket %d", hnd, hnd->sck);
@@ -140,6 +168,10 @@ irccon_dispose(ichnd_t hnd)
 		return false;
 
 	irccon_reset(hnd);
+
+#ifdef WITH_SSL
+	irccon_set_ssl(hnd, false); //dispose ssl context if existing
+#endif
 
 	XFREE(hnd->host);
 	XFREE(hnd->phost);
@@ -226,6 +258,31 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 		hnd->sck = -1;
 		return false;
 	}
+#ifdef WITH_SSL
+	if (hnd->ssl) {
+		bool fail = false;
+		fail = !(hnd->shnd = SSL_new(hnd->sctx));
+		fail = fail || !SSL_set_fd(hnd->shnd, sck);
+		int r = SSL_connect(hnd->shnd);
+		WVX("ssl_connect: %d", r);
+		if (r != 1) {
+			int rr = SSL_get_error(hnd->shnd, r);
+			WVX("rr: %d", rr);
+		}
+		fail = fail || (r != 1);
+		if (fail) {
+			ERR_print_errors_fp(stderr);
+			if (hnd->shnd) {
+				SSL_free(hnd->shnd);
+				hnd->shnd = NULL;
+			}
+
+			close(sck);
+			WX("connect bailing out; couldn't initiate ssl");
+			return false;
+		}
+	}
+#endif
 
 	hnd->state = ON;
 
@@ -255,9 +312,12 @@ irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 				return 0;
 			}
 		}
-
-		n = ircio_read(hnd->sck, hnd->linebuf, LINEBUF_SZ,
-		    hnd->overbuf, OVERBUF_SZ, &hnd->mehptr, tok, tok_len,
+		n = ircio_read_ex(hnd->sck,
+#ifdef WITH_SSL
+		    hnd->shnd,
+#endif
+		    hnd->linebuf, LINEBUF_SZ, hnd->overbuf, OVERBUF_SZ,
+		    &hnd->mehptr, tok, tok_len,
 		    tsend ? (unsigned long)trem : 0ul);
 
 		if (n < 0) { //read error
@@ -285,7 +345,11 @@ irccon_write(ichnd_t hnd, const char *line)
 		return false;
 
 
-	if (ircio_write(hnd->sck, line) == -1) {
+	if (ircio_write_ex(hnd->sck,
+#ifdef WITH_SSL
+	    hnd->shnd,
+#endif
+	    line) == -1) {
 		WX("(%p) failed to write '%s'", hnd, line);
 		irccon_reset(hnd);
 		return false;
@@ -368,6 +432,34 @@ irccon_set_server(ichnd_t hnd, const char *host, unsigned short port)
 	return true;
 }
 
+#ifdef WITH_SSL
+bool
+irccon_set_ssl(ichnd_t hnd, bool on)
+{
+	if (!hnd || hnd->state == INV)
+		return false;
+	
+	if (!s_sslinit && on) {
+		SSL_load_error_strings();
+		SSL_library_init();
+		s_sslinit = true;
+	}
+
+	if (on && !hnd->sctx) {
+		if (!(hnd->sctx = SSL_CTX_new(SSLv23_client_method()))) {
+			WX("SSL_CTX_new failed, ssl not enabled!");
+			return false;
+		}
+	} else if (!on && hnd->sctx) {
+		SSL_CTX_free(hnd->sctx);
+	}
+
+	hnd->ssl = on;
+
+	return true;
+}
+#endif
+
 const char*
 irccon_get_proxy_host(ichnd_t hnd)
 {
@@ -412,6 +504,17 @@ irccon_get_port(ichnd_t hnd)
 
 	return hnd->port;
 }
+
+#ifdef WITH_SSL
+bool
+irccon_get_ssl(ichnd_t hnd)
+{
+	if (!hnd || hnd->state == INV)
+		return false;
+
+	return hnd->ssl;
+}
+#endif
 
 int
 irccon_sockfd(ichnd_t hnd)

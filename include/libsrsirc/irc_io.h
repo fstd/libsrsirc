@@ -10,6 +10,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#ifdef WITH_SSL
+/* ssl */
+# include <openssl/ssl.h>
+#endif
+
 /* overview
 ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
     size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len,
@@ -90,6 +95,15 @@ int ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
     size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len,
     unsigned long to_us);
 
+int ircio_read_ex(int sck,
+#ifdef WITH_SSL
+    SSL *shnd,
+#endif
+    char *tokbuf, size_t tokbuf_sz, char *workbuf,
+    size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len,
+    unsigned long to_us);
+
+
 /* ircio_write - write one (or perhaps multiple) lines to socket
  *
  * If multiple lines are to be written, they must be separated by "\r\n".
@@ -107,5 +121,11 @@ int ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
  *         if an error occurs, or invalid arguments were given, -1 is returned.
  */
 int ircio_write(int sck, const char *line);
+
+int ircio_write_ex(int sck,
+#ifdef WITH_SSL
+    SSL *shnd,
+#endif
+    const char *line);
 
 #endif /* SRS_IRC_IO_H */

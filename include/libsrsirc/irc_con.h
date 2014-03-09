@@ -28,6 +28,10 @@ unsigned short irccon_get_proxy_port(ichnd_t hnd);
 int irccon_get_proxy_type(ichnd_t hnd);
 bool irccon_set_server(ichnd_t hnd, const char *host, unsigned short port);
 bool irccon_set_proxy(ichnd_t hnd, const char *host, unsigned short port, int ptype);
+#ifdef WITH_SSL
+bool irccon_set_ssl(ichnd_t hnd, bool on);
+bool irccon_get_ssl(ichnd_t hnd);
+#endif
 int irccon_sockfd(ichnd_t hnd);
 
 #endif /* SRS_IRC_CON_H */

@@ -64,6 +64,10 @@ const char *ircbas_get_service_info(ibhnd_t hnd);
 const char *ircbas_get_proxy_host(ibhnd_t hnd);
 unsigned short ircbas_get_proxy_port(ibhnd_t hnd);
 int ircbas_get_proxy_type(ibhnd_t hnd);
+#ifdef WITH_SSL
+bool ircbas_set_ssl(ibhnd_t hnd, bool on);
+bool ircbas_get_ssl(ibhnd_t hnd);
+#endif
 
 int ircbas_sockfd(ibhnd_t hnd);
 

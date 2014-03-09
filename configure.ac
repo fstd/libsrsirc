@@ -21,6 +21,25 @@ AC_PROG_MAKE_SET
 AC_HEADER_STDC
 
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdbool.h stddef.h stdlib.h string.h strings.h sys/socket.h sys/time.h sys/types.h unistd.h])
+AC_ARG_WITH(ssl,
+[  --with-ssl            Build with SSL support],
+	if test x$withval = xno; then
+		want_ssl=no
+	else
+		want_ssl=yes
+	fi,
+	want_ssl=no)
+
+dnl **
+dnl ** check for ssl
+dnl **
+if test "x$want_ssl" = "xyes"; then
+	AC_CHECK_LIB([ssl], [SSL_new], [
+		AC_DEFINE(WITH_SSL,, Build with SSL support)
+		LIBS="$LIBS -lssl"
+		AC_CHECK_HEADERS([openssl/ssl.h])
+	])
+fi
 
 AC_HEADER_STDBOOL
 

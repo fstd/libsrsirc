@@ -398,6 +398,19 @@ ircbas_online(ibhnd_t hnd)
 {
 	return irccon_online(hnd->con);
 }
+#ifdef WITH_SSL
+bool
+ircbas_set_ssl(ibhnd_t hnd, bool on)
+{
+	return irccon_set_ssl(hnd->con, on);
+}
+
+bool
+ircbas_get_ssl(ibhnd_t hnd)
+{
+	return irccon_get_ssl(hnd->con);
+}
+#endif
 
 int
 ircbas_sockfd(ibhnd_t hnd)

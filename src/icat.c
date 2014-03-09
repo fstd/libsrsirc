@@ -57,6 +57,9 @@ struct settings_s {
 	int freelines;
 	int waitquit_s;
 	bool keeptrying;
+#ifdef WITH_SSL
+	bool ssl;
+#endif
 	int confailwait_s;
 	int heartbeat;
 	bool reconnect;
@@ -286,7 +289,11 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 	char *a0 = (*argv)[0];
 
 	for(int ch; (ch = getopt(*argc, *argv,
+#ifdef WITH_SSL
+	                "vchHn:u:f:F:s:p:P:tT:C:kw:l:L:Sb:W:rNjz")) != -1;) {
+#else
 	                "vchHn:u:f:F:s:p:P:tT:C:kw:l:L:Sb:W:rNj")) != -1;) {
+#endif
 		switch (ch) {
 		      case 'n':
 			ircbas_set_nick(g_irc, optarg);
@@ -367,6 +374,10 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 		break;case 'N':
 			sett->notices = true;
 			WVX("switched to NOTICE mode");
+#ifdef WITH_SSL
+		break;case 'z':
+			sett->ssl = true;
+#endif
 		break;case 'v':
 			sett->verb++;
 		break;case 'H':
@@ -409,6 +420,12 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	ircbas_set_server(g_irc, host, port);
 	WVX("set server to '%s:%hu'", ircbas_get_host(g_irc),
 			ircbas_get_port(g_irc));
+	
+#ifdef WITH_SSL
+	if (sett->ssl && !ircbas_set_ssl(g_irc, true))
+		EX("failed to enable SSL");
+	WVX("SSL selected");
+#endif
 
 	if (!sett->trgmode && strlen(sett->chanlist) == 0)
 		EX("no targetmode and no chans given. i can't fap to that.");
@@ -497,6 +514,9 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	BH("\t-r: Reconnect on disconnect, rather than terminating");
 	LH("\t-S: Explicitly flush stdout after every line of output");
 	LH("\t-N: Use NOTICE instead of PRIVMSG for messages");
+#ifdef WITH_SSL
+	BH("\t-z: use SSL (does not work with proxies)");
+#endif
 	LH("");
 	BH("\t-n <str>: Use <str> as nick. Subject to mutilation if N/A");
 	LH("\t-u <str>: Use <str> as (IRC) username/ident");
