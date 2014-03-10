@@ -424,9 +424,11 @@ init(int *argc, char ***argv, struct settings_s *sett)
 			ircbas_get_port(g_irc));
 
 #ifdef WITH_SSL
-	if (sett->ssl && !ircbas_set_ssl(g_irc, true))
-		EX("failed to enable SSL");
-	WVX("SSL selected");
+	if (sett->ssl) {
+		if (!ircbas_set_ssl(g_irc, true))
+			EX("failed to enable SSL");
+		WVX("SSL selected");
+	}
 #endif
 
 	if (!sett->trgmode && strlen(sett->chanlist) == 0)
@@ -520,7 +522,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	LH("\t-S: Explicitly flush stdout after every line of output");
 	LH("\t-N: Use NOTICE instead of PRIVMSG for messages");
 #ifdef WITH_SSL
-	BH("\t-z: use SSL (does not work with proxies)");
+	BH("\t-z: use SSL");
 #endif
 	LH("");
 	BH("\t-n <str>: Use <str> as nick. Subject to mutilation if N/A");
