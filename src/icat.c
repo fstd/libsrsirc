@@ -31,6 +31,14 @@
 #define MAX_CHANS 32
 #define IRC_MAXARGS 16
 #define MAX_CHANLIST 512
+
+#define DEF_CONTO_S 10
+#define DEF_LINEDELAY 2
+#define DEF_FREELINES 0
+#define DEF_WAITQUIT_S 3
+#define DEF_CONFAILWAIT_S 10
+#define DEF_VERB 1
+
 #define STRACAT(DSTARR, STR) strNcat((DSTARR), (STR), sizeof (DSTARR))
 
 #define W_(FNC, THR, FMT, A...) do {                                  \
@@ -50,7 +58,7 @@
 #define EX(FMT, A...) do { W_(warnx, 0, FMT, ##A); \
 		exit(EXIT_FAILURE);} while(0)
 
-struct settings_s {
+static struct settings_s {
 	bool trgmode;
 	int conto_s;
 	int linedelay;
@@ -404,6 +412,13 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	ircbas_set_fname(g_irc, "irc netcat, descendant of longcat");
 	ircbas_set_conflags(g_irc, 0);
 	ircbas_regcb_conread(g_irc, conread, 0);
+
+	sett->conto_s = DEF_CONTO_S;
+	sett->linedelay = DEF_LINEDELAY;
+	sett->freelines = DEF_FREELINES;
+	sett->waitquit_s = DEF_WAITQUIT_S;
+	sett->confailwait_s = DEF_CONFAILWAIT_S;
+	sett->verb = DEF_VERB;
 
 	process_args(argc, argv, sett);
 
