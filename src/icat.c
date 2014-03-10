@@ -87,6 +87,7 @@ static struct outline_s {
 
 static ibhnd_t g_irc;
 static time_t g_quitat;
+static time_t g_nexthb = 0;
 
 void life(void);
 void handle_stdin(char *line);
@@ -96,49 +97,28 @@ int iprintf(const char *fmt, ...);
 void strNcat(char *dest, const char *src, size_t destsz);
 bool conread(char **msg, size_t msg_len, void *tag);
 void usage(FILE *str, const char *a0, int ec, bool sh);
+void do_heartbeat(void);
+int process_sendq(void);
+int select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, unsigned long to_us);
 int main(int argc, char **argv);
 
 
 int
 process_stdin(void)
 {
-	struct timeval tout = {0, 0};
-
-	fd_set fds;
-	FD_ZERO(&fds);
-	FD_SET(fileno(stdin), &fds);
-
-	int r;
-
-	for(;;) {
-		errno=0;
-		r = select(fileno(stdin)+1, &fds, NULL, NULL, &tout);
-
-		if (r == -1) {
-			if (errno == EINTR)
-				continue; //suppress warning, retry
-			W("select failed");
+	char *line = NULL;
+	size_t linecap = 0;
+	ssize_t linelen;
+	if ((linelen = getline(&line, &linecap, stdin)) > 0) {
+		handle_stdin(line);
+		free(line);
+	} else if (linelen == -1) {
+		if (feof(stdin)) {
+			WVX("got EOF on stdin");
+			return 0;
+		} else {
+			WX("read from stdin failed");
 			return -1;
-		}
-
-		break;
-	}
-
-	if (r == 1) {
-		char *line = NULL;
-		size_t linecap = 0;
-		ssize_t linelen;
-		if ((linelen = getline(&line, &linecap, stdin)) > 0) {
-			handle_stdin(line);
-			free(line);
-		} else if (linelen == -1) {
-			if (feof(stdin)) {
-				WVX("got EOF on stdin");
-				return 0;
-			} else {
-				WX("read from stdin failed");
-				return -1;
-			}
 		}
 	}
 
@@ -149,12 +129,7 @@ process_stdin(void)
 int
 process_irc(void)
 {
-	static time_t nexthb = 0;
-	static time_t nextsend = 0;
-	if (nexthb == 0)
-		nexthb = time(NULL) + g_sett.heartbeat;
 	char *tok[IRC_MAXARGS];
-
 	int r = ircbas_read(g_irc, tok, IRC_MAXARGS, 100000);
 
 	if (r == -1) {
@@ -165,32 +140,10 @@ process_irc(void)
 		sndumpmsg(buf, sizeof buf, NULL, tok, IRC_MAXARGS);
 		WVX("%s", buf);
 		handle_irc(tok, IRC_MAXARGS);
-	} else {
-		if (g_sett.heartbeat && nexthb <= time(NULL)) {
-			iprintf("PING %s", ircbas_myhost(g_irc));
-			nexthb = time(NULL) + g_sett.heartbeat;
-		}
+		return 1;
 	}
 
-	if (g_outQ) {
-		if (g_sett.freelines > 0 || nextsend <= time(NULL)) {
-			struct outline_s *ptr = g_outQ;
-			if (!ircbas_write(g_irc, ptr->line)) {
-				WX("write failed");
-				return -1;
-			}
-			g_outQ = g_outQ->next;
-			if (strncasecmp(ptr->line, "QUIT", 4) == 0)
-				g_quitat = time(NULL) + g_sett.waitquit_s+1;
-			free(ptr->line);
-			free(ptr);
-			if (g_sett.freelines)
-				g_sett.freelines--;
-			nextsend = time(NULL) + g_sett.linedelay;
-		}
-	}
-	return 1;
-
+	return 0;
 }
 
 
@@ -200,8 +153,18 @@ life(void)
 	time_t quitat = 0;
 	int r;
 	bool stdineof = false;
+	g_nexthb = time(NULL) + g_sett.heartbeat;
 	for(;;) {
-		if (!stdineof) {
+
+		bool canreadstdin = false, canreadirc = false;
+
+		r = select2(&canreadstdin, &canreadirc, stdineof ? -1 : fileno(stdin),
+		    ircbas_online(g_irc) ? ircbas_sockfd(g_irc) : -1, 10000000UL);
+
+		if (r == -1)
+			E("select failed");
+
+		if (!stdineof && canreadstdin) {
 			r = process_stdin();
 
 			if (r == 0) {
@@ -212,8 +175,12 @@ life(void)
 			}
 		}
 
-		r = process_irc();
-		if (r == -1) {
+		bool fail = false;
+
+		fail = canreadirc && (r = process_irc()) == -1;
+		fail = fail || process_sendq() == -1;
+
+		if (fail) {
 			if (g_quitat) {
 				WVX("irc connection closed");
 				return;
@@ -237,14 +204,109 @@ life(void)
 			}
 
 			break;
-		}
+		} else if (r > 0)
+			g_nexthb = time(NULL) + g_sett.heartbeat;
 
 		if (quitat && time(NULL) > quitat) {
 			WX("forcefully terminating irc connection");
 			break;
 		}
 
+		do_heartbeat();
 	}
+}
+
+void
+do_heartbeat(void)
+{
+	if (g_sett.heartbeat && g_nexthb <= time(NULL)) {
+		iprintf("PING %s", ircbas_myhost(g_irc));
+		g_nexthb = time(NULL) + g_sett.heartbeat;
+	}
+}
+
+int
+process_sendq(void)
+{
+	static time_t nextsend = 0;
+	if (!g_outQ)
+		return 0;
+
+	if (g_sett.freelines > 0 || nextsend <= time(NULL)) {
+		struct outline_s *ptr = g_outQ;
+		if (!ircbas_write(g_irc, ptr->line)) {
+			WX("write failed");
+			return -1;
+		}
+		g_outQ = g_outQ->next;
+		if (strncasecmp(ptr->line, "QUIT", 4) == 0)
+			g_quitat = time(NULL) + g_sett.waitquit_s+1;
+		free(ptr->line);
+		free(ptr);
+		if (g_sett.freelines)
+			g_sett.freelines--;
+		nextsend = time(NULL) + g_sett.linedelay;
+
+		return 1;
+	}
+
+	return 0;
+}
+
+int
+select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, unsigned long to_us)
+{
+	fd_set read_set;
+	struct timeval tout;
+	int ret, fd, i;
+
+	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+	int64_t trem = 0;
+
+	if (fd1 < 0 && fd2 < 0) {
+		W("both filedescriptors -1");
+		return -1;
+	}
+
+	int maxfd = fd1 > fd2 ? fd1 : fd2;
+
+	FD_ZERO(&read_set);
+
+	if (fd1 >= 0)
+		FD_SET(fd1, &read_set);
+	if (fd2 >= 0)
+		FD_SET(fd2, &read_set);
+
+	for(;;) {
+		if (tsend) {
+			trem = tsend - ic_timestamp_us();
+			if (trem <= 0)
+				trem = 1;// next select will cause success or timeout
+			ic_tconv(&tout, &trem, false);
+		}
+		errno=0;
+		ret = select(maxfd + 1, &read_set, NULL, NULL,
+				    tsend ? &tout : NULL);
+
+		if (ret == -1) {
+			if (errno == EINTR)
+				continue; //suppress warning, retry
+			W("select failed");
+			return -1;
+		}
+
+		break;
+	}
+
+	*rdbl1 = *rdbl2 = false;
+	if (ret > 0) {
+		if (fd1 >= 0 && FD_ISSET(fd1, &read_set))
+			*rdbl1 = true;
+		if (fd2 >= 0 && FD_ISSET(fd2, &read_set))
+			*rdbl2 = true;
+	}
+
+	return ret;
 }
 
 
