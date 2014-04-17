@@ -32,11 +32,12 @@
 #define IRC_MAXARGS 16
 #define MAX_CHANLIST 512
 
-#define DEF_CONTO_S 10
+#define DEF_CONTO_S 30
 #define DEF_LINEDELAY 2
 #define DEF_FREELINES 0
 #define DEF_WAITQUIT_S 3
 #define DEF_CONFAILWAIT_S 10
+#define DEF_HEARBEAT_S 0
 #define DEF_VERB 1
 
 #define STRACAT(DSTARR, STR) strNcat((DSTARR), (STR), sizeof (DSTARR))
@@ -258,7 +259,7 @@ select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, unsigned long to_us)
 {
 	fd_set read_set;
 	struct timeval tout;
-	int ret, fd, i;
+	int ret;
 
 	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	int64_t trem = 0;
@@ -360,9 +361,9 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 
 	for(int ch; (ch = getopt(*argc, *argv,
 #ifdef WITH_SSL
-	                "vchHn:u:f:F:s:p:P:tT:C:kw:l:L:Sb:W:rNjz")) != -1;) {
+	                "vchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNjz")) != -1;) {
 #else
-	                "vchHn:u:f:F:s:p:P:tT:C:kw:l:L:Sb:W:rNj")) != -1;) {
+	                "vchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNj")) != -1;) {
 #endif
 		switch (ch) {
 		      case 'n':
@@ -480,6 +481,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	sett->freelines = DEF_FREELINES;
 	sett->waitquit_s = DEF_WAITQUIT_S;
 	sett->confailwait_s = DEF_CONFAILWAIT_S;
+	sett->heartbeat = DEF_HEARBEAT_S;
 	sett->verb = DEF_VERB;
 
 	process_args(argc, argv, sett);
@@ -573,6 +575,8 @@ conread(char **msg, size_t msg_len, void *tag)
 void
 usage(FILE *str, const char *a0, int ec, bool sh)
 {
+	#define XSTR(s) STR(s)
+	#define STR(s) #s
 	#define SH(STR) if (sh) fputs(STR "\n", str)
 	#define LH(STR) if (!sh) fputs(STR "\n", str)
 	#define BH(STR) fputs(STR "\n", str)
@@ -598,6 +602,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	BH("\t-r: Reconnect on disconnect, rather than terminating");
 	LH("\t-S: Explicitly flush stdout after every line of output");
 	LH("\t-N: Use NOTICE instead of PRIVMSG for messages");
+	LH("\t-j: Do not join channel given by -C");
 #ifdef WITH_SSL
 	BH("\t-z: use SSL");
 #endif
@@ -606,17 +611,23 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	LH("\t-u <str>: Use <str> as (IRC) username/ident");
 	LH("\t-f <str>: Use <str> as (IRC) fullname");
 	LH("\t-F <int>: Specify USER flags. 0=None, 8=usermode +i");
-	LH("\t-W <int>: Wait <int> seconds between attempts to connect");
-	LH("\t-b <int>: Send heart beat PING every <int> seconds");
+	LH("\t-W <int>: Wait <int> seconds between attempts to connect."
+	    "[def: "XSTR(DEF_CONFAILWAIT_S)"]");
+	LH("\t-b <int>: Send heart beat PING every <int> seconds."
+	    "[def: "XSTR(DEF_HEARBEAT_S)"]");
 	BH("\t-p <str>: Use <str> as server password");
 	fprintf(str, "\t-P <pxspec>: Use <pxspec> as proxy. "
 			"See %s for format\n", sh?"man page":"below");
-	BH("\t-T <int>: Connect/Logon timeout in seconds");
+	BH("\t-T <int>: Connect/Logon timeout in seconds."
+	    "[def: "XSTR(DEF_CONTO_S)"]");
 	fprintf(str, "\t-C <chanlst>: List of chans to join + keys. "
 			"See %s for format\n", sh?"man page":"below");
-	BH("\t-w <int>: Secs to wait for server disconnect after QUIT");
-	BH("\t-l <int>: Wait <int> sec between sending messages to IRC");
-	BH("\t-L <int>: Number of 'first free' lines to send unthrottled");
+	BH("\t-w <int>: Secs to wait for server disconnect after QUIT."
+	    "[def: "XSTR(DEF_WAITQUIT_S)"]");
+	BH("\t-l <int>: Wait <int> sec between sending messages to IRC."
+	    "[def: "XSTR(DEF_LINEDELAY)"]");
+	BH("\t-L <int>: Number of 'first free' lines to send unthrottled."
+	    "[def: "XSTR(DEF_FREELINES)"]");
 	LH("");
 	LH("\t<pxspec> specifies a proxy and mostly works like hostspec:");
 	LH("\t\tpxspec   := pxtype:hostspec");
@@ -632,6 +643,8 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	#undef SH
 	#undef LH
 	#undef BH
+	#undef STR
+	#undef XSTR
 	exit(ec);
 }
 
@@ -659,7 +672,8 @@ main(int argc, char **argv)
 		}
 		WVX("logged on!");
 
-		iprintf("JOIN %s %s", g_sett.chanlist, g_sett.keylist);
+		if (!g_sett.nojoin)
+			iprintf("JOIN %s %s", g_sett.chanlist, g_sett.keylist);
 
 		break;
 	}
