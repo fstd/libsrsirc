@@ -159,7 +159,7 @@ life(void)
 		r = select2(&canreadstdin, &canreadirc,
 		    stdineof ? -1 : fileno(stdin),
 		    ircbas_online(g_irc) ? ircbas_sockfd(g_irc) : -1,
-		    10000000UL);
+		    g_outQ ? 900000 : 300000000ul);
 
 		if (r == -1)
 			E("select failed");
