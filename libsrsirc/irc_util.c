@@ -230,7 +230,7 @@ void
 sndumpmsg(char *dest, size_t dest_sz, void *tag, char **msg, size_t msglen)
 {
 	snprintf(dest, dest_sz, "(%p) '%s' '%s'", tag, msg[0], msg[1]);
-	for(size_t i = 2; i < msg_len; i++) {
+	for(size_t i = 2; i < msglen; i++) {
 		if (!msg[i])
 			break;
 		ic_strNcat(dest, " '", dest_sz);
