@@ -468,6 +468,12 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 void
 init(int *argc, char ***argv, struct settings_s *sett)
 {
+	if (setvbuf(stdin, NULL, _IOLBF, 0) != 0)
+		W("setvbuf stdin");
+
+	if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
+		W("setvbuf stdout");
+
 	g_irc = ircbas_init();
 
 	ircbas_set_nick(g_irc, "icat");
