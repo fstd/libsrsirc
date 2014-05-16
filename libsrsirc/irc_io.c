@@ -6,8 +6,6 @@
 # include <config.h>
 #endif
 
-#define _GNU_SOURCE 1
-
 /* pub if */
 #include <libsrsirc/irc_io.h>
 
@@ -37,8 +35,8 @@
 
 /* local helpers */
 static void hexdump(const void *pAddressIn, long  lSize, const char *name);
-static int tokenize(char *buf, char **tok, size_t tok_len); //tokenize proto msg
-static char *skip2lws(char *s, bool tab_is_ws); //fwd pointer until whitespace
+static int tokenize(char *buf, char **tok, size_t tok_len);
+static char *skip2lws(char *s, bool tab_is_ws); //fwd ptr until whitespace
 static int writeall(int sck,
 #ifdef WITH_SSL
     SSL *shnd,
@@ -102,11 +100,12 @@ ircio_read_ex(int sck,
 		if (*mehptr != workbuf) {
 			size_t mehdist = (size_t)(*mehptr - workbuf);
 			V("*mehptr doesn't point at workbuf's start "
-			    "(dist: %zu), shifting %zu bytes to the beginning",
+			    "(dist: %zu), shifting %zu bytes to the start",
 			    mehdist, len);
 
 			if (ircdbg_getlvl() == LOG_VIVI)
-				hexdump(workbuf, workbuf_sz, "workbuf before shift");
+				hexdump(workbuf, workbuf_sz,
+				    "workbuf before shift");
 			memmove(workbuf, *mehptr, len);
 			V("zeroing %zu bytes", workbuf_sz - len);
 			memset(workbuf + len, 0, workbuf_sz - len);
@@ -114,7 +113,8 @@ ircio_read_ex(int sck,
 			end -= mehdist;
 			V("end is %p (%hhx (%c))", end, *end, *end);
 			if (ircdbg_getlvl() == LOG_VIVI)
-				hexdump(workbuf, workbuf_sz, "workbuf after shift");
+				hexdump(workbuf, workbuf_sz,
+				    "workbuf after shift");
 		}
 
 		for(;;) {
@@ -125,10 +125,12 @@ ircio_read_ex(int sck,
 			for(;;) {
 				struct timeval tout;
 				if (tsend) {
-					int64_t trem = tsend - ic_timestamp_us();
+					int64_t trem =
+					    tsend - ic_timestamp_us();
+
 					if (trem <= 0) {
-						V("(sck:%d) timeout reached"
-						    " while selecting for read",
+						V("(sck:%d) timeout hit"
+						    " while selecting",
 						    sck);
 						return 0;
 					}
@@ -145,11 +147,11 @@ ircio_read_ex(int sck,
 
 				if (r < 0) {
 					if (errno == EINTR) {
-						WE("(sck:%d) received signal "
-						    "while selecting", sck);
+						WE("(sck:%d) select got "
+						    "while selecting",sck);
 						return 0;
 					}
-					WE("(sck:%d) select() failed", sck);
+					WE("(sck:%d) select() failed",sck);
 					return -1;
 				} else if (r == 1) {
 					break;
@@ -172,7 +174,8 @@ ircio_read_ex(int sck,
 				if (n == 0)
 					W("(sck%d) read: EOF", sck);
 				else
-					WE("(sck%d) read failed (%zd)", sck, n);
+					WE("(sck%d) read failed (%zd)",
+					    sck, n);
 				return -1;
 			}
 			V("read returned %d", n);
@@ -236,10 +239,11 @@ ircio_write_ex(int sck,
 		return -1;
 
 	size_t len = strlen(line);
-	int needbr = len < 2 || line[len - 2] != '\r' || line[len - 1] != '\n';
+	int needbr = len < 2 || line[len-2] != '\r' || line[len-1] != '\n';
 
 #ifdef WITH_SSL
-	if (!writeall(sck, shnd, line) || (needbr && !writeall(sck, shnd, "\r\n"))) {
+	if (!writeall(sck, shnd, line)
+	    || (needbr && !writeall(sck, shnd, "\r\n"))) {
 #else
 	if (!writeall(sck, line) || (needbr && !writeall(sck, "\r\n"))) {
 #endif
@@ -295,7 +299,7 @@ tokenize(char *buf, char **tok, size_t tok_len)
 	for(size_t i = 0; i < tok_len; ++i)
 		tok[i] = NULL;
 
-	while(isspace(*buf))
+	while(isspace((unsigned char)*buf))
 		*buf++ = '\0';
 
 	size_t len = strlen(buf);
@@ -310,7 +314,7 @@ tokenize(char *buf, char **tok, size_t tok_len)
 			W("parse erro, pfx but no cmd");
 			return -1;//parse err, pfx but no cmd
 		}
-		while(isspace(*buf))
+		while(isspace((unsigned char)*buf))
 			*buf++ = '\0';
 		V("extracted pfx: %s, rest: %s", tok[0], buf);
 	}
@@ -318,7 +322,7 @@ tokenize(char *buf, char **tok, size_t tok_len)
 	tok[1] = buf;
 	buf = skip2lws(buf, true);
 	if (buf) {
-		while(isspace(*buf))
+		while(isspace((unsigned char)*buf))
 			*buf++ = '\0';
 	}
 	V("extracted cmd: %s, rest: %s", tok[1], buf);
@@ -337,11 +341,12 @@ tokenize(char *buf, char **tok, size_t tok_len)
 		/* have seen a channel with <Tab> in its name */
 		buf = skip2lws(buf, false);
 		if (buf) {
-			while(isspace(*buf))
+			while(isspace((unsigned char)*buf))
 				*buf++ = '\0';
 			V("jumped over ws: %s", buf);
 		}
-		V("extracted arg[%zu]: %s, rest: %s", argc-1, tok[argc-1], buf);
+		V("extracted arg[%zu]: %s, rest: %s",
+		    argc-1, tok[argc-1], buf);
 	}
 
 	V("done!");
@@ -351,7 +356,8 @@ tokenize(char *buf, char **tok, size_t tok_len)
 static char*
 skip2lws(char *s, bool tab_is_ws)
 {
-	while(*s && (!isspace(*s) || (*s == '\t' && !tab_is_ws)))
+	while(*s &&
+	    (!isspace((unsigned char)*s) || (*s == '\t' && !tab_is_ws)))
 		s++;
 	return *s ? s : NULL;
 }
@@ -371,31 +377,29 @@ static void hexdump(const void *pAddressIn, long  lSize, const char *name)
 	buf.lSize   = lSize;
 	V("hexdump '%s'", name);
 
-	while (buf.lSize > 0)
-	{
-		pTmp     = (unsigned char *)buf.pData;
-		lOutLen  = (int)buf.lSize;
+	while (buf.lSize > 0) {
+		pTmp = (unsigned char *)buf.pData;
+		lOutLen = (int)buf.lSize;
 		if (lOutLen > 16)
 			lOutLen = 16;
 
 		/* create a 64-character formatted output line: */
 		sprintf(szBuf, " |                            "
-				"                      "
-				"    %08lX", (long unsigned int)(pTmp-pAddress));
+		    "                      "
+		    "    %08lX", (long unsigned int)(pTmp-pAddress));
 		lOutLen2 = lOutLen;
 
-		for(lIndex = 1+lIndent, lIndex2 = 53-15+lIndent, lRelPos = 0;
-				lOutLen2;
-				lOutLen2--, lIndex += 2, lIndex2++
-		   )
-		{
+		for(lIndex = 1+lIndent, lIndex2 = 53-15+lIndent, lRelPos=0;
+		    lOutLen2;
+		    lOutLen2--, lIndex += 2, lIndex2++) {
 			ucTmp = *pTmp++;
 
-			sprintf(szBuf + lIndex, "%02X ", (unsigned short)ucTmp);
-			if(!isprint(ucTmp))  ucTmp = '.'; /* nonprintable char */
+			sprintf(szBuf + lIndex, "%02X ",
+			    (unsigned short)ucTmp);
+			if(!isprint(ucTmp))  ucTmp = '.'; /*nonprintable*/
 			szBuf[lIndex2] = ucTmp;
 
-			if (!(++lRelPos & 3))     /* extra blank after 4 bytes */
+			if (!(++lRelPos & 3)) /*extra blank after 4 bytes*/
 			{  lIndex++; szBuf[lIndex+2] = ' '; }
 		}
 

@@ -6,10 +6,6 @@
 # include <config.h>
 #endif
 
-#define _GNU_SOURCE 1
-
-#define _WITH_GETLINE
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,9 +40,9 @@
 #define STRACAT(DSTARR, STR) strNcat((DSTARR), (STR), sizeof (DSTARR))
 
 #define W_(FNC, THR, FMT, A...) do {                                  \
-		if (g_sett.verb < THR) break; \
-		FNC("%s:%d:%s() - " FMT, __FILE__, __LINE__, __func__, ##A);  \
-		} while(0)
+    if (g_sett.verb < THR) break; \
+    FNC("%s:%d:%s() - " FMT, __FILE__, __LINE__, __func__, ##A);  \
+    } while(0)
 
 #define W(FMT, A...) W_(warn, 1, FMT, ##A)
 #define WV(FMT, A...) W_(warn, 2, FMT, ##A)
@@ -55,10 +51,10 @@
 #define WVX(FMT, A...) W_(warnx, 2, FMT, ##A)
 
 #define E(FMT, A...) do { W_(warn, 0, FMT, ##A); \
-		exit(EXIT_FAILURE);} while(0)
+    exit(EXIT_FAILURE);} while(0)
 
 #define EX(FMT, A...) do { W_(warnx, 0, FMT, ##A); \
-		exit(EXIT_FAILURE);} while(0)
+    exit(EXIT_FAILURE);} while(0)
 
 static struct settings_s {
 	bool trgmode;
@@ -158,11 +154,12 @@ life(void)
 	bool stdineof = false;
 	g_nexthb = time(NULL) + g_sett.heartbeat;
 	for(;;) {
-
 		bool canreadstdin = false, canreadirc = false;
 
-		r = select2(&canreadstdin, &canreadirc, stdineof ? -1 : fileno(stdin),
-		    ircbas_online(g_irc) ? ircbas_sockfd(g_irc) : -1, 10000000UL);
+		r = select2(&canreadstdin, &canreadirc,
+		    stdineof ? -1 : fileno(stdin),
+		    ircbas_online(g_irc) ? ircbas_sockfd(g_irc) : -1,
+		    10000000UL);
 
 		if (r == -1)
 			E("select failed");
@@ -194,13 +191,13 @@ life(void)
 				WVX("reconnecting");
 				if (!ircbas_connect(g_irc)) {
 					WVX("sleeping %d sec",
-					              g_sett.confailwait_s);
+					    g_sett.confailwait_s);
 					sleep(g_sett.confailwait_s);
 					continue;
 				}
 				WVX("connected again!");
 				iprintf("JOIN %s %s",
-				           g_sett.chanlist, g_sett.keylist);
+				    g_sett.chanlist, g_sett.keylist);
 				WVX("recommencing operation");
 				continue;
 			}
@@ -283,12 +280,12 @@ select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, unsigned long to_us)
 		if (tsend) {
 			trem = tsend - ic_timestamp_us();
 			if (trem <= 0)
-				trem = 1;// next select will cause success or timeout
+				trem = 1;
 			ic_tconv(&tout, &trem, false);
 		}
 		errno=0;
 		ret = select(maxfd + 1, &read_set, NULL, NULL,
-				    tsend ? &tout : NULL);
+		    tsend ? &tout : NULL);
 
 		if (ret == -1) {
 			if (errno == EINTR)
@@ -346,7 +343,7 @@ handle_irc(char **tok, size_t ntok)
 		pfx_extract_nick(nick, sizeof nick, tok[0]);
 		if (g_sett.trgmode)
 			printf("%s %s %s %s\n",
-			                      nick, tok[0], tok[2], tok[3]);
+			    nick, tok[0], tok[2], tok[3]);
 		else
 			printf("%s\n", tok[3]);
 		if (g_sett.flush)
@@ -362,9 +359,9 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 
 	for(int ch; (ch = getopt(*argc, *argv,
 #ifdef WITH_SSL
-	                "vchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNjz")) != -1;) {
+	    "vchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNjz")) != -1;) {
 #else
-	                "vchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNj")) != -1;) {
+	    "vchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNj")) != -1;) {
 #endif
 		switch (ch) {
 		      case 'n':
@@ -375,7 +372,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			ircbas_set_fname(g_irc, optarg);
 		break;case 'F':
 			ircbas_set_conflags(g_irc,
-			                (unsigned)strtol(optarg, NULL, 10));
+			    (unsigned)strtol(optarg, NULL, 10));
 		break;case 'p':
 			ircbas_set_pass(g_irc, optarg);
 		break;case 'P':
@@ -385,7 +382,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			unsigned short port;
 			int typeno;
 			if (!parse_pxspec(typestr, sizeof typestr, host,
-					sizeof host, &port, optarg))
+			    sizeof host, &port, optarg))
 				EX("failed to parse pxspec '%s'", optarg);
 			if ((typeno = pxtypeno(typestr)) == -1)
 				EX("unknown proxy type '%s'", typestr);
@@ -525,7 +522,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 
 	ircbas_set_server(g_irc, host, port);
 	WVX("set server to '%s:%hu'", ircbas_get_host(g_irc),
-			ircbas_get_port(g_irc));
+	    ircbas_get_port(g_irc));
 
 #ifdef WITH_SSL
 	if (sett->ssl) {
@@ -645,11 +642,11 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	    "[def: "XSTR(DEF_HEARBEAT_S)"]");
 	BH("\t-p <str>: Use <str> as server password");
 	fprintf(str, "\t-P <pxspec>: Use <pxspec> as proxy. "
-			"See %s for format\n", sh?"man page":"below");
+	    "See %s for format\n", sh?"man page":"below");
 	BH("\t-T <int>[:<int>]: Connect/Logon hard[:soft]-timeout in seconds."
 	    "[def: "XSTR(DEF_CONTO_HARD_S)":"XSTR(DEF_CONTO_SOFT_S)"]");
 	fprintf(str, "\t-C <chanlst>: List of chans to join + keys. "
-			"See %s for format\n", sh?"man page":"below");
+	    "See %s for format\n", sh?"man page":"below");
 	BH("\t-w <int>: Secs to wait for server disconnect after QUIT."
 	    "[def: "XSTR(DEF_WAITQUIT_S)"]");
 	BH("\t-l <int>: Wait <int> sec between sending messages to IRC."
@@ -689,8 +686,8 @@ main(int argc, char **argv)
 
 		if (!ircbas_connect(g_irc)) {
 			WX("failed to connect/logon (%s)",
-			                           g_sett.keeptrying
-			                           ?"retrying":"giving up");
+			    g_sett.keeptrying ?"retrying":"giving up");
+
 			if (g_sett.keeptrying) {
 				WVX("sleeping %d sec", g_sett.confailwait_s);
 				sleep(g_sett.confailwait_s);

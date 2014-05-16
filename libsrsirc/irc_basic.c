@@ -6,8 +6,6 @@
 # include <config.h>
 #endif
 
-#define _GNU_SOURCE 1
-
 #include <libsrsirc/irc_basic.h>
 
 #include <common.h>
@@ -170,7 +168,7 @@ ircbas_init(void)
 	r->ver = NULL;
 	r->lasterr = NULL;
 
-	r->casemapping = CASEMAPPING_RFC1459;
+	r->casemapping = CMAP_RFC1459;
 
 	r->restricted = false;
 	r->banned = false;
@@ -298,13 +296,15 @@ ircbas_connect(ibhnd_t hnd)
 		if(tsend) {
 			trem = tsend - ic_timestamp_us();
 			if (trem <= 0) {
-				W("(%p) timeout hit while waiting for 004", hnd);
+				W("(%p) timeout waiting for 004", hnd);
 				ircbas_reset(hnd);
 				return false;
 			}
 		}
 
-		int r = irccon_read(hnd->con, msg, MAX_IRCARGS, (unsigned long)trem);
+		int r = irccon_read(hnd->con, msg, MAX_IRCARGS,
+		    (unsigned long)trem);
+
 		if (r < 0) {
 			W("(%p) irccon_read() failed", hnd);
 			ircbas_reset(hnd);
@@ -365,12 +365,12 @@ ircbas_connect(ibhnd_t hnd)
 				ircbas_reset(hnd);
 				return false;
 			}
-		} else if ((strcmp(msg[1], "432") == 0)//ERR_ERRONEUSNICKNAME
-		    || (strcmp(msg[1], "433") == 0)//ERR_NICKNAMEINUSE
-		    || (strcmp(msg[1], "436") == 0)//ERR_NICKCOLLISION
-		    || (strcmp(msg[1], "437") == 0)) {//ERR_UNAVAILRESOURCE
+		} else if ((strcmp(msg[1], "432") == 0)//errorneous nick
+		    || (strcmp(msg[1], "433") == 0)//nick in use
+		    || (strcmp(msg[1], "436") == 0)//nick collision
+		    || (strcmp(msg[1], "437") == 0)) {//unavail resource
 			if (!hnd->cb_mut_nick) {
-				W("(%p) got no mutnick, wat do? (failing)", hnd);
+				W("(%p) got no mutnick.. (failing)", hnd);
 				ircbas_reset(hnd);
 				return false;
 			}
@@ -382,11 +382,11 @@ ircbas_connect(ibhnd_t hnd)
 				ircbas_reset(hnd);
 				return false;
 			}
-		} else if (strcmp(msg[1], "464") == 0) { /*ERR_PASSWDMISMATCH*/
+		} else if (strcmp(msg[1], "464") == 0) {//passwd missmatch
 			ircbas_reset(hnd);
 			W("(%p) wrong server password", hnd);
 			return false;
-		} else if (strcmp(msg[1], "383") == 0) { /*RPL_YOURESERVICE*/
+		} else if (strcmp(msg[1], "383") == 0) { //we're service
 			XFREE(hnd->mynick);
 			hnd->mynick = XSTRDUP(msg[2]);
 			char *tmp;
@@ -402,19 +402,20 @@ ircbas_connect(ibhnd_t hnd)
 			hnd->ver = XSTRDUP("");
 			hnd->service = true;
 			break;
-		} else if (strcmp(msg[1], "484") == 0) { /*ERR_RESTRICTED*/
+		} else if (strcmp(msg[1], "484") == 0) { //restricted
 			hnd->restricted = true;
-		} else if (strcmp(msg[1], "465") == 0) { //ERR_YOUREBANNEDCREEP
+		} else if (strcmp(msg[1], "465") == 0) { //banned
 			W("(%p) we're banned", hnd);
 			hnd->banned = true;
 			XFREE(hnd->banmsg);
 			hnd->banmsg = XSTRDUP(msg[3]?msg[3]:"");
-		} else if (strcmp(msg[1], "466") == 0) { //ERR_YOUWILLBEBANNED
+		} else if (strcmp(msg[1], "466") == 0) { //will be banned
 			W("(%p) we will be banned", hnd); //XXX not in RFC
-		} else if (strcmp(msg[1], "ERROR") == 0) { /*ERR_RESTRICTED*/
+		} else if (strcmp(msg[1], "ERROR") == 0) {
 			XFREE(hnd->lasterr);
 			hnd->lasterr = XSTRDUP(msg[2]?msg[2]:"");
-			W("(%p) received error while logging on: %s", hnd, msg[2]);
+			W("(%p) received error while logging on: %s",
+			    hnd, msg[2]);
 			ircbas_reset(hnd);
 			return false;
 		}
@@ -430,7 +431,8 @@ ircbas_read(ibhnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
 	int r = irccon_read(hnd->con, tok, tok_len, to_us);
 
 	if (r == -1 || (r != 0 && !onread(hnd, tok, tok_len))) {
-		W("(%p) irccon_read() failed or onread() denied (r:%d)", hnd, r);
+		W("(%p) irccon_read() failed or onread() denied (r:%d)",
+		    hnd, r);
 		ircbas_reset(hnd);
 		return -1;
 	}
@@ -576,7 +578,8 @@ ircbas_set_connect_timeout(ibhnd_t hnd,
 }
 
 bool
-ircbas_set_proxy(ibhnd_t hnd, const char *host, unsigned short port, int ptype)
+ircbas_set_proxy(ibhnd_t hnd, const char *host, unsigned short port,
+    int ptype)
 {
 	return irccon_set_proxy(hnd->con, host, port, ptype);
 }
@@ -821,7 +824,8 @@ send_logon(ibhnd_t hnd)
 
 	if (hnd->service) {
 		r = snprintf(pBuf, rem, "SERVICE %s 0 %s %ld 0 :%s\r\n",
-		    hnd->nick, hnd->serv_dist, hnd->serv_type, hnd->serv_info);
+		    hnd->nick, hnd->serv_dist, hnd->serv_type,
+		    hnd->serv_info);
 	} else {
 		r = snprintf(pBuf, rem, "NICK %s\r\nUSER %s %u * :%s\r\n",
 		    hnd->nick, hnd->uname, hnd->conflags, hnd->fname);
@@ -843,7 +847,7 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 		if (!pfx_extract_nick(nick, sizeof nick, tok[0]))
 			return false;
 
-		if (istrcasecmp(nick, hnd->mynick, hnd->casemapping) == 0) {
+		if (!istrcasecmp(nick, hnd->mynick, hnd->casemapping)) {
 			XFREE(hnd->mynick);
 			hnd->mynick = XSTRDUP(tok[2]);
 		}
@@ -854,16 +858,18 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 		for (size_t z = 3; z < tok_len; ++z) {
 			if (!tok[z]) break;
 
-			if (strncasecmp(tok[z], "CASEMAPPING=", 12) == 0) {
+			if (!strncasecmp(tok[z], "CASEMAPPING=", 12)) {
 				const char *value = tok[z] + 12;
 				if (strcasecmp(value, "ascii") == 0) {
-					hnd->casemapping = CASEMAPPING_ASCII;
-				} else if (strcasecmp(value, "strict-rfc1459") == 0) {
-					hnd->casemapping = CASEMAPPING_STRICT_RFC1459;
+					hnd->casemapping = CMAP_ASCII;
+				} else if (strcasecmp(value,
+				    "strict-rfc1459") == 0) {
+					hnd->casemapping
+					    = CMAP_STRICT_RFC1459;
 				} else {
-					hnd->casemapping = CASEMAPPING_RFC1459;
+					hnd->casemapping = CMAP_RFC1459;
 				}
-			} else if (strncasecmp(tok[z], "PREFIX=", 7) == 0) {
+			} else if (!strncasecmp(tok[z], "PREFIX=", 7)) {
 				char *str = XSTRDUP(tok[z] + 8);
 				char *p = strchr(str, ')');
 				*p++ = '\0';
@@ -874,7 +880,7 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 				hnd->m005modepfx[1] = XSTRDUP(p);
 
 				XFREE(str);
-			} else if (strncasecmp(tok[z], "CHANMODES=", 10) == 0) {
+			} else if (!strncasecmp(tok[z], "CHANMODES=", 10)){
 				for (int z = 0; z < 4; ++z) {
 					XFREE(hnd->m005chanmodes[z]);
 					hnd->m005chanmodes[z] = NULL;
@@ -886,14 +892,15 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 
 				while (ptr) {
 					if (c < 4)
-						hnd->m005chanmodes[c++]=XSTRDUP(ptr);
+						hnd->m005chanmodes[c++] =
+						    XSTRDUP(ptr);
 					ptr = strtok(NULL, ",");
 				}
 
 				if (c != 4) {
 					W("005 chanmodes parse element: "
-					    "expected 4 parameters, got %i. "
-					    "arg is: \"%s\"", c, tok[z] + 10);
+					    "expected 4 params, got %i. "
+					    "arg: \"%s\"", c, tok[z] + 10);
 				}
 
 				XFREE(argbuf);

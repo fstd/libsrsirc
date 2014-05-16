@@ -6,8 +6,6 @@
 # include <config.h>
 #endif
 
-#define _GNU_SOURCE 1
-
 #include <libsrsirc/irc_util.h>
 
 #include <common.h>
@@ -23,7 +21,7 @@
 
 #include <intlog.h>
 
-#define CHANMODE_CLASS_A 1 /*do not change these, see int classify_chanmode(char)*/
+#define CHANMODE_CLASS_A 1 /*don't change;see int classify_chanmode(char)*/
 #define CHANMODE_CLASS_B 2
 #define CHANMODE_CLASS_C 3
 #define CHANMODE_CLASS_D 4
@@ -109,7 +107,7 @@ istrcasecmp(const char *n1, const char *n2, int casemap)
 	size_t l1 = strlen(n1);
 	size_t l2 = strlen(n2);
 
-	return istrncasecmp(n1, n2, (l1 < l2) ? (l1 + 1) : (l2 + 1), casemap);
+	return istrncasecmp(n1, n2, (l1 < l2 ? l1 : l2) + 1, casemap);
 }
 
 int
@@ -136,10 +134,10 @@ itolower(char *dest, size_t destsz, const char *str, int casemap)
 {
 	int rangeinc;
 	switch (casemap) {
-	case CASEMAPPING_RFC1459:
+	case CMAP_RFC1459:
 		rangeinc = 4;
 		break;
-	case CASEMAPPING_STRICT_RFC1459:
+	case CMAP_STRICT_RFC1459:
 		rangeinc = 3;
 		break;
 	default:
@@ -229,7 +227,7 @@ parse_identity(char *nick, size_t nicksz, char *uname, size_t unamesz,
 
 
 void
-sndumpmsg(char *dest, size_t dest_sz, void *tag, char **msg, size_t msg_len)
+sndumpmsg(char *dest, size_t dest_sz, void *tag, char **msg, size_t msglen)
 {
 	snprintf(dest, dest_sz, "(%p) '%s' '%s'", tag, msg[0], msg[1]);
 	for(size_t i = 2; i < msg_len; i++) {
@@ -297,13 +295,15 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
 				break;
 			case CHANMODE_CLASS_C:
 				if (enable)
-					arg = (i > argcount) ? ("*") : arr[i++];
+					arg = (i > argcount) ?
+					    ("*") : arr[i++];
 				break;
 			case CHANMODE_CLASS_D:
 				break;
 			default:/*error?*/
 				if (strchr(modepfx005chr, c)) {
-					arg = (i > argcount) ? ("*") : arr[i++];
+					arg = (i > argcount) ?
+					    ("*") : arr[i++];
 				} else {
 					W("unknown chanmode '%c' (0x%X)\n",
 					    c, (unsigned)c);
@@ -314,7 +314,9 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
 		}
 		if (arg)
 			D("arg is '%s'", arg);
-		modearr[j] = XMALLOC((3 + ((arg != NULL) ? strlen(arg) + 1 : 0)));
+		modearr[j] = XMALLOC((3 + ((arg != NULL) ?
+		    strlen(arg) + 1 : 0)));
+
 		modearr[j][0] = enable ? '+' : '-';
 		modearr[j][1] = c;
 		modearr[j][2] = arg ? ' ' : '\0';

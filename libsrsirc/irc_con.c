@@ -6,8 +6,6 @@
 # include <config.h>
 #endif
 
-#define _GNU_SOURCE 1
-
 /* pub if */
 #include <libsrsirc/irc_con.h>
 
@@ -234,7 +232,7 @@ irccon_connect(ichnd_t hnd,
 	    softto_us, hardto_us);
 
 	if (sck < 0) {
-		W("(%p) failed to ic_consocket for %s:%hu", hnd, host, port);
+		W("(%p) ic_consocket failed for %s:%hu", hnd, host, port);
 		return false;
 	}
 
@@ -417,7 +415,8 @@ irccon_colon_trail(ichnd_t hnd)
 }
 
 bool
-irccon_set_proxy(ichnd_t hnd, const char *host, unsigned short port, int ptype)
+irccon_set_proxy(ichnd_t hnd, const char *host, unsigned short port,
+    int ptype)
 {
 	if (!hnd || hnd->state == INV)
 		return false;
@@ -579,8 +578,8 @@ static bool pxlogon_http(ichnd_t hnd, unsigned long to_us)
 
 	D("(%p) wrote HTTP CONNECT, reading response", hnd);
 	size_t c = 0;
-	while(c < sizeof buf && (c < 4 || buf[c - 4] != '\r' ||
-	    buf[c - 3] != '\n' || buf[c - 2] != '\r' || buf[c - 1] != '\n')) {
+	while(c < sizeof buf && (c < 4 || buf[c-4] != '\r' ||
+	    buf[c-3] != '\n' || buf[c-2] != '\r' || buf[c-1] != '\n')) {
 		errno = 0;
 		n = read(hnd->sck, &buf[c], 1);
 		if (n <= 0) {
@@ -622,7 +621,7 @@ static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us)
 	unsigned char logon[14];
 	uint16_t port = htons(hnd->port);
 
-	/* XXX FIXME this doesntwork if hnd->host is not an ipv4 addr but dns */
+	/*FIXME this doesntwork if hnd->host is not an ipv4 addr but dns*/
 	uint32_t ip = inet_addr(hnd->host);
 	char name[6];
 	for(size_t i = 0; i < sizeof name - 1; i++)
@@ -758,7 +757,7 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 			return false;
 		}
 		if (n == 0) {
-			W("(%p) illegal ipv4 address: '%s'", hnd, hnd->host);
+			W("(%p) illegal ipv4 addr: '%s'", hnd, hnd->host);
 			return false;
 		}
 		memcpy(connect+c, &ia4.s_addr, 4); c +=4;
@@ -771,7 +770,7 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 			return false;
 		}
 		if (n == 0) {
-			W("(%p) illegal ipv6 address: '%s'", hnd, hnd->host);
+			W("(%p) illegal ipv6 addr: '%s'", hnd, hnd->host);
 			return false;
 		}
 		memcpy(connect+c, &ia6.s6_addr, 16); c +=16;
@@ -835,7 +834,7 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 		l = 1; //length
 		break;
 	default:
-		W("(%p) socks returned illegal addresstype %d", hnd, resp[3]);
+		W("(%p) socks returned illegal addrtype %d", hnd, resp[3]);
 		return false;
 	}
 
@@ -863,8 +862,8 @@ static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
 		c += n;
 	}
 
-	/* not that we'd care about what we just have read but we want to make
-	 * sure to read the correct amount of characters */
+	/* not that we'd care about what we just have read but we want to
+	 * make sure to read the correct amount of characters */
 
 	D("(%p) socks5 success (apparently)", hnd);
 	return true;
@@ -880,7 +879,7 @@ guess_hosttype(const char *host)
 	while(*host) {
 		if (*host == '.')
 			dc++;
-		else if (!isdigit(*host))
+		else if (!isdigit((unsigned char)*host))
 			return HOST_DNS;
 		host++;
 	}

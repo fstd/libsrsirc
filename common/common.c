@@ -6,8 +6,6 @@
 # include <config.h>
 #endif
 
-#define _GNU_SOURCE 1
-
 #include <common.h>
 
 #include <stdio.h>
@@ -116,8 +114,8 @@ ic_strNcpy(char *dst, const char *src, size_t len)
 }
 
 int ic_consocket(const char *host, unsigned short port,
-		struct sockaddr *sockaddr, size_t *addrlen,
-		unsigned long softto, unsigned long hardto)
+    struct sockaddr *sockaddr, size_t *addrlen,
+    unsigned long softto, unsigned long hardto)
 {
 	D("ic_consocket() called: host='%s', port=%hu, sto=%lu, hto=%lu)",
 	    host, port, softto, hardto);
@@ -135,7 +133,7 @@ int ic_consocket(const char *host, unsigned short port,
 	int64_t hardtsend = hardto ? ic_timestamp_us() + hardto : 0;
 
 	D("calling getaddrinfo on '%s:%s' (AF_UNSPEC, SOCK_STREAM)",
-			host, portstr);
+	    host, portstr);
 
 	int r = getaddrinfo(host, portstr, &hints, &ai_list);
 

@@ -5,8 +5,6 @@
 #ifndef SRS_IRC_BASIC_H
 #define SRS_IRC_BASIC_H 1
 
-#define _GNU_SOURCE 1
-
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -19,7 +17,8 @@ ibhnd_t ircbas_init(void);
 bool ircbas_reset(ibhnd_t hnd);
 bool ircbas_dispose(ibhnd_t hnd);
 bool ircbas_connect(ibhnd_t hnd);
-int ircbas_read(ibhnd_t hnd, char **tok, size_t tok_len, unsigned long to_us);
+int ircbas_read(ibhnd_t hnd, char **tok, size_t tok_len,
+    unsigned long to_us);
 bool ircbas_write(ibhnd_t hnd, const char *line);
 bool ircbas_online(ibhnd_t hnd);
 
@@ -39,7 +38,8 @@ bool ircbas_regcb_conread(ibhnd_t hnd, fp_con_read cb, void *tag);
 bool ircbas_regcb_mutnick(ibhnd_t hnd, fp_mut_nick);
 //getter/setter:
 bool ircbas_set_server(ibhnd_t hnd, const char *host, unsigned short port);
-bool ircbas_set_proxy(ibhnd_t hnd, const char *host, unsigned short port, int ptype);
+bool ircbas_set_proxy(ibhnd_t hnd, const char *host, unsigned short port,
+    int ptype);
 bool ircbas_set_pass(ibhnd_t hnd, const char *srvpass);
 bool ircbas_set_uname(ibhnd_t hnd, const char *uname);
 bool ircbas_set_fname(ibhnd_t hnd, const char *fname);

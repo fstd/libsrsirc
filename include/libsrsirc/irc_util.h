@@ -5,14 +5,12 @@
 #ifndef SRS_IRC_UTIL_H
 #define SRS_IRC_UTIL_H 1
 
-#define _GNU_SOURCE 1
-
 #include <stdbool.h>
 #include <stddef.h>
 
-#define CASEMAPPING_RFC1459 0
-#define CASEMAPPING_STRICT_RFC1459 1
-#define CASEMAPPING_ASCII 2
+#define CMAP_RFC1459 0
+#define CMAP_STRICT_RFC1459 1
+#define CMAP_ASCII 2
 
 #define IRCPX_HTTP 0
 #define IRCPX_SOCKS4 1 // NOT socks4a
@@ -49,12 +47,13 @@ void parse_hostspec(char *hoststr, size_t hoststr_sz, unsigned short *port,
 bool parse_identity(char *nick, size_t nicksz, char *uname, size_t unamesz,
     char *fname, size_t fnamesz, const char *identity);
 
-void sndumpmsg(char *dest, size_t dest_sz, void *tag, char **msg, size_t msg_len);
+void sndumpmsg(char *dest, size_t dest_sz, void *tag, char **msg,
+    size_t msg_len);
 
-void dumpmsg(void *tag, char **msg, size_t msg_len);
+void dumpmsg(void *tag, char **msg, size_t msglen);
 
 bool cr(char **msg, size_t msg_len, void *tag);
-char** parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
+char** parse_chanmodes(const char *const *arr, size_t argcnt, size_t *num,
     const char *modepfx005chr, const char *const *chmodes);
 
 #endif /* SRS_IRC_UTIL_H */
