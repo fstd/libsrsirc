@@ -18,7 +18,7 @@ typedef void (*fp_mut_nick)(char *nick, size_t nick_sz);
 ibhnd_t ircbas_init(void);
 bool ircbas_reset(ibhnd_t hnd);
 bool ircbas_dispose(ibhnd_t hnd);
-bool ircbas_connect(ibhnd_t hnd, unsigned long to_us);
+bool ircbas_connect(ibhnd_t hnd);
 int ircbas_read(ibhnd_t hnd, char **tok, size_t tok_len, unsigned long to_us);
 bool ircbas_write(ibhnd_t hnd, const char *line);
 bool ircbas_online(ibhnd_t hnd);
@@ -49,6 +49,8 @@ bool ircbas_set_service_connect(ibhnd_t hnd, bool enabled);
 bool ircbas_set_service_dist(ibhnd_t hnd, const char *dist);
 bool ircbas_set_service_type(ibhnd_t hnd, long type);
 bool ircbas_set_service_info(ibhnd_t hnd, const char *info);
+bool ircbas_set_connect_timeout(ibhnd_t hnd,
+    unsigned long soft, unsigned long hard);
 
 const char *ircbas_get_host(ibhnd_t hnd);
 unsigned short ircbas_get_port(ibhnd_t hnd);

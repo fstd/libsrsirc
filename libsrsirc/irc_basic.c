@@ -36,6 +36,8 @@
 #define DEF_UMODES "iswo"
 #define DEF_CMODES "opsitnml"
 
+#define DEF_CONTO_HARD 120000000ul
+#define DEF_CONTO_SOFT 15000000ul
 
 struct ibhnd
 {
@@ -46,6 +48,10 @@ struct ibhnd
 	char *cmodes;
 	char *ver;
 	char *lasterr;
+
+	/* zero timeout means no timeout */
+	unsigned long conto_hard_us;/*connect() timeout per A/AAAA record*/
+	unsigned long conto_soft_us;/*overall ircbas_connect() timeout*/
 
 	bool restricted;
 	bool banned;
@@ -178,6 +184,9 @@ ircbas_init(void)
 	r->tag_con_read = NULL;
 	r->cb_mut_nick = mutilate_nick;
 
+	r->conto_soft_us = DEF_CONTO_SOFT;
+	r->conto_hard_us = DEF_CONTO_HARD;
+
 	for(int i = 0; i < 4; i++)
 		r->logonconv[i] = NULL;
 
@@ -247,9 +256,11 @@ ircbas_dispose(ibhnd_t hnd)
 }
 
 bool
-ircbas_connect(ibhnd_t hnd, unsigned long to_us)
+ircbas_connect(ibhnd_t hnd)
 {
-	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+	int64_t tsend = hnd->conto_hard_us ?
+	    ic_timestamp_us() + hnd->conto_hard_us : 0;
+
 	XFREE(hnd->lasterr);
 	hnd->lasterr = NULL;
 	XFREE(hnd->banmsg);
@@ -261,8 +272,11 @@ ircbas_connect(ibhnd_t hnd, unsigned long to_us)
 		hnd->logonconv[i] = NULL;
 	}
 
-	D("(%p) wanna connect, connecting backend (timeout: %lu)", hnd, to_us);
-	if (!irccon_connect(hnd->con, to_us)) {
+	D("(%p) connecting backend (timeout: %luus (soft), %luus (hard))",
+	    hnd, hnd->conto_soft_us, hnd->conto_hard_us);
+
+	if (!irccon_connect(hnd->con, hnd->conto_soft_us,
+	    hnd->conto_hard_us)) {
 		W("(%p) backend failed to establish connection", hnd);
 		return false;
 	}
@@ -547,6 +561,17 @@ ircbas_set_service_info(ibhnd_t hnd, const char *info)
 		return false;
 	XFREE(hnd->serv_info);
 	hnd->serv_info = XSTRDUP(info);
+	return true;
+}
+
+bool
+ircbas_set_connect_timeout(ibhnd_t hnd,
+    unsigned long soft, unsigned long hard)
+{
+	if (!irccon_valid(hnd->con))
+		return false;
+	hnd->conto_hard_us = hard;
+	hnd->conto_soft_us = soft;
 	return true;
 }
 

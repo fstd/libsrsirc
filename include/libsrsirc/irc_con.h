@@ -15,7 +15,8 @@ typedef struct ichnd* ichnd_t;
 ichnd_t irccon_init(void);
 bool irccon_reset(ichnd_t hnd);
 bool irccon_dispose(ichnd_t hnd);
-bool irccon_connect(ichnd_t hnd, unsigned long to_us);
+bool irccon_connect(ichnd_t hnd,
+    unsigned long softto_us, unsigned long hardto_us);
 int irccon_read(ichnd_t hnd, char **tok, size_t tok_len, unsigned long to_us);
 bool irccon_write(ichnd_t hnd, const char *line);
 bool irccon_online(ichnd_t hnd);

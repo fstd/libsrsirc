@@ -204,12 +204,14 @@ irccon_dispose(ichnd_t hnd)
 }
 
 bool
-irccon_connect(ichnd_t hnd, unsigned long to_us)
+irccon_connect(ichnd_t hnd,
+    unsigned long softto_us, unsigned long hardto_us)
 {
 	if (!hnd || hnd->state != OFF)
 		return false;
 
-	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+	int64_t tsend = hardto_us ? ic_timestamp_us() + hardto_us : 0;
+
 	char *host = hnd->ptype != -1 ? hnd->phost : hnd->host;
 	unsigned short port = hnd->ptype != -1 ? hnd->pport : hnd->port;
 
@@ -220,14 +222,16 @@ irccon_connect(ichnd_t hnd, unsigned long to_us)
 			snprintf(pxspec, sizeof pxspec, " via %s:%s:%hu",
 			    pxtypestr(hnd->ptype), hnd->phost, hnd->pport);
 
-		D("(%p) wanna connect to %s:%hu%s, timeout: %luus",
-		    hnd, hnd->host, hnd->port, pxspec, to_us);
+		D("(%p) wanna connect to %s:%hu%s, sto: %luus, hto: %luus",
+		    hnd, hnd->host, hnd->port, pxspec,
+		    softto_us, hardto_us);
 	}
 
 	struct sockaddr sa;
 	size_t addrlen;
 
-	int sck = ic_consocket(host, port, &sa, &addrlen, 3000000, 30000000);
+	int sck = ic_consocket(host, port, &sa, &addrlen,
+	    softto_us, hardto_us);
 
 	if (sck < 0) {
 		W("(%p) failed to ic_consocket for %s:%hu", hnd, host, port);

@@ -32,7 +32,8 @@
 #define IRC_MAXARGS 16
 #define MAX_CHANLIST 512
 
-#define DEF_CONTO_S 30
+#define DEF_CONTO_SOFT_S 15
+#define DEF_CONTO_HARD_S 120
 #define DEF_LINEDELAY 2
 #define DEF_FREELINES 0
 #define DEF_WAITQUIT_S 3
@@ -61,7 +62,8 @@
 
 static struct settings_s {
 	bool trgmode;
-	int conto_s;
+	unsigned conto_soft_s;
+	unsigned conto_hard_s;
 	int linedelay;
 	int freelines;
 	int waitquit_s;
@@ -190,8 +192,7 @@ life(void)
 			WX("irc connection reset");
 			if (!stdineof && g_sett.reconnect) {
 				WVX("reconnecting");
-				if(!ircbas_connect(g_irc,
-				              g_sett.conto_s * 1000000UL)) {
+				if (!ircbas_connect(g_irc)) {
 					WVX("sleeping %d sec",
 					              g_sett.confailwait_s);
 					sleep(g_sett.confailwait_s);
@@ -395,8 +396,25 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			WVX("enabled target mode");
 			sett->trgmode = true;
 		break;case 'T':
-			sett->conto_s = (unsigned)strtol(optarg, NULL, 10);
-			WVX("set connect timeout to %ds", sett->conto_s);
+			{
+			char *arg = strdup(optarg);
+			if (!arg)
+				E("strdup failed");
+
+			char *ptr = strchr(arg, ':');
+			if (!ptr)
+				sett->conto_hard_s = (unsigned)strtoul(arg, NULL, 10);
+			else {
+				*ptr = '\0';
+				sett->conto_hard_s = (unsigned)strtoul(arg, NULL, 10);
+				sett->conto_soft_s = (unsigned)strtoul(ptr+1, NULL, 10);
+			}
+
+			WVX("set connect timeout to %us (soft), %us (hard)s",
+			    sett->conto_soft_s, sett->conto_hard_s);
+
+			free(arg);
+			}
 		break;case 'C':
 			{
 			char *str = strdup(optarg);
@@ -482,13 +500,14 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	ircbas_set_conflags(g_irc, 0);
 	ircbas_regcb_conread(g_irc, conread, 0);
 
-	sett->conto_s = DEF_CONTO_S;
 	sett->linedelay = DEF_LINEDELAY;
 	sett->freelines = DEF_FREELINES;
 	sett->waitquit_s = DEF_WAITQUIT_S;
 	sett->confailwait_s = DEF_CONFAILWAIT_S;
 	sett->heartbeat = DEF_HEARBEAT_S;
 	sett->verb = DEF_VERB;
+	sett->conto_soft_s = DEF_CONTO_SOFT_S;
+	sett->conto_hard_s = DEF_CONTO_HARD_S;
 
 	process_args(argc, argv, sett);
 
@@ -518,6 +537,9 @@ init(int *argc, char ***argv, struct settings_s *sett)
 
 	if (!sett->trgmode && strlen(sett->chanlist) == 0)
 		EX("no targetmode and no chans given. i can't fap to that.");
+
+	ircbas_set_connect_timeout(g_irc,
+	    g_sett.conto_soft_s*1000000UL, g_sett.conto_hard_s*1000000UL);
 
 	WVX("initialized");
 }
@@ -624,8 +646,8 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	BH("\t-p <str>: Use <str> as server password");
 	fprintf(str, "\t-P <pxspec>: Use <pxspec> as proxy. "
 			"See %s for format\n", sh?"man page":"below");
-	BH("\t-T <int>: Connect/Logon timeout in seconds."
-	    "[def: "XSTR(DEF_CONTO_S)"]");
+	BH("\t-T <int>[:<int>]: Connect/Logon hard[:soft]-timeout in seconds."
+	    "[def: "XSTR(DEF_CONTO_HARD_S)":"XSTR(DEF_CONTO_SOFT_S)"]");
 	fprintf(str, "\t-C <chanlst>: List of chans to join + keys. "
 			"See %s for format\n", sh?"man page":"below");
 	BH("\t-w <int>: Secs to wait for server disconnect after QUIT."
@@ -664,7 +686,8 @@ main(int argc, char **argv)
 
 	for (;;) {
 		WVX("connecting...");
-		if (!ircbas_connect(g_irc, g_sett.conto_s*1000000UL)) {
+
+		if (!ircbas_connect(g_irc)) {
 			WX("failed to connect/logon (%s)",
 			                           g_sett.keeptrying
 			                           ?"retrying":"giving up");
