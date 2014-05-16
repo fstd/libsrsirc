@@ -20,7 +20,7 @@ AC_PROG_MAKE_SET
 
 AC_HEADER_STDC
 
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdbool.h stddef.h stdlib.h string.h strings.h sys/socket.h sys/time.h sys/types.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdbool.h stddef.h stdlib.h string.h strings.h sys/socket.h sys/time.h sys/types.h syslog.h unistd.h])
 AC_ARG_WITH(ssl,
 [  --with-ssl            Build with SSL support],
 	if test x$withval = xno; then
@@ -52,8 +52,10 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 
 # Checks for library functions.
+AC_FUNC_MALLOC
+AC_FUNC_REALLOC
 AC_FUNC_STRERROR_R
-AC_CHECK_FUNCS([getaddrinfo gettimeofday memmove memset select socket strcasecmp strchr strdup strncasecmp strtol])
+AC_CHECK_FUNCS([getaddrinfo gettimeofday memmove memset select socket strcasecmp strchr strdup strncasecmp strtol strtoul])
 
 AC_CONFIG_FILES([Makefile
 		 common/Makefile
