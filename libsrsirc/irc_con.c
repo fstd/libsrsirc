@@ -14,6 +14,8 @@
 #include <libsrsirc/irc_io.h>
 #include <libsrsirc/irc_util.h>
 
+#include "proxy.h"
+
 //#define _BSD_SOURCE 1
 
 /* C */
@@ -53,10 +55,6 @@
 #define OFF 0
 #define ON 1
 
-#define HOST_IPV4 0
-#define HOST_IPV6 1
-#define HOST_DNS 2
-
 
 #ifdef WITH_SSL
 static bool s_sslinit;
@@ -84,11 +82,6 @@ struct ichnd
 	SSL *shnd;
 #endif
 };
-
-static bool pxlogon_http(ichnd_t hnd, unsigned long to_us);
-static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us);
-static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us);
-static int guess_hosttype(const char *host);
 
 ichnd_t
 irccon_init(void)
@@ -238,7 +231,7 @@ irccon_connect(ichnd_t hnd,
 
 	D("(%p) connected socket %d for %s:%hu", hnd, sck, host, port);
 
-	hnd->sck = sck; //must be set here for pxlogon
+	hnd->sck = sck; //must be set here for proxy_logon
 
 	int64_t trem = 0;
 	if (hnd->ptype != -1) {
@@ -255,11 +248,14 @@ irccon_connect(ichnd_t hnd,
 		bool ok = false;
 		D("(%p) logging on to proxy", hnd);
 		if (hnd->ptype == IRCPX_HTTP)
-			ok = pxlogon_http(hnd, (unsigned long)trem);
+			ok = proxy_logon_http(hnd->sck, hnd->host,
+			    hnd->port, (unsigned long)trem);
 		else if (hnd->ptype == IRCPX_SOCKS4)
-			ok = pxlogon_socks4(hnd, (unsigned long)trem);
+			ok = proxy_logon_socks4(hnd->sck, hnd->host,
+			    hnd->port, (unsigned long)trem);
 		else if (hnd->ptype == IRCPX_SOCKS5)
-			ok = pxlogon_socks5(hnd, (unsigned long)trem);
+			ok = proxy_logon_socks5(hnd->sck, hnd->host,
+			    hnd->port, (unsigned long)trem);
 
 		if (!ok) {
 			W("(%p) proxy logon failed", hnd);
@@ -562,332 +558,4 @@ irccon_sockfd(ichnd_t hnd)
 	return hnd->sck;
 }
 
-static bool pxlogon_http(ichnd_t hnd, unsigned long to_us)
-{
-	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
-	char buf[256];
-	snprintf(buf, sizeof buf, "CONNECT %s:%d HTTP/1.0\r\nHost: %s:%d"
-	    "\r\n\r\n", hnd->host, hnd->port, hnd->host, hnd->port);
 
-	errno = 0;
-	ssize_t n = write(hnd->sck, buf, strlen(buf));
-	if (n == -1) {
-		WE("(%p) write() failed", hnd);
-		return false;
-	} else if (n < (ssize_t)strlen(buf)) {
-		W("(%p) didn't send everything (%zd/%zu)",
-		    hnd, n, strlen(buf));
-		return false;
-	}
-
-	memset(buf, 0, sizeof buf);
-
-	D("(%p) wrote HTTP CONNECT, reading response", hnd);
-	size_t c = 0;
-	while(c < sizeof buf && (c < 4 || buf[c-4] != '\r' ||
-	    buf[c-3] != '\n' || buf[c-2] != '\r' || buf[c-1] != '\n')) {
-		errno = 0;
-		n = read(hnd->sck, &buf[c], 1);
-		if (n <= 0) {
-			if (n == 0)
-				W("(%p) unexpected EOF", hnd);
-			else if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				if (tsend && ic_timestamp_us() < tsend) {
-					usleep(10000);
-					continue;
-				}
-				W("(%p) timeout hit", hnd);
-			} else
-				WE("(%p) read failed", hnd);
-			return false;
-		}
-		c++;
-	}
-	char *ctx; //context ptr for strtok_r
-	char *tok = strtok_r(buf, " ", &ctx);
-	if (!tok) {
-		W("(%p) parse error 1 (buf: '%s')", hnd, buf);
-		return false;
-	}
-
-	tok = strtok_r(NULL, " ", &ctx);
-	if (!tok) {
-		W("(%p) parse error 2 (buf: '%s')", hnd, buf);
-		return false;
-	}
-
-	D("(%p) http response: '%.3s' (should be '200')", hnd, tok);
-	return strncmp(tok, "200", 3) == 0;
-}
-
-/* SOCKS4 doesntsupport ipv6 */
-static bool pxlogon_socks4(ichnd_t hnd, unsigned long to_us)
-{
-	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
-	unsigned char logon[14];
-	uint16_t port = htons(hnd->port);
-
-	/*FIXME this doesntwork if hnd->host is not an ipv4 addr but dns*/
-	uint32_t ip = inet_addr(hnd->host);
-	char name[6];
-	for(size_t i = 0; i < sizeof name - 1; i++)
-		name[i] = (char)(rand() % 26 + 'a');
-	name[sizeof name - 1] = '\0';
-
-	if (ip == INADDR_NONE || !(1 <= port && port <= 65535)) {
-		W("(%p) srsly what?", hnd);
-		return false;
-	}
-
-
-	size_t c = 0;
-	logon[c++] = 4;
-	logon[c++] = 1;
-
-	memcpy(logon+c, &port, 2); c += 2;
-	memcpy(logon+c, &ip, 4); c += 4;
-
-	memcpy(logon+c, (unsigned char*)name, strlen(name) + 1);
-	c += strlen(name) + 1;
-
-	errno = 0;
-	ssize_t n = write(hnd->sck, logon, c);
-	if (n == -1) {
-		WE("(%p) write() failed", hnd);
-		return false;
-	} else if (n < (ssize_t)c) {
-		W("(%p) didn't send everything (%zd/%zu)", hnd, n, c);
-		return false;
-	}
-
-	D("(%p) wrote SOCKS4 logon sequence, reading response", hnd);
-	char resp[8];
-	c = 0;
-	while(c < 8) {
-		errno = 0;
-		n = read(hnd->sck, &resp+c, 8-c);
-		if (n <= 0) {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				if (tsend && ic_timestamp_us() < tsend) {
-					usleep(10000);
-					continue;
-				}
-				W("(%p) timeout hit", hnd);
-			} else if (n == 0) {
-				W("(%p) unexpected EOF", hnd);
-			} else
-				WE("(%p) read failed", hnd);
-			return false;
-		}
-		c += n;
-	}
-	D("(%p) socks4 response: %hhx %hhx (should be: 0x00 0x5a)",
-	    hnd, resp[0], resp[1]);
-	return resp[0] == 0 && resp[1] == 0x5a;
-}
-
-static bool pxlogon_socks5(ichnd_t hnd, unsigned long to_us)
-{
-	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
-	unsigned char logon[14];
-
-	if(!(1 <= hnd->port && hnd->port <= 65535)) {
-		W("(%p) srsly what?!", hnd);
-		return false;
-	}
-
-	uint16_t nport = htons(hnd->port);
-	size_t c = 0;
-	logon[c++] = 5;
-
-	logon[c++] = 1;
-	logon[c++] = 0;
-
-	errno = 0;
-	ssize_t n = write(hnd->sck, logon, c);
-	if (n == -1) {
-		WE("(%p) write() failed", hnd);
-		return false;
-	} else if (n < (ssize_t)c) {
-		W("(%p) didn't send everything (%zd/%zu)", hnd, n, c);
-		return false;
-	}
-
-	D("(%p) wrote SOCKS5 logon sequence 1, reading response", hnd);
-	char resp[128];
-	c = 0;
-	while(c < 2) {
-		errno = 0;
-		n = read(hnd->sck, &resp+c, 2-c);
-		if (n <= 0) {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				if (tsend && ic_timestamp_us() < tsend) {
-					usleep(10000);
-					continue;
-				}
-				W("(%p) timeout 1 hit", hnd);
-			} else if (n == 0) {
-				W("(%p) unexpected EOF", hnd);
-			} else
-				WE("(%p) read failed", hnd);
-			return false;
-		}
-		c += n;
-	}
-
-	if(resp[0] != 5) {
-		W("(%p) unexpected response %hhx %hhx (no socks5?)",
-		    hnd, resp[0], resp[1]);
-		return false;
-	}
-	if (resp[1] != 0) {
-		W("(%p) socks5 denied (%hhx %hhx)", hnd, resp[0], resp[1]);
-		return false;
-	}
-	D("(%p) socks5 let us in", hnd);
-
-	c = 0;
-	char connect[128];
-	connect[c++] = 5;
-	connect[c++] = 1;
-	connect[c++] = 0;
-	int type = guess_hosttype(hnd->host);
-	struct in_addr ia4;
-	struct in6_addr ia6;
-	switch(type) {
-	case HOST_IPV4:
-		connect[c++] = 1;
-		n = inet_pton(AF_INET, hnd->host, &ia4);
-		if (n == -1) {
-			WE("(%p) inet_pton failed", hnd);
-			return false;
-		}
-		if (n == 0) {
-			W("(%p) illegal ipv4 addr: '%s'", hnd, hnd->host);
-			return false;
-		}
-		memcpy(connect+c, &ia4.s_addr, 4); c +=4;
-		break;
-	case HOST_IPV6:
-		connect[c++] = 4;
-		n = inet_pton(AF_INET6, hnd->host, &ia6);
-		if (n == -1) {
-			WE("(%p) inet_pton failed", hnd);
-			return false;
-		}
-		if (n == 0) {
-			W("(%p) illegal ipv6 addr: '%s'", hnd, hnd->host);
-			return false;
-		}
-		memcpy(connect+c, &ia6.s6_addr, 16); c +=16;
-		break;
-	case HOST_DNS:
-		connect[c++] = 3;
-		connect[c++] = strlen(hnd->host);
-		memcpy(connect+c, hnd->host, strlen(hnd->host));
-		c += strlen(hnd->host);
-	}
-	memcpy(connect+c, &nport, 2); c += 2;
-
-	errno = 0;
-	n = write(hnd->sck, connect, c);
-	if (n == -1) {
-		WE("(%p) write() failed", hnd);
-		return false;
-	} else if (n < (ssize_t)c) {
-		W("(%p) didn't send everything (%zd/%zu)", hnd, n, c);
-		return false;
-	}
-	D("(%p) wrote SOCKS5 logon sequence 2, reading response", hnd);
-
-	size_t l = 4;
-	c = 0;
-	while(c < l) {
-		errno = 0;
-		n = read(hnd->sck, resp + c, l - c);
-		if (n <= 0) {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				if (tsend && ic_timestamp_us() < tsend) {
-					usleep(10000);
-					continue;
-				}
-				W("(%p) timeout 2 hit", hnd);
-			} else if (n == 0) {
-				W("(%p) unexpected EOF", hnd);
-			} else
-				WE("(%p) read failed", hnd);
-			return false;
-		}
-		c += n;
-	}
-
-	if (resp[0] != 5 || resp[1] != 0) {
-		W("(%p) socks5 denied/failed (%hhx %hhx %hhx %hhx)",
-		    hnd, resp[0], resp[1], resp[2], resp[3]);
-		return false;
-	}
-
-	bool dns = false;
-	switch(resp[3]) {
-	case 1: //ipv4
-		l = 4;
-		break;
-	case 4: //ipv6
-		l = 16;
-		break;
-	case 3: //dns
-		dns = true;
-		l = 1; //length
-		break;
-	default:
-		W("(%p) socks returned illegal addrtype %d", hnd, resp[3]);
-		return false;
-	}
-
-	c = 0;
-	l += 2; //port
-	while(c < l) {
-		errno = 0;
-		/* read the very first byte seperately */
-		n = read(hnd->sck, resp + c, c ? l - c : 1);
-		if (n <= 0) {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				if (tsend && ic_timestamp_us() < tsend) {
-					usleep(10000);
-					continue;
-				}
-				W("(%p) timeout 2 hit", hnd);
-			} else if (n == 0) {
-				W("(%p) unexpected EOF", hnd);
-			} else
-				WE("(%p) read failed", hnd);
-			return false;
-		}
-		if (!c && dns)
-			l += resp[c];
-		c += n;
-	}
-
-	/* not that we'd care about what we just have read but we want to
-	 * make sure to read the correct amount of characters */
-
-	D("(%p) socks5 success (apparently)", hnd);
-	return true;
-}
-
-/*dumb heuristic to tell apart domain name/ip4/ip6 addr XXX FIXME */
-static int
-guess_hosttype(const char *host)
-{
-	if (strchr(host, '['))
-		return HOST_IPV6;
-	int dc = 0;
-	while(*host) {
-		if (*host == '.')
-			dc++;
-		else if (!isdigit((unsigned char)*host))
-			return HOST_DNS;
-		host++;
-	}
-	return dc == 3 ? HOST_IPV4 : HOST_DNS;
-}
