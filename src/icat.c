@@ -179,7 +179,8 @@ tryconnect(void)
 			EX("we haven't been compiled with SSL support...");
 #endif
 			WVX("SSL selected");
-		}
+		} else
+			ircbas_set_ssl(g_irc, false);
 
 		if (ircbas_connect(g_irc))
 			return true;
