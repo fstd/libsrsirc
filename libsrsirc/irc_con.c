@@ -463,12 +463,15 @@ irccon_set_server(ichnd_t hnd, const char *host, unsigned short port)
 	return true;
 }
 
-#ifdef WITH_SSL
 bool
 irccon_set_ssl(ichnd_t hnd, bool on)
 {
 	if (!hnd || hnd->state == INV)
 		return false;
+#ifndef WITH_SSL
+	W("library was not compiled with SSL support");
+	return false;
+#else
 
 	if (!s_sslinit && on) {
 		SSL_load_error_strings();
@@ -489,8 +492,8 @@ irccon_set_ssl(ichnd_t hnd, bool on)
 	hnd->ssl = on;
 
 	return true;
-}
 #endif
+}
 
 const char*
 irccon_get_proxy_host(ichnd_t hnd)
@@ -537,16 +540,18 @@ irccon_get_port(ichnd_t hnd)
 	return hnd->port;
 }
 
-#ifdef WITH_SSL
 bool
 irccon_get_ssl(ichnd_t hnd)
 {
 	if (!hnd || hnd->state == INV)
 		return false;
 
+#ifdef WITH_SSL
 	return hnd->ssl;
-}
+#else
+	return false;
 #endif
+}
 
 int
 irccon_sockfd(ichnd_t hnd)
