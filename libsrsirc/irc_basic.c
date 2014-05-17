@@ -720,7 +720,7 @@ mutilate_nick(char *nick, size_t nick_sz)
 	} else {
 		char last = nick[len-1];
 		if (last == '9')
-			nick[rand() % len] = '0' + rand() % 10;
+			nick[1 + rand() % (len-1)] = '0' + rand() % 10;
 		else if ('0' <= last && last <= '8')
 			nick[len - 1] = last + 1;
 		else
