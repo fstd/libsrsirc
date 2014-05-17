@@ -6,18 +6,18 @@
 # include <config.h>
 #endif
 
-#include <libsrsirc/irc_basic.h>
-
-#include <common.h>
-#include <libsrsirc/irc_con.h>
-#include <libsrsirc/irc_util.h>
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
 
+#include <common.h>
+#include <libsrsirc/irc_util.h>
+#include "irc_con.h"
+
 #include <intlog.h>
+
+#include <libsrsirc/irc_basic.h>
 
 #define MAX_IRCARGS ((size_t)15)
 

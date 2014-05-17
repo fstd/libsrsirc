@@ -6,12 +6,6 @@
 # include <config.h>
 #endif
 
-/* pub if */
-#include <libsrsirc/irc_io.h>
-
-/* locals */
-#include <common.h>
-
 /* C */
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +23,12 @@
 # include <openssl/err.h>
 #endif
 
+/* locals */
+#include <common.h>
 #include <intlog.h>
+
+#include "irc_io.h"
+
 
 #define ISDELIM(C) ((C)=='\n' || (C) == '\r')
 

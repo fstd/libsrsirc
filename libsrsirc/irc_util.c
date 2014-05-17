@@ -6,11 +6,6 @@
 # include <config.h>
 #endif
 
-#include <libsrsirc/irc_util.h>
-
-#include <common.h>
-
-
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,7 +14,11 @@
 #include <strings.h>
 #include <limits.h>
 
+#include <common.h>
+
 #include <intlog.h>
+
+#include <libsrsirc/irc_util.h>
 
 #define CHANMODE_CLASS_A 1 /*don't change;see int classify_chanmode(char)*/
 #define CHANMODE_CLASS_B 2

@@ -6,18 +6,6 @@
 # include <config.h>
 #endif
 
-/* pub if */
-#include <libsrsirc/irc_con.h>
-
-/* locals */
-#include <common.h>
-#include <libsrsirc/irc_io.h>
-#include <libsrsirc/irc_util.h>
-
-#include "proxy.h"
-
-//#define _BSD_SOURCE 1
-
 /* C */
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,7 +30,14 @@
 # include <openssl/err.h>
 #endif
 
+#include <common.h>
+#include <libsrsirc/irc_io.h>
+#include <libsrsirc/irc_util.h>
 #include <intlog.h>
+
+#include "proxy.h"
+
+#include "irc_con.h"
 
 #define RXBUF_SZ 4096
 #define LINEBUF_SZ 1024

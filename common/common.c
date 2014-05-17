@@ -6,8 +6,6 @@
 # include <config.h>
 #endif
 
-#include <common.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,6 +21,9 @@
 #include <arpa/inet.h>
 
 #include <intlog.h>
+
+#include <common.h>
+
 
 void
 ic_strNcat(char *dest, const char *src, size_t destsz)
