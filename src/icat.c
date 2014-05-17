@@ -20,8 +20,6 @@
 
 #include <common.h>
 #include <libsrsirc/irc_basic.h>
-#include <libsrsirc/irc_con.h>
-#include <libsrsirc/irc_io.h>
 #include <libsrsirc/irc_util.h>
 
 #define DEF_PORT 6667

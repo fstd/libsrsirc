@@ -31,8 +31,8 @@
 #endif
 
 #include <common.h>
-#include <libsrsirc/irc_io.h>
 #include <libsrsirc/irc_util.h>
+#include "irc_io.h"
 #include <intlog.h>
 
 #include "proxy.h"
