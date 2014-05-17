@@ -483,6 +483,7 @@ irccon_set_ssl(ichnd_t hnd, bool on)
 		}
 	} else if (!on && hnd->sctx) {
 		SSL_CTX_free(hnd->sctx);
+		hnd->sctx = NULL;
 	}
 
 	hnd->ssl = on;
