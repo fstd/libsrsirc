@@ -42,7 +42,7 @@ bool parse_pxspec(char *pxtypestr, size_t pxtypestr_sz, char *hoststr,
     size_t hoststr_sz, unsigned short *port, const char *line);
 
 void parse_hostspec(char *hoststr, size_t hoststr_sz, unsigned short *port,
-    const char *line);
+    bool *ssl, const char *line);
 
 bool parse_identity(char *nick, size_t nicksz, char *uname, size_t unamesz,
     char *fname, size_t fnamesz, const char *identity);

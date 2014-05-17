@@ -178,17 +178,28 @@ parse_pxspec(char *pxtypestr, size_t pxtypestr_sz, char *hoststr,
 	strncpy(pxtypestr, linebuf, num);
 	pxtypestr[num] = '\0';
 
-	parse_hostspec(hoststr, hoststr_sz, port, ptr + 1);
+	parse_hostspec(hoststr, hoststr_sz, port, NULL, ptr + 1);
 	return true;
 
 }
 
 void
 parse_hostspec(char *hoststr, size_t hoststr_sz, unsigned short *port,
-    const char *line)
+    bool *ssl, const char *line)
 {
+	if (ssl)
+		*ssl = false;
+
 	strncpy(hoststr, line + (line[0] == '['), hoststr_sz);
-	char *ptr = strchr(hoststr, ']');
+	
+	char *ptr = strcasestr(hoststr, "/ssl");
+	if (ptr && !ptr[4]) {
+		if (ssl)
+			*ssl = true;
+		*ptr = '\0';
+	}
+
+	ptr = strchr(hoststr, ']');
 	if (!ptr)
 		ptr = hoststr;
 	else

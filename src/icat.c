@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdarg.h>
+#include <ctype.h>
 #include <errno.h>
 
 #include <time.h>
@@ -24,6 +25,7 @@
 #include <libsrsirc/irc_util.h>
 
 #define DEF_PORT 6667
+#define DEF_PORT_SSL 6697
 #define MAX_CHANS 32
 #define IRC_MAXARGS 16
 #define MAX_CHANLIST 512
@@ -64,9 +66,6 @@ static struct settings_s {
 	int freelines;
 	int waitquit_s;
 	bool keeptrying;
-#ifdef WITH_SSL
-	bool ssl;
-#endif
 	int confailwait_s;
 	int heartbeat;
 	bool reconnect;
@@ -79,6 +78,13 @@ static struct settings_s {
 	char keylist[MAX_CHANLIST];
 } g_sett;
 
+static struct srvlist_s {
+	char *host;
+	unsigned short port;
+	bool ssl;
+	struct srvlist_s *next;
+} *g_srvlist;
+
 static struct outline_s {
 	char *line;
 	struct outline_s *next;
@@ -86,23 +92,29 @@ static struct outline_s {
 
 static ibhnd_t g_irc;
 static time_t g_quitat;
-static time_t g_nexthb = 0;
+static time_t g_nexthb;
 
-void life(void);
-void handle_stdin(char *line);
-void handle_irc(char **tok, size_t ntok);
-void init(int *argc, char ***argv, struct settings_s *sett);
-int iprintf(const char *fmt, ...);
-void strNcat(char *dest, const char *src, size_t destsz);
-bool conread(char **msg, size_t msg_len, void *tag);
-void usage(FILE *str, const char *a0, int ec, bool sh);
-void do_heartbeat(void);
-int process_sendq(void);
-int select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, unsigned long to_us);
+
+static int process_stdin(void);
+static int process_irc(void);
+static bool tryconnect(void);
+static void life(void);
+static void do_heartbeat(void);
+static int process_sendq(void);
+static int select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, unsigned long to_us);
+static void handle_stdin(char *line);
+static void handle_irc(char **tok, size_t ntok);
+static void process_args(int *argc, char ***argv, struct settings_s *sett);
+static void init(int *argc, char ***argv, struct settings_s *sett);
+static int iprintf(const char *fmt, ...);
+static void strNcat(char *dest, const char *src, size_t destsz);
+static bool isdigitstr(const char *str);
+static bool conread(char **msg, size_t msg_len, void *tag);
+static void usage(FILE *str, const char *a0, int ec, bool sh);
 int main(int argc, char **argv);
 
 
-int
+static int
 process_stdin(void)
 {
 	char *line = NULL;
@@ -125,7 +137,7 @@ process_stdin(void)
 }
 
 
-int
+static int
 process_irc(void)
 {
 	char *tok[IRC_MAXARGS];
@@ -146,7 +158,37 @@ process_irc(void)
 }
 
 
-void
+static bool
+tryconnect(void)
+{
+	struct srvlist_s *s = g_srvlist;
+
+	while (s) {
+		ircbas_set_server(g_irc, s->host, s->port);
+		WVX("set server to '%s:%hu'", ircbas_get_host(g_irc),
+		    ircbas_get_port(g_irc));
+
+		if (s->ssl) {
+#ifdef WITH_SSL
+			if (!ircbas_set_ssl(g_irc, true))
+				EX("failed to enable SSL");
+#else
+			EX("we haven't been compiled with SSL support...");
+#endif
+			WVX("SSL selected");
+		}
+
+		if (ircbas_connect(g_irc))
+			return true;
+
+		s = s->next;
+	}
+
+	return false;
+}
+
+
+static void
 life(void)
 {
 	time_t quitat = 0;
@@ -189,7 +231,7 @@ life(void)
 			WX("irc connection reset");
 			if (!stdineof && g_sett.reconnect) {
 				WVX("reconnecting");
-				if (!ircbas_connect(g_irc)) {
+				if (!tryconnect()) {
 					WVX("sleeping %d sec",
 					    g_sett.confailwait_s);
 					sleep(g_sett.confailwait_s);
@@ -215,7 +257,7 @@ life(void)
 	}
 }
 
-void
+static void
 do_heartbeat(void)
 {
 	if (g_sett.heartbeat && g_nexthb <= time(NULL)) {
@@ -224,7 +266,7 @@ do_heartbeat(void)
 	}
 }
 
-int
+static int
 process_sendq(void)
 {
 	static time_t nextsend = 0;
@@ -252,7 +294,7 @@ process_sendq(void)
 	return 0;
 }
 
-int
+static int
 select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, unsigned long to_us)
 {
 	fd_set read_set;
@@ -309,7 +351,7 @@ select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, unsigned long to_us)
 }
 
 
-void
+static void
 handle_stdin(char *line)
 {
 	char *end = line + strlen(line) - 1;
@@ -331,7 +373,7 @@ handle_stdin(char *line)
 }
 
 
-void
+static void
 handle_irc(char **tok, size_t ntok)
 {
 	if (strcmp(tok[1], "PING") == 0) {
@@ -352,17 +394,13 @@ handle_irc(char **tok, size_t ntok)
 }
 
 
-void
+static void
 process_args(int *argc, char ***argv, struct settings_s *sett)
 {
 	char *a0 = (*argv)[0];
 
 	for(int ch; (ch = getopt(*argc, *argv,
-#ifdef WITH_SSL
-	    "vchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNjz")) != -1;) {
-#else
 	    "vchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNj")) != -1;) {
-#endif
 		switch (ch) {
 		      case 'n':
 			ircbas_set_nick(g_irc, optarg);
@@ -462,10 +500,6 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 		break;case 'N':
 			sett->notices = true;
 			WVX("switched to NOTICE mode");
-#ifdef WITH_SSL
-		break;case 'z':
-			sett->ssl = true;
-#endif
 		break;case 'v':
 			sett->verb++;
 		break;case 'H':
@@ -480,7 +514,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 	*argv += optind;
 }
 
-void
+static void
 init(int *argc, char ***argv, struct settings_s *sett)
 {
 	if (setvbuf(stdin, NULL, _IOLBF, 0) != 0)
@@ -493,7 +527,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 
 	ircbas_set_nick(g_irc, "icat");
 	ircbas_set_uname(g_irc, "icat");
-	ircbas_set_fname(g_irc, "irc netcat, descendant of longcat");
+	ircbas_set_fname(g_irc, "irc netcat");
 	ircbas_set_conflags(g_irc, 0);
 	ircbas_regcb_conread(g_irc, conread, 0);
 
@@ -511,26 +545,38 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	if (!*argc)
 		EX("no server given");
 
-	if (*argc > 1)
-		EX("too many args. use 'srv:port' instead of 'srv port'");
+	for (int i = 0; i < *argc; i++) {
+		char host[256];
+		unsigned short port;
+		bool ssl = false;
+		parse_hostspec(host, sizeof host, &port, &ssl, (*argv)[i]);
 
-	char host[256];
-	unsigned short port;
-	parse_hostspec(host, sizeof host, &port, (*argv)[0]);
-	if (port == 0)
-		port = DEF_PORT;
+		if (isdigitstr(host)) /* catch netcat and telnet invocation syntax */
+			EX("invalid server specified (use 'srv:port' instead of 'srv port')");
 
-	ircbas_set_server(g_irc, host, port);
-	WVX("set server to '%s:%hu'", ircbas_get_host(g_irc),
-	    ircbas_get_port(g_irc));
+		/* we choke on all other sorts of invalid addresses/hostnames later */
 
-#ifdef WITH_SSL
-	if (sett->ssl) {
-		if (!ircbas_set_ssl(g_irc, true))
-			EX("failed to enable SSL");
-		WVX("SSL selected");
+		if (port == 0)
+			port = ssl ? DEF_PORT_SSL : DEF_PORT;
+
+		struct srvlist_s *node = malloc(sizeof *node);
+		if (!node)
+			E("malloc failed");
+
+		node->host = strdup(host);
+		node->port = port;
+		node->ssl = ssl;
+		node->next = NULL;
+
+		if (!g_srvlist)
+			g_srvlist = node;
+		else {
+			struct srvlist_s *n = g_srvlist;
+			while (n->next)
+				n = n->next;
+			n->next = node;
+		}
 	}
-#endif
 
 	if (!sett->trgmode && strlen(sett->chanlist) == 0)
 		EX("no targetmode and no chans given. i can't fap to that.");
@@ -542,7 +588,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 }
 
 
-int
+static int
 iprintf(const char *fmt, ...)
 {
 	char buf[1024];
@@ -571,7 +617,7 @@ iprintf(const char *fmt, ...)
 }
 
 
-void
+static void
 strNcat(char *dest, const char *src, size_t destsz)
 {
 	size_t len = strlen(dest);
@@ -587,7 +633,17 @@ strNcat(char *dest, const char *src, size_t destsz)
 }
 
 
-bool
+static bool
+isdigitstr(const char *str)
+{
+	while (*str)
+		if (!isdigit((unsigned char)*str++))
+			return false;
+	
+	return true;
+}
+
+static bool
 conread(char **msg, size_t msg_len, void *tag)
 {
 	char buf[1024];
@@ -597,7 +653,7 @@ conread(char **msg, size_t msg_len, void *tag)
 }
 
 
-void
+static void
 usage(FILE *str, const char *a0, int ec, bool sh)
 {
 	#define XSTR(s) STR(s)
@@ -605,13 +661,15 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	#define SH(STR) if (sh) fputs(STR "\n", str)
 	#define LH(STR) if (!sh) fputs(STR "\n", str)
 	#define BH(STR) fputs(STR "\n", str)
-	BH("=============================================================");
-	BH("== icat - IRC netcat, the only known descendant of longcat ==");
-	BH("=============================================================");
-	fprintf(str, "usage: %s [-vchtkSnufFspPTCwlL] <hostspec>\n", a0);
+	BH("=============================");
+	BH("== icat "PACKAGE_VERSION" - IRC netcat ==");
+	BH("=============================");
+	fprintf(str, "usage: %s [-vchtkSnufFspPTCwlL] <hostspec> "
+	    "[<hostspec> ...]\n", a0);
 	BH("");
-	BH("\t<hostspec> specifies the IRC server to connect against");
-	LH("\t\thostspec := srvaddr[:port]");
+	BH("\t<hostspec> specifies an IRC server to connect against");
+	BH("\t           multiple hostspecs may be given.");
+	LH("\t\thostspec := srvaddr[:port]['/ssl']");
 	LH("\t\tsrvaddr  := ip4addr|ip6addr|dnsname");
 	LH("\t\tport     := int(0..65535)");
 	LH("\t\tip4addr  := 'aaa.bbb.ccc.ddd'");
@@ -628,9 +686,6 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	LH("\t-S: Explicitly flush stdout after every line of output");
 	LH("\t-N: Use NOTICE instead of PRIVMSG for messages");
 	LH("\t-j: Do not join channel given by -C");
-#ifdef WITH_SSL
-	BH("\t-z: use SSL");
-#endif
 	LH("");
 	BH("\t-n <str>: Use <str> as nick. Subject to mutilation if N/A");
 	LH("\t-u <str>: Use <str> as (IRC) username/ident");
@@ -684,7 +739,7 @@ main(int argc, char **argv)
 	for (;;) {
 		WVX("connecting...");
 
-		if (!ircbas_connect(g_irc)) {
+		if (!tryconnect()) {
 			WX("failed to connect/logon (%s)",
 			    g_sett.keeptrying ?"retrying":"giving up");
 
