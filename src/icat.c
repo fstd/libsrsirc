@@ -38,6 +38,7 @@
 #define DEF_CONFAILWAIT_S 10
 #define DEF_HEARBEAT_S 0
 #define DEF_IGNORE_PM true
+#define DEF_IGNORE_CHANSERV true
 #define DEF_VERB 1
 
 #define STRACAT(DSTARR, STR) strNcat((DSTARR), (STR), sizeof (DSTARR))
@@ -73,6 +74,7 @@ static struct settings_s {
 	bool flush;
 	bool nojoin;
 	bool ignore_pm;
+	bool ignore_cs;
 	//bool fancy;
 	bool notices;
 	int verb;
@@ -387,6 +389,9 @@ handle_irc(char **tok, size_t ntok)
 	} else if (strcmp(tok[1], "PRIVMSG") == 0) {
 		char nick[32];
 		pfx_extract_nick(nick, sizeof nick, tok[0]);
+		if (g_sett.ignore_cs && !istrcasecmp(nick, "ChanServ", ircbas_casemap(g_irc)))
+			return;
+				
 		if (g_sett.trgmode)
 			printf("%s %s %s %s\n",
 			    nick, tok[0], tok[2], tok[3]);
@@ -417,7 +422,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 	char *a0 = (*argv)[0];
 
 	for(int ch; (ch = getopt(*argc, *argv,
-	    "vchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNji")) != -1;) {
+	    "vchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNjiI")) != -1;) {
 		switch (ch) {
 		      case 'n':
 			ircbas_set_nick(g_irc, optarg);
@@ -514,6 +519,8 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			sett->flush = true;
 		break;case 'j':
 			sett->nojoin = true;
+		break;case 'I':
+			sett->ignore_cs = false;
 		break;case 'i':
 			sett->ignore_pm = false;
 		break;case 'N':
@@ -559,6 +566,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	sett->conto_soft_s = DEF_CONTO_SOFT_S;
 	sett->conto_hard_s = DEF_CONTO_HARD_S;
 	sett->ignore_pm = DEF_IGNORE_PM;
+	sett->ignore_cs = DEF_IGNORE_CHANSERV;
 
 	process_args(argc, argv, sett);
 
@@ -707,6 +715,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	LH("\t-N: Use NOTICE instead of PRIVMSG for messages");
 	LH("\t-j: Do not join channel given by -C");
 	LH("\t-i: Don't ignore non-channel messages");
+	LH("\t-I: Don't ignore messages from ChanServ");
 	LH("");
 	BH("\t-n <str>: Use <str> as nick. Subject to mutilation if N/A");
 	LH("\t-u <str>: Use <str> as (IRC) username/ident");
