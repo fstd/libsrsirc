@@ -37,6 +37,7 @@
 #define DEF_WAITQUIT_S 3
 #define DEF_CONFAILWAIT_S 10
 #define DEF_HEARBEAT_S 0
+#define DEF_IGNORE_PM true
 #define DEF_VERB 1
 
 #define STRACAT(DSTARR, STR) strNcat((DSTARR), (STR), sizeof (DSTARR))
@@ -71,6 +72,7 @@ static struct settings_s {
 	bool reconnect;
 	bool flush;
 	bool nojoin;
+	bool ignore_pm;
 	//bool fancy;
 	bool notices;
 	int verb;
@@ -104,6 +106,7 @@ static int process_sendq(void);
 static int select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, unsigned long to_us);
 static void handle_stdin(char *line);
 static void handle_irc(char **tok, size_t ntok);
+static bool ismychan(const char *chan);
 static void process_args(int *argc, char ***argv, struct settings_s *sett);
 static void init(int *argc, char ***argv, struct settings_s *sett);
 static int iprintf(const char *fmt, ...);
@@ -386,11 +389,24 @@ handle_irc(char **tok, size_t ntok)
 		if (g_sett.trgmode)
 			printf("%s %s %s %s\n",
 			    nick, tok[0], tok[2], tok[3]);
-		else
+		else if (ismychan(tok[2]) || !g_sett.ignore_pm)
 			printf("%s\n", tok[3]);
+
 		if (g_sett.flush)
 			fflush(stdout);
 	}
+}
+
+
+static bool
+ismychan(const char *chan)
+{
+	char chans[512];
+	char search[512];
+	snprintf(chans, sizeof chans, ",%s,", g_sett.chanlist);
+	snprintf(search, sizeof search, ",%s,", chan);
+
+	return strstr(chans, search);
 }
 
 
@@ -400,7 +416,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 	char *a0 = (*argv)[0];
 
 	for(int ch; (ch = getopt(*argc, *argv,
-	    "vchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNj")) != -1;) {
+	    "vchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNji")) != -1;) {
 		switch (ch) {
 		      case 'n':
 			ircbas_set_nick(g_irc, optarg);
@@ -497,6 +513,8 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			sett->flush = true;
 		break;case 'j':
 			sett->nojoin = true;
+		break;case 'i':
+			sett->ignore_pm = false;
 		break;case 'N':
 			sett->notices = true;
 			WVX("switched to NOTICE mode");
@@ -539,6 +557,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	sett->verb = DEF_VERB;
 	sett->conto_soft_s = DEF_CONTO_SOFT_S;
 	sett->conto_hard_s = DEF_CONTO_HARD_S;
+	sett->ignore_pm = DEF_IGNORE_PM;
 
 	process_args(argc, argv, sett);
 
@@ -686,6 +705,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	LH("\t-S: Explicitly flush stdout after every line of output");
 	LH("\t-N: Use NOTICE instead of PRIVMSG for messages");
 	LH("\t-j: Do not join channel given by -C");
+	LH("\t-i: Don't ignore non-channel messages");
 	LH("");
 	BH("\t-n <str>: Use <str> as nick. Subject to mutilation if N/A");
 	LH("\t-u <str>: Use <str> as (IRC) username/ident");
