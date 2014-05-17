@@ -194,6 +194,7 @@ int ic_consocket(const char *host, unsigned short port,
 		if (fcntl(sck, F_SETFL, O_NONBLOCK) == -1) {
 			WE("failed to enable nonblocking mode");
 			close(sck);
+			sck = -1;
 			continue;
 		}
 
@@ -204,6 +205,7 @@ int ic_consocket(const char *host, unsigned short port,
 		if (r == -1 && (errno != EINPROGRESS)) {
 			WE("connect() failed");
 			close(sck);
+			sck = -1;
 			continue;
 		}
 
@@ -247,12 +249,14 @@ int ic_consocket(const char *host, unsigned short port,
 
 		if (!success) {
 			close(sck);
+			sck = -1;
 			continue;
 		}
 
 		if (getsockopt(sck, SOL_SOCKET, SO_ERROR, &opt, &optlen) != 0) {
 			W("getsockopt failed");
 			close(sck);
+			sck = -1;
 			continue;
 		}
 
@@ -265,8 +269,11 @@ int ic_consocket(const char *host, unsigned short port,
 
 			break;
 		} else {
-			W("could not connect socket (%d)", opt);
+			char berr[128];
+			strerror_r(opt, berr, sizeof berr);
+			W("could not connect socket (%d: %s)", opt, berr);
 			close(sck);
+			sck = -1;
 			continue;
 		}
 	}
