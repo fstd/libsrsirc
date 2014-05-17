@@ -137,9 +137,6 @@ irccon_init_fail:
 bool
 irccon_reset(ichnd_t hnd)
 {
-	if (!hnd || hnd->state == INV)
-		return false;
-
 	D("(%p) resetting", hnd);
 
 #ifdef WITH_SSL
@@ -168,9 +165,6 @@ irccon_reset(ichnd_t hnd)
 bool
 irccon_dispose(ichnd_t hnd)
 {
-	if (!hnd || hnd->state == INV)
-		return false;
-
 	irccon_reset(hnd);
 
 #ifdef WITH_SSL
@@ -381,19 +375,7 @@ irccon_write(ichnd_t hnd, const char *line)
 bool
 irccon_online(ichnd_t hnd)
 {
-	if (!hnd || hnd->state == INV)
-		return false;
-
 	return hnd->state == ON;
-}
-
-bool
-irccon_valid(ichnd_t hnd)
-{
-	if (!hnd || hnd->state == INV)
-		return false;
-
-	return true;
 }
 
 bool
@@ -409,9 +391,6 @@ bool
 irccon_set_proxy(ichnd_t hnd, const char *host, unsigned short port,
     int ptype)
 {
-	if (!hnd || hnd->state == INV)
-		return false;
-
 	char *n = NULL;
 	switch(ptype) {
 	case IRCPX_HTTP:
@@ -440,9 +419,6 @@ irccon_set_proxy(ichnd_t hnd, const char *host, unsigned short port,
 bool
 irccon_set_server(ichnd_t hnd, const char *host, unsigned short port)
 {
-	if (!hnd || hnd->state == INV)
-		return false;
-
 	char *n;
 	if (!(n = strdup(host?host:DEF_HOST))) {
 		EE("strdup failed");
@@ -457,8 +433,6 @@ irccon_set_server(ichnd_t hnd, const char *host, unsigned short port)
 bool
 irccon_set_ssl(ichnd_t hnd, bool on)
 {
-	if (!hnd || hnd->state == INV)
-		return false;
 #ifndef WITH_SSL
 	W("library was not compiled with SSL support");
 	return false;
@@ -489,54 +463,36 @@ irccon_set_ssl(ichnd_t hnd, bool on)
 const char*
 irccon_get_proxy_host(ichnd_t hnd)
 {
-	if (!hnd || hnd->state == INV)
-		return NULL;
-
 	return hnd->phost;
 }
 
 unsigned short
 irccon_get_proxy_port(ichnd_t hnd)
 {
-	if (!hnd || hnd->state == INV)
-		return 0;
-
 	return hnd->pport;
 }
 
 int
 irccon_get_proxy_type(ichnd_t hnd)
 {
-	if (!hnd || hnd->state == INV)
-		return 0;
-
 	return hnd->ptype;
 }
 
 const char*
 irccon_get_host(ichnd_t hnd)
 {
-	if (!hnd || hnd->state == INV)
-		return NULL;
-
 	return hnd->host;
 }
 
 unsigned short
 irccon_get_port(ichnd_t hnd)
 {
-	if (!hnd || hnd->state == INV)
-		return 0;
-
 	return hnd->port;
 }
 
 bool
 irccon_get_ssl(ichnd_t hnd)
 {
-	if (!hnd || hnd->state == INV)
-		return false;
-
 #ifdef WITH_SSL
 	return hnd->ssl;
 #else

@@ -91,8 +91,6 @@ static void freearr(char **arr, size_t nelem);
 bool
 ircbas_regcb_mutnick(ibhnd_t hnd, fp_mut_nick cb)
 {
-	if (!irccon_valid(hnd->con))
-		return false;
 	hnd->cb_mut_nick = cb;
 	return true;
 }
@@ -100,8 +98,6 @@ ircbas_regcb_mutnick(ibhnd_t hnd, fp_mut_nick cb)
 bool
 ircbas_regcb_conread(ibhnd_t hnd, fp_con_read cb, void *tag)
 {
-	if (!irccon_valid(hnd->con))
-		return false;
 	hnd->cb_con_read = cb;
 	hnd->tag_con_read = tag;
 	return true;
@@ -480,8 +476,6 @@ ircbas_sockfd(ibhnd_t hnd)
 bool
 ircbas_set_pass(ibhnd_t hnd, const char *srvpass)
 {
-	if (!irccon_valid(hnd->con))
-		return false;
 	XFREE(hnd->pass);
 	hnd->pass = XSTRDUP(srvpass);
 	return true;
@@ -490,8 +484,6 @@ ircbas_set_pass(ibhnd_t hnd, const char *srvpass)
 bool
 ircbas_set_uname(ibhnd_t hnd, const char *uname)
 {
-	if (!irccon_valid(hnd->con))
-		return false;
 	XFREE(hnd->uname);
 	hnd->uname = XSTRDUP(uname);
 	return true;
@@ -500,8 +492,6 @@ ircbas_set_uname(ibhnd_t hnd, const char *uname)
 bool
 ircbas_set_fname(ibhnd_t hnd, const char *fname)
 {
-	if (!irccon_valid(hnd->con))
-		return false;
 	XFREE(hnd->fname);
 	hnd->fname = XSTRDUP(fname);
 	return true;
@@ -510,8 +500,6 @@ ircbas_set_fname(ibhnd_t hnd, const char *fname)
 bool
 ircbas_set_conflags(ibhnd_t hnd, unsigned flags)
 {
-	if (!irccon_valid(hnd->con))
-		return false;
 	hnd->conflags = flags;
 	return true;
 }
@@ -519,8 +507,6 @@ ircbas_set_conflags(ibhnd_t hnd, unsigned flags)
 bool
 ircbas_set_nick(ibhnd_t hnd, const char *nick)
 {
-	if (!irccon_valid(hnd->con))
-		return false;
 	XFREE(hnd->nick);
 	hnd->nick = XSTRDUP(nick);
 	return true;
@@ -529,8 +515,6 @@ ircbas_set_nick(ibhnd_t hnd, const char *nick)
 bool
 ircbas_set_service_connect(ibhnd_t hnd, bool enabled)
 {
-	if (!irccon_valid(hnd->con))
-		return false;
 	hnd->serv_con = enabled;
 	return true;
 }
@@ -538,8 +522,6 @@ ircbas_set_service_connect(ibhnd_t hnd, bool enabled)
 bool
 ircbas_set_service_dist(ibhnd_t hnd, const char *dist)
 {
-	if (!irccon_valid(hnd->con))
-		return false;
 	XFREE(hnd->serv_dist);
 	hnd->serv_dist = XSTRDUP(dist);
 	return true;
@@ -548,8 +530,6 @@ ircbas_set_service_dist(ibhnd_t hnd, const char *dist)
 bool
 ircbas_set_service_type(ibhnd_t hnd, long type)
 {
-	if (!irccon_valid(hnd->con))
-		return false;
 	hnd->serv_type = type;
 	return true;
 }
@@ -557,8 +537,6 @@ ircbas_set_service_type(ibhnd_t hnd, long type)
 bool
 ircbas_set_service_info(ibhnd_t hnd, const char *info)
 {
-	if (!irccon_valid(hnd->con))
-		return false;
 	XFREE(hnd->serv_info);
 	hnd->serv_info = XSTRDUP(info);
 	return true;
@@ -568,8 +546,6 @@ bool
 ircbas_set_connect_timeout(ibhnd_t hnd,
     unsigned long soft, unsigned long hard)
 {
-	if (!irccon_valid(hnd->con))
-		return false;
 	hnd->conto_hard_us = hard;
 	hnd->conto_soft_us = soft;
 	return true;
@@ -591,78 +567,58 @@ ircbas_set_server(ibhnd_t hnd, const char *host, unsigned short port)
 int
 ircbas_casemap(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return -1;
 	return hnd->casemapping;
 }
 
 const char*
 ircbas_mynick(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return NULL;
 	return hnd->mynick;
 }
 
 const char*
 ircbas_myhost(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return NULL;
 	return hnd->myhost;
 }
 
 bool
 ircbas_service(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return NULL;
 	return hnd->service;
 }
 
 const char*
 ircbas_umodes(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return NULL;
 	return hnd->umodes;
 }
 
 const char*
 ircbas_cmodes(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return NULL;
 	return hnd->cmodes;
 }
 
 const char*
 ircbas_version(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return NULL;
 	return hnd->ver;
 }
 
 const char*
 ircbas_lasterror(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return NULL;
 	return hnd->lasterr;
 }
 const char*
 ircbas_banmsg(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return NULL;
 	return hnd->banmsg;
 }
 bool
 ircbas_banned(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return false;
 	return hnd->banned;
 }
 bool
@@ -704,72 +660,54 @@ ircbas_get_port(ibhnd_t hnd)
 const char*
 ircbas_get_pass(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return NULL;
 	return hnd->pass;
 }
 
 const char*
 ircbas_get_uname(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return NULL;
 	return hnd->uname;
 }
 
 const char*
 ircbas_get_fname(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return NULL;
 	return hnd->fname;
 }
 
 unsigned
 ircbas_get_conflags(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return 0;
 	return hnd->conflags;
 }
 
 const char*
 ircbas_get_nick(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return NULL;
 	return hnd->nick;
 }
 
 bool
 ircbas_get_service_connect(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return false;
 	return hnd->serv_con;
 }
 
 const char*
 ircbas_get_service_dist(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return NULL;
 	return hnd->serv_dist;
 }
 
 long
 ircbas_get_service_type(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return 0;
 	return hnd->serv_type;
 }
 
 const char*
 ircbas_get_service_info(ibhnd_t hnd)
 {
-	if (!irccon_valid(hnd->con))
-		return NULL;
 	return hnd->serv_info;
 }
 
