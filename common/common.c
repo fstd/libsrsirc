@@ -283,3 +283,13 @@ int ic_consocket(const char *host, unsigned short port,
 
 	return sck;
 }
+
+char*
+ic_strmdup(const char *str, size_t minlen)
+{
+	size_t len = strlen(str);
+	char *s = ic_xmalloc((len > minlen ? len : minlen) + 1);
+	strcpy(s, str);
+	return s;
+}
+

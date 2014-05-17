@@ -40,7 +40,7 @@ static int writeall(int sck,
 #ifdef WITH_SSL
     SSL *shnd,
 #endif
-    const char* buf); //write a full string
+    const char *buf); //write a full string
 
 /* pub if implementation */
 int
@@ -259,7 +259,7 @@ writeall(int sck,
 #ifdef WITH_SSL
     SSL *shnd,
 #endif
-    const char* buf)
+    const char *buf)
 {
 	V("invoke");
 	size_t cnt = 0;

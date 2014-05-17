@@ -81,7 +81,6 @@ struct ibhnd
 
 
 static void mutilate_nick(char *nick, size_t nick_sz);
-static char *strmdup(const char *str, size_t minlen);
 static bool send_logon(ibhnd_t hnd);
 
 static bool onread(ibhnd_t hnd, char **tok, size_t tok_len);
@@ -285,7 +284,7 @@ ircbas_connect(ibhnd_t hnd)
 	D("(%p) connection established, IRC logon sequence sent", hnd);
 	char *msg[MAX_IRCARGS];
 	XFREE(hnd->mynick);
-	hnd->mynick = strmdup(hnd->nick, 9);
+	hnd->mynick = ic_strmdup(hnd->nick, 9);
 
 	int64_t trem = 0;
 	for(;;) {
@@ -729,15 +728,6 @@ mutilate_nick(char *nick, size_t nick_sz)
 	}
 }
 
-static char*
-strmdup(const char *str, size_t minlen)
-{
-	size_t len = strlen(str);
-	char *s = XMALLOC((len > minlen ? len : minlen) + 1);
-	strcpy(s, str);
-	return s;
-}
-
 static bool
 send_logon(ibhnd_t hnd)
 {
@@ -823,7 +813,7 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 				}
 
 				int c = 0;
-				char* argbuf = XSTRDUP(tok[z] + 10);
+				char *argbuf = XSTRDUP(tok[z] + 10);
 				char *ptr = strtok(argbuf, ",");
 
 				while (ptr) {
@@ -846,22 +836,22 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 	return true;
 }
 
-const char* const* const*
+const char *const *const*
 ircbas_logonconv(ibhnd_t hnd)
 {
-	return (const char* const* const*)hnd->logonconv;
+	return (const char *const *const*)hnd->logonconv;
 }
 
-const char* const*
+const char *const*
 ircbas_005chanmodes(ibhnd_t hnd)
 {
-	return (const char* const*)hnd->m005chanmodes;
+	return (const char *const*)hnd->m005chanmodes;
 }
 
-const char* const*
+const char *const*
 ircbas_005modepfx(ibhnd_t hnd)
 {
-	return (const char* const*)hnd->m005modepfx;
+	return (const char *const*)hnd->m005modepfx;
 }
 
 
