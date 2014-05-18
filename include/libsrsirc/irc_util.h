@@ -37,6 +37,7 @@ bool pfx_extract_uname(char *dest, size_t dest_sz, const char *pfx);
 bool pfx_extract_host(char *dest, size_t dest_sz, const char *pfx);
 int istrcasecmp(const char *n1, const char *n2, int casemapping);
 int istrncasecmp(const char *n1, const char *n2, size_t len, int casemap);
+int ichartolower(int c, int casemap);
 void itolower(char *dest, size_t destsz, const char *str, int casemap);
 bool parse_pxspec(char *pxtypestr, size_t pxtypestr_sz, char *hoststr,
     size_t hoststr_sz, unsigned short *port, const char *line);

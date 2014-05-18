@@ -169,14 +169,14 @@ irccon_dispose(ichnd_t hnd)
 	irccon_set_ssl(hnd, false); //dispose ssl context if existing
 #endif
 
-	XFREE(hnd->host);
-	XFREE(hnd->phost);
-	XFREE(hnd->linebuf);
-	XFREE(hnd->overbuf);
+	free(hnd->host);
+	free(hnd->phost);
+	free(hnd->linebuf);
+	free(hnd->overbuf);
 	hnd->state = INV;
 
 	D("(%p) disposed", hnd);
-	XFREE(hnd);
+	free(hnd);
 
 	return true;
 }
@@ -403,7 +403,7 @@ irccon_set_proxy(ichnd_t hnd, const char *host, unsigned short port,
 		}
 		hnd->pport = port;
 		hnd->ptype = ptype;
-		XFREE(hnd->phost);
+		free(hnd->phost);
 		hnd->phost = n;
 		break;
 	default:
@@ -422,7 +422,7 @@ irccon_set_server(ichnd_t hnd, const char *host, unsigned short port)
 		EE("strdup failed");
 		return false;
 	}
-	XFREE(hnd->host);
+	free(hnd->host);
 	hnd->host = n;
 	hnd->port = (1 <= port && port <= 65535)?port:DEF_PORT;
 	return true;

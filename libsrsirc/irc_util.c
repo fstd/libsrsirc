@@ -115,17 +115,43 @@ istrncasecmp(const char *n1, const char *n2, size_t len, int casemap)
 	if (len == 0)
 		return 0;
 
-	char *d1 = XSTRDUP(n1);
-	char *d2 = XSTRDUP(n2);
+	while (*n1 && *n2) {
+		int c1 = ichartolower(*n1, casemap);
+		int c2 = ichartolower(*n2, casemap);
+		if (c1 != c2)
+			return c1 - c2;
 
-	itolower(d1, strlen(d1) + 1, n1, casemap);
-	itolower(d2, strlen(d2) + 1, n2, casemap);
+		n1++;
+		n2++;
+	}
 
-	int i = strncmp(d1, d2, len);
+	if (*n1)
+		return 1;
+	if (*n2)
+		return -1;
 
-	XFREE(d1);
-	XFREE(d2);
-	return i;
+	return 0;
+}
+
+int
+ichartolower(int c, int casemap)
+{
+	int rangeinc;
+	switch (casemap) {
+	case CMAP_RFC1459:
+		rangeinc = 4;
+		break;
+	case CMAP_STRICT_RFC1459:
+		rangeinc = 3;
+		break;
+	default:
+		rangeinc = 0;
+	}
+
+	if (c >= 'A' && c <= ('Z'+rangeinc))
+		return c + ('a'-'A');
+	else
+		return c;
 }
 
 void
@@ -146,10 +172,7 @@ itolower(char *dest, size_t destsz, const char *str, int casemap)
 	size_t c = 0;
 	char *ptr = dest;
 	while(c < destsz) {
-		if (*str >= 'A' && *str <= ('Z'+rangeinc))
-			*ptr++ = *str + ('a'-'A');
-		else
-			*ptr++ = *str;
+		*ptr++ = ichartolower(*str, casemap);
 
 		if (!*str)
 			break;
@@ -269,11 +292,25 @@ char**
 parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
     const char *modepfx005chr, const char *const *chmodes)
 {
-	char *modes = XSTRDUP(arr[0]);
+	char *modes = strdup(arr[0]);
+	if (!modes) {
+		EE("strdup");
+		return NULL;
+	}
+
 	const char *arg;
 	size_t nummodes = strlen(modes) - (ic_strCchr(modes,'-')
 	    + ic_strCchr(modes,'+'));
-	char **modearr = XMALLOC(nummodes * sizeof *modearr);
+
+	char **modearr = malloc(nummodes * sizeof *modearr);
+	if (!modearr) {
+		EE("malloc");
+		goto parse_chanmodes_fail;
+	}
+
+	for (size_t i = 0; i < nummodes; i++)
+		modearr[i] = NULL; //for safe cleanup
+
 	size_t i = 1;
 	int j = 0, cl;
 	char *ptr = modes;
@@ -324,8 +361,12 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
 		}
 		if (arg)
 			D("arg is '%s'", arg);
-		modearr[j] = XMALLOC((3 + ((arg != NULL) ?
+		modearr[j] = malloc((3 + ((arg != NULL) ?
 		    strlen(arg) + 1 : 0)));
+		if (!modearr[j]) {
+			EE("malloc");
+			goto parse_chanmodes_fail;
+		}
 
 		modearr[j][0] = enable ? '+' : '-';
 		modearr[j][1] = c;
@@ -342,8 +383,17 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
 	}
 
 	*num = nummodes;
-	XFREE(modes);
+	free(modes);
 	return modearr;
+
+parse_chanmodes_fail:
+	if (modearr)
+		for (size_t i = 0; i < nummodes; i++)
+			free(modearr[i]);
+
+	free(modearr);
+	free(modes);
+	return NULL;
 }
 
 static int

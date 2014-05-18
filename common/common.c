@@ -50,6 +50,7 @@ ic_strCchr(const char *dst, char c)
 	return r;
 }
 
+/*
 void*
 ic_xmalloc(size_t num)
 {
@@ -84,6 +85,7 @@ ic_xstrdup(const char *str)
 		return strcpy(ic_xmalloc(strlen(str) + 1), str);
 	return NULL;
 }
+*/
 
 int64_t
 ic_timestamp_us()
@@ -284,12 +286,14 @@ int ic_consocket(const char *host, unsigned short port,
 	return sck;
 }
 
+/*
 char*
 ic_strmdup(const char *str, size_t minlen)
 {
 	size_t len = strlen(str);
-	char *s = ic_xmalloc((len > minlen ? len : minlen) + 1);
-	strcpy(s, str);
+	char *s = malloc((len > minlen ? len : minlen) + 1);
+	if (s)
+		strcpy(s, str);
 	return s;
 }
-
+*/

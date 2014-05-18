@@ -74,8 +74,8 @@ struct ibhnd
 	char *serv_info;
 
 	char **logonconv[4];
-	char *m005chanmodes[4];
-	char *m005modepfx[2];
+	char m005chanmodes[4][64];
+	char m005modepfx[2][32];
 
 	fp_con_read cb_con_read;
 	void *tag_con_read;
@@ -128,12 +128,12 @@ ircbas_init(void)
 	r->fname = NULL;
 	r->serv_dist = NULL;
 	r->serv_info = NULL;
-	r->m005chanmodes[0] = NULL;
-	r->m005chanmodes[1] = NULL;
-	r->m005chanmodes[2] = NULL;
-	r->m005chanmodes[3] = NULL;
-	r->m005modepfx[0] = NULL;
-	r->m005modepfx[1] = NULL;
+	ic_strNcpy(r->m005chanmodes[0], "b", sizeof r->m005chanmodes[0]);
+	ic_strNcpy(r->m005chanmodes[1], "k", sizeof r->m005chanmodes[1]);
+	ic_strNcpy(r->m005chanmodes[2], "l", sizeof r->m005chanmodes[2]);
+	ic_strNcpy(r->m005chanmodes[3], "psitnm", sizeof r->m005chanmodes[3]);
+	ic_strNcpy(r->m005modepfx[0], "ov", sizeof r->m005modepfx[0]);
+	ic_strNcpy(r->m005modepfx[1], "@+", sizeof r->m005modepfx[1]);
 
 	if (!(r->pass = strdup(DEF_PASS)))
 		goto ircbas_init_fail;
@@ -146,13 +146,7 @@ ircbas_init(void)
 	if ((!(r->uname = strdup(DEF_UNAME)))
 	    || (!(r->fname = strdup(DEF_FNAME)))
 	    || (!(r->serv_dist = strdup(DEF_SERV_DIST)))
-	    || (!(r->serv_info = strdup(DEF_SERV_INFO)))
-	    || (!(r->m005chanmodes[0] = strdup("b")))
-	    || (!(r->m005chanmodes[1] = strdup("k")))
-	    || (!(r->m005chanmodes[2] = strdup("l")))
-	    || (!(r->m005chanmodes[3] = strdup("psitnm")))
-	    || (!(r->m005modepfx[0] = strdup("ov")))
-	    || (!(r->m005modepfx[1] = strdup("@+"))))
+	    || (!(r->serv_info = strdup(DEF_SERV_INFO))))
 		goto ircbas_init_fail;
 
 	errno = preverrno;
@@ -200,12 +194,6 @@ ircbas_init_fail:
 		free(r->fname);
 		free(r->serv_dist);
 		free(r->serv_info);
-		free(r->m005chanmodes[0]);
-		free(r->m005chanmodes[1]);
-		free(r->m005chanmodes[2]);
-		free(r->m005chanmodes[3]);
-		free(r->m005modepfx[0]);
-		free(r->m005modepfx[1]);
 		free(r);
 	}
 
@@ -231,18 +219,18 @@ ircbas_dispose(ibhnd_t hnd)
 	if (!irccon_dispose(hnd->con))
 		return false;
 
-	XFREE(hnd->lasterr);
-	XFREE(hnd->banmsg);
+	free(hnd->lasterr);
+	free(hnd->banmsg);
 
-	XFREE(hnd->pass);
-	XFREE(hnd->nick);
-	XFREE(hnd->uname);
-	XFREE(hnd->fname);
-	XFREE(hnd->serv_dist);
-	XFREE(hnd->serv_info);
+	free(hnd->pass);
+	free(hnd->nick);
+	free(hnd->uname);
+	free(hnd->fname);
+	free(hnd->serv_dist);
+	free(hnd->serv_info);
 
 	D("(%p) disposed", hnd);
-	XFREE(hnd);
+	free(hnd);
 
 	return true;
 }
@@ -253,9 +241,9 @@ ircbas_connect(ibhnd_t hnd)
 	int64_t tsend = hnd->conto_hard_us ?
 	    ic_timestamp_us() + hnd->conto_hard_us : 0;
 
-	XFREE(hnd->lasterr);
+	free(hnd->lasterr);
 	hnd->lasterr = NULL;
-	XFREE(hnd->banmsg);
+	free(hnd->banmsg);
 	hnd->banmsg = NULL;
 	hnd->banned = false;
 
@@ -396,15 +384,22 @@ ircbas_connect(ibhnd_t hnd)
 		} else if (strcmp(msg[1], "465") == 0) { //banned
 			W("(%p) we're banned", hnd);
 			hnd->banned = true;
-			XFREE(hnd->banmsg);
-			hnd->banmsg = XSTRDUP(msg[3]?msg[3]:"");
+			free(hnd->banmsg);
+			hnd->banmsg = strdup(msg[3] ? msg[3] : "");
+			if (!hnd->banned)
+				EE("strdup");
+
 		} else if (strcmp(msg[1], "466") == 0) { //will be banned
 			W("(%p) we will be banned", hnd); //XXX not in RFC
 		} else if (strcmp(msg[1], "ERROR") == 0) {
-			XFREE(hnd->lasterr);
-			hnd->lasterr = XSTRDUP(msg[2]?msg[2]:"");
+			free(hnd->lasterr);
+			hnd->lasterr = strdup(msg[2] ? msg[2] : "");
+			if (!hnd->lasterr)
+				EE("strdup");
+
 			W("(%p) received error while logging on: %s",
 			    hnd, msg[2]);
+
 			ircbas_reset(hnd);
 			return false;
 		}
@@ -469,25 +464,40 @@ ircbas_sockfd(ibhnd_t hnd)
 bool
 ircbas_set_pass(ibhnd_t hnd, const char *srvpass)
 {
-	XFREE(hnd->pass);
-	hnd->pass = XSTRDUP(srvpass);
-	return true;
+	char *n = strdup(srvpass);
+	if (!n)
+		EE("strdup");
+	else {
+		free(hnd->pass);
+		hnd->pass = n;
+	}
+	return n;
 }
 
 bool
 ircbas_set_uname(ibhnd_t hnd, const char *uname)
 {
-	XFREE(hnd->uname);
-	hnd->uname = XSTRDUP(uname);
-	return true;
+	char *n = strdup(uname);
+	if (!n)
+		EE("strdup");
+	else {
+		free(hnd->uname);
+		hnd->uname = n;
+	}
+	return n;
 }
 
 bool
 ircbas_set_fname(ibhnd_t hnd, const char *fname)
 {
-	XFREE(hnd->fname);
-	hnd->fname = XSTRDUP(fname);
-	return true;
+	char *n = strdup(fname);
+	if (!n)
+		EE("strdup");
+	else {
+		free(hnd->fname);
+		hnd->fname = n;
+	}
+	return n;
 }
 
 bool
@@ -500,9 +510,14 @@ ircbas_set_conflags(ibhnd_t hnd, unsigned flags)
 bool
 ircbas_set_nick(ibhnd_t hnd, const char *nick)
 {
-	XFREE(hnd->nick);
-	hnd->nick = XSTRDUP(nick);
-	return true;
+	char *n = strdup(nick);
+	if (!n)
+		EE("strdup");
+	else {
+		free(hnd->nick);
+		hnd->nick = n;
+	}
+	return n;
 }
 
 bool
@@ -515,9 +530,14 @@ ircbas_set_service_connect(ibhnd_t hnd, bool enabled)
 bool
 ircbas_set_service_dist(ibhnd_t hnd, const char *dist)
 {
-	XFREE(hnd->serv_dist);
-	hnd->serv_dist = XSTRDUP(dist);
-	return true;
+	char *n = strdup(dist);
+	if (!n)
+		EE("strdup");
+	else {
+		free(hnd->serv_dist);
+		hnd->serv_dist = n;
+	}
+	return n;
 }
 
 bool
@@ -530,9 +550,14 @@ ircbas_set_service_type(ibhnd_t hnd, long type)
 bool
 ircbas_set_service_info(ibhnd_t hnd, const char *info)
 {
-	XFREE(hnd->serv_info);
-	hnd->serv_info = XSTRDUP(info);
-	return true;
+	char *n = strdup(info);
+	if (!n)
+		EE("strdup");
+	else {
+		free(hnd->serv_info);
+		hnd->serv_info = n;
+	}
+	return n;
 }
 
 bool
@@ -770,8 +795,11 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 		if (!istrcasecmp(nick, hnd->mynick, hnd->casemapping))
 			ic_strNcpy(hnd->mynick, tok[2],sizeof hnd->mynick);
 	} else if (strcmp(tok[1], "ERROR") == 0) {
-		XFREE(hnd->lasterr);
-		hnd->lasterr = XSTRDUP(tok[2]);
+		free(hnd->lasterr);
+		hnd->lasterr = strdup(tok[2]);
+		if (!hnd->lasterr)
+			EE("strdup");
+
 	} else if (strcmp(tok[1], "005") == 0) {
 		for (size_t z = 3; z < tok_len; ++z) {
 			if (!tok[z]) break;
@@ -788,30 +816,29 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 					hnd->casemapping = CMAP_RFC1459;
 				}
 			} else if (!strncasecmp(tok[z], "PREFIX=", 7)) {
-				char *str = XSTRDUP(tok[z] + 8);
+				char str[32];
+				ic_strNcpy(str, tok[z]+8, sizeof str);
 				char *p = strchr(str, ')');
 				*p++ = '\0';
-				XFREE(hnd->m005modepfx[0]);
-				hnd->m005modepfx[0] = XSTRDUP(str);
+				ic_strNcpy(hnd->m005modepfx[0], str,
+				    sizeof hnd->m005modepfx[0]);
 
-				XFREE(hnd->m005modepfx[1]);
-				hnd->m005modepfx[1] = XSTRDUP(p);
-
-				XFREE(str);
+				ic_strNcpy(hnd->m005modepfx[1], p,
+				    sizeof hnd->m005modepfx[1]);
 			} else if (!strncasecmp(tok[z], "CHANMODES=", 10)){
-				for (int z = 0; z < 4; ++z) {
-					XFREE(hnd->m005chanmodes[z]);
-					hnd->m005chanmodes[z] = NULL;
-				}
+				for (int z = 0; z < 4; ++z)
+					hnd->m005chanmodes[z][0] = '\0';
 
 				int c = 0;
-				char *argbuf = XSTRDUP(tok[z] + 10);
+				char argbuf[64];
+				ic_strNcpy(argbuf, tok[z] + 10,
+				    sizeof argbuf);
 				char *ptr = strtok(argbuf, ",");
 
 				while (ptr) {
 					if (c < 4)
-						hnd->m005chanmodes[c++] =
-						    XSTRDUP(ptr);
+						ic_strNcpy(hnd->m005chanmodes[c++],
+						    ptr, sizeof hnd->m005chanmodes[0]);
 					ptr = strtok(NULL, ",");
 				}
 
@@ -820,8 +847,6 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 					    "expected 4 params, got %i. "
 					    "arg: \"%s\"", c, tok[z] + 10);
 				}
-
-				XFREE(argbuf);
 			}
 		}
 	}
@@ -850,11 +875,28 @@ ircbas_005modepfx(ibhnd_t hnd)
 static char**
 clonearr(char **arr, size_t nelem)
 {
-	char **res = XMALLOC((nelem+1) * sizeof *arr);
-	for(size_t i = 0; i < nelem; i++)
-		res[i] = arr[i] ? XSTRDUP(arr[i]) : NULL;
+	char **res = malloc((nelem+1) * sizeof *arr);
+	if (!res) {
+		EE("malloc");
+		return NULL;
+	}
+
+	for(size_t i = 0; i < nelem; i++) {
+		if (arr[i]) {
+			if (!(res[i] = strdup(arr[i]))) {
+				EE("strdup");
+				goto clonearr_fail;
+			}
+		} else
+			res[i] = NULL;
+	}
 	res[nelem] = NULL;
 	return res;
+
+clonearr_fail:
+
+	freearr(res, nelem);
+	return NULL;
 }
 
 
@@ -863,7 +905,7 @@ freearr(char **arr, size_t nelem)
 {
 	if (arr) {
 		for(size_t i = 0; i < nelem; i++)
-			XFREE(arr[i]);
-		XFREE(arr);
+			free(arr[i]);
+		free(arr);
 	}
 }
