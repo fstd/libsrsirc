@@ -37,14 +37,20 @@
 #define DEF_CONTO_HARD 120000000ul
 #define DEF_CONTO_SOFT 15000000ul
 
+#define MAX_NICK_LEN 64
+#define MAX_HOST_LEN 128
+#define MAX_UMODES_LEN 64
+#define MAX_CMODES_LEN 64
+#define MAX_VER_LEN 128
+
 struct ibhnd
 {
-	char *mynick;
-	char *myhost;
+	char mynick[MAX_NICK_LEN];
+	char myhost[MAX_HOST_LEN];
 	bool service;
-	char *umodes;
-	char *cmodes;
-	char *ver;
+	char umodes[MAX_UMODES_LEN];
+	char cmodes[MAX_CMODES_LEN];
+	char ver[MAX_VER_LEN];
 	char *lasterr;
 
 	/* zero timeout means no timeout */
@@ -113,8 +119,6 @@ ircbas_init(void)
 		goto ircbas_init_fail;
 
 
-	/* no XMALLOC here because at this point we might as well
-	 * check and error instead of terminating */
 	if (!(r = malloc(sizeof (*(ibhnd_t)0))))
 		goto ircbas_init_fail;
 
@@ -155,12 +159,12 @@ ircbas_init(void)
 
 	r->con = con;
 	/* persistent after reset */
-	r->mynick = NULL;
-	r->myhost = NULL;
+	r->mynick[0] = '\0';
+	r->myhost[0] = '\0';
 	r->service = false;
-	r->umodes = NULL;
-	r->cmodes = NULL;
-	r->ver = NULL;
+	r->umodes[0] = '\0';
+	r->cmodes[0] = '\0';
+	r->ver[0] = '\0';
 	r->lasterr = NULL;
 
 	r->casemapping = CMAP_RFC1459;
@@ -227,11 +231,6 @@ ircbas_dispose(ibhnd_t hnd)
 	if (!irccon_dispose(hnd->con))
 		return false;
 
-	XFREE(hnd->mynick);
-	XFREE(hnd->myhost);
-	XFREE(hnd->umodes);
-	XFREE(hnd->cmodes);
-	XFREE(hnd->ver);
 	XFREE(hnd->lasterr);
 	XFREE(hnd->banmsg);
 
@@ -283,8 +282,7 @@ ircbas_connect(ibhnd_t hnd)
 
 	D("(%p) connection established, IRC logon sequence sent", hnd);
 	char *msg[MAX_IRCARGS];
-	XFREE(hnd->mynick);
-	hnd->mynick = ic_strmdup(hnd->nick, 9);
+	ic_strNcpy(hnd->mynick, hnd->nick, sizeof hnd->mynick);
 
 	int64_t trem = 0;
 	for(;;) {
@@ -318,23 +316,21 @@ ircbas_connect(ibhnd_t hnd)
 
 		if (strcmp(msg[1], "001") == 0) {
 			hnd->logonconv[0] = clonearr(msg, MAX_IRCARGS);
-			XFREE(hnd->mynick);
-			hnd->mynick = XSTRDUP(msg[2]);
+			ic_strNcpy(hnd->mynick, msg[2],sizeof hnd->mynick);
 			char *tmp;
 			if ((tmp = strchr(hnd->mynick, '@')))
 				*tmp = '\0';
 			if ((tmp = strchr(hnd->mynick, '!')))
 				*tmp = '\0';
 
-			XFREE(hnd->myhost);//XXX ensure argcount
-			XFREE(hnd->umodes);
-			XFREE(hnd->cmodes);
-			XFREE(hnd->ver);
-			hnd->myhost = XSTRDUP(msg[0] ?
-			    msg[0] : irccon_get_host(hnd->con));
-			hnd->umodes = XSTRDUP(DEF_UMODES);
-			hnd->cmodes = XSTRDUP(DEF_CMODES);
-			hnd->ver = XSTRDUP("");
+			//XXX ensure argcount
+			ic_strNcpy(hnd->myhost,
+			    msg[0] ? msg[0] : irccon_get_host(hnd->con),
+			    sizeof hnd->mynick);
+
+			ic_strNcpy(hnd->umodes, DEF_UMODES, sizeof hnd->umodes);
+			ic_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
+			hnd->ver[0] = '\0';
 			hnd->service = false;
 		} else if (strcmp(msg[1], "002") == 0) {
 			hnd->logonconv[1] = clonearr(msg, MAX_IRCARGS);
@@ -342,14 +338,11 @@ ircbas_connect(ibhnd_t hnd)
 			hnd->logonconv[2] = clonearr(msg, MAX_IRCARGS);
 		} else if (strcmp(msg[1], "004") == 0) {
 			hnd->logonconv[3] = clonearr(msg, MAX_IRCARGS);
-			XFREE(hnd->myhost);//XXX ensure argcount
-			hnd->myhost = XSTRDUP(msg[3]);
-			XFREE(hnd->umodes);
-			hnd->umodes = XSTRDUP(msg[5]);
-			XFREE(hnd->cmodes);
-			hnd->cmodes = XSTRDUP(msg[6]);
-			XFREE(hnd->ver);
-			hnd->ver = XSTRDUP(msg[4]);
+			//XXX ensure argcount
+			ic_strNcpy(hnd->myhost, msg[3],sizeof hnd->myhost);
+			ic_strNcpy(hnd->umodes, msg[5], sizeof hnd->umodes);
+			ic_strNcpy(hnd->cmodes, msg[6], sizeof hnd->cmodes);
+			ic_strNcpy(hnd->ver, msg[4], sizeof hnd->ver);
 			D("(%p) got beloved 004", hnd);
 			break;
 		} else if (strcmp(msg[1], "PING") == 0) {
@@ -370,7 +363,7 @@ ircbas_connect(ibhnd_t hnd)
 				return false;
 			}
 			hnd->cb_mut_nick(hnd->mynick, 10); //XXX hc
-			char buf[64];
+			char buf[MAX_NICK_LEN];
 			snprintf(buf,sizeof buf,"NICK %s\r\n",hnd->mynick);
 			if (!irccon_write(hnd->con, buf)) {
 				W("(%p) write failed (2)", hnd);
@@ -382,19 +375,20 @@ ircbas_connect(ibhnd_t hnd)
 			W("(%p) wrong server password", hnd);
 			return false;
 		} else if (strcmp(msg[1], "383") == 0) { //we're service
-			XFREE(hnd->mynick);
-			hnd->mynick = XSTRDUP(msg[2]);
+			ic_strNcpy(hnd->mynick, msg[2],sizeof hnd->mynick);
 			char *tmp;
 			if ((tmp = strchr(hnd->mynick, '@')))
 				*tmp = '\0';
 			if ((tmp = strchr(hnd->mynick, '!')))
 				*tmp = '\0';
 
-			hnd->myhost = XSTRDUP(msg[0] ?
-			    msg[0] : irccon_get_host(hnd->con));
-			hnd->umodes = XSTRDUP(DEF_UMODES);
-			hnd->cmodes = XSTRDUP(DEF_CMODES);
-			hnd->ver = XSTRDUP("");
+			ic_strNcpy(hnd->myhost,
+			    msg[0] ? msg[0] : irccon_get_host(hnd->con),
+			    sizeof hnd->mynick);
+
+			ic_strNcpy(hnd->umodes, DEF_UMODES, sizeof hnd->umodes);
+			ic_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
+			hnd->ver[0] = '\0';
 			hnd->service = true;
 			break;
 		} else if (strcmp(msg[1], "484") == 0) { //restricted
@@ -773,10 +767,8 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 		if (!pfx_extract_nick(nick, sizeof nick, tok[0]))
 			return false;
 
-		if (!istrcasecmp(nick, hnd->mynick, hnd->casemapping)) {
-			XFREE(hnd->mynick);
-			hnd->mynick = XSTRDUP(tok[2]);
-		}
+		if (!istrcasecmp(nick, hnd->mynick, hnd->casemapping))
+			ic_strNcpy(hnd->mynick, tok[2],sizeof hnd->mynick);
 	} else if (strcmp(tok[1], "ERROR") == 0) {
 		XFREE(hnd->lasterr);
 		hnd->lasterr = XSTRDUP(tok[2]);

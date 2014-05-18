@@ -85,8 +85,6 @@ irccon_init(void)
 	int preverrno = errno;
 	errno = 0;
 
-	/* no XMALLOC here because at this point we might as well
-	 * check and error instead of terminating */
 	if (!(r = malloc(sizeof *r)))
 		goto irccon_init_fail;
 
