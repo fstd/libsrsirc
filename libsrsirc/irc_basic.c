@@ -872,6 +872,9 @@ freearr(char **arr, size_t nelem)
 static bool
 handle_001(ibhnd_t hnd, char **msg, size_t nargs)
 {
+	if (nargs < 3)
+		return false;
+
 	hnd->logonconv[0] = clonearr(msg, MAX_IRCARGS);
 	ic_strNcpy(hnd->mynick, msg[2],sizeof hnd->mynick);
 	char *tmp;
@@ -910,6 +913,9 @@ handle_003(ibhnd_t hnd, char **msg, size_t nargs)
 static bool
 handle_004(ibhnd_t hnd, char **msg, size_t nargs)
 {
+	if (nargs < 7)
+		return false;
+
 	hnd->logonconv[3] = clonearr(msg, MAX_IRCARGS);
 	ic_strNcpy(hnd->myhost, msg[3],sizeof hnd->myhost);
 	ic_strNcpy(hnd->umodes, msg[5], sizeof hnd->umodes);
@@ -923,6 +929,9 @@ handle_004(ibhnd_t hnd, char **msg, size_t nargs)
 static bool
 handle_PING(ibhnd_t hnd, char **msg, size_t nargs)
 {
+	if (nargs < 3)
+		return false;
+
 	char buf[64];
 	snprintf(buf, sizeof buf, "PONG :%s\r\n", msg[2]);
 	return irccon_write(hnd->con, buf);
@@ -976,6 +985,9 @@ handle_464(ibhnd_t hnd, char **msg, size_t nargs)
 static bool
 handle_383(ibhnd_t hnd, char **msg, size_t nargs)
 {
+	if (nargs < 3)
+		return false;
+
 	ic_strNcpy(hnd->mynick, msg[2],sizeof hnd->mynick);
 	char *tmp;
 	if ((tmp = strchr(hnd->mynick, '@')))
@@ -1037,6 +1049,9 @@ handle_ERROR(ibhnd_t hnd, char **msg, size_t nargs)
 static bool
 handle_NICK(ibhnd_t hnd, char **msg, size_t nargs)
 {
+	if (nargs < 3)
+		return false;
+
 	char nick[128];
 	if (!pfx_extract_nick(nick, sizeof nick, msg[0]))
 		return false;
