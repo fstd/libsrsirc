@@ -93,6 +93,28 @@ static bool onread(ibhnd_t hnd, char **tok, size_t tok_len);
 static char** clonearr(char **arr, size_t nelem);
 static void freearr(char **arr, size_t nelem);
 
+static bool handle_001(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_002(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_003(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_004(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_PING(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_432(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_433(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_436(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_437(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_XXX(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_464(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_383(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_484(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_465(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_466(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_ERROR(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_005(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_NICK(ibhnd_t hnd, char **msg, size_t nargs);
+static bool handle_005_CASEMAPPING(ibhnd_t hnd, const char *val);
+static bool handle_005_PREFIX(ibhnd_t hnd, const char *val);
+static bool handle_005_CHANMODES(ibhnd_t hnd, const char *val);
+
 bool
 ircbas_regcb_mutnick(ibhnd_t hnd, fp_mut_nick cb)
 {
@@ -272,8 +294,9 @@ ircbas_connect(ibhnd_t hnd)
 	char *msg[MAX_IRCARGS];
 	ic_strNcpy(hnd->mynick, hnd->nick, sizeof hnd->mynick);
 
+	bool success = false;
 	int64_t trem = 0;
-	for(;;) {
+	do {
 		if(tsend) {
 			trem = tsend - ic_timestamp_us();
 			if (trem <= 0) {
@@ -302,111 +325,82 @@ ircbas_connect(ibhnd_t hnd)
 			return false;
 		}
 
+		size_t ac = 2;
+		while (ac < MAX_IRCARGS && msg[ac])
+			ac++;
+
+		bool failure = false;
+
+		/* these are the protocol messages we deal with.
+		 * seeing 004 or 383 makes us consider ourselves logged on
+		 * note that we do not wait for 005, but we will later
+		 * parse it as we ran across it. */
 		if (strcmp(msg[1], "001") == 0) {
-			hnd->logonconv[0] = clonearr(msg, MAX_IRCARGS);
-			ic_strNcpy(hnd->mynick, msg[2],sizeof hnd->mynick);
-			char *tmp;
-			if ((tmp = strchr(hnd->mynick, '@')))
-				*tmp = '\0';
-			if ((tmp = strchr(hnd->mynick, '!')))
-				*tmp = '\0';
-
-			//XXX ensure argcount
-			ic_strNcpy(hnd->myhost,
-			    msg[0] ? msg[0] : irccon_get_host(hnd->con),
-			    sizeof hnd->mynick);
-
-			ic_strNcpy(hnd->umodes, DEF_UMODES, sizeof hnd->umodes);
-			ic_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
-			hnd->ver[0] = '\0';
-			hnd->service = false;
+			if (!(handle_001(hnd, msg, ac)))
+				failure = true;
 		} else if (strcmp(msg[1], "002") == 0) {
-			hnd->logonconv[1] = clonearr(msg, MAX_IRCARGS);
+			if (!(handle_002(hnd, msg, ac)))
+				failure = true;
 		} else if (strcmp(msg[1], "003") == 0) {
-			hnd->logonconv[2] = clonearr(msg, MAX_IRCARGS);
+			if (!(handle_003(hnd, msg, ac)))
+				failure = true;
 		} else if (strcmp(msg[1], "004") == 0) {
-			hnd->logonconv[3] = clonearr(msg, MAX_IRCARGS);
-			//XXX ensure argcount
-			ic_strNcpy(hnd->myhost, msg[3],sizeof hnd->myhost);
-			ic_strNcpy(hnd->umodes, msg[5], sizeof hnd->umodes);
-			ic_strNcpy(hnd->cmodes, msg[6], sizeof hnd->cmodes);
-			ic_strNcpy(hnd->ver, msg[4], sizeof hnd->ver);
-			D("(%p) got beloved 004", hnd);
-			break;
+			if (!(handle_004(hnd, msg, ac)))
+				failure = true;
+			success = true;
 		} else if (strcmp(msg[1], "PING") == 0) {
-			char buf[64];
-			snprintf(buf, sizeof buf, "PONG :%s\r\n", msg[2]);
-			if (!irccon_write(hnd->con, buf)) {
-				W("(%p) write failed (1)", hnd);
-				ircbas_reset(hnd);
-				return false;
-			}
-		} else if ((strcmp(msg[1], "432") == 0)//errorneous nick
-		    || (strcmp(msg[1], "433") == 0)//nick in use
-		    || (strcmp(msg[1], "436") == 0)//nick collision
-		    || (strcmp(msg[1], "437") == 0)) {//unavail resource
-			if (!hnd->cb_mut_nick) {
-				W("(%p) got no mutnick.. (failing)", hnd);
-				ircbas_reset(hnd);
-				return false;
-			}
-			hnd->cb_mut_nick(hnd->mynick, 10); //XXX hc
-			char buf[MAX_NICK_LEN];
-			snprintf(buf,sizeof buf,"NICK %s\r\n",hnd->mynick);
-			if (!irccon_write(hnd->con, buf)) {
-				W("(%p) write failed (2)", hnd);
-				ircbas_reset(hnd);
-				return false;
-			}
-		} else if (strcmp(msg[1], "464") == 0) {//passwd missmatch
-			ircbas_reset(hnd);
-			W("(%p) wrong server password", hnd);
-			return false;
+			if (!(handle_PING(hnd, msg, ac)))
+				failure = true;
+		} else if (strcmp(msg[1], "432") == 0) { //errorneous nick
+			if (!(handle_432(hnd, msg, ac)))
+				failure = true;
+		} else if (strcmp(msg[1], "433") == 0) { //nick in use
+			if (!(handle_433(hnd, msg, ac)))
+				failure = true;
+		} else if (strcmp(msg[1], "436") == 0) { //nick collision
+			if (!(handle_436(hnd, msg, ac)))
+				failure = true;
+		} else if (strcmp(msg[1], "437") == 0) { //unavail resource
+			if (!(handle_437(hnd, msg, ac)))
+				failure = true;
+		} else if (strcmp(msg[1], "464") == 0) { //passwd missmatch
+			handle_464(hnd, msg, ac);
+			failure = true;
 		} else if (strcmp(msg[1], "383") == 0) { //we're service
-			ic_strNcpy(hnd->mynick, msg[2],sizeof hnd->mynick);
-			char *tmp;
-			if ((tmp = strchr(hnd->mynick, '@')))
-				*tmp = '\0';
-			if ((tmp = strchr(hnd->mynick, '!')))
-				*tmp = '\0';
-
-			ic_strNcpy(hnd->myhost,
-			    msg[0] ? msg[0] : irccon_get_host(hnd->con),
-			    sizeof hnd->mynick);
-
-			ic_strNcpy(hnd->umodes, DEF_UMODES, sizeof hnd->umodes);
-			ic_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
-			hnd->ver[0] = '\0';
-			hnd->service = true;
-			break;
+			if (!(handle_383(hnd, msg, ac)))
+				failure = true;
+			success = true;
 		} else if (strcmp(msg[1], "484") == 0) { //restricted
-			hnd->restricted = true;
+			if (!(handle_484(hnd, msg, ac)))
+				failure = true;
 		} else if (strcmp(msg[1], "465") == 0) { //banned
-			W("(%p) we're banned", hnd);
-			hnd->banned = true;
-			free(hnd->banmsg);
-			hnd->banmsg = strdup(msg[3] ? msg[3] : "");
-			if (!hnd->banned)
-				EE("strdup");
-
+			if (!(handle_465(hnd, msg, ac)))
+				failure = true;
 		} else if (strcmp(msg[1], "466") == 0) { //will be banned
-			W("(%p) we will be banned", hnd); //XXX not in RFC
+			if (!(handle_466(hnd, msg, ac)))
+				failure = true;
 		} else if (strcmp(msg[1], "ERROR") == 0) {
-			free(hnd->lasterr);
-			hnd->lasterr = strdup(msg[2] ? msg[2] : "");
-			if (!hnd->lasterr)
-				EE("strdup");
-
+			handle_ERROR(hnd, msg, ac);
 			W("(%p) received error while logging on: %s",
 			    hnd, msg[2]);
+			failure = true;
+		}
 
+		if (failure) {
+			char line[1024];
+			sndumpmsg(line, sizeof line, NULL, msg, MAX_IRCARGS);
+			E("choked on '%s' (colontrail: %d",
+			    line, irccon_colon_trail(hnd->con));
 			ircbas_reset(hnd);
 			return false;
 		}
-	}
+
+	} while (!success);
 	D("(%p) irc logon finished, U R online", hnd);
 	return true;
 }
+
+
 
 int
 ircbas_read(ibhnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
@@ -784,73 +778,39 @@ send_logon(ibhnd_t hnd)
 	return ircbas_write(hnd, aBuf);
 }
 
+static size_t
+countargs(char **tok, size_t tok_len)
+{
+	size_t ac = 2;
+	while (ac < tok_len && tok[ac])
+		ac++;
+	return ac;
+}
+
 static bool
 onread(ibhnd_t hnd, char **tok, size_t tok_len)
 {
-	char nick[128];
+	bool failure = false;
+
 	if (strcmp(tok[1], "NICK") == 0) {
-		if (!pfx_extract_nick(nick, sizeof nick, tok[0]))
-			return false;
-
-		if (!istrcasecmp(nick, hnd->mynick, hnd->casemapping))
-			ic_strNcpy(hnd->mynick, tok[2],sizeof hnd->mynick);
+		if (!handle_NICK(hnd, tok, countargs(tok, tok_len)))
+			failure = true;
 	} else if (strcmp(tok[1], "ERROR") == 0) {
-		free(hnd->lasterr);
-		hnd->lasterr = strdup(tok[2]);
-		if (!hnd->lasterr)
-			EE("strdup");
-
+		if (!handle_ERROR(hnd, tok, countargs(tok, tok_len)))
+			failure = true;
 	} else if (strcmp(tok[1], "005") == 0) {
-		for (size_t z = 3; z < tok_len; ++z) {
-			if (!tok[z]) break;
-
-			if (!strncasecmp(tok[z], "CASEMAPPING=", 12)) {
-				const char *value = tok[z] + 12;
-				if (strcasecmp(value, "ascii") == 0) {
-					hnd->casemapping = CMAP_ASCII;
-				} else if (strcasecmp(value,
-				    "strict-rfc1459") == 0) {
-					hnd->casemapping
-					    = CMAP_STRICT_RFC1459;
-				} else {
-					hnd->casemapping = CMAP_RFC1459;
-				}
-			} else if (!strncasecmp(tok[z], "PREFIX=", 7)) {
-				char str[32];
-				ic_strNcpy(str, tok[z]+8, sizeof str);
-				char *p = strchr(str, ')');
-				*p++ = '\0';
-				ic_strNcpy(hnd->m005modepfx[0], str,
-				    sizeof hnd->m005modepfx[0]);
-
-				ic_strNcpy(hnd->m005modepfx[1], p,
-				    sizeof hnd->m005modepfx[1]);
-			} else if (!strncasecmp(tok[z], "CHANMODES=", 10)){
-				for (int z = 0; z < 4; ++z)
-					hnd->m005chanmodes[z][0] = '\0';
-
-				int c = 0;
-				char argbuf[64];
-				ic_strNcpy(argbuf, tok[z] + 10,
-				    sizeof argbuf);
-				char *ptr = strtok(argbuf, ",");
-
-				while (ptr) {
-					if (c < 4)
-						ic_strNcpy(hnd->m005chanmodes[c++],
-						    ptr, sizeof hnd->m005chanmodes[0]);
-					ptr = strtok(NULL, ",");
-				}
-
-				if (c != 4) {
-					W("005 chanmodes parse element: "
-					    "expected 4 params, got %i. "
-					    "arg: \"%s\"", c, tok[z] + 10);
-				}
-			}
-		}
+		if (!handle_005(hnd, tok, countargs(tok, tok_len)))
+			failure = true;
 	}
-	return true;
+
+	if (failure) {
+		char line[1024];
+		sndumpmsg(line, sizeof line, NULL, tok, tok_len);
+		E("choked on '%s' (colontrail: %d",
+		    line, irccon_colon_trail(hnd->con));
+	}
+
+	return !failure;
 }
 
 const char *const *const*
@@ -908,4 +868,259 @@ freearr(char **arr, size_t nelem)
 			free(arr[i]);
 		free(arr);
 	}
+}
+static bool
+handle_001(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	hnd->logonconv[0] = clonearr(msg, MAX_IRCARGS);
+	ic_strNcpy(hnd->mynick, msg[2],sizeof hnd->mynick);
+	char *tmp;
+	if ((tmp = strchr(hnd->mynick, '@')))
+		*tmp = '\0';
+	if ((tmp = strchr(hnd->mynick, '!')))
+		*tmp = '\0';
+
+	ic_strNcpy(hnd->myhost, msg[0] ?
+	    msg[0] : irccon_get_host(hnd->con), sizeof hnd->mynick);
+
+	ic_strNcpy(hnd->umodes, DEF_UMODES, sizeof hnd->umodes);
+	ic_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
+	hnd->ver[0] = '\0';
+	hnd->service = false;
+
+	return true;
+}
+
+static bool
+handle_002(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	hnd->logonconv[1] = clonearr(msg, MAX_IRCARGS);
+
+	return true;
+}
+
+static bool
+handle_003(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	hnd->logonconv[2] = clonearr(msg, MAX_IRCARGS);
+
+	return true;
+}
+
+static bool
+handle_004(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	hnd->logonconv[3] = clonearr(msg, MAX_IRCARGS);
+	ic_strNcpy(hnd->myhost, msg[3],sizeof hnd->myhost);
+	ic_strNcpy(hnd->umodes, msg[5], sizeof hnd->umodes);
+	ic_strNcpy(hnd->cmodes, msg[6], sizeof hnd->cmodes);
+	ic_strNcpy(hnd->ver, msg[4], sizeof hnd->ver);
+	D("(%p) got beloved 004", hnd);
+
+	return true;
+}
+
+static bool
+handle_PING(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	char buf[64];
+	snprintf(buf, sizeof buf, "PONG :%s\r\n", msg[2]);
+	return irccon_write(hnd->con, buf);
+}
+
+static bool
+handle_432(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	return handle_XXX(hnd, msg, nargs);
+}
+
+static bool
+handle_433(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	return handle_XXX(hnd, msg, nargs);
+}
+
+static bool
+handle_436(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	return handle_XXX(hnd, msg, nargs);
+}
+
+static bool
+handle_437(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	return handle_XXX(hnd, msg, nargs);
+}
+
+static bool
+handle_XXX(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	if (!hnd->cb_mut_nick) {
+		W("(%p) got no mutnick.. (failing)", hnd);
+		return false;
+	}
+
+	hnd->cb_mut_nick(hnd->mynick, 10); //XXX hc
+	char buf[MAX_NICK_LEN];
+	snprintf(buf,sizeof buf,"NICK %s\r\n",hnd->mynick);
+	return irccon_write(hnd->con, buf);
+}
+
+static bool
+handle_464(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	W("(%p) wrong server password", hnd);
+	return true;
+}
+
+static bool
+handle_383(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	ic_strNcpy(hnd->mynick, msg[2],sizeof hnd->mynick);
+	char *tmp;
+	if ((tmp = strchr(hnd->mynick, '@')))
+		*tmp = '\0';
+	if ((tmp = strchr(hnd->mynick, '!')))
+		*tmp = '\0';
+
+	ic_strNcpy(hnd->myhost,
+	    msg[0] ? msg[0] : irccon_get_host(hnd->con),
+	    sizeof hnd->mynick);
+
+	ic_strNcpy(hnd->umodes, DEF_UMODES, sizeof hnd->umodes);
+	ic_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
+	hnd->ver[0] = '\0';
+	hnd->service = true;
+
+	return true;
+}
+
+static bool
+handle_484(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	hnd->restricted = true;
+
+	return true;
+}
+
+static bool
+handle_465(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	W("(%p) we're banned", hnd);
+	hnd->banned = true;
+	free(hnd->banmsg);
+	hnd->banmsg = strdup(msg[3] ? msg[3] : "");
+	if (!hnd->banned)
+		EE("strdup");
+
+	return true;
+}
+
+static bool
+handle_466(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	W("(%p) we will be banned", hnd);
+
+	return true;
+}
+
+static bool
+handle_ERROR(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	free(hnd->lasterr);
+	hnd->lasterr = strdup(msg[2] ? msg[2] : "");
+	if (!hnd->lasterr)
+		EE("strdup");
+	return true;
+}
+
+static bool
+handle_NICK(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	char nick[128];
+	if (!pfx_extract_nick(nick, sizeof nick, msg[0]))
+		return false;
+
+	if (!istrcasecmp(nick, hnd->mynick, hnd->casemapping))
+		ic_strNcpy(hnd->mynick, msg[2], sizeof hnd->mynick);
+	
+	return true;
+}
+static bool
+handle_005_CASEMAPPING(ibhnd_t hnd, const char *val)
+{
+	if (strcasecmp(val, "ascii") == 0)
+		hnd->casemapping = CMAP_ASCII;
+	else if (strcasecmp(val, "strict-rfc1459") == 0)
+		hnd->casemapping = CMAP_STRICT_RFC1459;
+	else {
+		if (strcasecmp(val, "rfc1459") != 0)
+			W("unknown 005 casemapping: '%s'", val);
+		hnd->casemapping = CMAP_RFC1459;
+	}
+
+	return true;
+}
+
+/* XXX not robust enough */
+static bool
+handle_005_PREFIX(ibhnd_t hnd, const char *val)
+{
+	char str[32];
+	ic_strNcpy(str, val + 1, sizeof str);
+	char *p = strchr(str, ')');
+	*p++ = '\0';
+	ic_strNcpy(hnd->m005modepfx[0], str, sizeof hnd->m005modepfx[0]);
+	ic_strNcpy(hnd->m005modepfx[1], p, sizeof hnd->m005modepfx[1]);
+
+	return true;
+}
+
+static bool
+handle_005_CHANMODES(ibhnd_t hnd, const char *val)
+{
+	for (int z = 0; z < 4; ++z)
+		hnd->m005chanmodes[z][0] = '\0';
+
+	int c = 0;
+	char argbuf[64];
+	ic_strNcpy(argbuf, val, sizeof argbuf);
+	char *ptr = strtok(argbuf, ",");
+
+	while (ptr) {
+		if (c < 4)
+			ic_strNcpy(hnd->m005chanmodes[c++], ptr,
+			    sizeof hnd->m005chanmodes[0]);
+		ptr = strtok(NULL, ",");
+	}
+
+	if (c != 4)
+		W("005 chanmodes: expected 4 params, got %i. arg: \"%s\"",
+		    c, val);
+
+	return true;
+}
+
+static bool
+handle_005(ibhnd_t hnd, char **msg, size_t nargs)
+{
+	bool failure = false;
+
+	for (size_t z = 3; z < nargs; ++z) {
+		if (strncasecmp(msg[z], "CASEMAPPING=", 12) == 0) {
+			if (!(handle_005_CASEMAPPING(hnd, msg[z] + 12)))
+				failure = true;
+		} else if (strncasecmp(msg[z], "PREFIX=", 7) == 0) {
+			if (!(handle_005_PREFIX(hnd, msg[z] + 7)))
+				failure = true;
+		} else if (strncasecmp(msg[z], "CHANMODES=", 10) == 0) {
+			if (!(handle_005_CHANMODES(hnd, msg[z] + 10)))
+				failure = true;
+		}
+
+		if (failure)
+			return false;
+	}
+
+	return true;
 }
