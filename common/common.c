@@ -321,7 +321,7 @@ ic_clonearr(char **arr, size_t nelem)
 
 clonearr_fail:
 
-	freearr(res, nelem);
+	ic_freearr(res, nelem);
 	return NULL;
 }
 

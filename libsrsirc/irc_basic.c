@@ -836,8 +836,8 @@ handle_001(ibhnd_t hnd, char **msg, size_t nargs)
 	if (nargs < 3)
 		return false;
 
-	freearr(hnd->logonconv[0], MAX_IRCARGS);
-	hnd->logonconv[0] = clonearr(msg, MAX_IRCARGS);
+	ic_freearr(hnd->logonconv[0], MAX_IRCARGS);
+	hnd->logonconv[0] = ic_clonearr(msg, MAX_IRCARGS);
 	ic_strNcpy(hnd->mynick, msg[2],sizeof hnd->mynick);
 	char *tmp;
 	if ((tmp = strchr(hnd->mynick, '@')))
@@ -859,8 +859,8 @@ handle_001(ibhnd_t hnd, char **msg, size_t nargs)
 static bool
 handle_002(ibhnd_t hnd, char **msg, size_t nargs)
 {
-	freearr(hnd->logonconv[1], MAX_IRCARGS);
-	hnd->logonconv[1] = clonearr(msg, MAX_IRCARGS);
+	ic_freearr(hnd->logonconv[1], MAX_IRCARGS);
+	hnd->logonconv[1] = ic_clonearr(msg, MAX_IRCARGS);
 
 	return true;
 }
@@ -868,8 +868,8 @@ handle_002(ibhnd_t hnd, char **msg, size_t nargs)
 static bool
 handle_003(ibhnd_t hnd, char **msg, size_t nargs)
 {
-	freearr(hnd->logonconv[2], MAX_IRCARGS);
-	hnd->logonconv[2] = clonearr(msg, MAX_IRCARGS);
+	ic_freearr(hnd->logonconv[2], MAX_IRCARGS);
+	hnd->logonconv[2] = ic_clonearr(msg, MAX_IRCARGS);
 
 	return true;
 }
@@ -880,8 +880,8 @@ handle_004(ibhnd_t hnd, char **msg, size_t nargs)
 	if (nargs < 7)
 		return false;
 
-	freearr(hnd->logonconv[3], MAX_IRCARGS);
-	hnd->logonconv[3] = clonearr(msg, MAX_IRCARGS);
+	ic_freearr(hnd->logonconv[3], MAX_IRCARGS);
+	hnd->logonconv[3] = ic_clonearr(msg, MAX_IRCARGS);
 	ic_strNcpy(hnd->myhost, msg[3],sizeof hnd->myhost);
 	ic_strNcpy(hnd->umodes, msg[5], sizeof hnd->umodes);
 	ic_strNcpy(hnd->cmodes, msg[6], sizeof hnd->cmodes);
