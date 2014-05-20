@@ -297,3 +297,41 @@ ic_strmdup(const char *str, size_t minlen)
 	return s;
 }
 */
+
+char**
+ic_clonearr(char **arr, size_t nelem)
+{
+	char **res = malloc((nelem+1) * sizeof *arr);
+	if (!res) {
+		EE("malloc");
+		return NULL;
+	}
+
+	for(size_t i = 0; i < nelem; i++) {
+		if (arr[i]) {
+			if (!(res[i] = strdup(arr[i]))) {
+				EE("strdup");
+				goto clonearr_fail;
+			}
+		} else
+			res[i] = NULL;
+	}
+	res[nelem] = NULL;
+	return res;
+
+clonearr_fail:
+
+	freearr(res, nelem);
+	return NULL;
+}
+
+
+void
+ic_freearr(char **arr, size_t nelem)
+{
+	if (arr) {
+		for(size_t i = 0; i < nelem; i++)
+			free(arr[i]);
+		free(arr);
+	}
+}

@@ -270,7 +270,7 @@ ircbas_connect(ibhnd_t hnd)
 	hnd->banned = false;
 
 	for(int i = 0; i < 4; i++) {
-		freearr(hnd->logonconv[i], MAX_IRCARGS);
+		ic_freearr(hnd->logonconv[i], MAX_IRCARGS);
 		hnd->logonconv[i] = NULL;
 	}
 
