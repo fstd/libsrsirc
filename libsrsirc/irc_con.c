@@ -32,19 +32,13 @@
 
 #include <common.h>
 #include <libsrsirc/irc_util.h>
+#include "ircdefs.h"
 #include "irc_io.h"
 #include <intlog.h>
 
 #include "proxy.h"
 
 #include "irc_con.h"
-
-#define RXBUF_SZ 4096
-#define LINEBUF_SZ 1024
-#define OVERBUF_SZ 1024
-
-#define DEF_HOST "localhost"
-#define DEF_PORT 6667
 
 #define INV -1
 #define OFF 0

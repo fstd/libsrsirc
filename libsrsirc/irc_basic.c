@@ -14,36 +14,12 @@
 #include <common.h>
 #include <libsrsirc/irc_util.h>
 #include "irc_con.h"
+#include "ircdefs.h"
 #include "msghandle.h"
 
 #include <intlog.h>
 
 #include <libsrsirc/irc_basic.h>
-
-#define MAX_IRCARGS ((size_t)15)
-
-#define RFC1459 0
-
-#define DEF_PASS ""
-#define DEF_NICK "srsirc"
-#define DEF_UNAME "bsnsirc"
-#define DEF_FNAME "serious business irc"
-#define DEF_CONFLAGS 0
-#define DEF_SERV_DIST "*"
-#define DEF_SERV_TYPE 0
-#define DEF_SERV_INFO "serious business irc service"
-#define DEF_UMODES "iswo"
-#define DEF_CMODES "opsitnml"
-
-#define DEF_CONTO_HARD 120000000ul
-#define DEF_CONTO_SOFT 15000000ul
-
-#define MAX_NICK_LEN 64
-#define MAX_HOST_LEN 128
-#define MAX_UMODES_LEN 64
-#define MAX_CMODES_LEN 64
-#define MAX_VER_LEN 128
-
 
 static void mutilate_nick(char *nick, size_t nick_sz);
 static bool send_logon(ibhnd_t hnd);
