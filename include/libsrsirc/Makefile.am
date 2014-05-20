@@ -1,1 +1,1 @@
-pkginclude_HEADERS = irc_basic.h irc_util.h ihnd.h
+pkginclude_HEADERS = irc_basic.h irc_util.h ircdefs.h

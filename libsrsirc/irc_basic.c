@@ -14,7 +14,6 @@
 #include <common.h>
 #include <libsrsirc/irc_util.h>
 #include "irc_con.h"
-#include "ircdefs.h"
 #include "msghandle.h"
 
 #include <intlog.h>

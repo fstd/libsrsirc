@@ -12,11 +12,10 @@
 #include <string.h>
 
 #include <common.h>
-#include <libsrsirc/ihnd.h>
+#include <libsrsirc/ircdefs.h>
 #include "irc_con.h"
 #include <libsrsirc/irc_util.h>
 #include <intlog.h>
-#include "ircdefs.h"
 
 #include "msghandle.h"
 

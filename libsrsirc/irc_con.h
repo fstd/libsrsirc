@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include <libsrsirc/ihnd.h>
+#include <libsrsirc/ircdefs.h>
 
 ichnd_t irccon_init(void);
 bool irccon_reset(ichnd_t hnd);

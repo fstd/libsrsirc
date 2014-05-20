@@ -32,7 +32,6 @@
 
 #include <common.h>
 #include <libsrsirc/irc_util.h>
-#include "ircdefs.h"
 #include "irc_io.h"
 #include <intlog.h>
 
