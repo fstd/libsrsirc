@@ -59,5 +59,7 @@ char** parse_chanmodes(const char *const *arr, size_t argcnt, size_t *num,
 
 void mutilate_nick(char *nick, size_t nick_sz);
 
+/* will never return less than 2 */
+size_t countargs(char **tok, size_t tok_len);
 
 #endif /* SRS_IRC_UTIL_H */

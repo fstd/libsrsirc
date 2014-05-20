@@ -24,21 +24,6 @@ static bool send_logon(ibhnd_t hnd);
 
 static bool onread(ibhnd_t hnd, char **tok, size_t tok_len);
 
-bool
-ircbas_regcb_mutnick(ibhnd_t hnd, fp_mut_nick cb)
-{
-	hnd->cb_mut_nick = cb;
-	return true;
-}
-
-bool
-ircbas_regcb_conread(ibhnd_t hnd, fp_con_read cb, void *tag)
-{
-	hnd->cb_con_read = cb;
-	hnd->tag_con_read = tag;
-	return true;
-}
-
 ibhnd_t
 ircbas_init(void)
 {
@@ -309,7 +294,11 @@ ircbas_connect(ibhnd_t hnd)
 	return true;
 }
 
-
+bool
+ircbas_online(ibhnd_t hnd)
+{
+	return irccon_online(hnd->con);
+}
 
 int
 ircbas_read(ibhnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
@@ -341,27 +330,122 @@ ircbas_write(ibhnd_t hnd, const char *line)
 	return r;
 }
 
-bool
-ircbas_online(ibhnd_t hnd)
+const char*
+ircbas_mynick(ibhnd_t hnd)
 {
-	return irccon_online(hnd->con);
+	return hnd->mynick;
 }
-bool
-ircbas_set_ssl(ibhnd_t hnd, bool on)
+
+const char*
+ircbas_myhost(ibhnd_t hnd)
 {
-	return irccon_set_ssl(hnd->con, on);
+	return hnd->myhost;
+}
+
+int
+ircbas_casemap(ibhnd_t hnd)
+{
+	return hnd->casemapping;
 }
 
 bool
-ircbas_get_ssl(ibhnd_t hnd)
+ircbas_service(ibhnd_t hnd)
 {
-	return irccon_get_ssl(hnd->con);
+	return hnd->service;
+}
+
+const char*
+ircbas_umodes(ibhnd_t hnd)
+{
+	return hnd->umodes;
+}
+
+const char*
+ircbas_cmodes(ibhnd_t hnd)
+{
+	return hnd->cmodes;
+}
+
+const char*
+ircbas_version(ibhnd_t hnd)
+{
+	return hnd->ver;
+}
+
+const char*
+ircbas_lasterror(ibhnd_t hnd)
+{
+	return hnd->lasterr;
+}
+
+const char*
+ircbas_banmsg(ibhnd_t hnd)
+{
+	return hnd->banmsg;
+}
+
+bool
+ircbas_banned(ibhnd_t hnd)
+{
+	return hnd->banned;
+}
+
+bool
+ircbas_colon_trail(ibhnd_t hnd)
+{
+	return irccon_colon_trail(hnd->con);
 }
 
 int
 ircbas_sockfd(ibhnd_t hnd)
 {
 	return irccon_sockfd(hnd->con);
+}
+
+const char *const *const*
+ircbas_logonconv(ibhnd_t hnd)
+{
+	return (const char *const *const*)hnd->logonconv;
+}
+
+const char *const*
+ircbas_005chanmodes(ibhnd_t hnd)
+{
+	return (const char *const*)hnd->m005chanmodes;
+}
+
+const char *const*
+ircbas_005modepfx(ibhnd_t hnd)
+{
+	return (const char *const*)hnd->m005modepfx;
+}
+
+bool
+ircbas_regcb_conread(ibhnd_t hnd, fp_con_read cb, void *tag)
+{
+	hnd->cb_con_read = cb;
+	hnd->tag_con_read = tag;
+	return true;
+}
+
+bool
+ircbas_regcb_mutnick(ibhnd_t hnd, fp_mut_nick cb)
+{
+	hnd->cb_mut_nick = cb;
+	return true;
+}
+
+bool
+ircbas_set_server(ibhnd_t hnd, const char *host, unsigned short port)
+{
+	return irccon_set_server(hnd->con, host, port);
+}
+
+bool
+ircbas_set_proxy(ibhnd_t hnd, const char *host, unsigned short port,
+    int ptype)
+{
+	return irccon_set_proxy(hnd->con, host, port, ptype);
 }
 
 bool
@@ -473,79 +557,21 @@ ircbas_set_connect_timeout(ibhnd_t hnd,
 }
 
 bool
-ircbas_set_proxy(ibhnd_t hnd, const char *host, unsigned short port,
-    int ptype)
+ircbas_set_ssl(ibhnd_t hnd, bool on)
 {
-	return irccon_set_proxy(hnd->con, host, port, ptype);
-}
-
-bool
-ircbas_set_server(ibhnd_t hnd, const char *host, unsigned short port)
-{
-	return irccon_set_server(hnd->con, host, port);
-}
-
-int
-ircbas_casemap(ibhnd_t hnd)
-{
-	return hnd->casemapping;
+	return irccon_set_ssl(hnd->con, on);
 }
 
 const char*
-ircbas_mynick(ibhnd_t hnd)
+ircbas_get_host(ibhnd_t hnd)
 {
-	return hnd->mynick;
+	return irccon_get_host(hnd->con);
 }
 
-const char*
-ircbas_myhost(ibhnd_t hnd)
+unsigned short
+ircbas_get_port(ibhnd_t hnd)
 {
-	return hnd->myhost;
-}
-
-bool
-ircbas_service(ibhnd_t hnd)
-{
-	return hnd->service;
-}
-
-const char*
-ircbas_umodes(ibhnd_t hnd)
-{
-	return hnd->umodes;
-}
-
-const char*
-ircbas_cmodes(ibhnd_t hnd)
-{
-	return hnd->cmodes;
-}
-
-const char*
-ircbas_version(ibhnd_t hnd)
-{
-	return hnd->ver;
-}
-
-const char*
-ircbas_lasterror(ibhnd_t hnd)
-{
-	return hnd->lasterr;
-}
-const char*
-ircbas_banmsg(ibhnd_t hnd)
-{
-	return hnd->banmsg;
-}
-bool
-ircbas_banned(ibhnd_t hnd)
-{
-	return hnd->banned;
-}
-bool
-ircbas_colon_trail(ibhnd_t hnd)
-{
-	return irccon_colon_trail(hnd->con);
+	return irccon_get_port(hnd->con);
 }
 
 const char*
@@ -564,18 +590,6 @@ int
 ircbas_get_proxy_type(ibhnd_t hnd)
 {
 	return irccon_get_proxy_type(hnd->con);
-}
-
-const char*
-ircbas_get_host(ibhnd_t hnd)
-{
-	return irccon_get_host(hnd->con);
-}
-
-unsigned short
-ircbas_get_port(ibhnd_t hnd)
-{
-	return irccon_get_port(hnd->con);
 }
 
 const char*
@@ -632,6 +646,12 @@ ircbas_get_service_info(ibhnd_t hnd)
 	return hnd->serv_info;
 }
 
+bool
+ircbas_get_ssl(ibhnd_t hnd)
+{
+	return irccon_get_ssl(hnd->con);
+}
+
 static bool
 send_logon(ibhnd_t hnd)
 {
@@ -669,15 +689,6 @@ send_logon(ibhnd_t hnd)
 	return ircbas_write(hnd, aBuf);
 }
 
-static size_t
-countargs(char **tok, size_t tok_len)
-{
-	size_t ac = 2;
-	while (ac < tok_len && tok[ac])
-		ac++;
-	return ac;
-}
-
 static bool
 onread(ibhnd_t hnd, char **tok, size_t tok_len)
 {
@@ -702,22 +713,4 @@ onread(ibhnd_t hnd, char **tok, size_t tok_len)
 	}
 
 	return !failure;
-}
-
-const char *const *const*
-ircbas_logonconv(ibhnd_t hnd)
-{
-	return (const char *const *const*)hnd->logonconv;
-}
-
-const char *const*
-ircbas_005chanmodes(ibhnd_t hnd)
-{
-	return (const char *const*)hnd->m005chanmodes;
-}
-
-const char *const*
-ircbas_005modepfx(ibhnd_t hnd)
-{
-	return (const char *const*)hnd->m005modepfx;
 }

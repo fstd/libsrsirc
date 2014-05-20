@@ -424,3 +424,13 @@ mutilate_nick(char *nick, size_t nick_sz)
 			nick[len - 1] = '0';
 	}
 }
+
+size_t
+countargs(char **tok, size_t tok_len)
+{
+	size_t ac = 2;
+	while (ac < tok_len && tok[ac])
+		ac++;
+	return ac;
+}
+
