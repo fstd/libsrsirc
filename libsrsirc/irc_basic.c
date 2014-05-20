@@ -38,12 +38,9 @@ ircbas_init(void)
 	if (!(r = malloc(sizeof (*(ibhnd_t)0))))
 		goto ircbas_init_fail;
 
-	r->pass = NULL;
-	r->nick = NULL;
-	r->uname = NULL;
-	r->fname = NULL;
-	r->serv_dist = NULL;
-	r->serv_info = NULL;
+	r->pass = r->nick = r->uname = r->fname = r->serv_dist
+	    = r->serv_info = r->lasterr = r->banmsg = NULL;
+
 	ic_strNcpy(r->m005chanmodes[0], "b", sizeof r->m005chanmodes[0]);
 	ic_strNcpy(r->m005chanmodes[1], "k", sizeof r->m005chanmodes[1]);
 	ic_strNcpy(r->m005chanmodes[2], "l", sizeof r->m005chanmodes[2]);
@@ -69,28 +66,15 @@ ircbas_init(void)
 
 	r->con = con;
 	/* persistent after reset */
-	r->mynick[0] = '\0';
-	r->myhost[0] = '\0';
-	r->service = false;
-	r->umodes[0] = '\0';
-	r->cmodes[0] = '\0';
-	r->ver[0] = '\0';
-	r->lasterr = NULL;
+	r->mynick[0] = r->myhost[0] = r->umodes[0] = r->cmodes[0]
+	    = r->ver[0] = '\0';
 
-	r->casemapping = CMAP_RFC1459;
-
-	r->restricted = false;
-	r->banned = false;
-	r->banmsg = NULL;
-
-	r->conflags = DEF_CONFLAGS;
-	r->serv_con = false;
-	r->serv_type = DEF_SERV_TYPE;
-
+	r->service = r->restricted = r->banned = r->serv_con = false;
 	r->cb_con_read = NULL;
-	r->tag_con_read = NULL;
 	r->cb_mut_nick = mutilate_nick;
-
+	r->casemapping = CMAP_RFC1459;
+	r->conflags = DEF_CONFLAGS;
+	r->serv_type = DEF_SERV_TYPE;
 	r->conto_soft_us = DEF_CONTO_SOFT;
 	r->conto_hard_us = DEF_CONTO_HARD;
 
@@ -122,11 +106,7 @@ ircbas_init_fail:
 bool
 ircbas_reset(ibhnd_t hnd)
 {
-	D("(%p) resetting backend", hnd);
-	if (!irccon_reset(hnd->con))
-		return false;
-
-	return true;
+	return irccon_reset(hnd->con);
 }
 
 bool
@@ -137,7 +117,6 @@ ircbas_dispose(ibhnd_t hnd)
 
 	free(hnd->lasterr);
 	free(hnd->banmsg);
-
 	free(hnd->pass);
 	free(hnd->nick);
 	free(hnd->uname);
