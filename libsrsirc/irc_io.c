@@ -213,6 +213,7 @@ ircio_read_ex(int sck,
 	*mehptr = end+1;
 	V("first ten of *mehptr: '%.10s'", *mehptr);
 	V("tokenizing, then done!");
+	D("read a line: '%s'", tokbuf);
 	return tokenize(tokbuf, tok, tok_len);
 }
 
@@ -267,8 +268,7 @@ writeall(int sck,
 	while(cnt < len) {
 		errno = 0;
 		ssize_t n;
-		V("calling send()/SSL_write(), num: %zu len: %zu",
-		    buf + cnt, len - cnt);
+		V("calling send()/SSL_write(), len: %zu", len - cnt);
 #ifdef WITH_SSL
 		if (shnd)
 			n = (ssize_t)SSL_write(shnd, buf + cnt, len - cnt);
