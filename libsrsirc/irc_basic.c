@@ -90,8 +90,6 @@ static void mutilate_nick(char *nick, size_t nick_sz);
 static bool send_logon(ibhnd_t hnd);
 
 static bool onread(ibhnd_t hnd, char **tok, size_t tok_len);
-static char** clonearr(char **arr, size_t nelem);
-static void freearr(char **arr, size_t nelem);
 
 static bool handle_001(ibhnd_t hnd, char **msg, size_t nargs);
 static bool handle_002(ibhnd_t hnd, char **msg, size_t nargs);
@@ -832,43 +830,6 @@ ircbas_005modepfx(ibhnd_t hnd)
 }
 
 
-static char**
-clonearr(char **arr, size_t nelem)
-{
-	char **res = malloc((nelem+1) * sizeof *arr);
-	if (!res) {
-		EE("malloc");
-		return NULL;
-	}
-
-	for(size_t i = 0; i < nelem; i++) {
-		if (arr[i]) {
-			if (!(res[i] = strdup(arr[i]))) {
-				EE("strdup");
-				goto clonearr_fail;
-			}
-		} else
-			res[i] = NULL;
-	}
-	res[nelem] = NULL;
-	return res;
-
-clonearr_fail:
-
-	freearr(res, nelem);
-	return NULL;
-}
-
-
-static void
-freearr(char **arr, size_t nelem)
-{
-	if (arr) {
-		for(size_t i = 0; i < nelem; i++)
-			free(arr[i]);
-		free(arr);
-	}
-}
 static bool
 handle_001(ibhnd_t hnd, char **msg, size_t nargs)
 {
