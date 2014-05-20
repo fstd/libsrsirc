@@ -13,8 +13,6 @@
 
 #define MAX_IRCARGS ((size_t)15)
 
-#define RFC1459 0
-
 #define RXBUF_SZ 4096
 #define LINEBUF_SZ 1024
 #define OVERBUF_SZ 1024
