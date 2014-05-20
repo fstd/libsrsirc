@@ -55,29 +55,6 @@
 static bool s_sslinit;
 #endif
 
-struct ichnd
-{
-	char *host;
-	unsigned short port;
-
-	char *phost;
-	unsigned short pport;
-	int ptype;
-
-	int sck;
-	int state;
-
-	char *linebuf;
-	char *overbuf;
-	char *mehptr;
-	bool colon_trail;
-#ifdef WITH_SSL
-	bool ssl;
-	SSL_CTX *sctx;
-	SSL *shnd;
-#endif
-};
-
 ichnd_t
 irccon_init(void)
 {

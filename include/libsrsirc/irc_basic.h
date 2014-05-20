@@ -8,10 +8,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef struct ibhnd* ibhnd_t;
-
-typedef bool (*fp_con_read)(char **msg, size_t msg_len, void* tag);
-typedef void (*fp_mut_nick)(char *nick, size_t nick_sz);
+#include <libsrsirc/ihnd.h>
 
 ibhnd_t ircbas_init(void);
 bool ircbas_reset(ibhnd_t hnd);

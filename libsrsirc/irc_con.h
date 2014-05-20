@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef struct ichnd* ichnd_t;
+#include <libsrsirc/ihnd.h>
 
 ichnd_t irccon_init(void);
 bool irccon_reset(ichnd_t hnd);

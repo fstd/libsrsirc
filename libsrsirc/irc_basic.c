@@ -43,48 +43,6 @@
 #define MAX_CMODES_LEN 64
 #define MAX_VER_LEN 128
 
-struct ibhnd
-{
-	char mynick[MAX_NICK_LEN];
-	char myhost[MAX_HOST_LEN];
-	bool service;
-	char umodes[MAX_UMODES_LEN];
-	char cmodes[MAX_CMODES_LEN];
-	char ver[MAX_VER_LEN];
-	char *lasterr;
-
-	/* zero timeout means no timeout */
-	unsigned long conto_hard_us;/*connect() timeout per A/AAAA record*/
-	unsigned long conto_soft_us;/*overall ircbas_connect() timeout*/
-
-	bool restricted;
-	bool banned;
-	char *banmsg;
-
-	int casemapping;
-
-	char *pass;
-	char *nick;
-	char *uname;
-	char *fname;
-	unsigned conflags;
-	bool serv_con;
-	char *serv_dist;
-	long serv_type;
-	char *serv_info;
-
-	char **logonconv[4];
-	char m005chanmodes[4][64];
-	char m005modepfx[2][32];
-
-	fp_con_read cb_con_read;
-	void *tag_con_read;
-	fp_mut_nick cb_mut_nick;
-
-	ichnd_t con;
-};
-
-
 
 static void mutilate_nick(char *nick, size_t nick_sz);
 static bool send_logon(ibhnd_t hnd);
