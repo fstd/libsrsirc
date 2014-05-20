@@ -20,7 +20,6 @@
 
 #include <libsrsirc/irc_basic.h>
 
-static void mutilate_nick(char *nick, size_t nick_sz);
 static bool send_logon(ibhnd_t hnd);
 
 static bool onread(ibhnd_t hnd, char **tok, size_t tok_len);
@@ -631,24 +630,6 @@ const char*
 ircbas_get_service_info(ibhnd_t hnd)
 {
 	return hnd->serv_info;
-}
-
-static void
-mutilate_nick(char *nick, size_t nick_sz)
-{if (nick_sz){} //XXX
-	size_t len = strlen(nick);
-	if (len < 9) {
-		nick[len++] = '_';
-		nick[len] = '\0';
-	} else {
-		char last = nick[len-1];
-		if (last == '9')
-			nick[1 + rand() % (len-1)] = '0' + rand() % 10;
-		else if ('0' <= last && last <= '8')
-			nick[len - 1] = last + 1;
-		else
-			nick[len - 1] = '0';
-	}
 }
 
 static bool

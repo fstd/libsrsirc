@@ -57,4 +57,7 @@ bool cr(char **msg, size_t msg_len, void *tag);
 char** parse_chanmodes(const char *const *arr, size_t argcnt, size_t *num,
     const char *modepfx005chr, const char *const *chmodes);
 
+void mutilate_nick(char *nick, size_t nick_sz);
+
+
 #endif /* SRS_IRC_UTIL_H */

@@ -406,3 +406,21 @@ classify_chanmode(char c, const char *const *chmodes)
 	}
 	return 0;
 }
+
+void
+mutilate_nick(char *nick, size_t nick_sz)
+{
+	size_t len = strlen(nick);
+	if (len < 9) {
+		nick[len++] = '_';
+		nick[len] = '\0';
+	} else {
+		char last = nick[len-1];
+		if (last == '9')
+			nick[1 + rand() % (len-1)] = '0' + rand() % 10;
+		else if ('0' <= last && last <= '8')
+			nick[len - 1] = last + 1;
+		else
+			nick[len - 1] = '0';
+	}
+}
