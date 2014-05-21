@@ -244,7 +244,7 @@ life(void)
 			WX("irc connection reset");
 			if (!stdineof && g_sett.reconnect) {
 				WVX("reconnecting");
-				if (!tryconnect()) {
+				while (!tryconnect()) {
 					WVX("sleeping %d sec",
 					    g_sett.confailwait_s);
 					if (g_sett.confailwait_s > 0)
