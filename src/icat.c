@@ -247,7 +247,8 @@ life(void)
 				if (!tryconnect()) {
 					WVX("sleeping %d sec",
 					    g_sett.confailwait_s);
-					sleep(g_sett.confailwait_s);
+					if (g_sett.confailwait_s > 0)
+						sleep(g_sett.confailwait_s);
 					continue;
 				}
 				WVX("recommencing operation");
@@ -804,7 +805,8 @@ main(int argc, char **argv)
 
 			if (g_sett.keeptrying) {
 				WVX("sleeping %d sec", g_sett.confailwait_s);
-				sleep(g_sett.confailwait_s);
+				if (g_sett.confailwait_s > 0)
+					sleep(g_sett.confailwait_s);
 				continue;
 			}
 			failure = true;
