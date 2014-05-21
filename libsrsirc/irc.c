@@ -229,14 +229,14 @@ irc_read(irc hnd, char *(*tok)[MAX_IRCARGS], uint64_t to_us)
 	bool failure = false;
 	int r = icon_read(hnd->con, tok, to_us);
 	if (r == -1) {
-		W("(%p) icon_read() failed");
+		W("(%p) icon_read() failed", hnd);
 		failure = true;
 	} else if (r != 0) {
 		uint8_t flags = handle(hnd, tok);
 
 		if (flags & CANT_PROCEED) {
 			W("(%p) failed to handle, can't proceed (f:%x)",
-			    flags);
+			    hnd, flags);
 			failure = true;
 		}
 	}
@@ -255,7 +255,7 @@ irc_write(irc hnd, const char *line)
 
 	if (!r) {
 		W("(%p) icon_write() failed", hnd);
-		irc_reset(hnd);
+		hnd, irc_reset(hnd);
 	}
 
 	return r;
