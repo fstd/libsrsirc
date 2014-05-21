@@ -452,7 +452,6 @@ char *(*ic_clonearr(char *(*arr)[MAX_IRCARGS]))[MAX_IRCARGS]
 		} else
 			(*res)[i] = NULL;
 	}
-	(*res)[COUNTOF(*arr)] = NULL;
 	return res;
 
 clonearr_fail:

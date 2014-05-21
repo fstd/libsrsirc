@@ -240,9 +240,20 @@ static uint8_t
 handle_005_PREFIX(irc hnd, const char *val)
 {
 	char str[32];
+	if (!val[0])
+		return CANT_PROCEED|PROTO_ERR;
+
 	ic_strNcpy(str, val + 1, sizeof str);
 	char *p = strchr(str, ')');
+	if (!p)
+		return CANT_PROCEED|PROTO_ERR;
+
 	*p++ = '\0';
+
+	size_t slen = strlen(str);
+	if (slen == 0 || slen != strlen(p))
+		return CANT_PROCEED|PROTO_ERR;
+
 	ic_strNcpy(hnd->m005modepfx[0], str, sizeof hnd->m005modepfx[0]);
 	ic_strNcpy(hnd->m005modepfx[1], p, sizeof hnd->m005modepfx[1]);
 
