@@ -34,7 +34,7 @@
 #define ISDELIM(C) ((C)=='\n' || (C) == '\r')
 
 /* local helpers */
-static void hexdump(const void *pAddressIn, long  lSize, const char *name);
+static void hexdump(const void *pAddressIn, size_t  zSize, const char *name);
 static int tokenize(char *buf, char *(*tok)[MAX_IRCARGS]);
 static char *skip2lws(char *s, bool tab_is_ws); //fwd ptr until whitespace
 static int writeall(int sck,
@@ -363,30 +363,30 @@ skip2lws(char *s, bool tab_is_ws)
 }
 
 /*not-quite-ravomavain's h4xdump*/
-static void hexdump(const void *pAddressIn, long  lSize, const char *name)
+static void hexdump(const void *pAddressIn, size_t zSize, const char *name)
 {
 	char szBuf[100];
-	long lIndent = 1;
-	long lOutLen, lIndex, lIndex2, lOutLen2;
-	long lRelPos;
-	struct { char *pData; unsigned long lSize; } buf;
+	size_t lIndent = 1;
+	size_t lOutLen, lIndex, lIndex2, lOutLen2;
+	size_t lRelPos;
+	struct { char *pData; size_t zSize; } buf;
 	unsigned char *pTmp,ucTmp;
 	unsigned char *pAddress = (unsigned char *)pAddressIn;
 
 	buf.pData   = (char *)pAddress;
-	buf.lSize   = lSize;
+	buf.zSize   = zSize;
 	V("hexdump '%s'", name);
 
-	while (buf.lSize > 0) {
+	while (buf.zSize > 0) {
 		pTmp = (unsigned char *)buf.pData;
-		lOutLen = (int)buf.lSize;
+		lOutLen = (int)buf.zSize;
 		if (lOutLen > 16)
 			lOutLen = 16;
 
 		/* create a 64-character formatted output line: */
 		sprintf(szBuf, " |                            "
 		    "                      "
-		    "    %08lX", (long unsigned int)(pTmp-pAddress));
+		    "    %08"PRIX64, (uint64_t)(pTmp-pAddress));
 		lOutLen2 = lOutLen;
 
 		for(lIndex = 1+lIndent, lIndex2 = 53-15+lIndent, lRelPos=0;
@@ -394,7 +394,7 @@ static void hexdump(const void *pAddressIn, long  lSize, const char *name)
 		    lOutLen2--, lIndex += 2, lIndex2++) {
 			ucTmp = *pTmp++;
 
-			sprintf(szBuf + lIndex, "%02X ", (uint16_t)ucTmp);
+			sprintf(szBuf + lIndex, "%02"PRIX16" ", (uint16_t)ucTmp);
 			if(!isprint(ucTmp))  ucTmp = '.'; /*nonprintable*/
 			szBuf[lIndex2] = ucTmp;
 
@@ -410,7 +410,7 @@ static void hexdump(const void *pAddressIn, long  lSize, const char *name)
 		V("%s", szBuf);
 
 		buf.pData   += lOutLen;
-		buf.lSize   -= lOutLen;
+		buf.zSize   -= lOutLen;
 	}
 	V("end of hexdump '%s'", name);
 }
