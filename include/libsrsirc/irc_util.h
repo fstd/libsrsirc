@@ -64,4 +64,7 @@ void mutilate_nick(char *nick, size_t nick_sz);
 /* will never return less than 2 */
 size_t countargs(char *(*tok)[MAX_IRCARGS]);
 
+char *(*ic_clonearr(char *(*arr)[MAX_IRCARGS]))[MAX_IRCARGS];
+void ic_freearr(char *(*arr)[MAX_IRCARGS]);
+
 #endif /* SRS_IRC_UTIL_H */
