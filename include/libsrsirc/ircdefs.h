@@ -40,6 +40,13 @@
 #define MAX_CMODES_LEN 64
 #define MAX_VER_LEN 128
 
+#define CANT_PROCEED (1<<0)
+# define OUT_OF_NICKS (1<<1)
+# define AUTH_ERR (1<<2)
+# define PROTO_ERR (1<<3)
+# define IO_ERR (1<<4)
+#define LOGON_COMPLETE (1<<5)
+
 
 typedef struct ichnd* ichnd_t;
 typedef struct ibhnd* ibhnd_t;

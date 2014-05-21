@@ -22,8 +22,6 @@
 
 static bool send_logon(ibhnd_t hnd);
 
-static bool onread(ibhnd_t hnd, char **tok, size_t tok_len);
-
 ibhnd_t
 ircbas_init(void)
 {
@@ -201,71 +199,32 @@ ircbas_connect(ibhnd_t hnd)
 		while (ac < COUNTOF(msg) && msg[ac])
 			ac++;
 
-		bool failure = false;
-
 		/* these are the protocol messages we deal with.
 		 * seeing 004 or 383 makes us consider ourselves logged on
 		 * note that we do not wait for 005, but we will later
 		 * parse it as we ran across it. */
-		if (strcmp(msg[1], "001") == 0) {
-			if (!(handle_001(hnd, msg, ac)))
-				failure = true;
-		} else if (strcmp(msg[1], "002") == 0) {
-			if (!(handle_002(hnd, msg, ac)))
-				failure = true;
-		} else if (strcmp(msg[1], "003") == 0) {
-			if (!(handle_003(hnd, msg, ac)))
-				failure = true;
-		} else if (strcmp(msg[1], "004") == 0) {
-			if (!(handle_004(hnd, msg, ac)))
-				failure = true;
-			success = true;
-		} else if (strcmp(msg[1], "PING") == 0) {
-			if (!(handle_PING(hnd, msg, ac)))
-				failure = true;
-		} else if (strcmp(msg[1], "432") == 0) { //errorneous nick
-			if (!(handle_432(hnd, msg, ac)))
-				failure = true;
-		} else if (strcmp(msg[1], "433") == 0) { //nick in use
-			if (!(handle_433(hnd, msg, ac)))
-				failure = true;
-		} else if (strcmp(msg[1], "436") == 0) { //nick collision
-			if (!(handle_436(hnd, msg, ac)))
-				failure = true;
-		} else if (strcmp(msg[1], "437") == 0) { //unavail resource
-			if (!(handle_437(hnd, msg, ac)))
-				failure = true;
-		} else if (strcmp(msg[1], "464") == 0) { //passwd missmatch
-			handle_464(hnd, msg, ac);
-			failure = true;
-		} else if (strcmp(msg[1], "383") == 0) { //we're service
-			if (!(handle_383(hnd, msg, ac)))
-				failure = true;
-			success = true;
-		} else if (strcmp(msg[1], "484") == 0) { //restricted
-			if (!(handle_484(hnd, msg, ac)))
-				failure = true;
-		} else if (strcmp(msg[1], "465") == 0) { //banned
-			if (!(handle_465(hnd, msg, ac)))
-				failure = true;
-		} else if (strcmp(msg[1], "466") == 0) { //will be banned
-			if (!(handle_466(hnd, msg, ac)))
-				failure = true;
-		} else if (strcmp(msg[1], "ERROR") == 0) {
-			handle_ERROR(hnd, msg, ac);
-			W("(%p) received error while logging on: %s",
-			    hnd, msg[2]);
-			failure = true;
-		}
+		uint8_t flags = handle(hnd, &msg);
 
-		if (failure) {
-			char line[1024];
-			sndumpmsg(line, sizeof line, NULL, msg, MAX_IRCARGS);
-			E("choked on '%s' (colontrail: %d",
-			    line, irccon_colon_trail(hnd->con));
+		if (flags & CANT_PROCEED) {
+			if (flags & AUTH_ERR) {
+				E("(%p) failed to authenticate", hnd);
+			} else if (flags & IO_ERR) {
+				E("(%p) i/o error", hnd);
+			} else if (flags & OUT_OF_NICKS) {
+				E("(%p) out of nicks", hnd);
+			} else if (flags & PROTO_ERR) {
+				char line[1024];
+				sndumpmsg(line, sizeof line, NULL, &msg);
+				E("(%p) proto error on '%s' (ct:%d, f:%x)",
+				    hnd, line,
+				    irccon_colon_trail(hnd->con), flags);
+			}
 			ircbas_reset(hnd);
 			return false;
 		}
+
+		if (flags & LOGON_COMPLETE)
+			success = true;
 
 	} while (!success);
 	D("(%p) irc logon finished, U R online", hnd);
@@ -282,17 +241,26 @@ int
 ircbas_read(ibhnd_t hnd, char *(*tok)[MAX_IRCARGS], unsigned long to_us)
 {
 	//D("(%p) wanna read (timeout: %lu)", hnd, to_us);
+	bool failure = false;
 	int r = irccon_read(hnd->con, tok, to_us);
+	if (r == -1) {
+		W("(%p) irccon_read() failed");
+		failure = true;
+	} else if (r != 0) {
+		uint8_t flags = handle(hnd, tok);
 
-	if (r == -1 || (r != 0 && !onread(hnd, tok, tok_len))) {
-		W("(%p) irccon_read() failed or onread() denied (r:%d)",
-		    hnd, r);
-		ircbas_reset(hnd);
-		return -1;
+		if (flags & CANT_PROCEED) {
+			W("(%p) failed to handle, can't proceed (f:%x)",
+			    flags);
+			failure = true;
+		}
 	}
+	
+	if (failure)
+		ircbas_reset(hnd);
 	//D("(%p) done reading", hnd);
 
-	return r;
+	return failure ? -1 : r;
 }
 
 bool
@@ -665,30 +633,4 @@ send_logon(ibhnd_t hnd)
 		return false;
 
 	return ircbas_write(hnd, aBuf);
-}
-
-static bool
-onread(ibhnd_t hnd, char **tok, size_t tok_len)
-{
-	bool failure = false;
-
-	if (strcmp(tok[1], "NICK") == 0) {
-		if (!handle_NICK(hnd, tok, countargs(tok, tok_len)))
-			failure = true;
-	} else if (strcmp(tok[1], "ERROR") == 0) {
-		if (!handle_ERROR(hnd, tok, countargs(tok, tok_len)))
-			failure = true;
-	} else if (strcmp(tok[1], "005") == 0) {
-		if (!handle_005(hnd, tok, countargs(tok, tok_len)))
-			failure = true;
-	}
-
-	if (failure) {
-		char line[1024];
-		sndumpmsg(line, sizeof line, NULL, tok, tok_len);
-		E("choked on '%s' (colontrail: %d",
-		    line, irccon_colon_trail(hnd->con));
-	}
-
-	return !failure;
 }
