@@ -258,7 +258,7 @@ irc_write(irc hnd, const char *line)
 
 	if (!r) {
 		W("(%p) icon_write() failed", hnd);
-		hnd, irc_reset(hnd);
+		irc_reset(hnd);
 	}
 
 	return r;
