@@ -12,6 +12,8 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 
+#define COUNTOF(ARR) (sizeof (ARR) / sizeof (ARR)[0])
+
 /*
 #define XCALLOC(num) ic_xcalloc(1, num)
 #define XMALLOC(num) ic_xmalloc(num)

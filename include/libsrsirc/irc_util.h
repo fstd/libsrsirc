@@ -8,6 +8,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include <libsrsirc/ircdefs.h>
+
 #define CMAP_RFC1459 0
 #define CMAP_STRICT_RFC1459 1
 #define CMAP_ASCII 2
@@ -48,18 +50,18 @@ void parse_hostspec(char *hoststr, size_t hoststr_sz, unsigned short *port,
 bool parse_identity(char *nick, size_t nicksz, char *uname, size_t unamesz,
     char *fname, size_t fnamesz, const char *identity);
 
-void sndumpmsg(char *dest, size_t dest_sz, void *tag, char **msg,
-    size_t msg_len);
+void sndumpmsg(char *dest, size_t dest_sz, void *tag,
+    char *(*msg)[MAX_IRCARGS]);
 
-void dumpmsg(void *tag, char **msg, size_t msglen);
+void dumpmsg(void *tag, char *(*msg)[MAX_IRCARGS]);
 
-bool cr(char **msg, size_t msg_len, void *tag);
+bool cr(char *(*msg)[MAX_IRCARGS], void *tag);
 char** parse_chanmodes(const char *const *arr, size_t argcnt, size_t *num,
     const char *modepfx005chr, const char *const *chmodes);
 
 void mutilate_nick(char *nick, size_t nick_sz);
 
 /* will never return less than 2 */
-size_t countargs(char **tok, size_t tok_len);
+size_t countargs(char *(*tok)[MAX_IRCARGS]);
 
 #endif /* SRS_IRC_UTIL_H */

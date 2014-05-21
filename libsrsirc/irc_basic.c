@@ -143,7 +143,7 @@ ircbas_connect(ibhnd_t hnd)
 	hnd->banned = false;
 
 	for(int i = 0; i < 4; i++) {
-		ic_freearr(hnd->logonconv[i], MAX_IRCARGS);
+		ic_freearr(hnd->logonconv[i]);
 		hnd->logonconv[i] = NULL;
 	}
 
@@ -179,8 +179,7 @@ ircbas_connect(ibhnd_t hnd)
 			}
 		}
 
-		int r = irccon_read(hnd->con, msg, MAX_IRCARGS,
-		    (unsigned long)trem);
+		int r = irccon_read(hnd->con, &msg, (unsigned long)trem);
 
 		if (r < 0) {
 			W("(%p) irccon_read() failed", hnd);
@@ -191,15 +190,15 @@ ircbas_connect(ibhnd_t hnd)
 		if (r == 0)
 			continue;
 
-		if (hnd->cb_con_read && !hnd->cb_con_read(msg, MAX_IRCARGS,
-		    hnd->tag_con_read)) {
+		if (hnd->cb_con_read &&
+		    !hnd->cb_con_read(&msg, hnd->tag_con_read)) {
 			W("(%p) further logon prohibited by conread", hnd);
 			ircbas_reset(hnd);
 			return false;
 		}
 
 		size_t ac = 2;
-		while (ac < MAX_IRCARGS && msg[ac])
+		while (ac < COUNTOF(msg) && msg[ac])
 			ac++;
 
 		bool failure = false;
@@ -280,10 +279,10 @@ ircbas_online(ibhnd_t hnd)
 }
 
 int
-ircbas_read(ibhnd_t hnd, char **tok, size_t tok_len, unsigned long to_us)
+ircbas_read(ibhnd_t hnd, char *(*tok)[MAX_IRCARGS], unsigned long to_us)
 {
 	//D("(%p) wanna read (timeout: %lu)", hnd, to_us);
-	int r = irccon_read(hnd->con, tok, tok_len, to_us);
+	int r = irccon_read(hnd->con, tok, to_us);
 
 	if (r == -1 || (r != 0 && !onread(hnd, tok, tok_len))) {
 		W("(%p) irccon_read() failed or onread() denied (r:%d)",

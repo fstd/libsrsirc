@@ -105,14 +105,14 @@ static void do_heartbeat(void);
 static int process_sendq(void);
 static int select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, unsigned long to_us);
 static void handle_stdin(char *line);
-static void handle_irc(char **tok, size_t ntok);
+static void handle_irc(char *(*tok)[MAX_IRCARGS], size_t ntok);
 static bool ismychan(const char *chan);
 static void process_args(int *argc, char ***argv, struct settings_s *sett);
 static void init(int *argc, char ***argv, struct settings_s *sett);
 static int iprintf(const char *fmt, ...);
 static void strNcat(char *dest, const char *src, size_t destsz);
 static bool isdigitstr(const char *str);
-static bool conread(char **msg, size_t msg_len, void *tag);
+static bool conread(char *(*msg)[MAX_IRCARGS], void *tag);
 static void usage(FILE *str, const char *a0, int ec, bool sh);
 int main(int argc, char **argv);
 
@@ -143,17 +143,17 @@ process_stdin(void)
 static int
 process_irc(void)
 {
-	char *tok[IRC_MAXARGS];
-	int r = ircbas_read(g_irc, tok, IRC_MAXARGS, 100000);
+	char *tok[MAX_IRCARGS];
+	int r = ircbas_read(g_irc, &tok, 100000);
 
 	if (r == -1) {
 		WX("irc read failed");
 		return -1;
 	} else if (r == 1) {
 		char buf[1024];
-		sndumpmsg(buf, sizeof buf, NULL, tok, IRC_MAXARGS);
+		sndumpmsg(buf, sizeof buf, NULL, &tok);
 		WVX("%s", buf);
-		handle_irc(tok, IRC_MAXARGS);
+		handle_irc(&tok, MAX_IRCARGS);
 		return 1;
 	}
 
@@ -378,23 +378,23 @@ handle_stdin(char *line)
 
 
 static void
-handle_irc(char **tok, size_t ntok)
+handle_irc(char *(*tok)[MAX_IRCARGS], size_t ntok)
 {
-	if (strcmp(tok[1], "PING") == 0) {
+	if (strcmp((*tok)[1], "PING") == 0) {
 		char resp[512];
-		snprintf(resp, sizeof resp, "PONG :%s", tok[2]);
+		snprintf(resp, sizeof resp, "PONG :%s", (*tok)[2]);
 		ircbas_write(g_irc, resp);
-	} else if (strcmp(tok[1], "PRIVMSG") == 0) {
+	} else if (strcmp((*tok)[1], "PRIVMSG") == 0) {
 		char nick[32];
-		pfx_extract_nick(nick, sizeof nick, tok[0]);
+		pfx_extract_nick(nick, sizeof nick, (*tok)[0]);
 		if (g_sett.ignore_cs && !istrcasecmp(nick, "ChanServ", ircbas_casemap(g_irc)))
 			return;
 				
 		if (g_sett.trgmode)
 			printf("%s %s %s %s\n",
-			    nick, tok[0], tok[2], tok[3]);
-		else if (ismychan(tok[2]) || !g_sett.ignore_pm)
-			printf("%s\n", tok[3]);
+			    nick, (*tok)[0], (*tok)[2], (*tok)[3]);
+		else if (ismychan((*tok)[2]) || !g_sett.ignore_pm)
+			printf("%s\n", (*tok)[3]);
 
 		if (g_sett.flush)
 			fflush(stdout);
@@ -670,10 +670,10 @@ isdigitstr(const char *str)
 }
 
 static bool
-conread(char **msg, size_t msg_len, void *tag)
+conread(char *(*msg)[MAX_IRCARGS], void *tag)
 {
 	char buf[1024];
-	sndumpmsg(buf, sizeof buf, tag, msg, msg_len);
+	sndumpmsg(buf, sizeof buf, tag, msg);
 	WVX("%s", buf);
 	return true;
 }

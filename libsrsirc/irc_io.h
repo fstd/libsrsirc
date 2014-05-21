@@ -13,6 +13,8 @@
 # include <openssl/ssl.h>
 #endif
 
+#include <libsrsirc/ircdefs.h>
+
 /* overview
 ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
     size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len,
@@ -93,7 +95,7 @@ int ircio_write(int sck, const char *line);
  *    whitespace is stripped away (except for trail argument), etc.
  */
 int ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
-    size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len,
+    size_t workbuf_sz, char **mehptr, char *(*tok)[MAX_IRCARGS],
     unsigned long to_us);
 
 int ircio_read_ex(int sck,
@@ -101,7 +103,7 @@ int ircio_read_ex(int sck,
     SSL *shnd,
 #endif
     char *tokbuf, size_t tokbuf_sz, char *workbuf,
-    size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len,
+    size_t workbuf_sz, char **mehptr, char *(*tok)[MAX_IRCARGS],
     unsigned long to_us);
 
 

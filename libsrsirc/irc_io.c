@@ -34,7 +34,7 @@
 
 /* local helpers */
 static void hexdump(const void *pAddressIn, long  lSize, const char *name);
-static int tokenize(char *buf, char **tok, size_t tok_len);
+static int tokenize(char *buf, char *(*tok)[MAX_IRCARGS]);
 static char *skip2lws(char *s, bool tab_is_ws); //fwd ptr until whitespace
 static int writeall(int sck,
 #ifdef WITH_SSL
@@ -45,15 +45,15 @@ static int writeall(int sck,
 /* pub if implementation */
 int
 ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
-    size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len,
+    size_t workbuf_sz, char **mehptr, char *(*tok)[MAX_IRCARGS],
     unsigned long to_us)
 {
 #ifdef WITH_SSL
 	return ircio_read_ex(sck, NULL, tokbuf, tokbuf_sz, workbuf,
-	    workbuf_sz, mehptr, tok, tok_len, to_us);
+	    workbuf_sz, mehptr, tok, to_us);
 #else
 	return ircio_read_ex(sck, tokbuf, tokbuf_sz, workbuf,
-	    workbuf_sz, mehptr, tok, tok_len, to_us);
+	    workbuf_sz, mehptr, tok, to_us);
 #endif
 }
 
@@ -63,7 +63,7 @@ ircio_read_ex(int sck,
     SSL *shnd,
 #endif
     char *tokbuf, size_t tokbuf_sz, char *workbuf,
-    size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len,
+    size_t workbuf_sz, char **mehptr, char *(*tok)[MAX_IRCARGS],
     unsigned long to_us)
 {
 	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
@@ -214,7 +214,7 @@ ircio_read_ex(int sck,
 	V("first ten of *mehptr: '%.10s'", *mehptr);
 	V("tokenizing, then done!");
 	D("read a line: '%s'", tokbuf);
-	return tokenize(tokbuf, tok, tok_len);
+	return tokenize(tokbuf, tok);
 }
 
 int
@@ -289,14 +289,14 @@ writeall(int sck,
 }
 
 static int
-tokenize(char *buf, char **tok, size_t tok_len)
+tokenize(char *buf, char *(*tok)[MAX_IRCARGS])
 {
-	if (!buf || !tok || tok_len < 2)
+	if (!buf || !tok)
 		return -1;
 
 	V("tokenizing: %s", buf);
-	for(size_t i = 0; i < tok_len; ++i)
-		tok[i] = NULL;
+	for(size_t i = 0; i < COUNTOF(*tok); ++i)
+		(*tok)[i] = NULL;
 
 	while(isspace((unsigned char)*buf))
 		*buf++ = '\0';
@@ -307,7 +307,7 @@ tokenize(char *buf, char **tok, size_t tok_len)
 		return 0;
 
 	if (*buf == ':') {
-		tok[0] = buf + 1;
+		(*tok)[0] = buf + 1;
 		buf = skip2lws(buf, true);
 		if (!buf) {
 			W("parse erro, pfx but no cmd");
@@ -315,27 +315,27 @@ tokenize(char *buf, char **tok, size_t tok_len)
 		}
 		while(isspace((unsigned char)*buf))
 			*buf++ = '\0';
-		V("extracted pfx: %s, rest: %s", tok[0], buf);
+		V("extracted pfx: %s, rest: %s", (*tok)[0], buf);
 	}
 
-	tok[1] = buf;
+	(*tok)[1] = buf;
 	buf = skip2lws(buf, true);
 	if (buf) {
 		while(isspace((unsigned char)*buf))
 			*buf++ = '\0';
 	}
-	V("extracted cmd: %s, rest: %s", tok[1], buf);
+	V("extracted cmd: %s, rest: %s", (*tok)[1], buf);
 
 	size_t argc = 2;
-	while(buf && *buf && argc < tok_len) {
+	while(buf && *buf && argc < COUNTOF(*tok)) {
 		V("iter (argc: %zu) buf is: %s", argc, buf);
 		if (*buf == ':') {
-			tok[argc++] = buf + 1;
+			(*tok)[argc++] = buf + 1;
 			V("extracted trailing (len: %zu), arg[%zu]: %s",
-			    strlen(buf+1), argc-1, tok[argc-1]);
+			    strlen(buf+1), argc-1, (*tok)[argc-1]);
 			break;
 		}
-		tok[argc++] = buf;
+		(*tok)[argc++] = buf;
 
 		/* have seen a channel with <Tab> in its name */
 		buf = skip2lws(buf, false);
@@ -345,7 +345,7 @@ tokenize(char *buf, char **tok, size_t tok_len)
 			V("jumped over ws: %s", buf);
 		}
 		V("extracted arg[%zu]: %s, rest: %s",
-		    argc-1, tok[argc-1], buf);
+		    argc-1, (*tok)[argc-1], buf);
 	}
 
 	V("done!");

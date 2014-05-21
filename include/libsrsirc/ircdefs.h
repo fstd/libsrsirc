@@ -44,7 +44,7 @@
 typedef struct ichnd* ichnd_t;
 typedef struct ibhnd* ibhnd_t;
 
-typedef bool (*fp_con_read)(char **msg, size_t msg_len, void* tag);
+typedef bool (*fp_con_read)(char *(*msg)[MAX_IRCARGS], void* tag);
 typedef void (*fp_mut_nick)(char *nick, size_t nick_sz);
 
 struct ichnd
@@ -101,7 +101,7 @@ struct ibhnd
 	long serv_type;
 	char *serv_info;
 
-	char **logonconv[4];
+	char *(*logonconv[4])[MAX_IRCARGS];
 	char m005chanmodes[4][64];
 	char m005modepfx[2][32];
 

@@ -260,31 +260,31 @@ parse_identity(char *nick, size_t nicksz, char *uname, size_t unamesz,
 
 
 void
-sndumpmsg(char *dest, size_t dest_sz, void *tag, char **msg, size_t msglen)
+sndumpmsg(char *dest, size_t dest_sz, void *tag, char *(*msg)[MAX_IRCARGS])
 {
-	snprintf(dest, dest_sz, "(%p) '%s' '%s'", tag, msg[0], msg[1]);
-	for(size_t i = 2; i < msglen; i++) {
-		if (!msg[i])
+	snprintf(dest, dest_sz, "(%p) '%s' '%s'", tag, (*msg)[0], (*msg)[1]);
+	for(size_t i = 2; i < COUNTOF(*msg); i++) {
+		if (!(*msg)[i])
 			break;
 		ic_strNcat(dest, " '", dest_sz);
-		ic_strNcat(dest, msg[i], dest_sz);
+		ic_strNcat(dest, (*msg)[i], dest_sz);
 		ic_strNcat(dest, "'", dest_sz);
 	}
 }
 
 void
-dumpmsg(void *tag, char **msg, size_t msg_len)
+dumpmsg(void *tag, char *(*msg)[MAX_IRCARGS])
 {
 	char buf[1024];
-	sndumpmsg(buf, sizeof buf, tag, msg, msg_len);
+	sndumpmsg(buf, sizeof buf, tag, msg);
 	fprintf(stderr, "%s\n", buf);
 }
 
 
 bool
-cr(char **msg, size_t msg_len, void *tag)
+cr(char *(*msg)[MAX_IRCARGS], void *tag)
 {
-	dumpmsg(tag, msg, msg_len);
+	dumpmsg(tag, msg);
 	return true;
 }
 
@@ -426,11 +426,48 @@ mutilate_nick(char *nick, size_t nick_sz)
 }
 
 size_t
-countargs(char **tok, size_t tok_len)
+countargs(char *(*tok)[MAX_IRCARGS])
 {
 	size_t ac = 2;
-	while (ac < tok_len && tok[ac])
+	while (ac < COUNTOF(*tok) && tok[ac])
 		ac++;
 	return ac;
 }
 
+
+char *(*ic_clonearr(char *(*arr)[MAX_IRCARGS]))[MAX_IRCARGS]
+{
+	char *(*res)[MAX_IRCARGS] = malloc(sizeof *res);
+	if (!res) {
+		EE("malloc");
+		return NULL;
+	}
+
+	for(size_t i = 0; i < COUNTOF(*arr); i++) {
+		if ((*arr)[i]) {
+			if (!((*res)[i] = strdup((*arr)[i]))) {
+				EE("strdup");
+				goto clonearr_fail;
+			}
+		} else
+			(*res)[i] = NULL;
+	}
+	(*res)[COUNTOF(*arr)] = NULL;
+	return res;
+
+clonearr_fail:
+
+	ic_freearr(res);
+	return NULL;
+}
+
+
+void
+ic_freearr(char *(*arr)[MAX_IRCARGS])
+{
+	if (arr) {
+		for(size_t i = 0; i < COUNTOF(*arr); i++)
+			free((*arr)[i]);
+		free(arr);
+	}
+}
