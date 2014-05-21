@@ -84,7 +84,8 @@ bool ircdbg_getfancy(void);
 void ircdbg_log(int lvl, int errn, const char *file, int line,
     const char *func, const char *fmt, ...)
 #ifdef __GNUC__
-    __attribute__ ((format (printf, 6, 7)));
+    __attribute__ ((format (printf, 6, 7)))
 #endif
+    ;
 
 #endif /* INTLOG_H */
