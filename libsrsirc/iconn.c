@@ -266,7 +266,7 @@ icon_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 }
 
 int
-icon_read(iconn hnd, char *(*tok)[MAX_IRCARGS], uint64_t to_us)
+icon_read(iconn hnd, tokarr *tok, uint64_t to_us)
 {
 	if (!hnd || hnd->state != ON)
 		return -1;

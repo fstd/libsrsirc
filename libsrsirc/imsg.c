@@ -21,7 +21,7 @@
 
 
 static uint8_t
-handle_001(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_001(irc hnd, tokarr *msg, size_t nargs)
 {
 	if (nargs < 3)
 		return CANT_PROCEED|PROTO_ERR;
@@ -44,7 +44,7 @@ handle_001(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
 }
 
 static uint8_t
-handle_002(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_002(irc hnd, tokarr *msg, size_t nargs)
 {
 	ic_freearr(hnd->logonconv[1]);
 	hnd->logonconv[1] = ic_clonearr(msg);
@@ -53,7 +53,7 @@ handle_002(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
 }
 
 static uint8_t
-handle_003(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_003(irc hnd, tokarr *msg, size_t nargs)
 {
 	ic_freearr(hnd->logonconv[2]);
 	hnd->logonconv[2] = ic_clonearr(msg);
@@ -62,7 +62,7 @@ handle_003(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
 }
 
 static uint8_t
-handle_004(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_004(irc hnd, tokarr *msg, size_t nargs)
 {
 	if (nargs < 7)
 		return CANT_PROCEED|PROTO_ERR;
@@ -79,7 +79,7 @@ handle_004(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
 }
 
 static uint8_t
-handle_PING(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_PING(irc hnd, tokarr *msg, size_t nargs)
 {
 	if (nargs < 3)
 		return CANT_PROCEED|PROTO_ERR;
@@ -90,7 +90,7 @@ handle_PING(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
 }
 
 static uint8_t
-handle_XXX(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_XXX(irc hnd, tokarr *msg, size_t nargs)
 {
 	if (!hnd->cb_mut_nick) {
 		W("(%p) got no mutnick.. (failing)", hnd);
@@ -110,38 +110,38 @@ handle_XXX(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
 }
 
 static uint8_t
-handle_432(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_432(irc hnd, tokarr *msg, size_t nargs)
 {
 	return handle_XXX(hnd, msg, nargs);
 }
 
 static uint8_t
-handle_433(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_433(irc hnd, tokarr *msg, size_t nargs)
 {
 	return handle_XXX(hnd, msg, nargs);
 }
 
 static uint8_t
-handle_436(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_436(irc hnd, tokarr *msg, size_t nargs)
 {
 	return handle_XXX(hnd, msg, nargs);
 }
 
 static uint8_t
-handle_437(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_437(irc hnd, tokarr *msg, size_t nargs)
 {
 	return handle_XXX(hnd, msg, nargs);
 }
 
 static uint8_t
-handle_464(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_464(irc hnd, tokarr *msg, size_t nargs)
 {
 	W("(%p) wrong server password", hnd);
 	return CANT_PROCEED|AUTH_ERR;
 }
 
 static uint8_t
-handle_383(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_383(irc hnd, tokarr *msg, size_t nargs)
 {
 	if (nargs < 3)
 		return CANT_PROCEED|PROTO_ERR;
@@ -165,7 +165,7 @@ handle_383(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
 }
 
 static uint8_t
-handle_484(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_484(irc hnd, tokarr *msg, size_t nargs)
 {
 	hnd->restricted = true;
 
@@ -173,7 +173,7 @@ handle_484(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
 }
 
 static uint8_t
-handle_465(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_465(irc hnd, tokarr *msg, size_t nargs)
 {
 	W("(%p) we're banned", hnd);
 	hnd->banned = true;
@@ -186,7 +186,7 @@ handle_465(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
 }
 
 static uint8_t
-handle_466(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_466(irc hnd, tokarr *msg, size_t nargs)
 {
 	W("(%p) we will be banned", hnd);
 
@@ -194,7 +194,7 @@ handle_466(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
 }
 
 static uint8_t
-handle_ERROR(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_ERROR(irc hnd, tokarr *msg, size_t nargs)
 {
 	free(hnd->lasterr);
 	hnd->lasterr = strdup((*msg)[2] ? (*msg)[2] : "");
@@ -204,7 +204,7 @@ handle_ERROR(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
 }
 
 static uint8_t
-handle_NICK(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_NICK(irc hnd, tokarr *msg, size_t nargs)
 {
 	if (nargs < 3)
 		return CANT_PROCEED|PROTO_ERR;
@@ -286,7 +286,7 @@ handle_005_CHANMODES(irc hnd, const char *val)
 }
 
 static uint8_t
-handle_005(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
+handle_005(irc hnd, tokarr *msg, size_t nargs)
 {
 	uint8_t ret = 0;
 
@@ -307,7 +307,7 @@ handle_005(irc hnd, char *(*msg)[MAX_IRCARGS], size_t nargs)
 
 
 uint8_t
-handle(irc hnd, char *(*msg)[MAX_IRCARGS])
+handle(irc hnd, tokarr *msg)
 {
 	uint8_t retflags = 0;
 	size_t ac = countargs(msg);

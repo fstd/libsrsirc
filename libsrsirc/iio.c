@@ -35,7 +35,7 @@
 
 /* local helpers */
 static void hexdump(const void *pAddressIn, size_t  zSize, const char *name);
-static int tokenize(char *buf, char *(*tok)[MAX_IRCARGS]);
+static int tokenize(char *buf, tokarr *tok);
 static char *skip2lws(char *s, bool tab_is_ws); //fwd ptr until whitespace
 static int writeall(int sck,
 #ifdef WITH_SSL
@@ -46,7 +46,7 @@ static int writeall(int sck,
 /* pub if implementation */
 int
 ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
-    size_t workbuf_sz, char **mehptr, char *(*tok)[MAX_IRCARGS],
+    size_t workbuf_sz, char **mehptr, tokarr *tok,
     uint64_t to_us)
 {
 #ifdef WITH_SSL
@@ -64,7 +64,7 @@ ircio_read_ex(int sck,
     SSL *shnd,
 #endif
     char *tokbuf, size_t tokbuf_sz, char *workbuf,
-    size_t workbuf_sz, char **mehptr, char *(*tok)[MAX_IRCARGS],
+    size_t workbuf_sz, char **mehptr, tokarr *tok,
     uint64_t to_us)
 {
 	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
@@ -290,7 +290,7 @@ writeall(int sck,
 }
 
 static int
-tokenize(char *buf, char *(*tok)[MAX_IRCARGS])
+tokenize(char *buf, tokarr *tok)
 {
 	if (!buf || !tok)
 		return -1;

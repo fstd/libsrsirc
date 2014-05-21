@@ -51,20 +51,20 @@ bool parse_identity(char *nick, size_t nicksz, char *uname, size_t unamesz,
     char *fname, size_t fnamesz, const char *identity);
 
 void sndumpmsg(char *dest, size_t dest_sz, void *tag,
-    char *(*msg)[MAX_IRCARGS]);
+    tokarr *msg);
 
-void dumpmsg(void *tag, char *(*msg)[MAX_IRCARGS]);
+void dumpmsg(void *tag, tokarr *msg);
 
-bool cr(char *(*msg)[MAX_IRCARGS], void *tag);
+bool cr(tokarr *msg, void *tag);
 char** parse_chanmodes(const char *const *arr, size_t argcnt, size_t *num,
     const char *modepfx005chr, const char *const *chmodes);
 
 void mutilate_nick(char *nick, size_t nick_sz);
 
 /* will never return less than 2 */
-size_t countargs(char *(*tok)[MAX_IRCARGS]);
+size_t countargs(tokarr *tok);
 
-char *(*ic_clonearr(char *(*arr)[MAX_IRCARGS]))[MAX_IRCARGS];
-void ic_freearr(char *(*arr)[MAX_IRCARGS]);
+tokarr *ic_clonearr(tokarr *arr);
+void ic_freearr(tokarr *arr);
 
 #endif /* SRS_IRC_UTIL_H */

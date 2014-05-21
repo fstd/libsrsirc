@@ -251,7 +251,7 @@ parse_identity(char *nick, size_t nicksz, char *uname, size_t unamesz,
 
 
 void
-sndumpmsg(char *dest, size_t dest_sz, void *tag, char *(*msg)[MAX_IRCARGS])
+sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
 {
 	snprintf(dest, dest_sz, "(%p) '%s' '%s'", tag, (*msg)[0], (*msg)[1]);
 	for(size_t i = 2; i < COUNTOF(*msg); i++) {
@@ -264,7 +264,7 @@ sndumpmsg(char *dest, size_t dest_sz, void *tag, char *(*msg)[MAX_IRCARGS])
 }
 
 void
-dumpmsg(void *tag, char *(*msg)[MAX_IRCARGS])
+dumpmsg(void *tag, tokarr *msg)
 {
 	char buf[1024];
 	sndumpmsg(buf, sizeof buf, tag, msg);
@@ -273,7 +273,7 @@ dumpmsg(void *tag, char *(*msg)[MAX_IRCARGS])
 
 
 bool
-cr(char *(*msg)[MAX_IRCARGS], void *tag)
+cr(tokarr *msg, void *tag)
 {
 	dumpmsg(tag, msg);
 	return true;
@@ -417,7 +417,7 @@ mutilate_nick(char *nick, size_t nick_sz)
 }
 
 size_t
-countargs(char *(*tok)[MAX_IRCARGS])
+countargs(tokarr *tok)
 {
 	size_t ac = 2;
 	while (ac < COUNTOF(*tok) && (*tok)[ac])
@@ -426,9 +426,9 @@ countargs(char *(*tok)[MAX_IRCARGS])
 }
 
 
-char *(*ic_clonearr(char *(*arr)[MAX_IRCARGS]))[MAX_IRCARGS]
+tokarr *ic_clonearr(tokarr *arr)
 {
-	char *(*res)[MAX_IRCARGS] = malloc(sizeof *res);
+	tokarr *res = malloc(sizeof *res);
 	if (!res) {
 		EE("malloc");
 		return NULL;
@@ -453,7 +453,7 @@ clonearr_fail:
 
 
 void
-ic_freearr(char *(*arr)[MAX_IRCARGS])
+ic_freearr(tokarr *arr)
 {
 	if (arr) {
 		for(size_t i = 0; i < COUNTOF(*arr); i++)

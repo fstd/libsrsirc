@@ -15,7 +15,7 @@ bool irc_reset(irc hnd);
 bool irc_dispose(irc hnd);
 bool irc_connect(irc hnd);
 bool irc_online(irc hnd);
-int irc_read(irc hnd, char *(*tok)[MAX_IRCARGS], uint64_t to_us);
+int irc_read(irc hnd, tokarr *tok, uint64_t to_us);
 bool irc_write(irc hnd, const char *line);
 
 const char *irc_mynick(irc hnd);

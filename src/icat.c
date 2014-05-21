@@ -105,7 +105,7 @@ static void do_heartbeat(void);
 static int process_sendq(void);
 static int select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, uint64_t to_us);
 static void handle_stdin(char *line);
-static void handle_irc(char *(*tok)[MAX_IRCARGS]);
+static void handle_irc(tokarr *tok);
 static bool ismychan(const char *chan);
 static void process_args(int *argc, char ***argv, struct settings_s *sett);
 static void init(int *argc, char ***argv, struct settings_s *sett);
@@ -114,7 +114,7 @@ static void strNcat(char *dest, const char *src, size_t destsz);
 static uint64_t timestamp_us(void);
 static void tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 static bool isdigitstr(const char *str);
-static bool conread(char *(*msg)[MAX_IRCARGS], void *tag);
+static bool conread(tokarr *msg, void *tag);
 static void usage(FILE *str, const char *a0, int ec, bool sh);
 int main(int argc, char **argv);
 
@@ -145,7 +145,7 @@ process_stdin(void)
 static int
 process_irc(void)
 {
-	char *tok[MAX_IRCARGS];
+	tokarr tok;
 	int r = irc_read(g_irc, &tok, 100000);
 
 	if (r == -1) {
@@ -385,7 +385,7 @@ handle_stdin(char *line)
 
 
 static void
-handle_irc(char *(*tok)[MAX_IRCARGS])
+handle_irc(tokarr *tok)
 {
 	if (strcmp((*tok)[1], "PING") == 0) {
 		char resp[512];
@@ -704,7 +704,7 @@ isdigitstr(const char *str)
 }
 
 static bool
-conread(char *(*msg)[MAX_IRCARGS], void *tag)
+conread(tokarr *msg, void *tag)
 {
 	char buf[1024];
 	sndumpmsg(buf, sizeof buf, tag, msg);

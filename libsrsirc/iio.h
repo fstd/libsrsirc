@@ -95,7 +95,7 @@ int ircio_write(int sck, const char *line);
  *    whitespace is stripped away (except for trail argument), etc.
  */
 int ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
-    size_t workbuf_sz, char **mehptr, char *(*tok)[MAX_IRCARGS],
+    size_t workbuf_sz, char **mehptr, tokarr *tok,
     uint64_t to_us);
 
 int ircio_read_ex(int sck,
@@ -103,7 +103,7 @@ int ircio_read_ex(int sck,
     SSL *shnd,
 #endif
     char *tokbuf, size_t tokbuf_sz, char *workbuf,
-    size_t workbuf_sz, char **mehptr, char *(*tok)[MAX_IRCARGS],
+    size_t workbuf_sz, char **mehptr, tokarr *tok,
     uint64_t to_us);
 
 

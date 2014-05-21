@@ -155,7 +155,7 @@ irc_connect(irc hnd)
 	I("(%p) connection established, IRC logon sequence sent", hnd);
 
 	ic_strNcpy(hnd->mynick, hnd->nick, sizeof hnd->mynick);
-	char *msg[MAX_IRCARGS];
+	tokarr msg;
 
 	bool success = false;
 	uint64_t trem = 0;
@@ -226,7 +226,7 @@ irc_online(irc hnd)
 }
 
 int
-irc_read(irc hnd, char *(*tok)[MAX_IRCARGS], uint64_t to_us)
+irc_read(irc hnd, tokarr *tok, uint64_t to_us)
 {
 	//D("(%p) wanna read (timeout: %"PRIu64")", hnd, to_us);
 	bool failure = false;

@@ -53,7 +53,9 @@
 typedef struct iconn_s* iconn;
 typedef struct irc_s* irc;
 
-typedef bool (*fp_con_read)(char *(*msg)[MAX_IRCARGS], void* tag);
+typedef char *tokarr[MAX_IRCARGS];
+
+typedef bool (*fp_con_read)(tokarr *msg, void* tag);
 typedef void (*fp_mut_nick)(char *nick, size_t nick_sz);
 
 struct iconn_s
@@ -110,7 +112,7 @@ struct irc_s
 	long serv_type;
 	char *serv_info;
 
-	char *(*logonconv[4])[MAX_IRCARGS];
+	tokarr *logonconv[4];
 	char m005chanmodes[4][64];
 	char m005modepfx[2][32];
 
