@@ -25,7 +25,6 @@
 #define DEF_PORT 6667
 #define DEF_PORT_SSL 6697
 #define MAX_CHANS 32
-#define IRC_MAXARGS 16
 #define MAX_CHANLIST 512
 
 #define DEF_CONTO_SOFT_S 15
