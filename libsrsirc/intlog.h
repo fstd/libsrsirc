@@ -82,6 +82,6 @@ bool ircdbg_getfancy(void);
 
 // ----- backend -----
 void ircdbg_log(int lvl, int errn, const char *file, int line,
-    const char *func, const char *fmt, ...);
+    const char *func, const char *fmt, ...) __attribute__ ((format (printf, 6, 7)));
 
 #endif /* INTLOG_H */

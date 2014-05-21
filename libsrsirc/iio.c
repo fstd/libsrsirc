@@ -178,7 +178,7 @@ ircio_read_ex(int sck,
 					    sck, n);
 				return -1;
 			}
-			V("read returned %d", n);
+			V("read returned %zd", n);
 			bool gotdelim = false;
 			char *delim = NULL;
 			while(n--) {
