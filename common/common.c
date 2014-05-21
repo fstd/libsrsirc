@@ -297,3 +297,17 @@ ic_strmdup(const char *str, size_t minlen)
 	return s;
 }
 */
+
+bool
+update_strprop(char **field, const char *val)
+{
+	char *n = strdup(val);
+	if (!n)
+		EE("strdup");
+	else {
+		free(*field);
+		*field = n;
+	}
+
+	return n;
+}

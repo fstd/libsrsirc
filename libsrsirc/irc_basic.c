@@ -397,40 +397,19 @@ ircbas_set_proxy(ibhnd_t hnd, const char *host, unsigned short port,
 bool
 ircbas_set_pass(ibhnd_t hnd, const char *srvpass)
 {
-	char *n = strdup(srvpass);
-	if (!n)
-		EE("strdup");
-	else {
-		free(hnd->pass);
-		hnd->pass = n;
-	}
-	return n;
+	return update_strprop(&hnd->pass, srvpass);
 }
 
 bool
 ircbas_set_uname(ibhnd_t hnd, const char *uname)
 {
-	char *n = strdup(uname);
-	if (!n)
-		EE("strdup");
-	else {
-		free(hnd->uname);
-		hnd->uname = n;
-	}
-	return n;
+	return update_strprop(&hnd->uname, uname);
 }
 
 bool
 ircbas_set_fname(ibhnd_t hnd, const char *fname)
 {
-	char *n = strdup(fname);
-	if (!n)
-		EE("strdup");
-	else {
-		free(hnd->fname);
-		hnd->fname = n;
-	}
-	return n;
+	return update_strprop(&hnd->fname, fname);
 }
 
 bool
@@ -443,14 +422,7 @@ ircbas_set_conflags(ibhnd_t hnd, unsigned flags)
 bool
 ircbas_set_nick(ibhnd_t hnd, const char *nick)
 {
-	char *n = strdup(nick);
-	if (!n)
-		EE("strdup");
-	else {
-		free(hnd->nick);
-		hnd->nick = n;
-	}
-	return n;
+	return update_strprop(&hnd->nick, nick);
 }
 
 bool
@@ -463,14 +435,7 @@ ircbas_set_service_connect(ibhnd_t hnd, bool enabled)
 bool
 ircbas_set_service_dist(ibhnd_t hnd, const char *dist)
 {
-	char *n = strdup(dist);
-	if (!n)
-		EE("strdup");
-	else {
-		free(hnd->serv_dist);
-		hnd->serv_dist = n;
-	}
-	return n;
+	return update_strprop(&hnd->serv_dist, dist);
 }
 
 bool
@@ -483,14 +448,7 @@ ircbas_set_service_type(ibhnd_t hnd, long type)
 bool
 ircbas_set_service_info(ibhnd_t hnd, const char *info)
 {
-	char *n = strdup(info);
-	if (!n)
-		EE("strdup");
-	else {
-		free(hnd->serv_info);
-		hnd->serv_info = n;
-	}
-	return n;
+	return update_strprop(&hnd->serv_info, info);
 }
 
 bool

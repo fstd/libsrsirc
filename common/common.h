@@ -39,4 +39,5 @@ void ic_tconv(struct timeval *tv, int64_t *ts, bool tv_to_ts);
 int ic_consocket(const char *host, unsigned short port,
     struct sockaddr *sockaddr, size_t *addrlen,
     unsigned long softto, unsigned long hardto);
+bool update_strprop(char **field, const char *val);
 #endif /* SRS_COMMON_H */
