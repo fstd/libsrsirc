@@ -184,8 +184,15 @@ tryconnect(void)
 		} else
 			irc_set_ssl(g_irc, false);
 
-		if (irc_connect(g_irc))
+		if (irc_connect(g_irc)) {
+			if (!g_sett.nojoin) {
+				char jmsg[512];
+				snprintf(jmsg, sizeof jmsg, "JOIN %s %s\r\n",
+				    g_sett.chanlist, g_sett.keylist);
+				irc_write(g_irc, jmsg);
+			}
 			return true;
+		}
 
 		s = s->next;
 	}
@@ -243,9 +250,6 @@ life(void)
 					sleep(g_sett.confailwait_s);
 					continue;
 				}
-				WVX("connected again!");
-				iprintf("JOIN %s %s",
-				    g_sett.chanlist, g_sett.keylist);
 				WVX("recommencing operation");
 				continue;
 			}
@@ -807,10 +811,6 @@ main(int argc, char **argv)
 			break;
 		}
 		WVX("logged on!");
-
-		if (!g_sett.nojoin)
-			iprintf("JOIN %s %s", g_sett.chanlist, g_sett.keylist);
-
 		break;
 	}
 
