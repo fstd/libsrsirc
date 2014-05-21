@@ -1,4 +1,4 @@
-/* irc_basic.h - Front-end (main) interface.
+/* irc.h - Front-end (main) interface.
  * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include <libsrsirc/ircdefs.h>
+#include <libsrsirc/irc_defs.h>
 
 irc irc_init(void);
 bool irc_reset(irc hnd);

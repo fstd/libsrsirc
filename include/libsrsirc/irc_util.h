@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include <libsrsirc/ircdefs.h>
+#include <libsrsirc/irc_defs.h>
 
 #define CMAP_RFC1459 0
 #define CMAP_STRICT_RFC1459 1

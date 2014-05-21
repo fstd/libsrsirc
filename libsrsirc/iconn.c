@@ -1,4 +1,4 @@
-/* irc_io.c - Semi back-end (btw irc_io and irc_basic) implementation
+/* iconn.c
  * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
@@ -31,14 +31,14 @@
 # include <openssl/err.h>
 #endif
 
-#include <common.h>
+#include "common.h"
 #include <libsrsirc/irc_util.h>
-#include "irc_io.h"
+#include "iio.h"
 #include <intlog.h>
 
 #include "proxy.h"
 
-#include "irc_con.h"
+#include "iconn.h"
 
 #define INV -1
 #define OFF 0
@@ -87,12 +87,12 @@ icon_init(void)
 	r->sctx = NULL;
 #endif
 
-	D("(%p) irc_con initialized", r);
+	D("(%p) iconn initialized", r);
 
 	return r;
 
 icon_init_fail:
-	EE("failed to initialize irc_con handle");
+	EE("failed to initialize iconn handle");
 	if (r) {
 		free(r->host);
 		free(r->overbuf);
@@ -362,7 +362,7 @@ icon_set_proxy(iconn hnd, const char *host, uint16_t port, int ptype)
 	case IRCPX_HTTP:
 	case IRCPX_SOCKS4:
 	case IRCPX_SOCKS5:
-		if (!host || !(1 <= port && port <= 65535))
+		if (!host || !port) //XXX `most' default port per type?
 			return false;
 
 		if (!(n = strdup(host))) {
@@ -392,7 +392,7 @@ icon_set_server(iconn hnd, const char *host, uint16_t port)
 	}
 	free(hnd->host);
 	hnd->host = n;
-	hnd->port = (1 <= port && port <= 65535)?port:DEF_PORT;
+	hnd->port = port ? port : DEF_PORT;
 	return true;
 }
 

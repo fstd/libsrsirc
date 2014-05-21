@@ -1,4 +1,4 @@
-/* irc_con.h - handles the raw TCP (or proxy) connection
+/* iconn.h - handles the raw TCP (or proxy) connection
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include <libsrsirc/ircdefs.h>
+#include <libsrsirc/irc_defs.h>
 
 iconn icon_init(void);
 bool icon_reset(iconn hnd);

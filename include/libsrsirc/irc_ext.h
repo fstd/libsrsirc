@@ -8,8 +8,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include <libsrsirc/irc_basic.h>
-#include <libsrsirc/ircdefs.h>
+#include <libsrsirc/irc.h>
+#include <libsrsirc/irc_defs.h>
 
 const char *irc_myhost(irc hnd);
 int irc_casemap(irc hnd);

@@ -1,4 +1,4 @@
-/* msghandle.c - handlers for protocol messages
+/* imsg.c - handlers for protocol messages
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
@@ -11,13 +11,13 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <common.h>
-#include <libsrsirc/ircdefs.h>
-#include "irc_con.h"
+#include "common.h"
+#include <libsrsirc/irc_defs.h>
+#include "iconn.h"
 #include <libsrsirc/irc_util.h>
 #include <intlog.h>
 
-#include "msghandle.h"
+#include "imsg.h"
 
 
 static uint8_t

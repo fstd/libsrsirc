@@ -1,4 +1,4 @@
-/* msghandle.h - protocl message handler prototypes
+/* imsg.h - protocl message handler prototypes
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 

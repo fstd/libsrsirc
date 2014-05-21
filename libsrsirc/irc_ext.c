@@ -6,11 +6,11 @@
 # include <config.h>
 #endif
 
-#include "irc_con.h"
+#include "iconn.h"
 
 #include <intlog.h>
 
-#include <common.h>
+#include "common.h"
 #include <libsrsirc/irc_ext.h>
 
 const char*

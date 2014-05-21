@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <inttypes.h>
 
-#include <common.h>
+#include "common.h"
 #include <intlog.h>
 
 #include "proxy.h"
@@ -106,7 +106,7 @@ proxy_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 		name[i] = (char)(rand() % 26 + 'a');
 	name[sizeof name - 1] = '\0';
 
-	if (ip == INADDR_NONE || !(1 <= nport && nport <= 65535)) {
+	if (ip == INADDR_NONE || !port) {
 		W(DBGSPEC" srsly what?", sck, host, port);
 		return false;
 	}
@@ -169,7 +169,7 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	unsigned char logon[14];
 
-	if(!(1 <= port && port <= 65535)) {
+	if (!port) {
 		W(DBGSPEC" srsly what?!", sck, host, port);
 		return false;
 	}

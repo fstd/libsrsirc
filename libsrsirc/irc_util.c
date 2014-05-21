@@ -14,7 +14,7 @@
 #include <strings.h>
 #include <limits.h>
 
-#include <common.h>
+#include "common.h"
 
 #include <intlog.h>
 

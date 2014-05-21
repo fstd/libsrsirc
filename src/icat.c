@@ -19,7 +19,6 @@
 #include <inttypes.h>
 #include <err.h>
 
-#include <common.h>
 #include <libsrsirc/irc_ext.h>
 #include <libsrsirc/irc_util.h>
 
@@ -111,6 +110,8 @@ static void process_args(int *argc, char ***argv, struct settings_s *sett);
 static void init(int *argc, char ***argv, struct settings_s *sett);
 static int iprintf(const char *fmt, ...);
 static void strNcat(char *dest, const char *src, size_t destsz);
+static uint64_t timestamp_us(void);
+static void tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 static bool isdigitstr(const char *str);
 static bool conread(char *(*msg)[MAX_IRCARGS], void *tag);
 static void usage(FILE *str, const char *a0, int ec, bool sh);
@@ -305,7 +306,7 @@ select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, uint64_t to_us)
 	struct timeval tout;
 	int ret;
 
-	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? timestamp_us() + to_us : 0;
 	uint64_t trem = 0;
 
 	if (fd1 < 0 && fd2 < 0) {
@@ -324,10 +325,10 @@ select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, uint64_t to_us)
 
 	for(;;) {
 		if (tsend) {
-			trem = tsend - ic_timestamp_us();
+			trem = tsend - timestamp_us();
 			if (trem <= 0)
 				trem = 1;
-			ic_tconv(&tout, &trem, false);
+			tconv(&tout, &trem, false);
 		}
 		errno=0;
 		ret = select(maxfd + 1, &read_set, NULL, NULL,
@@ -658,6 +659,29 @@ strNcat(char *dest, const char *src, size_t destsz)
 	*ptr = '\0';
 }
 
+static uint64_t
+timestamp_us(void)
+{
+	struct timeval t;
+	uint64_t ts = 0;
+	if (gettimeofday(&t, NULL) != 0)
+		E("gettimeofday");
+	else
+		tconv(&t, &ts, true);
+
+	return ts;
+}
+
+static void
+tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts)
+{
+	if (tv_to_ts)
+		*ts = (uint64_t)tv->tv_sec * 1000000 + tv->tv_usec;
+	else {
+		tv->tv_sec = *ts / 1000000;
+		tv->tv_usec = *ts % 1000000;
+	}
+}
 
 static bool
 isdigitstr(const char *str)

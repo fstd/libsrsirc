@@ -1,4 +1,4 @@
-/* irc_basic.c - Front-end implementation
+/* irc.c - Front-end implementation
  * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
@@ -11,14 +11,14 @@
 #include <string.h>
 #include <strings.h>
 
-#include <common.h>
+#include "common.h"
 #include <libsrsirc/irc_util.h>
-#include "irc_con.h"
-#include "msghandle.h"
+#include "iconn.h"
+#include "imsg.h"
 
 #include <intlog.h>
 
-#include <libsrsirc/irc_basic.h>
+#include <libsrsirc/irc.h>
 
 static bool send_logon(irc hnd);
 
@@ -84,7 +84,7 @@ irc_init(void)
 	return r;
 
 irc_init_fail:
-	EE("failed to initialize irc_basic handle");
+	EE("failed to initialize irc handle");
 	if (r) {
 		free(r->pass);
 		free(r->nick);

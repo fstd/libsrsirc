@@ -1,4 +1,4 @@
-/* irc_io.c - Back-end, i/o processing
+/* iio.c - Back-end, i/o processing
  * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
@@ -25,10 +25,10 @@
 #endif
 
 /* locals */
-#include <common.h>
+#include "common.h"
 #include <intlog.h>
 
-#include "irc_io.h"
+#include "iio.h"
 
 
 #define ISDELIM(C) ((C)=='\n' || (C) == '\r')

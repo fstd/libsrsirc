@@ -1,4 +1,4 @@
-/* irc_io.h - Back-end interface.
+/* iio.h - Back-end interface.
  * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
@@ -13,7 +13,7 @@
 # include <openssl/ssl.h>
 #endif
 
-#include <libsrsirc/ircdefs.h>
+#include <libsrsirc/irc_defs.h>
 
 /* overview
 ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
