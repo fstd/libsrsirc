@@ -122,6 +122,9 @@ irc_dispose(irc hnd)
 	free(hnd->serv_dist);
 	free(hnd->serv_info);
 
+	for(int i = 0; i < 4; i++)
+		ic_freearr(hnd->logonconv[i]);
+
 	D("(%p) disposed", hnd);
 	free(hnd);
 
