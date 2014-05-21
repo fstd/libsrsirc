@@ -134,10 +134,8 @@ irc_connect(irc hnd)
 	uint64_t tsend = hnd->conto_hard_us ?
 	    ic_timestamp_us() + hnd->conto_hard_us : 0;
 
-	free(hnd->lasterr);
-	hnd->lasterr = NULL;
-	free(hnd->banmsg);
-	hnd->banmsg = NULL;
+	update_strprop(&hnd->lasterr, NULL);
+	update_strprop(&hnd->banmsg, NULL);
 	hnd->banned = false;
 
 	for(int i = 0; i < 4; i++) {
@@ -145,46 +143,28 @@ irc_connect(irc hnd)
 		hnd->logonconv[i] = NULL;
 	}
 
-	D("(%p) connecting backend (timeout: %luus (soft), %luus (hard))",
-	    hnd, hnd->conto_soft_us, hnd->conto_hard_us);
-
-	if (!icon_connect(hnd->con, hnd->conto_soft_us,
-	    hnd->conto_hard_us)) {
-		W("(%p) backend failed to establish connection", hnd);
+	if (!icon_connect(hnd->con, hnd->conto_soft_us, hnd->conto_hard_us))
 		return false;
-	}
 
-	D("(%p) sending IRC logon sequence", hnd);
-	if (!send_logon(hnd)) {
-		W("(%p) failed writing IRC logon sequence", hnd);
-		irc_reset(hnd);
-		return false;
-	}
+	if (!send_logon(hnd))
+		goto irc_connect_fail;
 
-	D("(%p) connection established, IRC logon sequence sent", hnd);
-	char *msg[MAX_IRCARGS];
+	I("(%p) connection established, IRC logon sequence sent", hnd);
+
 	ic_strNcpy(hnd->mynick, hnd->nick, sizeof hnd->mynick);
+	char *msg[MAX_IRCARGS];
 
 	bool success = false;
 	uint64_t trem = 0;
 	int r;
 	do {
-		if(tsend) {
-			trem = tsend - ic_timestamp_us();
-			if (trem <= 0) {
-				W("(%p) timeout waiting for 004", hnd);
-				irc_reset(hnd);
-				return false;
-			}
+		if (tsend && (trem = tsend - ic_timestamp_us()) <= 0) {
+			W("(%p) timeout waiting for 004", hnd);
+			goto irc_connect_fail;
 		}
 
-		int r = icon_read(hnd->con, &msg, (unsigned long)trem);
-
-		if (r < 0) {
-			W("(%p) icon_read() failed", hnd);
-			irc_reset(hnd);
-			return false;
-		}
+		if ((r = icon_read(hnd->con, &msg, trem)) < 0)
+			goto irc_connect_fail;
 
 		if (r == 0)
 			continue;
@@ -192,8 +172,7 @@ irc_connect(irc hnd)
 		if (hnd->cb_con_read &&
 		    !hnd->cb_con_read(&msg, hnd->tag_con_read)) {
 			W("(%p) further logon prohibited by conread", hnd);
-			irc_reset(hnd);
-			return false;
+			goto irc_connect_fail;
 		}
 
 		size_t ac = 2;
@@ -220,16 +199,21 @@ irc_connect(irc hnd)
 				    hnd, line,
 				    icon_colon_trail(hnd->con), flags);
 			}
-			irc_reset(hnd);
-			return false;
+
+			goto irc_connect_fail;
 		}
 
 		if (flags & LOGON_COMPLETE)
 			success = true;
 
 	} while (!success);
-	D("(%p) irc logon finished, U R online", hnd);
+
+	N("(%p) logged on to IRC", hnd);
 	return true;
+
+irc_connect_fail:
+	irc_reset(hnd);
+	return false;
 }
 
 bool
