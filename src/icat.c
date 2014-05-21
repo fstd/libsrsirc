@@ -388,7 +388,9 @@ handle_irc(char *(*tok)[MAX_IRCARGS])
 		irc_write(g_irc, resp);
 	} else if (strcmp((*tok)[1], "PRIVMSG") == 0) {
 		char nick[32];
-		pfx_extract_nick(nick, sizeof nick, (*tok)[0]);
+		if (!pfx_extract_nick(nick, sizeof nick, (*tok)[0]))
+			return;
+
 		if (g_sett.ignore_cs && !istrcasecmp(nick, "ChanServ", irc_casemap(g_irc)))
 			return;
 				
