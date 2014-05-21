@@ -791,11 +791,28 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	exit(ec);
 }
 
+void
+cleanup(void)
+{
+	if (g_irc)
+		irc_dispose(g_irc);
+
+	/* make valgrind happy */
+	struct srvlist_s *n = g_srvlist;
+	while (n) {
+		struct srvlist_s *next = n->next;
+		free(n->host);
+		free(n);
+		n = next;
+	}
+
+}
 
 int
 main(int argc, char **argv)
 {
 	init(&argc, &argv, &g_sett);
+	atexit(cleanup);
 
 	bool failure = false;
 
@@ -823,5 +840,7 @@ main(int argc, char **argv)
 		life();
 
 	irc_dispose(g_irc);
+	g_irc = NULL; /* avoid re-dispose in cleanup */
+
 	return failure ? EXIT_FAILURE : EXIT_SUCCESS;
 }
