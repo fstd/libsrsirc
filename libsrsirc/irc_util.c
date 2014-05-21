@@ -184,7 +184,7 @@ itolower(char *dest, size_t destsz, const char *str, int casemap)
 
 bool
 parse_pxspec(char *pxtypestr, size_t pxtypestr_sz, char *hoststr,
-    size_t hoststr_sz, unsigned short *port, const char *line)
+    size_t hoststr_sz, uint16_t *port, const char *line)
 {
 	char linebuf[128];
 	strncpy(linebuf, line, sizeof linebuf);
@@ -206,7 +206,7 @@ parse_pxspec(char *pxtypestr, size_t pxtypestr_sz, char *hoststr,
 }
 
 void
-parse_hostspec(char *hoststr, size_t hoststr_sz, unsigned short *port,
+parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
     bool *ssl, const char *line)
 {
 	if (ssl)
@@ -229,7 +229,7 @@ parse_hostspec(char *hoststr, size_t hoststr_sz, unsigned short *port,
 
 	ptr = strchr(ptr, ':');
 	if (ptr) {
-		*port = (unsigned short)strtol(ptr+1, NULL, 10);
+		*port = (uint16_t)strtol(ptr+1, NULL, 10);
 		*ptr = '\0';
 	} else
 		*port = 0;
@@ -429,7 +429,7 @@ size_t
 countargs(char *(*tok)[MAX_IRCARGS])
 {
 	size_t ac = 2;
-	while (ac < COUNTOF(*tok) && tok[ac])
+	while (ac < COUNTOF(*tok) && (*tok)[ac])
 		ac++;
 	return ac;
 }

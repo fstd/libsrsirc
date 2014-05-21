@@ -23,6 +23,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <inttypes.h>
 
 #ifdef WITH_SSL
 /* ssl */
@@ -152,27 +153,26 @@ icon_dispose(iconn hnd)
 }
 
 bool
-icon_connect(iconn hnd,
-    unsigned long softto_us, unsigned long hardto_us)
+icon_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 {
 	if (!hnd || hnd->state != OFF)
 		return false;
 
-	int64_t tsend = hardto_us ? ic_timestamp_us() + hardto_us : 0;
+	uint64_t tsend = hardto_us ? ic_timestamp_us() + hardto_us : 0;
 
 	char *host = hnd->ptype != -1 ? hnd->phost : hnd->host;
-	unsigned short port = hnd->ptype != -1 ? hnd->pport : hnd->port;
+	uint16_t port = hnd->ptype != -1 ? hnd->pport : hnd->port;
 
 	{
-		char pxspec[64];
-		pxspec[0] = '\0';
+		char ps[64];
+		ps[0] = '\0';
 		if (hnd->ptype != -1)
-			snprintf(pxspec, sizeof pxspec, " via %s:%s:%hu",
+			snprintf(ps, sizeof ps, " via %s:%s:%" PRIu16,
 			    pxtypestr(hnd->ptype), hnd->phost, hnd->pport);
 
-		D("(%p) wanna connect to %s:%hu%s, sto: %luus, hto: %luus",
-		    hnd, hnd->host, hnd->port, pxspec,
-		    softto_us, hardto_us);
+		D("(%p) wanna connect to %s:%"PRIu16"%s, "
+		    "sto: %"PRIu64"us, hto: %"PRIu64"us",
+		    hnd, hnd->host, hnd->port, ps, softto_us, hardto_us);
 	}
 
 	struct sockaddr sa;
@@ -182,15 +182,15 @@ icon_connect(iconn hnd,
 	    softto_us, hardto_us);
 
 	if (sck < 0) {
-		W("(%p) ic_consocket failed for %s:%hu", hnd, host, port);
+		W("(%p) ic_consocket failed for %s:%"PRIu16"", hnd, host, port);
 		return false;
 	}
 
-	D("(%p) connected socket %d for %s:%hu", hnd, sck, host, port);
+	D("(%p) connected socket %d for %s:%"PRIu16"", hnd, sck, host, port);
 
 	hnd->sck = sck; //must be set here for proxy_logon
 
-	int64_t trem = 0;
+	uint64_t trem = 0;
 	if (hnd->ptype != -1) {
 		if (tsend) {
 			trem = tsend - ic_timestamp_us();
@@ -206,13 +206,13 @@ icon_connect(iconn hnd,
 		D("(%p) logging on to proxy", hnd);
 		if (hnd->ptype == IRCPX_HTTP)
 			ok = proxy_logon_http(hnd->sck, hnd->host,
-			    hnd->port, (unsigned long)trem);
+			    hnd->port, trem);
 		else if (hnd->ptype == IRCPX_SOCKS4)
 			ok = proxy_logon_socks4(hnd->sck, hnd->host,
-			    hnd->port, (unsigned long)trem);
+			    hnd->port, trem);
 		else if (hnd->ptype == IRCPX_SOCKS5)
 			ok = proxy_logon_socks5(hnd->sck, hnd->host,
-			    hnd->port, (unsigned long)trem);
+			    hnd->port, trem);
 
 		if (!ok) {
 			W("(%p) proxy logon failed", hnd);
@@ -266,19 +266,18 @@ icon_connect(iconn hnd,
 }
 
 int
-icon_read(iconn hnd, char *(*tok)[MAX_IRCARGS],
-    unsigned long to_us)
+icon_read(iconn hnd, char *(*tok)[MAX_IRCARGS], uint64_t to_us)
 {
 	if (!hnd || hnd->state != ON)
 		return -1;
 
-	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
-	D("(%p) wanna read (timeout: %lu)", hnd, to_us);
+	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+	D("(%p) wanna read (timeout: %"PRIu64")", hnd, to_us);
 
 	int n;
 	/* read a line, ignoring empty lines */
 	do {
-		int64_t trem;
+		uint64_t trem;
 		if (tsend) {
 			trem = tsend - ic_timestamp_us();
 			if (trem <= 0) {
@@ -291,7 +290,7 @@ icon_read(iconn hnd, char *(*tok)[MAX_IRCARGS],
 		    hnd->shnd,
 #endif
 		    hnd->linebuf, LINEBUF_SZ, hnd->overbuf, OVERBUF_SZ,
-		    &hnd->mehptr, tok, tsend ? (unsigned long)trem : 0ul);
+		    &hnd->mehptr, tok, tsend ? trem : 0ul);
 
 		if (n < 0) { //read error
 			W("(%p) read failed", hnd);
@@ -356,8 +355,7 @@ icon_colon_trail(iconn hnd)
 }
 
 bool
-icon_set_proxy(iconn hnd, const char *host, unsigned short port,
-    int ptype)
+icon_set_proxy(iconn hnd, const char *host, uint16_t port, int ptype)
 {
 	char *n = NULL;
 	switch(ptype) {
@@ -385,7 +383,7 @@ icon_set_proxy(iconn hnd, const char *host, unsigned short port,
 }
 
 bool
-icon_set_server(iconn hnd, const char *host, unsigned short port)
+icon_set_server(iconn hnd, const char *host, uint16_t port)
 {
 	char *n;
 	if (!(n = strdup(host?host:DEF_HOST))) {
@@ -434,7 +432,7 @@ icon_get_proxy_host(iconn hnd)
 	return hnd->phost;
 }
 
-unsigned short
+uint16_t
 icon_get_proxy_port(iconn hnd)
 {
 	return hnd->pport;
@@ -452,7 +450,7 @@ icon_get_host(iconn hnd)
 	return hnd->host;
 }
 
-unsigned short
+uint16_t
 icon_get_port(iconn hnd)
 {
 	return hnd->port;

@@ -17,6 +17,7 @@
 /* POSIX */
 #include <unistd.h>
 #include <sys/socket.h>
+#include <inttypes.h>
 
 #ifdef WITH_SSL
 /* ssl */
@@ -46,7 +47,7 @@ static int writeall(int sck,
 int
 ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
     size_t workbuf_sz, char **mehptr, char *(*tok)[MAX_IRCARGS],
-    unsigned long to_us)
+    uint64_t to_us)
 {
 #ifdef WITH_SSL
 	return ircio_read_ex(sck, NULL, tokbuf, tokbuf_sz, workbuf,
@@ -64,11 +65,11 @@ ircio_read_ex(int sck,
 #endif
     char *tokbuf, size_t tokbuf_sz, char *workbuf,
     size_t workbuf_sz, char **mehptr, char *(*tok)[MAX_IRCARGS],
-    unsigned long to_us)
+    uint64_t to_us)
 {
-	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	V("invoke(sck:%d, tokbuf: %p, tokbuf_sz: %zu, workbuf: %p, "
-	    "workbuf_sz: %zu, mehptr: %p (*:%p), to_us: %lu, tsend: %lld)",
+	    "workbuf_sz: %zu, mehptr: %p (*:%p), to_us: %"PRIu64", tsend: %"PRIu64")",
 	    sck, tokbuf, tokbuf_sz, workbuf, workbuf_sz, mehptr, *mehptr,
 	    to_us, tsend);
 	if (!*mehptr) {
@@ -110,7 +111,7 @@ ircio_read_ex(int sck,
 			memset(workbuf + len, 0, workbuf_sz - len);
 			*mehptr = workbuf;
 			end -= mehdist;
-			V("end is %p (%hhx (%c))", end, *end, *end);
+			V("end is %p (%"PRIu8" (%c))", end, *end, *end);
 			if (ircdbg_getlvl() == LOG_VIVI)
 				hexdump(workbuf, workbuf_sz,
 				    "workbuf after shift");
@@ -124,7 +125,7 @@ ircio_read_ex(int sck,
 			for(;;) {
 				struct timeval tout;
 				if (tsend) {
-					int64_t trem =
+					uint64_t trem =
 					    tsend - ic_timestamp_us();
 
 					if (trem <= 0) {
@@ -393,8 +394,7 @@ static void hexdump(const void *pAddressIn, long  lSize, const char *name)
 		    lOutLen2--, lIndex += 2, lIndex2++) {
 			ucTmp = *pTmp++;
 
-			sprintf(szBuf + lIndex, "%02X ",
-			    (unsigned short)ucTmp);
+			sprintf(szBuf + lIndex, "%02X ", (uint16_t)ucTmp);
 			if(!isprint(ucTmp))  ucTmp = '.'; /*nonprintable*/
 			szBuf[lIndex2] = ucTmp;
 

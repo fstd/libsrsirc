@@ -21,13 +21,13 @@
 struct sockaddr;
 struct hostspec {
 	char addrstr[48];
-	unsigned short port;
+	uint16_t port;
 };
 
 struct pxspec {
 	int type;
 	char addrstr[48];
-	unsigned short port;
+	uint16_t port;
 };
 
 
@@ -42,9 +42,9 @@ int istrncasecmp(const char *n1, const char *n2, size_t len, int casemap);
 int ichartolower(int c, int casemap);
 void itolower(char *dest, size_t destsz, const char *str, int casemap);
 bool parse_pxspec(char *pxtypestr, size_t pxtypestr_sz, char *hoststr,
-    size_t hoststr_sz, unsigned short *port, const char *line);
+    size_t hoststr_sz, uint16_t *port, const char *line);
 
-void parse_hostspec(char *hoststr, size_t hoststr_sz, unsigned short *port,
+void parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
     bool *ssl, const char *line);
 
 bool parse_identity(char *nick, size_t nicksz, char *uname, size_t unamesz,

@@ -33,11 +33,11 @@ char* ic_xstrdup(const char *string);
 char* ic_strmdup(const char *str, size_t minlen);
 */
 
-int64_t ic_timestamp_us();
-void ic_tconv(struct timeval *tv, int64_t *ts, bool tv_to_ts);
+uint64_t ic_timestamp_us(void);
+void ic_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 
-int ic_consocket(const char *host, unsigned short port,
+int ic_consocket(const char *host, uint16_t port,
     struct sockaddr *sockaddr, size_t *addrlen,
-    unsigned long softto, unsigned long hardto);
+    uint64_t softto, uint64_t hardto);
 bool update_strprop(char **field, const char *val);
 #endif /* SRS_COMMON_H */

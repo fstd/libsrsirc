@@ -29,21 +29,19 @@ const char *const *irc_005modepfx(irc hnd);
 bool irc_regcb_conread(irc hnd, fp_con_read cb, void *tag);
 bool irc_regcb_mutnick(irc hnd, fp_mut_nick);
 
-bool irc_set_proxy(irc hnd, const char *host, unsigned short port,
-    int ptype);
+bool irc_set_proxy(irc hnd, const char *host, uint16_t port, int ptype);
 bool irc_set_conflags(irc hnd, unsigned flags);
 bool irc_set_service_connect(irc hnd, bool enabled);
 bool irc_set_service_dist(irc hnd, const char *dist);
 bool irc_set_service_type(irc hnd, long type);
 bool irc_set_service_info(irc hnd, const char *info);
-bool irc_set_connect_timeout(irc hnd,
-    unsigned long soft, unsigned long hard);
+bool irc_set_connect_timeout(irc hnd, uint64_t soft, uint64_t hard);
 bool irc_set_ssl(irc hnd, bool on);
 
 const char* irc_get_host(irc hnd);
-unsigned short irc_get_port(irc hnd);
+uint16_t irc_get_port(irc hnd);
 const char* irc_get_proxy_host(irc hnd);
-unsigned short irc_get_proxy_port(irc hnd);
+uint16_t irc_get_proxy_port(irc hnd);
 int irc_get_proxy_type(irc hnd);
 const char* irc_get_pass(irc hnd);
 const char* irc_get_uname(irc hnd);

@@ -10,6 +10,7 @@
 
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <inttypes.h>
 
 #include <common.h>
 #include <intlog.h>
@@ -22,13 +23,12 @@
 
 
 static int guess_hosttype(const char *host);
-
+#define DBGSPEC "(%d,%s,%"PRIu16")"
 
 bool
-proxy_logon_http(int sck, const char *host, unsigned short port,
-    unsigned long to_us)
+proxy_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 {
-	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	char buf[256];
 	snprintf(buf, sizeof buf, "CONNECT %s:%d HTTP/1.0\r\nHost: %s:%d"
 	    "\r\n\r\n", host, port, host, port);
@@ -36,17 +36,17 @@ proxy_logon_http(int sck, const char *host, unsigned short port,
 	errno = 0;
 	ssize_t n = write(sck, buf, strlen(buf));
 	if (n == -1) {
-		WE("(%d,%s,%hu) write() failed", sck, host, port);
+		WE(DBGSPEC" write() failed", sck, host, port);
 		return false;
 	} else if (n < (ssize_t)strlen(buf)) {
-		W("(%d,%s,%hu) didn't send everything (%zd/%zu)",
+		W(DBGSPEC" didn't send everything (%zd/%zu)",
 		    sck, host, port, n, strlen(buf));
 		return false;
 	}
 
 	memset(buf, 0, sizeof buf);
 
-	D("(%d,%s,%hu) wrote HTTP CONNECT, reading response",
+	D(DBGSPEC" wrote HTTP CONNECT, reading response",
 	    sck, host, port);
 	size_t c = 0;
 	while(c < sizeof buf && (c < 4 || buf[c-4] != '\r' ||
@@ -55,17 +55,17 @@ proxy_logon_http(int sck, const char *host, unsigned short port,
 		n = read(sck, &buf[c], 1);
 		if (n <= 0) {
 			if (n == 0)
-				W("(%d,%s,%hu) unexpected EOF",
+				W(DBGSPEC" unexpected EOF",
 				    sck, host, port);
 			else if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				if (tsend && ic_timestamp_us() < tsend) {
 					usleep(10000);
 					continue;
 				}
-				W("(%d,%s,%hu) timeout hit",
+				W(DBGSPEC" timeout hit",
 				    sck, host, port);
 			} else
-				WE("(%d,%s,%hu) read failed",
+				WE(DBGSPEC" read failed",
 				    sck, host, port);
 			return false;
 		}
@@ -74,29 +74,28 @@ proxy_logon_http(int sck, const char *host, unsigned short port,
 	char *ctx; //context ptr for strtok_r
 	char *tok = strtok_r(buf, " ", &ctx);
 	if (!tok) {
-		W("(%d,%s,%hu) parse error 1 (buf: '%s')",
+		W(DBGSPEC" parse error 1 (buf: '%s')",
 		    sck, host, port, buf);
 		return false;
 	}
 
 	tok = strtok_r(NULL, " ", &ctx);
 	if (!tok) {
-		W("(%d,%s,%hu) parse error 2 (buf: '%s')",
+		W(DBGSPEC" parse error 2 (buf: '%s')",
 		    sck, host, port, buf);
 		return false;
 	}
 
-	D("(%d,%s,%hu) http response: '%.3s' (should be '200')",
+	D(DBGSPEC" http response: '%.3s' (should be '200')",
 	    sck, host, port, tok);
 	return strncmp(tok, "200", 3) == 0;
 }
 
 /* SOCKS4 doesntsupport ipv6 */
 bool
-proxy_logon_socks4(int sck, const char *host, unsigned short port,
-    unsigned long to_us)
+proxy_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 {
-	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	unsigned char logon[14];
 	uint16_t nport = htons(port);
 
@@ -108,7 +107,7 @@ proxy_logon_socks4(int sck, const char *host, unsigned short port,
 	name[sizeof name - 1] = '\0';
 
 	if (ip == INADDR_NONE || !(1 <= nport && nport <= 65535)) {
-		W("(%d,%s,%hu) srsly what?", sck, host, port);
+		W(DBGSPEC" srsly what?", sck, host, port);
 		return false;
 	}
 
@@ -126,15 +125,15 @@ proxy_logon_socks4(int sck, const char *host, unsigned short port,
 	errno = 0;
 	ssize_t n = write(sck, logon, c);
 	if (n == -1) {
-		WE("(%d,%s,%hu) write() failed", sck, host, port);
+		WE(DBGSPEC" write() failed", sck, host, port);
 		return false;
 	} else if (n < (ssize_t)c) {
-		W("(%d,%s,%hu) didn't send everything (%zd/%zu)",
+		W(DBGSPEC" didn't send everything (%zd/%zu)",
 		    sck, host, port, n, c);
 		return false;
 	}
 
-	D("(%d,%s,%hu) wrote SOCKS4 logon sequence, reading response",
+	D(DBGSPEC" wrote SOCKS4 logon sequence, reading response",
 	    sck, host, port);
 	char resp[8];
 	c = 0;
@@ -147,32 +146,31 @@ proxy_logon_socks4(int sck, const char *host, unsigned short port,
 					usleep(10000);
 					continue;
 				}
-				W("(%d,%s,%hu) timeout hit",
+				W(DBGSPEC" timeout hit",
 				    sck, host, port);
 			} else if (n == 0) {
-				W("(%d,%s,%hu) unexpected EOF",
+				W(DBGSPEC" unexpected EOF",
 				    sck, host, port);
 			} else
-				WE("(%d,%s,%hu) read failed",
+				WE(DBGSPEC" read failed",
 				    sck, host, port);
 			return false;
 		}
 		c += n;
 	}
-	D("(%d,%s,%hu) socks4 response: %hhx %hhx (should be: 0x00 0x5a)",
+	D(DBGSPEC" socks4 response: %"PRIu8" %"PRIu8" (should be: 0x00 0x5a)",
 	    sck, host, port, resp[0], resp[1]);
 	return resp[0] == 0 && resp[1] == 0x5a;
 }
 
 bool
-proxy_logon_socks5(int sck, const char *host, unsigned short port,
-    unsigned long to_us)
+proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 {
-	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 	unsigned char logon[14];
 
 	if(!(1 <= port && port <= 65535)) {
-		W("(%d,%s,%hu) srsly what?!", sck, host, port);
+		W(DBGSPEC" srsly what?!", sck, host, port);
 		return false;
 	}
 
@@ -186,15 +184,15 @@ proxy_logon_socks5(int sck, const char *host, unsigned short port,
 	errno = 0;
 	ssize_t n = write(sck, logon, c);
 	if (n == -1) {
-		WE("(%d,%s,%hu) write() failed", sck, host, port);
+		WE(DBGSPEC" write() failed", sck, host, port);
 		return false;
 	} else if (n < (ssize_t)c) {
-		W("(%d,%s,%hu) didn't send everything (%zd/%zu)",
+		W(DBGSPEC" didn't send everything (%zd/%zu)",
 		    sck, host, port, n, c);
 		return false;
 	}
 
-	D("(%d,%s,%hu) wrote SOCKS5 logon sequence 1, reading response",
+	D(DBGSPEC" wrote SOCKS5 logon sequence 1, reading response",
 	    sck, host, port);
 	char resp[128];
 	c = 0;
@@ -207,13 +205,13 @@ proxy_logon_socks5(int sck, const char *host, unsigned short port,
 					usleep(10000);
 					continue;
 				}
-				W("(%d,%s,%hu) timeout 1 hit",
+				W(DBGSPEC" timeout 1 hit",
 				    sck, host, port);
 			} else if (n == 0) {
-				W("(%d,%s,%hu) unexpected EOF",
+				W(DBGSPEC" unexpected EOF",
 				    sck, host, port);
 			} else
-				WE("(%d,%s,%hu) read failed",
+				WE(DBGSPEC" read failed",
 				    sck, host, port);
 			return false;
 		}
@@ -221,16 +219,16 @@ proxy_logon_socks5(int sck, const char *host, unsigned short port,
 	}
 
 	if(resp[0] != 5) {
-		W("(%d,%s,%hu) unexpected response %hhx %hhx (no socks5?)",
+		W(DBGSPEC" unexpected response %"PRIu8" %"PRIu8" (no socks5?)",
 		    sck, host, port, resp[0], resp[1]);
 		return false;
 	}
 	if (resp[1] != 0) {
-		W("(%d,%s,%hu) socks5 denied (%hhx %hhx)",
+		W(DBGSPEC" socks5 denied (%"PRIu8" %"PRIu8")",
 		    sck, host, port, resp[0], resp[1]);
 		return false;
 	}
-	D("(%d,%s,%hu) socks5 let us in", sck, host, port);
+	D(DBGSPEC" socks5 let us in", sck, host, port);
 
 	c = 0;
 	char connect[128];
@@ -245,12 +243,12 @@ proxy_logon_socks5(int sck, const char *host, unsigned short port,
 		connect[c++] = 1;
 		n = inet_pton(AF_INET, host, &ia4);
 		if (n == -1) {
-			WE("(%d,%s,%hu) inet_pton failed",
+			WE(DBGSPEC" inet_pton failed",
 			    sck, host, port);
 			return false;
 		}
 		if (n == 0) {
-			W("(%d,%s,%hu) illegal ipv4 addr: '%s'",
+			W(DBGSPEC" illegal ipv4 addr: '%s'",
 			    sck, host, port, host);
 			return false;
 		}
@@ -260,12 +258,12 @@ proxy_logon_socks5(int sck, const char *host, unsigned short port,
 		connect[c++] = 4;
 		n = inet_pton(AF_INET6, host, &ia6);
 		if (n == -1) {
-			WE("(%d,%s,%hu) inet_pton failed",
+			WE(DBGSPEC" inet_pton failed",
 			    sck, host, port);
 			return false;
 		}
 		if (n == 0) {
-			W("(%d,%s,%hu) illegal ipv6 addr: '%s'",
+			W(DBGSPEC" illegal ipv6 addr: '%s'",
 			    sck, host, port, host);
 			return false;
 		}
@@ -282,15 +280,15 @@ proxy_logon_socks5(int sck, const char *host, unsigned short port,
 	errno = 0;
 	n = write(sck, connect, c);
 	if (n == -1) {
-		WE("(%d,%s,%hu) write() failed",
+		WE(DBGSPEC" write() failed",
 		    sck, host, port);
 		return false;
 	} else if (n < (ssize_t)c) {
-		W("(%d,%s,%hu) didn't send everything (%zd/%zu)",
+		W(DBGSPEC" didn't send everything (%zd/%zu)",
 		    sck, host, port, n, c);
 		return false;
 	}
-	D("(%d,%s,%hu) wrote SOCKS5 logon sequence 2, reading response",
+	D(DBGSPEC" wrote SOCKS5 logon sequence 2, reading response",
 	    sck, host, port);
 
 	size_t l = 4;
@@ -304,13 +302,13 @@ proxy_logon_socks5(int sck, const char *host, unsigned short port,
 					usleep(10000);
 					continue;
 				}
-				W("(%d,%s,%hu) timeout 2 hit",
+				W(DBGSPEC" timeout 2 hit",
 				    sck, host, port);
 			} else if (n == 0) {
-				W("(%d,%s,%hu) unexpected EOF",
+				W(DBGSPEC" unexpected EOF",
 				    sck, host, port);
 			} else
-				WE("(%d,%s,%hu) read failed",
+				WE(DBGSPEC" read failed",
 				    sck, host, port);
 			return false;
 		}
@@ -318,7 +316,7 @@ proxy_logon_socks5(int sck, const char *host, unsigned short port,
 	}
 
 	if (resp[0] != 5 || resp[1] != 0) {
-		W("(%d,%s,%hu) socks5 denied/failed (%hhx %hhx %hhx %hhx)",
+		W(DBGSPEC" socks5 denied/failed (%"PRIu8" %"PRIu8" %"PRIu8" %"PRIu8")",
 		    sck, host, port, resp[0], resp[1], resp[2], resp[3]);
 		return false;
 	}
@@ -336,7 +334,7 @@ proxy_logon_socks5(int sck, const char *host, unsigned short port,
 		l = 1; //length
 		break;
 	default:
-		W("(%d,%s,%hu) socks returned illegal addrtype %d",
+		W(DBGSPEC" socks returned illegal addrtype %d",
 		    sck, host, port, resp[3]);
 		return false;
 	}
@@ -353,13 +351,13 @@ proxy_logon_socks5(int sck, const char *host, unsigned short port,
 					usleep(10000);
 					continue;
 				}
-				W("(%d,%s,%hu) timeout 2 hit",
+				W(DBGSPEC" timeout 2 hit",
 				    sck, host, port);
 			} else if (n == 0) {
-				W("(%d,%s,%hu) unexpected EOF",
+				W(DBGSPEC" unexpected EOF",
 				    sck, host, port);
 			} else
-				WE("(%d,%s,%hu) read failed",
+				WE(DBGSPEC" read failed",
 				    sck, host, port);
 			return false;
 		}
@@ -371,7 +369,7 @@ proxy_logon_socks5(int sck, const char *host, unsigned short port,
 	/* not that we'd care about what we just have read but we want to
 	 * make sure to read the correct amount of characters */
 
-	D("(%d,%s,%hu) socks5 success (apparently)", sck, host, port);
+	D(DBGSPEC" socks5 success (apparently)", sck, host, port);
 	return true;
 }
 

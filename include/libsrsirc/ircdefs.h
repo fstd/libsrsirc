@@ -5,6 +5,8 @@
 #ifndef IRCDEFS_H
 #define IRCDEFS_H 1
 
+#include <stdint.h>
+
 #ifdef WITH_SSL
 /* ssl */
 # include <openssl/ssl.h>
@@ -57,10 +59,10 @@ typedef void (*fp_mut_nick)(char *nick, size_t nick_sz);
 struct iconn_s
 {
 	char *host;
-	unsigned short port;
+	uint16_t port;
 
 	char *phost;
-	unsigned short pport;
+	uint16_t pport;
 	int ptype;
 
 	int sck;
@@ -89,8 +91,8 @@ struct irc_s
 	char *lasterr;
 
 	/* zero timeout means no timeout */
-	unsigned long conto_hard_us;/*connect() timeout per A/AAAA record*/
-	unsigned long conto_soft_us;/*overall ircbas_connect() timeout*/
+	uint64_t conto_hard_us;/*connect() timeout per A/AAAA record*/
+	uint64_t conto_soft_us;/*overall ircbas_connect() timeout*/
 
 	bool restricted;
 	bool banned;

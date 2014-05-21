@@ -113,8 +113,7 @@ irc_regcb_mutnick(irc hnd, fp_mut_nick cb)
 }
 
 bool
-irc_set_proxy(irc hnd, const char *host, unsigned short port,
-    int ptype)
+irc_set_proxy(irc hnd, const char *host, uint16_t port, int ptype)
 {
 	return icon_set_proxy(hnd->con, host, port, ptype);
 }
@@ -153,8 +152,7 @@ irc_set_service_info(irc hnd, const char *info)
 }
 
 bool
-irc_set_connect_timeout(irc hnd,
-    unsigned long soft, unsigned long hard)
+irc_set_connect_timeout(irc hnd, uint64_t soft, uint64_t hard)
 {
 	hnd->conto_hard_us = hard;
 	hnd->conto_soft_us = soft;
@@ -173,7 +171,7 @@ irc_get_host(irc hnd)
 	return icon_get_host(hnd->con);
 }
 
-unsigned short
+uint16_t
 irc_get_port(irc hnd)
 {
 	return icon_get_port(hnd->con);
@@ -185,7 +183,7 @@ irc_get_proxy_host(irc hnd)
 	return icon_get_proxy_host(hnd->con);
 }
 
-unsigned short
+uint16_t
 irc_get_proxy_port(irc hnd)
 {
 	return icon_get_proxy_port(hnd->con);

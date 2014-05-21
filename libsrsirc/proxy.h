@@ -7,13 +7,13 @@
 
 #include <stdbool.h>
 
-bool proxy_logon_http(int sck, const char *host, unsigned short port,
-    unsigned long to_us);
+bool proxy_logon_http(int sck, const char *host, uint16_t port,
+    uint64_t to_us);
 
-bool proxy_logon_socks4(int sck, const char *host, unsigned short port,
-    unsigned long to_us);
+bool proxy_logon_socks4(int sck, const char *host, uint16_t port,
+    uint64_t to_us);
 
-bool proxy_logon_socks5(int sck, const char *host, unsigned short port,
-    unsigned long to_us);
+bool proxy_logon_socks5(int sck, const char *host, uint16_t port,
+    uint64_t to_us);
 
 #endif

@@ -87,21 +87,24 @@ ic_xstrdup(const char *str)
 }
 */
 
-int64_t
-ic_timestamp_us()
+uint64_t
+ic_timestamp_us(void)
 {
 	struct timeval t;
-	int64_t ts;
-	gettimeofday(&t, NULL);
-	ic_tconv(&t, &ts, true);
+	uint64_t ts = 0;
+	if (gettimeofday(&t, NULL) != 0)
+		EE("gettimeofday");
+	else
+		ic_tconv(&t, &ts, true);
+
 	return ts;
 }
 
 void
-ic_tconv(struct timeval *tv, int64_t *ts, bool tv_to_ts)
+ic_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts)
 {
 	if (tv_to_ts)
-		*ts = (int64_t)tv->tv_sec * 1000000 + tv->tv_usec;
+		*ts = (uint64_t)tv->tv_sec * 1000000 + tv->tv_usec;
 	else {
 		tv->tv_sec = *ts / 1000000;
 		tv->tv_usec = *ts % 1000000;
@@ -116,11 +119,11 @@ ic_strNcpy(char *dst, const char *src, size_t len)
 	return r;
 }
 
-int ic_consocket(const char *host, unsigned short port,
+int ic_consocket(const char *host, uint16_t port,
     struct sockaddr *sockaddr, size_t *addrlen,
-    unsigned long softto, unsigned long hardto)
+    uint64_t softto, uint64_t hardto)
 {
-	D("ic_consocket() called: host='%s', port=%hu, sto=%lu, hto=%lu)",
+	D("ic_consocket() called: host='%s', port=%"PRIu16", sto=%"PRIu64", hto=%"PRIu64")",
 	    host, port, softto, hardto);
 
 	struct addrinfo *ai_list = NULL;
@@ -131,9 +134,9 @@ int ic_consocket(const char *host, unsigned short port,
 	hints.ai_protocol = 0;
 	hints.ai_flags = AI_NUMERICSERV;
 	char portstr[6];
-	snprintf(portstr, sizeof portstr, "%hu", port);
+	snprintf(portstr, sizeof portstr, "%"PRIu16"", port);
 
-	int64_t hardtsend = hardto ? ic_timestamp_us() + hardto : 0;
+	uint64_t hardtsend = hardto ? ic_timestamp_us() + hardto : 0;
 
 	D("calling getaddrinfo on '%s:%s' (AF_UNSPEC, SOCK_STREAM)",
 	    host, portstr);
@@ -154,7 +157,7 @@ int ic_consocket(const char *host, unsigned short port,
 
 	D("iterating over result list...");
 	for (struct addrinfo *ai = ai_list; ai; ai = ai->ai_next) {
-		int64_t softtsend = softto ? ic_timestamp_us() + softto : 0;
+		uint64_t softtsend = softto ? ic_timestamp_us() + softto : 0;
 
 		I("next result, creating socket (fam=%d, styp=%d, prot=%d)",
 		    ai->ai_family, ai->ai_socktype, ai->ai_protocol);
@@ -166,7 +169,7 @@ int ic_consocket(const char *host, unsigned short port,
 		}
 
 		char peeraddr[64] = "(non-INET/INET6)";
-		unsigned short peerport = 0;
+		uint16_t peerport = 0;
 
 		if (ai->ai_family == AF_INET) {
 			struct sockaddr_in *sin =
@@ -187,7 +190,7 @@ int ic_consocket(const char *host, unsigned short port,
 		}
 
 		char portstr[7];
-		snprintf(portstr, sizeof portstr, ":%hu", peerport);
+		snprintf(portstr, sizeof portstr, ":%"PRIu16"", peerport);
 		ic_strNcat(peeraddr, portstr, sizeof peeraddr);
 
 		int opt = 1;
@@ -215,7 +218,7 @@ int ic_consocket(const char *host, unsigned short port,
 		struct timeval tout;
 		tout.tv_sec = 0;
 		tout.tv_usec = 0;
-		int64_t trem = 0;
+		uint64_t trem = 0;
 
 		bool success = false;
 
@@ -301,13 +304,16 @@ ic_strmdup(const char *str, size_t minlen)
 bool
 update_strprop(char **field, const char *val)
 {
-	char *n = strdup(val);
-	if (!n)
-		EE("strdup");
-	else {
-		free(*field);
-		*field = n;
+	char *n = NULL;
+	if (val) {
+		if (!(n = strdup(val))) {
+			EE("strdup");
+			return false;
+		}
 	}
 
-	return n;
+	free(*field);
+	*field = n;
+
+	return true;
 }

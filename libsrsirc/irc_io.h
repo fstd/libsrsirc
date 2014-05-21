@@ -96,7 +96,7 @@ int ircio_write(int sck, const char *line);
  */
 int ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
     size_t workbuf_sz, char **mehptr, char *(*tok)[MAX_IRCARGS],
-    unsigned long to_us);
+    uint64_t to_us);
 
 int ircio_read_ex(int sck,
 #ifdef WITH_SSL
@@ -104,7 +104,7 @@ int ircio_read_ex(int sck,
 #endif
     char *tokbuf, size_t tokbuf_sz, char *workbuf,
     size_t workbuf_sz, char **mehptr, char *(*tok)[MAX_IRCARGS],
-    unsigned long to_us);
+    uint64_t to_us);
 
 
 /* ircio_write - write one (or perhaps multiple) lines to socket

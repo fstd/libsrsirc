@@ -16,6 +16,7 @@
 
 #include <time.h>
 #include <unistd.h>
+#include <inttypes.h>
 #include <err.h>
 
 #include <common.h>
@@ -81,7 +82,7 @@ static struct settings_s {
 
 static struct srvlist_s {
 	char *host;
-	unsigned short port;
+	uint16_t port;
 	bool ssl;
 	struct srvlist_s *next;
 } *g_srvlist;
@@ -102,9 +103,9 @@ static bool tryconnect(void);
 static void life(void);
 static void do_heartbeat(void);
 static int process_sendq(void);
-static int select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, unsigned long to_us);
+static int select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, uint64_t to_us);
 static void handle_stdin(char *line);
-static void handle_irc(char *(*tok)[MAX_IRCARGS], size_t ntok);
+static void handle_irc(char *(*tok)[MAX_IRCARGS]);
 static bool ismychan(const char *chan);
 static void process_args(int *argc, char ***argv, struct settings_s *sett);
 static void init(int *argc, char ***argv, struct settings_s *sett);
@@ -152,7 +153,7 @@ process_irc(void)
 		char buf[1024];
 		sndumpmsg(buf, sizeof buf, NULL, &tok);
 		WVX("%s", buf);
-		handle_irc(&tok, MAX_IRCARGS);
+		handle_irc(&tok);
 		return 1;
 	}
 
@@ -167,7 +168,7 @@ tryconnect(void)
 
 	while (s) {
 		irc_set_server(g_irc, s->host, s->port);
-		WVX("set server to '%s:%hu'", irc_get_host(g_irc),
+		WVX("set server to '%s:%"PRIu16"'", irc_get_host(g_irc),
 		    irc_get_port(g_irc));
 
 		if (s->ssl) {
@@ -298,14 +299,14 @@ process_sendq(void)
 }
 
 static int
-select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, unsigned long to_us)
+select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, uint64_t to_us)
 {
 	fd_set read_set;
 	struct timeval tout;
 	int ret;
 
-	int64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
-	int64_t trem = 0;
+	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+	uint64_t trem = 0;
 
 	if (fd1 < 0 && fd2 < 0) {
 		W("both filedescriptors -1");
@@ -377,7 +378,7 @@ handle_stdin(char *line)
 
 
 static void
-handle_irc(char *(*tok)[MAX_IRCARGS], size_t ntok)
+handle_irc(char *(*tok)[MAX_IRCARGS])
 {
 	if (strcmp((*tok)[1], "PING") == 0) {
 		char resp[512];
@@ -436,7 +437,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			{
 			char typestr[16];
 			char host[256];
-			unsigned short port;
+			uint16_t port;
 			int typeno;
 			if (!parse_pxspec(typestr, sizeof typestr, host,
 			    sizeof host, &port, optarg))
@@ -572,7 +573,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 
 	for (int i = 0; i < *argc; i++) {
 		char host[256];
-		unsigned short port;
+		uint16_t port;
 		bool ssl = false;
 		parse_hostspec(host, sizeof host, &port, &ssl, (*argv)[i]);
 

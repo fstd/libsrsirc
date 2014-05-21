@@ -131,7 +131,7 @@ irc_dispose(irc hnd)
 bool
 irc_connect(irc hnd)
 {
-	int64_t tsend = hnd->conto_hard_us ?
+	uint64_t tsend = hnd->conto_hard_us ?
 	    ic_timestamp_us() + hnd->conto_hard_us : 0;
 
 	free(hnd->lasterr);
@@ -166,7 +166,8 @@ irc_connect(irc hnd)
 	ic_strNcpy(hnd->mynick, hnd->nick, sizeof hnd->mynick);
 
 	bool success = false;
-	int64_t trem = 0;
+	uint64_t trem = 0;
+	int r;
 	do {
 		if(tsend) {
 			trem = tsend - ic_timestamp_us();
@@ -238,9 +239,9 @@ irc_online(irc hnd)
 }
 
 int
-irc_read(irc hnd, char *(*tok)[MAX_IRCARGS], unsigned long to_us)
+irc_read(irc hnd, char *(*tok)[MAX_IRCARGS], uint64_t to_us)
 {
-	//D("(%p) wanna read (timeout: %lu)", hnd, to_us);
+	//D("(%p) wanna read (timeout: %"PRIu64")", hnd, to_us);
 	bool failure = false;
 	int r = icon_read(hnd->con, tok, to_us);
 	if (r == -1) {
@@ -283,7 +284,7 @@ irc_mynick(irc hnd)
 }
 
 bool
-irc_set_server(irc hnd, const char *host, unsigned short port)
+irc_set_server(irc hnd, const char *host, uint16_t port)
 {
 	return icon_set_server(hnd->con, host, port);
 }
