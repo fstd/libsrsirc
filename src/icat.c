@@ -429,7 +429,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 	char *a0 = (*argv)[0];
 
 	for(int ch; (ch = getopt(*argc, *argv,
-	    "vchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNjiI")) != -1;) {
+	    "vqchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNjiI")) != -1;) {
 		switch (ch) {
 		      case 'n':
 			irc_set_nick(g_irc, optarg);
@@ -533,6 +533,8 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 		break;case 'N':
 			sett->notices = true;
 			WVX("switched to NOTICE mode");
+		break;case 'q':
+			sett->verb--;
 		break;case 'v':
 			sett->verb++;
 		break;case 'H':
@@ -735,6 +737,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	LH("\t\tdnsname  := 'irc.example.org'");
 	BH("");
 	BH("\t-v: Increase verbosity on stderr (use -vv or -vvv for more)");
+	BH("\t-q: Decrease verbosity on stderr (use -qq or -qqq for less)");
 	BH("\t-c: Use Bash color sequences on stderr");
 	LH("\t-h: Display brief usage statement and terminate");
 	BH("\t-H: Display longer usage statement and terminate");
