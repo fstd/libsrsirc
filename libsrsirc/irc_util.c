@@ -157,18 +157,6 @@ ichartolower(int c, int casemap)
 void
 itolower(char *dest, size_t destsz, const char *str, int casemap)
 {
-	int rangeinc;
-	switch (casemap) {
-	case CMAP_RFC1459:
-		rangeinc = 4;
-		break;
-	case CMAP_STRICT_RFC1459:
-		rangeinc = 3;
-		break;
-	default:
-		rangeinc = 0;
-	}
-
 	size_t c = 0;
 	char *ptr = dest;
 	while(c < destsz) {
@@ -214,7 +202,10 @@ parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
 
 	strncpy(hoststr, line + (line[0] == '['), hoststr_sz);
 	
-	char *ptr = strcasestr(hoststr, "/ssl");
+	char *ptr = strstr(hoststr, "/ssl");
+	if (!ptr)
+		ptr = strstr(hoststr, "/SSL");
+
 	if (ptr && !ptr[4]) {
 		if (ssl)
 			*ssl = true;

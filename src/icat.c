@@ -17,6 +17,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <sys/time.h>
 #include <err.h>
 
 #include <libsrsirc/irc_ext.h>

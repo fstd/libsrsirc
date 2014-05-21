@@ -19,6 +19,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <inttypes.h>
 
 #include <intlog.h>
 
