@@ -48,15 +48,15 @@
 static bool s_sslinit;
 #endif
 
-ichnd_t
-irccon_init(void)
+iconn
+icon_init(void)
 {
-	ichnd_t r = NULL;
+	iconn r = NULL;
 	int preverrno = errno;
 	errno = 0;
 
 	if (!(r = malloc(sizeof *r)))
-		goto irccon_init_fail;
+		goto icon_init_fail;
 
 	r->linebuf = NULL;
 	r->overbuf = NULL;
@@ -65,7 +65,7 @@ irccon_init(void)
 	if ((!(r->linebuf = malloc(LINEBUF_SZ)))
 	    || (!(r->overbuf = malloc(OVERBUF_SZ)))
 	    || (!(r->host = strdup(DEF_HOST))))
-		goto irccon_init_fail;
+		goto icon_init_fail;
 
 	/* these 2 neccessary? */
 	memset(r->linebuf, 0, LINEBUF_SZ);
@@ -90,7 +90,7 @@ irccon_init(void)
 
 	return r;
 
-irccon_init_fail:
+icon_init_fail:
 	EE("failed to initialize irc_con handle");
 	if (r) {
 		free(r->host);
@@ -103,7 +103,7 @@ irccon_init_fail:
 }
 
 bool
-irccon_reset(ichnd_t hnd)
+icon_reset(iconn hnd)
 {
 	D("(%p) resetting", hnd);
 
@@ -131,12 +131,12 @@ irccon_reset(ichnd_t hnd)
 }
 
 bool
-irccon_dispose(ichnd_t hnd)
+icon_dispose(iconn hnd)
 {
-	irccon_reset(hnd);
+	icon_reset(hnd);
 
 #ifdef WITH_SSL
-	irccon_set_ssl(hnd, false); //dispose ssl context if existing
+	icon_set_ssl(hnd, false); //dispose ssl context if existing
 #endif
 
 	free(hnd->host);
@@ -152,7 +152,7 @@ irccon_dispose(ichnd_t hnd)
 }
 
 bool
-irccon_connect(ichnd_t hnd,
+icon_connect(iconn hnd,
     unsigned long softto_us, unsigned long hardto_us)
 {
 	if (!hnd || hnd->state != OFF)
@@ -266,7 +266,7 @@ irccon_connect(ichnd_t hnd,
 }
 
 int
-irccon_read(ichnd_t hnd, char *(*tok)[MAX_IRCARGS],
+icon_read(iconn hnd, char *(*tok)[MAX_IRCARGS],
     unsigned long to_us)
 {
 	if (!hnd || hnd->state != ON)
@@ -295,7 +295,7 @@ irccon_read(ichnd_t hnd, char *(*tok)[MAX_IRCARGS],
 
 		if (n < 0) { //read error
 			W("(%p) read failed", hnd);
-			irccon_reset(hnd);
+			icon_reset(hnd);
 			return -1;
 		}
 	} while(n == 0);
@@ -312,7 +312,7 @@ irccon_read(ichnd_t hnd, char *(*tok)[MAX_IRCARGS],
 }
 
 bool
-irccon_write(ichnd_t hnd, const char *line)
+icon_write(iconn hnd, const char *line)
 {
 	if (!hnd || hnd->state != ON || !line)
 		return false;
@@ -324,7 +324,7 @@ irccon_write(ichnd_t hnd, const char *line)
 #endif
 	    line) == -1) {
 		W("(%p) failed to write '%s'", hnd, line);
-		irccon_reset(hnd);
+		icon_reset(hnd);
 		return false;
 	}
 
@@ -341,13 +341,13 @@ irccon_write(ichnd_t hnd, const char *line)
 }
 
 bool
-irccon_online(ichnd_t hnd)
+icon_online(iconn hnd)
 {
 	return hnd->state == ON;
 }
 
 bool
-irccon_colon_trail(ichnd_t hnd)
+icon_colon_trail(iconn hnd)
 {
 	if (!hnd || hnd->state != ON)
 		return false;
@@ -356,7 +356,7 @@ irccon_colon_trail(ichnd_t hnd)
 }
 
 bool
-irccon_set_proxy(ichnd_t hnd, const char *host, unsigned short port,
+icon_set_proxy(iconn hnd, const char *host, unsigned short port,
     int ptype)
 {
 	char *n = NULL;
@@ -385,7 +385,7 @@ irccon_set_proxy(ichnd_t hnd, const char *host, unsigned short port,
 }
 
 bool
-irccon_set_server(ichnd_t hnd, const char *host, unsigned short port)
+icon_set_server(iconn hnd, const char *host, unsigned short port)
 {
 	char *n;
 	if (!(n = strdup(host?host:DEF_HOST))) {
@@ -399,7 +399,7 @@ irccon_set_server(ichnd_t hnd, const char *host, unsigned short port)
 }
 
 bool
-irccon_set_ssl(ichnd_t hnd, bool on)
+icon_set_ssl(iconn hnd, bool on)
 {
 #ifndef WITH_SSL
 	W("library was not compiled with SSL support");
@@ -429,37 +429,37 @@ irccon_set_ssl(ichnd_t hnd, bool on)
 }
 
 const char*
-irccon_get_proxy_host(ichnd_t hnd)
+icon_get_proxy_host(iconn hnd)
 {
 	return hnd->phost;
 }
 
 unsigned short
-irccon_get_proxy_port(ichnd_t hnd)
+icon_get_proxy_port(iconn hnd)
 {
 	return hnd->pport;
 }
 
 int
-irccon_get_proxy_type(ichnd_t hnd)
+icon_get_proxy_type(iconn hnd)
 {
 	return hnd->ptype;
 }
 
 const char*
-irccon_get_host(ichnd_t hnd)
+icon_get_host(iconn hnd)
 {
 	return hnd->host;
 }
 
 unsigned short
-irccon_get_port(ichnd_t hnd)
+icon_get_port(iconn hnd)
 {
 	return hnd->port;
 }
 
 bool
-irccon_get_ssl(ichnd_t hnd)
+icon_get_ssl(iconn hnd)
 {
 #ifdef WITH_SSL
 	return hnd->ssl;
@@ -469,7 +469,7 @@ irccon_get_ssl(ichnd_t hnd)
 }
 
 int
-irccon_sockfd(ichnd_t hnd)
+icon_sockfd(iconn hnd)
 {
 	if (!hnd || hnd->state != ON)
 		return -1;

@@ -91,7 +91,7 @@ static struct outline_s {
 	struct outline_s *next;
 } *g_outQ;
 
-static ibhnd_t g_irc;
+static irc g_irc;
 static time_t g_quitat;
 static time_t g_nexthb;
 
@@ -143,7 +143,7 @@ static int
 process_irc(void)
 {
 	char *tok[MAX_IRCARGS];
-	int r = ircbas_read(g_irc, &tok, 100000);
+	int r = irc_read(g_irc, &tok, 100000);
 
 	if (r == -1) {
 		WX("irc read failed");
@@ -166,22 +166,22 @@ tryconnect(void)
 	struct srvlist_s *s = g_srvlist;
 
 	while (s) {
-		ircbas_set_server(g_irc, s->host, s->port);
-		WVX("set server to '%s:%hu'", ircbas_get_host(g_irc),
-		    ircbas_get_port(g_irc));
+		irc_set_server(g_irc, s->host, s->port);
+		WVX("set server to '%s:%hu'", irc_get_host(g_irc),
+		    irc_get_port(g_irc));
 
 		if (s->ssl) {
 #ifdef WITH_SSL
-			if (!ircbas_set_ssl(g_irc, true))
+			if (!irc_set_ssl(g_irc, true))
 				EX("failed to enable SSL");
 #else
 			EX("we haven't been compiled with SSL support...");
 #endif
 			WVX("SSL selected");
 		} else
-			ircbas_set_ssl(g_irc, false);
+			irc_set_ssl(g_irc, false);
 
-		if (ircbas_connect(g_irc))
+		if (irc_connect(g_irc))
 			return true;
 
 		s = s->next;
@@ -203,7 +203,7 @@ life(void)
 
 		r = select2(&canreadstdin, &canreadirc,
 		    stdineof ? -1 : fileno(stdin),
-		    ircbas_online(g_irc) ? ircbas_sockfd(g_irc) : -1,
+		    irc_online(g_irc) ? irc_sockfd(g_irc) : -1,
 		    g_outQ ? 900000 : 300000000ul);
 
 		if (r == -1)
@@ -264,7 +264,7 @@ static void
 do_heartbeat(void)
 {
 	if (g_sett.heartbeat && g_nexthb <= time(NULL)) {
-		iprintf("PING %s", ircbas_myhost(g_irc));
+		iprintf("PING %s", irc_myhost(g_irc));
 		g_nexthb = time(NULL) + g_sett.heartbeat;
 	}
 }
@@ -278,7 +278,7 @@ process_sendq(void)
 
 	if (g_sett.freelines > 0 || nextsend <= time(NULL)) {
 		struct outline_s *ptr = g_outQ;
-		if (!ircbas_write(g_irc, ptr->line)) {
+		if (!irc_write(g_irc, ptr->line)) {
 			WX("write failed");
 			return -1;
 		}
@@ -382,11 +382,11 @@ handle_irc(char *(*tok)[MAX_IRCARGS], size_t ntok)
 	if (strcmp((*tok)[1], "PING") == 0) {
 		char resp[512];
 		snprintf(resp, sizeof resp, "PONG :%s", (*tok)[2]);
-		ircbas_write(g_irc, resp);
+		irc_write(g_irc, resp);
 	} else if (strcmp((*tok)[1], "PRIVMSG") == 0) {
 		char nick[32];
 		pfx_extract_nick(nick, sizeof nick, (*tok)[0]);
-		if (g_sett.ignore_cs && !istrcasecmp(nick, "ChanServ", ircbas_casemap(g_irc)))
+		if (g_sett.ignore_cs && !istrcasecmp(nick, "ChanServ", irc_casemap(g_irc)))
 			return;
 				
 		if (g_sett.trgmode)
@@ -422,16 +422,16 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 	    "vchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNjiI")) != -1;) {
 		switch (ch) {
 		      case 'n':
-			ircbas_set_nick(g_irc, optarg);
+			irc_set_nick(g_irc, optarg);
 		break;case 'u':
-			ircbas_set_uname(g_irc, optarg);
+			irc_set_uname(g_irc, optarg);
 		break;case 'f':
-			ircbas_set_fname(g_irc, optarg);
+			irc_set_fname(g_irc, optarg);
 		break;case 'F':
-			ircbas_set_conflags(g_irc,
+			irc_set_conflags(g_irc,
 			    (unsigned)strtol(optarg, NULL, 10));
 		break;case 'p':
-			ircbas_set_pass(g_irc, optarg);
+			irc_set_pass(g_irc, optarg);
 		break;case 'P':
 			{
 			char typestr[16];
@@ -444,7 +444,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			if ((typeno = pxtypeno(typestr)) == -1)
 				EX("unknown proxy type '%s'", typestr);
 
-			ircbas_set_proxy(g_irc, host, port, typeno);
+			irc_set_proxy(g_irc, host, port, typeno);
 			}
 		break;case 't':
 			WVX("enabled target mode");
@@ -546,13 +546,13 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
 		W("setvbuf stdout");
 
-	g_irc = ircbas_init();
+	g_irc = irc_init();
 
-	ircbas_set_nick(g_irc, "icat");
-	ircbas_set_uname(g_irc, "icat");
-	ircbas_set_fname(g_irc, "irc netcat");
-	ircbas_set_conflags(g_irc, 0);
-	ircbas_regcb_conread(g_irc, conread, 0);
+	irc_set_nick(g_irc, "icat");
+	irc_set_uname(g_irc, "icat");
+	irc_set_fname(g_irc, "irc netcat");
+	irc_set_conflags(g_irc, 0);
+	irc_regcb_conread(g_irc, conread, 0);
 
 	sett->linedelay = DEF_LINEDELAY;
 	sett->freelines = DEF_FREELINES;
@@ -606,7 +606,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	if (!sett->trgmode && strlen(sett->chanlist) == 0)
 		EX("no targetmode and no chans given. i can't fap to that.");
 
-	ircbas_set_connect_timeout(g_irc,
+	irc_set_connect_timeout(g_irc,
 	    g_sett.conto_soft_s*1000000UL, g_sett.conto_hard_s*1000000UL);
 
 	WVX("initialized");
@@ -789,6 +789,6 @@ main(int argc, char **argv)
 	if (!failure)
 		life();
 
-	ircbas_dispose(g_irc);
+	irc_dispose(g_irc);
 	return failure ? EXIT_FAILURE : EXIT_SUCCESS;
 }

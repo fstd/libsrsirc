@@ -11,49 +11,49 @@
 #include <libsrsirc/irc_basic.h>
 #include <libsrsirc/ircdefs.h>
 
-const char *ircbas_myhost(ibhnd_t hnd);
-int ircbas_casemap(ibhnd_t hnd);
-bool ircbas_service(ibhnd_t hnd);
-const char *ircbas_umodes(ibhnd_t hnd);
-const char *ircbas_cmodes(ibhnd_t hnd);
-const char *ircbas_version(ibhnd_t hnd);
-const char *ircbas_lasterror(ibhnd_t hnd);
-const char *ircbas_banmsg(ibhnd_t hnd);
-bool ircbas_banned(ibhnd_t hnd);
-bool ircbas_colon_trail(ibhnd_t hnd);
-int ircbas_sockfd(ibhnd_t hnd);
-const char *const *const *ircbas_logonconv(ibhnd_t hnd);
-const char *const *ircbas_005chanmodes(ibhnd_t hnd);
-const char *const *ircbas_005modepfx(ibhnd_t hnd);
+const char *irc_myhost(irc hnd);
+int irc_casemap(irc hnd);
+bool irc_service(irc hnd);
+const char *irc_umodes(irc hnd);
+const char *irc_cmodes(irc hnd);
+const char *irc_version(irc hnd);
+const char *irc_lasterror(irc hnd);
+const char *irc_banmsg(irc hnd);
+bool irc_banned(irc hnd);
+bool irc_colon_trail(irc hnd);
+int irc_sockfd(irc hnd);
+const char *const *const *irc_logonconv(irc hnd);
+const char *const *irc_005chanmodes(irc hnd);
+const char *const *irc_005modepfx(irc hnd);
 
-bool ircbas_regcb_conread(ibhnd_t hnd, fp_con_read cb, void *tag);
-bool ircbas_regcb_mutnick(ibhnd_t hnd, fp_mut_nick);
+bool irc_regcb_conread(irc hnd, fp_con_read cb, void *tag);
+bool irc_regcb_mutnick(irc hnd, fp_mut_nick);
 
-bool ircbas_set_proxy(ibhnd_t hnd, const char *host, unsigned short port,
+bool irc_set_proxy(irc hnd, const char *host, unsigned short port,
     int ptype);
-bool ircbas_set_conflags(ibhnd_t hnd, unsigned flags);
-bool ircbas_set_service_connect(ibhnd_t hnd, bool enabled);
-bool ircbas_set_service_dist(ibhnd_t hnd, const char *dist);
-bool ircbas_set_service_type(ibhnd_t hnd, long type);
-bool ircbas_set_service_info(ibhnd_t hnd, const char *info);
-bool ircbas_set_connect_timeout(ibhnd_t hnd,
+bool irc_set_conflags(irc hnd, unsigned flags);
+bool irc_set_service_connect(irc hnd, bool enabled);
+bool irc_set_service_dist(irc hnd, const char *dist);
+bool irc_set_service_type(irc hnd, long type);
+bool irc_set_service_info(irc hnd, const char *info);
+bool irc_set_connect_timeout(irc hnd,
     unsigned long soft, unsigned long hard);
-bool ircbas_set_ssl(ibhnd_t hnd, bool on);
+bool irc_set_ssl(irc hnd, bool on);
 
-const char* ircbas_get_host(ibhnd_t hnd);
-unsigned short ircbas_get_port(ibhnd_t hnd);
-const char* ircbas_get_proxy_host(ibhnd_t hnd);
-unsigned short ircbas_get_proxy_port(ibhnd_t hnd);
-int ircbas_get_proxy_type(ibhnd_t hnd);
-const char* ircbas_get_pass(ibhnd_t hnd);
-const char* ircbas_get_uname(ibhnd_t hnd);
-const char* ircbas_get_fname(ibhnd_t hnd);
-unsigned ircbas_get_conflags(ibhnd_t hnd);
-const char* ircbas_get_nick(ibhnd_t hnd);
-bool ircbas_get_service_connect(ibhnd_t hnd);
-const char* ircbas_get_service_dist(ibhnd_t hnd);
-long ircbas_get_service_type(ibhnd_t hnd);
-const char* ircbas_get_service_info(ibhnd_t hnd);
-bool ircbas_get_ssl(ibhnd_t hnd);
+const char* irc_get_host(irc hnd);
+unsigned short irc_get_port(irc hnd);
+const char* irc_get_proxy_host(irc hnd);
+unsigned short irc_get_proxy_port(irc hnd);
+int irc_get_proxy_type(irc hnd);
+const char* irc_get_pass(irc hnd);
+const char* irc_get_uname(irc hnd);
+const char* irc_get_fname(irc hnd);
+unsigned irc_get_conflags(irc hnd);
+const char* irc_get_nick(irc hnd);
+bool irc_get_service_connect(irc hnd);
+const char* irc_get_service_dist(irc hnd);
+long irc_get_service_type(irc hnd);
+const char* irc_get_service_info(irc hnd);
+bool irc_get_ssl(irc hnd);
 
 #endif /* SRS_IRC_EXT_H */

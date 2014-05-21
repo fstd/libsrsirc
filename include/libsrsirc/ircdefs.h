@@ -48,13 +48,13 @@
 #define LOGON_COMPLETE (1<<5)
 
 
-typedef struct ichnd* ichnd_t;
-typedef struct ibhnd* ibhnd_t;
+typedef struct iconn_s* iconn;
+typedef struct irc_s* irc;
 
 typedef bool (*fp_con_read)(char *(*msg)[MAX_IRCARGS], void* tag);
 typedef void (*fp_mut_nick)(char *nick, size_t nick_sz);
 
-struct ichnd
+struct iconn_s
 {
 	char *host;
 	unsigned short port;
@@ -78,7 +78,7 @@ struct ichnd
 };
 
 
-struct ibhnd
+struct irc_s
 {
 	char mynick[MAX_NICK_LEN];
 	char myhost[MAX_HOST_LEN];
@@ -116,7 +116,7 @@ struct ibhnd
 	void *tag_con_read;
 	fp_mut_nick cb_mut_nick;
 
-	struct ichnd *con;
+	struct iconn_s *con;
 };
 
 

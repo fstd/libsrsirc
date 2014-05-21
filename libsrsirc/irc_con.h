@@ -10,29 +10,29 @@
 
 #include <libsrsirc/ircdefs.h>
 
-ichnd_t irccon_init(void);
-bool irccon_reset(ichnd_t hnd);
-bool irccon_dispose(ichnd_t hnd);
-bool irccon_connect(ichnd_t hnd,
+iconn icon_init(void);
+bool icon_reset(iconn hnd);
+bool icon_dispose(iconn hnd);
+bool icon_connect(iconn hnd,
     unsigned long softto_us, unsigned long hardto_us);
-int irccon_read(ichnd_t hnd, char *(*tok)[MAX_IRCARGS],
+int icon_read(iconn hnd, char *(*tok)[MAX_IRCARGS],
     unsigned long to_us);
-bool irccon_write(ichnd_t hnd, const char *line);
-bool irccon_online(ichnd_t hnd);
+bool icon_write(iconn hnd, const char *line);
+bool icon_online(iconn hnd);
 
-const char *irccon_get_host(ichnd_t hnd);
-unsigned short irccon_get_port(ichnd_t hnd);
-const char *irccon_get_proxy_host(ichnd_t hnd);
-unsigned short irccon_get_proxy_port(ichnd_t hnd);
-int irccon_get_proxy_type(ichnd_t hnd);
-bool irccon_set_server(ichnd_t hnd, const char *host, unsigned short port);
-bool irccon_set_proxy(ichnd_t hnd, const char *host, unsigned short port,
+const char *icon_get_host(iconn hnd);
+unsigned short icon_get_port(iconn hnd);
+const char *icon_get_proxy_host(iconn hnd);
+unsigned short icon_get_proxy_port(iconn hnd);
+int icon_get_proxy_type(iconn hnd);
+bool icon_set_server(iconn hnd, const char *host, unsigned short port);
+bool icon_set_proxy(iconn hnd, const char *host, unsigned short port,
     int ptype);
-bool irccon_set_ssl(ichnd_t hnd, bool on);
-bool irccon_get_ssl(ichnd_t hnd);
+bool icon_set_ssl(iconn hnd, bool on);
+bool icon_get_ssl(iconn hnd);
 
 /* TODO: replace these by something less insane */
-bool irccon_colon_trail(ichnd_t hnd);
-int irccon_sockfd(ichnd_t hnd);
+bool icon_colon_trail(iconn hnd);
+int icon_sockfd(iconn hnd);
 
 #endif /* SRS_IRC_CON_H */

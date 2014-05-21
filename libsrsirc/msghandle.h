@@ -10,7 +10,7 @@
 
 #include <libsrsirc/ircdefs.h>
 
-uint8_t handle(ibhnd_t hnd, char *(*msg)[MAX_IRCARGS]);
+uint8_t handle(irc hnd, char *(*msg)[MAX_IRCARGS]);
 
 #endif /* MSGHANDLE_H */
 

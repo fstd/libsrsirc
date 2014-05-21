@@ -20,21 +20,21 @@
 
 #include <libsrsirc/irc_basic.h>
 
-static bool send_logon(ibhnd_t hnd);
+static bool send_logon(irc hnd);
 
-ibhnd_t
-ircbas_init(void)
+irc
+irc_init(void)
 {
-	ichnd_t con;
-	ibhnd_t r = NULL;
+	iconn con;
+	irc r = NULL;
 	int preverrno = errno;
 	errno = 0;
-	if (!(con = irccon_init()))
-		goto ircbas_init_fail;
+	if (!(con = icon_init()))
+		goto irc_init_fail;
 
 
-	if (!(r = malloc(sizeof (*(ibhnd_t)0))))
-		goto ircbas_init_fail;
+	if (!(r = malloc(sizeof (*(irc)0))))
+		goto irc_init_fail;
 
 	r->pass = r->nick = r->uname = r->fname = r->serv_dist
 	    = r->serv_info = r->lasterr = r->banmsg = NULL;
@@ -47,18 +47,18 @@ ircbas_init(void)
 	ic_strNcpy(r->m005modepfx[1], "@+", sizeof r->m005modepfx[1]);
 
 	if (!(r->pass = strdup(DEF_PASS)))
-		goto ircbas_init_fail;
+		goto irc_init_fail;
 
 	size_t len = strlen(DEF_NICK);
 	if (!(r->nick = malloc((len > 9 ? len : 9) + 1)))
-		goto ircbas_init_fail;
+		goto irc_init_fail;
 	strcpy(r->nick, DEF_NICK);
 
 	if ((!(r->uname = strdup(DEF_UNAME)))
 	    || (!(r->fname = strdup(DEF_FNAME)))
 	    || (!(r->serv_dist = strdup(DEF_SERV_DIST)))
 	    || (!(r->serv_info = strdup(DEF_SERV_INFO))))
-		goto ircbas_init_fail;
+		goto irc_init_fail;
 
 	errno = preverrno;
 
@@ -83,7 +83,7 @@ ircbas_init(void)
 	D("(%p) irc_bas initialized (backend: %p)", r, r->con);
 	return r;
 
-ircbas_init_fail:
+irc_init_fail:
 	EE("failed to initialize irc_basic handle");
 	if (r) {
 		free(r->pass);
@@ -96,21 +96,21 @@ ircbas_init_fail:
 	}
 
 	if (con)
-		irccon_dispose(con);
+		icon_dispose(con);
 
 	return NULL;
 }
 
 bool
-ircbas_reset(ibhnd_t hnd)
+irc_reset(irc hnd)
 {
-	return irccon_reset(hnd->con);
+	return icon_reset(hnd->con);
 }
 
 bool
-ircbas_dispose(ibhnd_t hnd)
+irc_dispose(irc hnd)
 {
-	if (!irccon_dispose(hnd->con))
+	if (!icon_dispose(hnd->con))
 		return false;
 
 	free(hnd->lasterr);
@@ -129,7 +129,7 @@ ircbas_dispose(ibhnd_t hnd)
 }
 
 bool
-ircbas_connect(ibhnd_t hnd)
+irc_connect(irc hnd)
 {
 	int64_t tsend = hnd->conto_hard_us ?
 	    ic_timestamp_us() + hnd->conto_hard_us : 0;
@@ -148,7 +148,7 @@ ircbas_connect(ibhnd_t hnd)
 	D("(%p) connecting backend (timeout: %luus (soft), %luus (hard))",
 	    hnd, hnd->conto_soft_us, hnd->conto_hard_us);
 
-	if (!irccon_connect(hnd->con, hnd->conto_soft_us,
+	if (!icon_connect(hnd->con, hnd->conto_soft_us,
 	    hnd->conto_hard_us)) {
 		W("(%p) backend failed to establish connection", hnd);
 		return false;
@@ -157,7 +157,7 @@ ircbas_connect(ibhnd_t hnd)
 	D("(%p) sending IRC logon sequence", hnd);
 	if (!send_logon(hnd)) {
 		W("(%p) failed writing IRC logon sequence", hnd);
-		ircbas_reset(hnd);
+		irc_reset(hnd);
 		return false;
 	}
 
@@ -172,16 +172,16 @@ ircbas_connect(ibhnd_t hnd)
 			trem = tsend - ic_timestamp_us();
 			if (trem <= 0) {
 				W("(%p) timeout waiting for 004", hnd);
-				ircbas_reset(hnd);
+				irc_reset(hnd);
 				return false;
 			}
 		}
 
-		int r = irccon_read(hnd->con, &msg, (unsigned long)trem);
+		int r = icon_read(hnd->con, &msg, (unsigned long)trem);
 
 		if (r < 0) {
-			W("(%p) irccon_read() failed", hnd);
-			ircbas_reset(hnd);
+			W("(%p) icon_read() failed", hnd);
+			irc_reset(hnd);
 			return false;
 		}
 
@@ -191,7 +191,7 @@ ircbas_connect(ibhnd_t hnd)
 		if (hnd->cb_con_read &&
 		    !hnd->cb_con_read(&msg, hnd->tag_con_read)) {
 			W("(%p) further logon prohibited by conread", hnd);
-			ircbas_reset(hnd);
+			irc_reset(hnd);
 			return false;
 		}
 
@@ -217,9 +217,9 @@ ircbas_connect(ibhnd_t hnd)
 				sndumpmsg(line, sizeof line, NULL, &msg);
 				E("(%p) proto error on '%s' (ct:%d, f:%x)",
 				    hnd, line,
-				    irccon_colon_trail(hnd->con), flags);
+				    icon_colon_trail(hnd->con), flags);
 			}
-			ircbas_reset(hnd);
+			irc_reset(hnd);
 			return false;
 		}
 
@@ -232,19 +232,19 @@ ircbas_connect(ibhnd_t hnd)
 }
 
 bool
-ircbas_online(ibhnd_t hnd)
+irc_online(irc hnd)
 {
-	return irccon_online(hnd->con);
+	return icon_online(hnd->con);
 }
 
 int
-ircbas_read(ibhnd_t hnd, char *(*tok)[MAX_IRCARGS], unsigned long to_us)
+irc_read(irc hnd, char *(*tok)[MAX_IRCARGS], unsigned long to_us)
 {
 	//D("(%p) wanna read (timeout: %lu)", hnd, to_us);
 	bool failure = false;
-	int r = irccon_read(hnd->con, tok, to_us);
+	int r = icon_read(hnd->con, tok, to_us);
 	if (r == -1) {
-		W("(%p) irccon_read() failed");
+		W("(%p) icon_read() failed");
 		failure = true;
 	} else if (r != 0) {
 		uint8_t flags = handle(hnd, tok);
@@ -257,65 +257,65 @@ ircbas_read(ibhnd_t hnd, char *(*tok)[MAX_IRCARGS], unsigned long to_us)
 	}
 	
 	if (failure)
-		ircbas_reset(hnd);
+		irc_reset(hnd);
 	//D("(%p) done reading", hnd);
 
 	return failure ? -1 : r;
 }
 
 bool
-ircbas_write(ibhnd_t hnd, const char *line)
+irc_write(irc hnd, const char *line)
 {
-	bool r = irccon_write(hnd->con, line);
+	bool r = icon_write(hnd->con, line);
 
 	if (!r) {
-		W("(%p) irccon_write() failed", hnd);
-		ircbas_reset(hnd);
+		W("(%p) icon_write() failed", hnd);
+		irc_reset(hnd);
 	}
 
 	return r;
 }
 
 const char*
-ircbas_mynick(ibhnd_t hnd)
+irc_mynick(irc hnd)
 {
 	return hnd->mynick;
 }
 
 bool
-ircbas_set_server(ibhnd_t hnd, const char *host, unsigned short port)
+irc_set_server(irc hnd, const char *host, unsigned short port)
 {
-	return irccon_set_server(hnd->con, host, port);
+	return icon_set_server(hnd->con, host, port);
 }
 
 bool
-ircbas_set_pass(ibhnd_t hnd, const char *srvpass)
+irc_set_pass(irc hnd, const char *srvpass)
 {
 	return update_strprop(&hnd->pass, srvpass);
 }
 
 bool
-ircbas_set_uname(ibhnd_t hnd, const char *uname)
+irc_set_uname(irc hnd, const char *uname)
 {
 	return update_strprop(&hnd->uname, uname);
 }
 
 bool
-ircbas_set_fname(ibhnd_t hnd, const char *fname)
+irc_set_fname(irc hnd, const char *fname)
 {
 	return update_strprop(&hnd->fname, fname);
 }
 
 bool
-ircbas_set_nick(ibhnd_t hnd, const char *nick)
+irc_set_nick(irc hnd, const char *nick)
 {
 	return update_strprop(&hnd->nick, nick);
 }
 
 static bool
-send_logon(ibhnd_t hnd)
+send_logon(irc hnd)
 {
-	if (!irccon_online(hnd->con))
+	if (!icon_online(hnd->con))
 		return false;
 	char aBuf[256];
 	char *pBuf = aBuf;
@@ -346,5 +346,5 @@ send_logon(ibhnd_t hnd)
 	if (rem < 0)
 		return false;
 
-	return ircbas_write(hnd, aBuf);
+	return irc_write(hnd, aBuf);
 }
