@@ -220,7 +220,7 @@ parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
 
 	ptr = strchr(ptr, ':');
 	if (ptr) {
-		*port = (uint16_t)strtol(ptr+1, NULL, 10);
+		*port = (uint16_t)strtoul(ptr+1, NULL, 10);
 		*ptr = '\0';
 	} else
 		*port = 0;
@@ -343,8 +343,7 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
 					arg = (i > argcount) ?
 					    ("*") : arr[i++];
 				} else {
-					W("unknown chanmode '%c' (0x%X)\n",
-					    c, (unsigned)c);
+					W("unknown chanmode '%c'", c);
 					ptr++;
 					continue;
 				}
@@ -408,7 +407,7 @@ mutilate_nick(char *nick, size_t nick_sz)
 	} else {
 		char last = nick[len-1];
 		if (last == '9')
-			nick[1 + rand() % (len-1)] = '0' + rand() % 10;
+			nick[rand() % (len-1) + 1u] = '0' + rand() % 10;
 		else if ('0' <= last && last <= '8')
 			nick[len - 1] = last + 1;
 		else

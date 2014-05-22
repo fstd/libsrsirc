@@ -35,10 +35,10 @@ proxy_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 
 	errno = 0;
 	ssize_t n = write(sck, buf, strlen(buf));
-	if (n == -1) {
+	if (n <= -1) {
 		WE(DBGSPEC" write() failed", sck, host, port);
 		return false;
-	} else if (n < (ssize_t)strlen(buf)) {
+	} else if ((size_t)n < strlen(buf)) {
 		W(DBGSPEC" didn't send everything (%zd/%zu)",
 		    sck, host, port, n, strlen(buf));
 		return false;
@@ -103,7 +103,7 @@ proxy_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 	uint32_t ip = inet_addr(host);
 	char name[6];
 	for(size_t i = 0; i < sizeof name - 1; i++)
-		name[i] = (char)(rand() % 26 + 'a');
+		name[i] = rand() % 26 + 'a';
 	name[sizeof name - 1] = '\0';
 
 	if (ip == INADDR_NONE || !port) {
@@ -119,15 +119,15 @@ proxy_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 	memcpy(logon+c, &nport, 2); c += 2;
 	memcpy(logon+c, &ip, 4); c += 4;
 
-	memcpy(logon+c, (unsigned char*)name, strlen(name) + 1);
+	memcpy(logon+c, name, strlen(name) + 1);
 	c += strlen(name) + 1;
 
 	errno = 0;
 	ssize_t n = write(sck, logon, c);
-	if (n == -1) {
+	if (n <= -1) {
 		WE(DBGSPEC" write() failed", sck, host, port);
 		return false;
-	} else if (n < (ssize_t)c) {
+	} else if ((size_t)n < c) {
 		W(DBGSPEC" didn't send everything (%zd/%zu)",
 		    sck, host, port, n, c);
 		return false;
@@ -183,10 +183,10 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 
 	errno = 0;
 	ssize_t n = write(sck, logon, c);
-	if (n == -1) {
+	if (n <= -1) {
 		WE(DBGSPEC" write() failed", sck, host, port);
 		return false;
-	} else if (n < (ssize_t)c) {
+	} else if ((size_t)n < c) {
 		W(DBGSPEC" didn't send everything (%zd/%zu)",
 		    sck, host, port, n, c);
 		return false;
@@ -271,19 +271,19 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 		break;
 	case HOST_DNS:
 		connect[c++] = 3;
-		connect[c++] = strlen(host);
+		connect[c++] = (uint8_t)strlen(host);
 		memcpy(connect+c, host, strlen(host));
-		c += strlen(host);;
+		c += strlen(host);
 	}
 	memcpy(connect+c, &nport, 2); c += 2;
 
 	errno = 0;
 	n = write(sck, connect, c);
-	if (n == -1) {
+	if (n <= -1) {
 		WE(DBGSPEC" write() failed",
 		    sck, host, port);
 		return false;
-	} else if (n < (ssize_t)c) {
+	} else if ((size_t)n < c) {
 		W(DBGSPEC" didn't send everything (%zd/%zu)",
 		    sck, host, port, n, c);
 		return false;
@@ -362,7 +362,7 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 			return false;
 		}
 		if (!c && dns)
-			l += resp[c];
+			l += (uint8_t)resp[c];
 		c += n;
 	}
 

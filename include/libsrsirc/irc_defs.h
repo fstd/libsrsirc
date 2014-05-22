@@ -20,7 +20,7 @@
 #define OVERBUF_SZ 1024
 
 #define DEF_HOST "localhost"
-#define DEF_PORT 6667
+#define DEF_PORT ((uint16_t)6667)
 
 #define DEF_PASS ""
 #define DEF_NICK "srsirc"

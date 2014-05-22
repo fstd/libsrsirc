@@ -308,7 +308,7 @@ send_logon(irc hnd)
 	char aBuf[256];
 	char *pBuf = aBuf;
 	aBuf[0] = '\0';
-	int rem = (int)sizeof aBuf;
+	ssize_t rem = sizeof aBuf;
 	int r;
 
 	if (hnd->pass && strlen(hnd->pass) > 0) {
