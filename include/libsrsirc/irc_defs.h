@@ -106,7 +106,7 @@ struct irc_s
 	char *nick;
 	char *uname;
 	char *fname;
-	unsigned conflags;
+	uint8_t conflags;
 	bool serv_con;
 	char *serv_dist;
 	long serv_type;

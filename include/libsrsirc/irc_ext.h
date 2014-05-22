@@ -30,7 +30,7 @@ bool irc_regcb_conread(irc hnd, fp_con_read cb, void *tag);
 bool irc_regcb_mutnick(irc hnd, fp_mut_nick);
 
 bool irc_set_proxy(irc hnd, const char *host, uint16_t port, int ptype);
-bool irc_set_conflags(irc hnd, unsigned flags);
+bool irc_set_conflags(irc hnd, uint8_t flags);
 bool irc_set_service_connect(irc hnd, bool enabled);
 bool irc_set_service_dist(irc hnd, const char *dist);
 bool irc_set_service_type(irc hnd, long type);
@@ -46,7 +46,7 @@ int irc_get_proxy_type(irc hnd);
 const char* irc_get_pass(irc hnd);
 const char* irc_get_uname(irc hnd);
 const char* irc_get_fname(irc hnd);
-unsigned irc_get_conflags(irc hnd);
+uint8_t irc_get_conflags(irc hnd);
 const char* irc_get_nick(irc hnd);
 bool irc_get_service_connect(irc hnd);
 const char* irc_get_service_dist(irc hnd);

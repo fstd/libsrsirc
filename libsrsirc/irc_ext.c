@@ -119,7 +119,7 @@ irc_set_proxy(irc hnd, const char *host, uint16_t port, int ptype)
 }
 
 bool
-irc_set_conflags(irc hnd, unsigned flags)
+irc_set_conflags(irc hnd, uint8_t flags)
 {
 	hnd->conflags = flags;
 	return true;
@@ -213,7 +213,7 @@ irc_get_fname(irc hnd)
 	return hnd->fname;
 }
 
-unsigned
+uint8_t
 irc_get_conflags(irc hnd)
 {
 	return hnd->conflags;
