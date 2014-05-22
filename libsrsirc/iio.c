@@ -34,7 +34,6 @@
 #define ISDELIM(C) ((C)=='\n' || (C) == '\r')
 
 /* local helpers */
-static void hexdump(const void *pAddressIn, size_t  zSize, const char *name);
 static int tokenize(char *buf, tokarr *tok);
 static char *skip2lws(char *s, bool tab_is_ws); //fwd ptr until whitespace
 static int writeall(int sck,
@@ -79,8 +78,8 @@ ircio_read_ex(int sck,
 		workbuf[0] = '\0';
 	} else {
 		V("first ten of *mehptr: '%.10s'", *mehptr);
-		if (ircdbg_getlvl() == LOG_VIVI)
-			hexdump(workbuf, workbuf_sz, "workbuf");
+		/*if (ircdbg_getlvl() == LOG_VIVI)
+			hexdump(workbuf, workbuf_sz, "workbuf");*/
 	}
 
 	while(ISDELIM(**mehptr)) {
@@ -103,18 +102,18 @@ ircio_read_ex(int sck,
 			    "(dist: %zu), shifting %zu bytes to the start",
 			    mehdist, len);
 
-			if (ircdbg_getlvl() == LOG_VIVI)
+			/*if (ircdbg_getlvl() == LOG_VIVI)
 				hexdump(workbuf, workbuf_sz,
-				    "workbuf before shift");
+				    "workbuf before shift");*/
 			memmove(workbuf, *mehptr, len);
 			V("zeroing %zu bytes", workbuf_sz - len);
 			memset(workbuf + len, 0, workbuf_sz - len);
 			*mehptr = workbuf;
 			end -= mehdist;
 			V("end is %p (%"PRIu8" (%c))", end, *end, *end);
-			if (ircdbg_getlvl() == LOG_VIVI)
+			/*if (ircdbg_getlvl() == LOG_VIVI)
 				hexdump(workbuf, workbuf_sz,
-				    "workbuf after shift");
+				    "workbuf after shift");*/
 		}
 
 		for(;;) {
@@ -200,8 +199,8 @@ ircio_read_ex(int sck,
 			V("no delim found so far");
 		}
 	}
-	if (ircdbg_getlvl() == LOG_VIVI)
-		hexdump(workbuf, workbuf_sz, "workbuf aftr both loops");
+	/*if (ircdbg_getlvl() == LOG_VIVI)
+		hexdump(workbuf, workbuf_sz, "workbuf aftr both loops");*/
 
 	assert (*end);
 	size_t len = (size_t)(end - *mehptr);
@@ -361,57 +360,3 @@ skip2lws(char *s, bool tab_is_ws)
 		s++;
 	return *s ? s : NULL;
 }
-
-/*not-quite-ravomavain's h4xdump*/
-static void hexdump(const void *pAddressIn, size_t zSize, const char *name)
-{
-	char szBuf[100];
-	size_t lIndent = 1;
-	size_t lOutLen, lIndex, lIndex2, lOutLen2;
-	size_t lRelPos;
-	struct { char *pData; size_t zSize; } buf;
-	unsigned char *pTmp,ucTmp;
-	unsigned char *pAddress = (unsigned char *)pAddressIn;
-
-	buf.pData   = (char *)pAddress;
-	buf.zSize   = zSize;
-	V("hexdump '%s'", name);
-
-	while (buf.zSize > 0) {
-		pTmp = (unsigned char *)buf.pData;
-		lOutLen = (int)buf.zSize;
-		if (lOutLen > 16)
-			lOutLen = 16;
-
-		/* create a 64-character formatted output line: */
-		sprintf(szBuf, " |                            "
-		    "                      "
-		    "    %08"PRIX64, (uint64_t)(pTmp-pAddress));
-		lOutLen2 = lOutLen;
-
-		for(lIndex = 1+lIndent, lIndex2 = 53-15+lIndent, lRelPos=0;
-		    lOutLen2;
-		    lOutLen2--, lIndex += 2, lIndex2++) {
-			ucTmp = *pTmp++;
-
-			sprintf(szBuf + lIndex, "%02"PRIX16" ", (uint16_t)ucTmp);
-			if(!isprint(ucTmp))  ucTmp = '.'; /*nonprintable*/
-			szBuf[lIndex2] = ucTmp;
-
-			if (!(++lRelPos & 3)) /*extra blank after 4 bytes*/
-			{  lIndex++; szBuf[lIndex+2] = ' '; }
-		}
-
-		if (!(lRelPos & 3)) lIndex--;
-
-		szBuf[lIndex  ]   = '|';
-		szBuf[lIndex+1]   = ' ';
-
-		V("%s", szBuf);
-
-		buf.pData   += lOutLen;
-		buf.zSize   -= lOutLen;
-	}
-	V("end of hexdump '%s'", name);
-}
-
