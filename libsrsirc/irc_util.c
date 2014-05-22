@@ -116,8 +116,8 @@ istrncasecmp(const char *n1, const char *n2, size_t len, int casemap)
 		return 0;
 
 	while (*n1 && *n2) {
-		int c1 = ichartolower(*n1, casemap);
-		int c2 = ichartolower(*n2, casemap);
+		char c1 = ichartolower(*n1, casemap);
+		char c2 = ichartolower(*n2, casemap);
 		if (c1 != c2)
 			return c1 - c2;
 
@@ -133,8 +133,8 @@ istrncasecmp(const char *n1, const char *n2, size_t len, int casemap)
 	return 0;
 }
 
-int
-ichartolower(int c, int casemap)
+char
+ichartolower(char c, int casemap)
 {
 	int rangeinc;
 	switch (casemap) {
