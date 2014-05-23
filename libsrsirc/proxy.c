@@ -9,6 +9,7 @@
 #include <ctype.h>
 
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <unistd.h>
 #include <inttypes.h>
 
