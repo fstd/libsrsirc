@@ -111,7 +111,6 @@ proxy_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 		return false;
 	}
 
-
 	size_t c = 0;
 	logon[c++] = 4;
 	logon[c++] = 1;
