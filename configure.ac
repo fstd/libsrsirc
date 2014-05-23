@@ -58,7 +58,7 @@ AC_TYPE_UINT64_T
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_STRERROR_R
-AC_CHECK_FUNCS([atexit getaddrinfo gettimeofday memmove memset select socket strcasecmp strchr strdup strncasecmp strstr strtol strtoul strtoull])
+AC_CHECK_FUNCS([atexit getaddrinfo getline gettimeofday memmove memset select socket strcasecmp strchr strdup strncasecmp strstr strtol strtoul strtoull])
 
 AC_CONFIG_FILES([Makefile
 		 include/Makefile
