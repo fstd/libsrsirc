@@ -219,7 +219,6 @@ int ic_consocket(const char *host, uint16_t port,
 		struct timeval tout;
 		tout.tv_sec = 0;
 		tout.tv_usec = 0;
-		uint64_t trem = 0;
 
 		bool success = false;
 
@@ -227,18 +226,18 @@ int ic_consocket(const char *host, uint16_t port,
 			fd_set fds;
 			FD_ZERO(&fds);
 			FD_SET(sck, &fds);
+			uint64_t strem = 0;
+			uint64_t htrem = 0;
 
-			if (hardtsend || softtsend) {
-				trem = hardtsend < softtsend
-				    ? hardtsend : softtsend - ic_timestamp_us();
-
-				if (trem <= 0) {
-					W("timeout reached while in 3WHS");
-					break;
-				}
-
-				ic_tconv(&tout, &trem, false);
+			if (ic_check_timeout(hardtsend, &htrem) 
+			    || ic_check_timeout(softtsend, &strem)) {
+				W("timeout reached while in 3WHS");
+				break;
 			}
+
+			if (hardtsend || softtsend)
+				ic_tconv(&tout,
+				    htrem < strem ? &htrem : &strem, false);
 
 			errno = 0;
 			r = select(sck+1, NULL, &fds, NULL,
@@ -317,4 +316,26 @@ update_strprop(char **field, const char *val)
 	*field = n;
 
 	return true;
+}
+
+bool
+ic_check_timeout(uint64_t tsend, uint64_t *trem)
+{
+	if (!tsend) {
+		if (trem)
+			*trem = 0;
+		return false;
+	}
+
+	uint64_t now = ic_timestamp_us();
+	if (now >= tsend) {
+		if (trem)
+			*trem = 0;
+		return true;
+	}
+
+	if (trem)
+		*trem = tsend - now;
+
+	return false;
 }

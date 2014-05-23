@@ -58,7 +58,7 @@ proxy_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 				W(DBGSPEC" unexpected EOF",
 				    sck, host, port);
 			else if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				if (tsend && ic_timestamp_us() < tsend) {
+				if (!ic_check_timeout(tsend, NULL)) {
 					usleep(10000);
 					continue;
 				}
@@ -142,7 +142,7 @@ proxy_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 		n = read(sck, &resp+c, 8-c);
 		if (n <= 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				if (tsend && ic_timestamp_us() < tsend) {
+				if (!ic_check_timeout(tsend, NULL)) {
 					usleep(10000);
 					continue;
 				}
@@ -201,7 +201,7 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 		n = read(sck, &resp+c, 2-c);
 		if (n <= 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				if (tsend && ic_timestamp_us() < tsend) {
+				if (!ic_check_timeout(tsend, NULL)) {
 					usleep(10000);
 					continue;
 				}
@@ -298,7 +298,7 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 		n = read(sck, resp + c, l - c);
 		if (n <= 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				if (tsend && ic_timestamp_us() < tsend) {
+				if (!ic_check_timeout(tsend, NULL)) {
 					usleep(10000);
 					continue;
 				}
@@ -347,7 +347,7 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 		n = read(sck, resp + c, c ? l - c : 1);
 		if (n <= 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				if (tsend && ic_timestamp_us() < tsend) {
+				if (!ic_check_timeout(tsend, NULL)) {
 					usleep(10000);
 					continue;
 				}

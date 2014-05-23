@@ -161,7 +161,7 @@ irc_connect(irc hnd)
 	uint64_t trem = 0;
 	int r;
 	do {
-		if (tsend && (trem = tsend - ic_timestamp_us()) <= 0) {
+		if (ic_check_timeout(tsend, &trem)) {
 			W("(%p) timeout waiting for 004", hnd);
 			goto irc_connect_fail;
 		}

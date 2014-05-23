@@ -192,14 +192,11 @@ icon_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 
 	uint64_t trem = 0;
 	if (hnd->ptype != -1) {
-		if (tsend) {
-			trem = tsend - ic_timestamp_us();
-			if (trem <= 0) {
-				W("(%p) timeout", hnd);
-				close(sck);
-				hnd->sck = -1;
-				return false;
-			}
+		if (ic_check_timeout(tsend, &trem)) {
+			W("(%p) timeout", hnd);
+			close(sck);
+			hnd->sck = -1;
+			return false;
 		}
 
 		bool ok = false;
@@ -278,19 +275,16 @@ icon_read(iconn hnd, tokarr *tok, uint64_t to_us)
 	/* read a line, ignoring empty lines */
 	do {
 		uint64_t trem;
-		if (tsend) {
-			trem = tsend - ic_timestamp_us();
-			if (trem <= 0) {
-				V("(%p) timeout hit", hnd);
-				return 0;
-			}
+		if (ic_check_timeout(tsend, &trem)) {
+			V("(%p) timeout hit", hnd);
+			return 0;
 		}
 		n = ircio_read_ex(hnd->sck,
 #ifdef WITH_SSL
 		    hnd->shnd,
 #endif
 		    hnd->linebuf, LINEBUF_SZ, hnd->overbuf, OVERBUF_SZ,
-		    &hnd->mehptr, tok, tsend ? trem : 0ul);
+		    &hnd->mehptr, tok, trem);
 
 		if (n < 0) { //read error
 			W("(%p) read failed", hnd);

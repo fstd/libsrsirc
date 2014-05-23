@@ -34,6 +34,7 @@ char* ic_strmdup(const char *str, size_t minlen);
 */
 
 uint64_t ic_timestamp_us(void);
+bool ic_check_timeout(uint64_t tsend, uint64_t *trem);
 void ic_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 
 int ic_consocket(const char *host, uint16_t port,

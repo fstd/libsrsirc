@@ -8,6 +8,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <limits.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdarg.h>
@@ -107,6 +109,8 @@ static int select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, uint64_t to_us);
 static void handle_stdin(char *line);
 static void handle_irc(tokarr *tok);
 static bool ismychan(const char *chan);
+static unsigned strtou8_cap(const char *nptr, char **endptr, int base);
+static uint64_t strtou64(const char *nptr, char **endptr, int base);
 static void process_args(int *argc, char ***argv, struct settings_s *sett);
 static void init(int *argc, char ***argv, struct settings_s *sett);
 static int iprintf(const char *fmt, ...);
@@ -116,6 +120,7 @@ static void tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 static bool isdigitstr(const char *str);
 static bool conread(tokarr *msg, void *tag);
 static void usage(FILE *str, const char *a0, int ec, bool sh);
+static void msleep(uint64_t millisecs);
 int main(int argc, char **argv);
 
 
@@ -420,6 +425,24 @@ ismychan(const char *chan)
 	snprintf(search, sizeof search, ",%s,", chan);
 
 	return strstr(chans, search);
+}
+
+
+static unsigned
+strtou8_cap(const char *nptr, char **endptr, int base)
+{
+	unsigned long l = strtoul(nptr, endptr, base);
+	if (l > UINT8_MAX)
+		l = UINT8_MAX;
+	
+	return (uint8_t)l;
+}
+
+static uint64_t
+strtou64(const char *nptr, char **endptr, int base)
+{
+	uint64_t l = strtoull(nptr, endptr, base);
+	return (uint64_t)l;
 }
 
 
@@ -806,6 +829,21 @@ cleanup(void)
 		n = next;
 	}
 
+}
+
+static void
+msleep(uint64_t millisecs)
+{
+	WVX("sleeping %"PRIu64" ms", millisecs);
+	uint64_t secs = millisecs / 1000u;
+	if (secs > INT_MAX)
+		secs = INT_MAX; //eh.. yeah.
+
+	sleep((int)secs);
+
+	useconds_t us = (millisecs % 1000u) * 1000u;
+	if (us)
+		usleep(us);
 }
 
 int

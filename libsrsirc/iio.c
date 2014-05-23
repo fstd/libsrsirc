@@ -123,19 +123,13 @@ ircio_read_ex(int sck,
 			}
 			for(;;) {
 				struct timeval tout;
-				if (tsend) {
-					uint64_t trem =
-					    tsend - ic_timestamp_us();
-
-					if (trem <= 0) {
-						V("(sck:%d) timeout hit"
-						    " while selecting",
-						    sck);
-						return 0;
-					}
-
+				uint64_t trem = 0;
+				if (ic_check_timeout(tsend, &trem)) {
+					V("(sck:%d) timeout in select", sck);
+					return 0;
+				} else if (tsend)
 					ic_tconv(&tout, &trem, false);
-				}
+
 				fd_set fds;
 				FD_ZERO(&fds);
 				FD_SET(sck, &fds);
