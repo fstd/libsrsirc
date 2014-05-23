@@ -42,6 +42,11 @@ if test "x$want_ssl" = "xyes"; then
 #	])
 fi
 
+if test "$(uname)" = "FreeBSD"; then
+AC_DEFINE([_WITH_GETLINE], [1], [FreeBSD needs this to be defined])
+:
+fi
+
 AC_HEADER_STDBOOL
 
 # Checks for typedefs, structures, and compiler characteristics.
