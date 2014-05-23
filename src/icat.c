@@ -75,7 +75,6 @@ static struct settings_s {
 	bool nojoin;
 	bool ignore_pm;
 	bool ignore_cs;
-	//bool fancy;
 	bool notices;
 	int verb;
 	char chanlist[MAX_CHANLIST];
