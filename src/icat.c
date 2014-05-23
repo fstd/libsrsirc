@@ -30,13 +30,13 @@
 #define MAX_CHANS 32
 #define MAX_CHANLIST 512
 
-#define DEF_CONTO_SOFT_S 15
-#define DEF_CONTO_HARD_S 120
-#define DEF_LINEDELAY 2
-#define DEF_FREELINES 0
-#define DEF_WAITQUIT_S 3
-#define DEF_CONFAILWAIT_S 10
-#define DEF_HEARBEAT_S 0
+#define DEF_CONTO_SOFT_MS 15000u
+#define DEF_CONTO_HARD_MS 120000u
+#define DEF_LINEDELAY_MS 2000u
+#define DEF_FREELINES 0u
+#define DEF_WAITQUIT_MS 3000u
+#define DEF_CONFAILWAIT_MS 10000u
+#define DEF_HEARBEAT_MS 0
 #define DEF_IGNORE_PM true
 #define DEF_IGNORE_CHANSERV true
 #define DEF_VERB 1
@@ -62,14 +62,14 @@
 
 static struct settings_s {
 	bool trgmode;
-	unsigned conto_soft_s;
-	unsigned conto_hard_s;
-	int linedelay;
-	int freelines;
-	int waitquit_s;
+	uint64_t conto_soft_us;
+	uint64_t conto_hard_us;
+	uint64_t linedelay;
+	unsigned freelines;
+	uint64_t waitquit_us;
 	bool keeptrying;
-	int confailwait_s;
-	int heartbeat;
+	uint64_t confailwait_us;
+	uint16_t heartbeat_us;
 	bool reconnect;
 	bool flush;
 	bool nojoin;
@@ -95,8 +95,8 @@ static struct outline_s {
 } *g_outQ;
 
 static irc g_irc;
-static time_t g_quitat;
-static time_t g_nexthb;
+static uint64_t g_quitat;
+static uint64_t g_nexthb;
 
 
 static int process_stdin(void);
@@ -120,7 +120,7 @@ static void tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 static bool isdigitstr(const char *str);
 static bool conread(tokarr *msg, void *tag);
 static void usage(FILE *str, const char *a0, int ec, bool sh);
-static void msleep(uint64_t millisecs);
+static void sleep_us(uint64_t us);
 int main(int argc, char **argv);
 
 
@@ -212,14 +212,14 @@ life(void)
 	time_t quitat = 0;
 	int r;
 	bool stdineof = false;
-	g_nexthb = time(NULL) + g_sett.heartbeat;
+	g_nexthb = timestamp_us() + g_sett.heartbeat_us;
 	for(;;) {
 		bool canreadstdin = false, canreadirc = false;
 
 		r = select2(&canreadstdin, &canreadirc,
 		    stdineof ? -1 : fileno(stdin),
 		    irc_online(g_irc) ? irc_sockfd(g_irc) : -1,
-		    g_outQ ? 900000 : 300000000ul);
+		    g_outQ ? g_sett.linedelay : 300000000u);
 
 		if (r == -1)
 			E("select failed");
@@ -250,10 +250,7 @@ life(void)
 			if (!stdineof && g_sett.reconnect) {
 				WVX("reconnecting");
 				while (!tryconnect()) {
-					WVX("sleeping %d sec",
-					    g_sett.confailwait_s);
-					if (g_sett.confailwait_s > 0)
-						sleep(g_sett.confailwait_s);
+					sleep_us(g_sett.confailwait_us);
 					continue;
 				}
 				WVX("recommencing operation");
@@ -262,7 +259,7 @@ life(void)
 
 			break;
 		} else if (r > 0)
-			g_nexthb = time(NULL) + g_sett.heartbeat;
+			g_nexthb = timestamp_us() + g_sett.heartbeat_us;
 
 		if (quitat && time(NULL) > quitat) {
 			WX("forcefully terminating irc connection");
@@ -276,20 +273,20 @@ life(void)
 static void
 do_heartbeat(void)
 {
-	if (g_sett.heartbeat && g_nexthb <= time(NULL)) {
+	if (g_sett.heartbeat_us && g_nexthb <= timestamp_us()) {
 		iprintf("PING %s", irc_myhost(g_irc));
-		g_nexthb = time(NULL) + g_sett.heartbeat;
+		g_nexthb = timestamp_us() + g_sett.heartbeat_us;
 	}
 }
 
 static int
 process_sendq(void)
 {
-	static time_t nextsend = 0;
+	static uint64_t nextsend = 0;
 	if (!g_outQ)
 		return 0;
 
-	if (g_sett.freelines > 0 || nextsend <= time(NULL)) {
+	if (g_sett.freelines > 0 || nextsend <= timestamp_us()) {
 		struct outline_s *ptr = g_outQ;
 		if (!irc_write(g_irc, ptr->line)) {
 			WX("write failed");
@@ -297,12 +294,12 @@ process_sendq(void)
 		}
 		g_outQ = g_outQ->next;
 		if (strncasecmp(ptr->line, "QUIT", 4) == 0)
-			g_quitat = time(NULL) + g_sett.waitquit_s+1;
+			g_quitat = timestamp_us() + g_sett.waitquit_us;
 		free(ptr->line);
 		free(ptr);
 		if (g_sett.freelines)
 			g_sett.freelines--;
-		nextsend = time(NULL) + g_sett.linedelay;
+		nextsend = timestamp_us() + g_sett.linedelay;
 
 		return 1;
 	}
@@ -461,8 +458,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 		break;case 'f':
 			irc_set_fname(g_irc, optarg);
 		break;case 'F':
-			irc_set_conflags(g_irc,
-			    (unsigned)strtol(optarg, NULL, 10));
+			irc_set_conflags(g_irc, strtou8_cap(optarg, NULL, 10));
 		break;case 'p':
 			irc_set_pass(g_irc, optarg);
 		break;case 'P':
@@ -490,15 +486,15 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 
 			char *ptr = strchr(arg, ':');
 			if (!ptr)
-				sett->conto_hard_s = (unsigned)strtoul(arg, NULL, 10);
+				sett->conto_hard_us = strtou64(arg, NULL, 10) * 1000ul;
 			else {
 				*ptr = '\0';
-				sett->conto_hard_s = (unsigned)strtoul(arg, NULL, 10);
-				sett->conto_soft_s = (unsigned)strtoul(ptr+1, NULL, 10);
+				sett->conto_hard_us = strtou64(arg, NULL, 10) * 1000ul;
+				sett->conto_soft_us = strtou64(ptr+1, NULL, 10) * 1000ul;
 			}
 
-			WVX("set connect timeout to %us (soft), %us (hard)s",
-			    sett->conto_soft_s, sett->conto_hard_s);
+			WVX("set connect timeout to %"PRIu64"ms (soft), %"PRIu64"ms (hard)",
+			    sett->conto_soft_us / 1000u, sett->conto_hard_us / 1000u);
 
 			free(arg);
 			}
@@ -529,20 +525,20 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			free(str);
 			}
 		break;case 'l':
-			sett->linedelay = (int)strtol(optarg, NULL, 10);
-			WVX("set linedelay to %d sec/line", sett->linedelay);
+			sett->linedelay = strtou64(optarg, NULL, 10) * 1000u;
+			WVX("set linedelay to %"PRIu64" ms/line", sett->linedelay / 1000u);
 		break;case 'L':
-			sett->freelines = (int)strtol(optarg, NULL, 10);
+			sett->freelines = (unsigned)strtoul(optarg, NULL, 10);
 			WVX("set freelines to %d", sett->freelines);
 		break;case 'w':
-			sett->waitquit_s = (int)strtol(optarg, NULL, 10);
-			WVX("set waitquit time to %d sec", sett->waitquit_s);
+			sett->waitquit_us = strtou64(optarg, NULL, 10) * 1000u;
+			WVX("set waitquit time to %"PRIu64" ms", sett->waitquit_us / 1000u);
 		break;case 'k':
 			sett->keeptrying = true;
 		break;case 'W':
-			sett->confailwait_s = (int)strtol(optarg, NULL, 10);
+			sett->confailwait_us = strtou64(optarg, NULL, 10) * 1000u;
 		break;case 'b':
-			sett->heartbeat = (int)strtol(optarg, NULL, 10);
+			sett->heartbeat_us = strtou64(optarg, NULL, 10) * 1000u;
 		break;case 'r':
 			sett->reconnect = true;
 		break;case 'S':
@@ -589,14 +585,14 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	irc_set_conflags(g_irc, 0);
 	irc_regcb_conread(g_irc, conread, 0);
 
-	sett->linedelay = DEF_LINEDELAY;
+	sett->linedelay = DEF_LINEDELAY_MS*1000u;
 	sett->freelines = DEF_FREELINES;
-	sett->waitquit_s = DEF_WAITQUIT_S;
-	sett->confailwait_s = DEF_CONFAILWAIT_S;
-	sett->heartbeat = DEF_HEARBEAT_S;
+	sett->waitquit_us = DEF_WAITQUIT_MS*1000u;
+	sett->confailwait_us = DEF_CONFAILWAIT_MS*1000u;
+	sett->heartbeat_us = DEF_HEARBEAT_MS*1000u;
 	sett->verb = DEF_VERB;
-	sett->conto_soft_s = DEF_CONTO_SOFT_S;
-	sett->conto_hard_s = DEF_CONTO_HARD_S;
+	sett->conto_soft_us = DEF_CONTO_SOFT_MS*1000u;
+	sett->conto_hard_us = DEF_CONTO_HARD_MS*1000u;
 	sett->ignore_pm = DEF_IGNORE_PM;
 	sett->ignore_cs = DEF_IGNORE_CHANSERV;
 
@@ -641,8 +637,8 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	if (!sett->trgmode && strlen(sett->chanlist) == 0)
 		EX("no targetmode and no chans given. i can't fap to that.");
 
-	irc_set_connect_timeout(g_irc,
-	    g_sett.conto_soft_s*1000000UL, g_sett.conto_hard_s*1000000UL);
+	irc_set_connect_timeout(g_irc, g_sett.conto_soft_us,
+	    g_sett.conto_hard_us);
 
 	WVX("initialized");
 }
@@ -709,10 +705,10 @@ static void
 tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts)
 {
 	if (tv_to_ts)
-		*ts = (uint64_t)tv->tv_sec * 1000000 + tv->tv_usec;
+		*ts = (uint64_t)tv->tv_sec * 1000000u + tv->tv_usec;
 	else {
-		tv->tv_sec = *ts / 1000000;
-		tv->tv_usec = *ts % 1000000;
+		tv->tv_sec = *ts / 1000000u;
+		tv->tv_usec = *ts % 1000000u;
 	}
 }
 
@@ -777,21 +773,21 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	LH("\t-u <str>: Use <str> as (IRC) username/ident");
 	LH("\t-f <str>: Use <str> as (IRC) fullname");
 	LH("\t-F <int>: Specify USER flags. 0=None, 8=usermode +i");
-	LH("\t-W <int>: Wait <int> seconds between attempts to connect."
-	    "[def: "XSTR(DEF_CONFAILWAIT_S)"]");
-	LH("\t-b <int>: Send heart beat PING every <int> seconds."
-	    "[def: "XSTR(DEF_HEARBEAT_S)"]");
+	LH("\t-W <int>: Wait <int> ms between attempts to connect."
+	    "[def: "XSTR(DEF_CONFAILWAIT_MS)"]");
+	LH("\t-b <int>: Send heart beat PING every <int> ms."
+	    "[def: "XSTR(DEF_HEARBEAT_MS)"]");
 	BH("\t-p <str>: Use <str> as server password");
 	fprintf(str, "\t-P <pxspec>: Use <pxspec> as proxy. "
 	    "See %s for format\n", sh?"man page":"below");
-	BH("\t-T <int>[:<int>]: Connect/Logon hard[:soft]-timeout in seconds."
-	    "[def: "XSTR(DEF_CONTO_HARD_S)":"XSTR(DEF_CONTO_SOFT_S)"]");
+	BH("\t-T <int>[:<int>]: Connect/Logon hard[:soft]-timeout in ms."
+	    "[def: "XSTR(DEF_CONTO_HARD_MS)":"XSTR(DEF_CONTO_SOFT_MS)"]");
 	fprintf(str, "\t-C <chanlst>: List of chans to join + keys. "
 	    "See %s for format\n", sh?"man page":"below");
-	BH("\t-w <int>: Secs to wait for server disconnect after QUIT."
-	    "[def: "XSTR(DEF_WAITQUIT_S)"]");
-	BH("\t-l <int>: Wait <int> sec between sending messages to IRC."
-	    "[def: "XSTR(DEF_LINEDELAY)"]");
+	BH("\t-w <int>: wait <int> ms for server disconnect after QUIT."
+	    "[def: "XSTR(DEF_WAITQUIT_MS)"]");
+	BH("\t-l <int>: Wait <int> ms between sending messages to IRC."
+	    "[def: "XSTR(DEF_LINEDELAY_MS)"]");
 	BH("\t-L <int>: Number of 'first free' lines to send unthrottled."
 	    "[def: "XSTR(DEF_FREELINES)"]");
 	LH("");
@@ -832,18 +828,18 @@ cleanup(void)
 }
 
 static void
-msleep(uint64_t millisecs)
+sleep_us(uint64_t us)
 {
-	WVX("sleeping %"PRIu64" ms", millisecs);
-	uint64_t secs = millisecs / 1000u;
+	WVX("sleeping %"PRIu64" us", us);
+	uint64_t secs = us / 1000000u;
 	if (secs > INT_MAX)
 		secs = INT_MAX; //eh.. yeah.
 
 	sleep((int)secs);
 
-	useconds_t us = (millisecs % 1000u) * 1000u;
-	if (us)
-		usleep(us);
+	useconds_t u = us % 1000000u;
+	if (u)
+		usleep(u);
 }
 
 int
@@ -862,9 +858,7 @@ main(int argc, char **argv)
 			    g_sett.keeptrying ?"retrying":"giving up");
 
 			if (g_sett.keeptrying) {
-				WVX("sleeping %d sec", g_sett.confailwait_s);
-				if (g_sett.confailwait_s > 0)
-					sleep(g_sett.confailwait_s);
+				sleep_us(g_sett.confailwait_us);
 				continue;
 			}
 			failure = true;
