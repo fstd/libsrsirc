@@ -15,21 +15,7 @@
 
 #include <libsrsirc/irc_defs.h>
 
-/* overview
-ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
-    size_t workbuf_sz, char **mehptr, char **tok, size_t tok_len,
-    unsigned long to_us)
-
-int ircio_write(int sck, const char *line);
-*/
-
 /* ircio_read - attempt to read an IRC protocol message from socket
- *
- * This function originally was meant to be suitable as both, irc_con's
- *   backend, and directly usable.  It used to read bytewise.
- * Nowadays, we read blockwise for performance and scalability reasons,
- *   which introduced a handful obscure context parameters.  I don't really
- *   remember how it works, too, but it works sort of well.
  *
  * Blocks until there is some actual data available, or a timeout is
  *   reached. However, said data *can*, for broken ircds, or unit tests,
@@ -37,14 +23,9 @@ int ircio_write(int sck, const char *line);
  *   is made to read data, and 0 is returned.
  *
  * params:
- *   int ``sck'' - socket to read from
- *   char* ``tokbuf'' - data is read and tokenized here. access via ``tok''
- *   size_t ``tokbuf_sz'' - size of ``tokbuf'', in chars
- *   char* ``workbuf'' - context buffer for pending/incomplete data
- *   size_t ``workbuf_sz'' - size of ``workbuf'', in chars
- *   char** ``mehptr'' - obscure context pointer
- *   char** ``tok'' - pointer to array of char* pointing to tokens
- *   size_t ``tok_len'' - no of elems in array pointed to by ``tok''; >= 2.
+ *   sckhld ``sh'' - socket "holder" structure
+ *   struct readctx ``ctx'' - read context structure
+ *   tokarr* ``tok'' - pointer to array of char* pointing to tokens
  *   unsigned long ``to_us'' - timeout in microseconds
  *
  * return:
@@ -67,45 +48,27 @@ int ircio_write(int sck, const char *line);
  *
  *   The Examples show some possible combinations of prefix, command and a
  *     varying number of arguments.
- *   Such a line is first being read into ''tokbuf``, possibly being
- *     truncated if there is not enough space available in order to hold
- *     the entire line.
- *   After a full line was read, it is tokenized according to the IRC
- *     protocol, by zeroing out all whitespace which acts as a delimiter.
- *   Pointers to the extracted tokens are finally stored in ''tok``,
+ *   Pointers to the extracted tokens are stored in ''tok``,
  *     according to the following table (suppose a message with or without
- *     prefix, with n args (n >= 0): (furthermore we assume ``tok_len'' > n
- *     for this example)
+ *     prefix, with n args (n >= 0):
  *     (*tok)[0] := <prefix w/o leading colon> or NULL if there was no pfx
  *     (*tok)[1] := <cmd>
  *     (*tok)[2] := <arg_0>
  *     (*tok)[3] := <arg_1>
  *     ...
- *     (*tok)[n-1] := <arg_n-1> (may contain whitespace)
- *     (*tok)[n] := NULL;
- *     ...
- *     (*tok)[``tok_len'' - 1] := NULL;
+ *     (*tok)[2+n-1] := <arg_n-1> (may contain whitespace)
+ *     (*tok)[2+n] := NULL;
  *
  *  As hopefully becomes visible, the number of arguments can be determined
- *    by looking at the index of the first element to hold a NULL pointer
- *
+ *    by looking at the index of the first element to hold a NULL pointer,
+ *    starting with index 1.
+ *    
  *  Note protocol parsing is not as strict as it could be, i.e. instead of
  *    requiring a single space to delimit parameters, any sequence of
  *    whitespace will do, empty lines are ignored, leading and trailing
- *    whitespace is stripped away (except for trail argument), etc.
+ *    whitespace may be stripped away (except for trail argument), etc.
  */
-int ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
-    size_t workbuf_sz, char **mehptr, tokarr *tok,
-    uint64_t to_us);
-
-int ircio_read_ex(int sck,
-#ifdef WITH_SSL
-    SSL *shnd,
-#endif
-    char *tokbuf, size_t tokbuf_sz, char *workbuf,
-    size_t workbuf_sz, char **mehptr, tokarr *tok,
-    uint64_t to_us);
-
+int ircio_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us);
 
 /* ircio_write - write one (or perhaps multiple) lines to socket
  *
@@ -116,19 +79,13 @@ int ircio_read_ex(int sck,
  * This function will make sure everything is sent.
  *
  * params:
- *   int         ``sck''    - socket to write to
+ *   sckhld      ``sh''    - socket "holder" structure
  *   const char  ``line''   - line to send, may be terminated by \r\n
  *
  * return: on success, the number of chars sent (i.e. strlen(line)
  *           (+2, if \r\n was added by this routine.)) is returned.
  *         if an error occurs, or invalid args were given, -1 is returned.
  */
-int ircio_write(int sck, const char *line);
-
-int ircio_write_ex(int sck,
-#ifdef WITH_SSL
-    SSL *shnd,
-#endif
-    const char *line);
+bool ircio_write(sckhld sck, const char *line);
 
 #endif /* SRS_IRC_IO_H */

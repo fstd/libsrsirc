@@ -15,9 +15,7 @@
 
 #define MAX_IRCARGS ((size_t)15)
 
-#define RXBUF_SZ 4096
-#define LINEBUF_SZ 1024
-#define OVERBUF_SZ 1024
+#define WORKBUF_SZ 4096
 
 #define DEF_HOST "localhost"
 #define DEF_PORT ((uint16_t)6667)
@@ -50,6 +48,19 @@
 #define LOGON_COMPLETE (1<<5)
 
 
+#ifdef WITH_SSL
+typedef SSL *SSLTYPE;
+typedef SSL_CTX *SSLCTXTYPE;
+#else
+typedef void *SSLTYPE;
+typedef void *SSLCTXTYPE;
+#endif
+
+typedef struct sckhld {
+	int sck;
+	SSLTYPE shnd;
+} sckhld;
+
 typedef struct iconn_s* iconn;
 typedef struct irc_s* irc;
 
@@ -57,6 +68,12 @@ typedef char *tokarr[MAX_IRCARGS];
 
 typedef bool (*fp_con_read)(tokarr *msg, void* tag);
 typedef void (*fp_mut_nick)(char *nick, size_t nick_sz);
+
+struct readctx {
+	char workbuf[WORKBUF_SZ];
+	char *wptr; //pointer to begin of current valid data
+	char *eptr; //pointer to one after end of current valid data
+};
 
 struct iconn_s
 {
@@ -67,18 +84,13 @@ struct iconn_s
 	uint16_t pport;
 	int ptype;
 
-	int sck;
+	sckhld sh;
 	int state;
 
-	char *linebuf;
-	char *overbuf;
-	char *mehptr;
+	struct readctx rctx;
 	bool colon_trail;
-#ifdef WITH_SSL
 	bool ssl;
-	SSL_CTX *sctx;
-	SSL *shnd;
-#endif
+	SSLCTXTYPE sctx;
 };
 
 

@@ -59,33 +59,23 @@ icon_init(void)
 	if (!(r = malloc(sizeof *r)))
 		goto icon_init_fail;
 
-	r->linebuf = NULL;
-	r->overbuf = NULL;
 	r->host = NULL;
 
-	if ((!(r->linebuf = malloc(LINEBUF_SZ)))
-	    || (!(r->overbuf = malloc(OVERBUF_SZ)))
-	    || (!(r->host = strdup(DEF_HOST))))
+	if (!(r->host = strdup(DEF_HOST)))
 		goto icon_init_fail;
 
-	/* these 2 neccessary? */
-	memset(r->linebuf, 0, LINEBUF_SZ);
-	memset(r->overbuf, 0, OVERBUF_SZ);
-
 	errno = preverrno;
+	r->rctx.wptr = r->rctx.eptr = r->rctx.workbuf;
 	r->port = DEF_PORT;
 	r->phost = NULL;
 	r->pport = 0;
 	r->ptype = -1;
-	r->sck = -1;
 	r->state = OFF;
-	r->mehptr = NULL;
 	r->colon_trail = false;
-#ifdef WITH_SSL
 	r->ssl = false;
-	r->shnd = NULL;
+	r->sh.shnd = NULL;
+	r->sh.sck = -1;
 	r->sctx = NULL;
-#endif
 
 	D("(%p) iconn initialized", r);
 
@@ -95,8 +85,6 @@ icon_init_fail:
 	EE("failed to initialize iconn handle");
 	if (r) {
 		free(r->host);
-		free(r->overbuf);
-		free(r->linebuf);
 		free(r);
 	}
 
@@ -109,24 +97,22 @@ icon_reset(iconn hnd)
 	D("(%p) resetting", hnd);
 
 #ifdef WITH_SSL
-	if (hnd->shnd) {
+	if (hnd->sh.shnd) {
 		D("(%p) shutting down ssl", hnd);
-		SSL_shutdown(hnd->shnd);
-		SSL_free(hnd->shnd);
-		hnd->shnd = NULL;
+		SSL_shutdown(hnd->sh.shnd);
+		SSL_free(hnd->sh.shnd);
+		hnd->sh.shnd = NULL;
 	}
 #endif
 
-	if (hnd->sck != -1) {
-		D("(%p) closing socket %d", hnd, hnd->sck);
-		close(hnd->sck);
+	if (hnd->sh.sck != -1) {
+		D("(%p) closing socket %d", hnd, hnd->sh.sck);
+		close(hnd->sh.sck);
 	}
 
-	hnd->sck = -1;
+	hnd->sh.sck = -1;
 	hnd->state = OFF;
-	hnd->linebuf[0] = '\0';
-	memset(hnd->overbuf, 0, OVERBUF_SZ);
-	hnd->mehptr = NULL;
+	hnd->rctx.wptr = hnd->rctx.eptr = hnd->rctx.workbuf;
 
 	return true;
 }
@@ -142,8 +128,6 @@ icon_dispose(iconn hnd)
 
 	free(hnd->host);
 	free(hnd->phost);
-	free(hnd->linebuf);
-	free(hnd->overbuf);
 	hnd->state = INV;
 
 	D("(%p) disposed", hnd);
@@ -178,43 +162,45 @@ icon_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 	struct sockaddr sa;
 	size_t addrlen;
 
-	int sck = ic_consocket(host, port, &sa, &addrlen,
+	sckhld sh;
+	sh.sck = ic_consocket(host, port, &sa, &addrlen,
 	    softto_us, hardto_us);
+	sh.shnd = NULL;
 
-	if (sck < 0) {
+	if (sh.sck < 0) {
 		W("(%p) ic_consocket failed for %s:%"PRIu16"", hnd, host, port);
 		return false;
 	}
 
-	D("(%p) connected socket %d for %s:%"PRIu16"", hnd, sck, host, port);
+	D("(%p) connected socket %d for %s:%"PRIu16"", hnd, sh.sck, host, port);
 
-	hnd->sck = sck; //must be set here for proxy_logon
+	hnd->sh = sh; //must be set here for proxy_logon
 
 	uint64_t trem = 0;
 	if (hnd->ptype != -1) {
 		if (ic_check_timeout(tsend, &trem)) {
 			W("(%p) timeout", hnd);
-			close(sck);
-			hnd->sck = -1;
+			close(sh.sck);
+			hnd->sh.sck = -1;
 			return false;
 		}
 
 		bool ok = false;
 		D("(%p) logging on to proxy", hnd);
 		if (hnd->ptype == IRCPX_HTTP)
-			ok = proxy_logon_http(hnd->sck, hnd->host,
+			ok = proxy_logon_http(hnd->sh.sck, hnd->host,
 			    hnd->port, trem);
 		else if (hnd->ptype == IRCPX_SOCKS4)
-			ok = proxy_logon_socks4(hnd->sck, hnd->host,
+			ok = proxy_logon_socks4(hnd->sh.sck, hnd->host,
 			    hnd->port, trem);
 		else if (hnd->ptype == IRCPX_SOCKS5)
-			ok = proxy_logon_socks5(hnd->sck, hnd->host,
+			ok = proxy_logon_socks5(hnd->sh.sck, hnd->host,
 			    hnd->port, trem);
 
 		if (!ok) {
 			W("(%p) proxy logon failed", hnd);
-			close(sck);
-			hnd->sck = -1;
+			close(sh.sck);
+			hnd->sh.sck = -1;
 			return false;
 		}
 		D("(%p) sent proxy logon sequence", hnd);
@@ -222,32 +208,32 @@ icon_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 
 	D("(%p) setting to blocking mode", hnd);
 	errno = 0;
-	if (fcntl(sck, F_SETFL, 0) == -1) {
+	if (fcntl(sh.sck, F_SETFL, 0) == -1) {
 		WE("(%p) failed to clear nonblocking mode", hnd);
-		close(sck);
-		hnd->sck = -1;
+		close(sh.sck);
+		hnd->sh.sck = -1;
 		return false;
 	}
 #ifdef WITH_SSL
 	if (hnd->ssl) {
 		bool fail = false;
-		fail = !(hnd->shnd = SSL_new(hnd->sctx));
-		fail = fail || !SSL_set_fd(hnd->shnd, sck);
-		int r = SSL_connect(hnd->shnd);
+		fail = !(hnd->sh.shnd = SSL_new(hnd->sctx));
+		fail = fail || !SSL_set_fd(hnd->sh.shnd, sh.sck);
+		int r = SSL_connect(hnd->sh.shnd);
 		D("ssl_connect: %d", r);
 		if (r != 1) {
-			int rr = SSL_get_error(hnd->shnd, r);
+			int rr = SSL_get_error(hnd->sh.shnd, r);
 			D("rr: %d", rr);
 		}
 		fail = fail || (r != 1);
 		if (fail) {
 			ERR_print_errors_fp(stderr);
-			if (hnd->shnd) {
-				SSL_free(hnd->shnd);
-				hnd->shnd = NULL;
+			if (hnd->sh.shnd) {
+				SSL_free(hnd->sh.shnd);
+				hnd->sh.shnd = NULL;
 			}
 
-			close(sck);
+			close(sh.sck);
 			W("connect bailing out; couldn't initiate ssl");
 			return false;
 		}
@@ -279,12 +265,7 @@ icon_read(iconn hnd, tokarr *tok, uint64_t to_us)
 			V("(%p) timeout hit", hnd);
 			return 0;
 		}
-		n = ircio_read_ex(hnd->sck,
-#ifdef WITH_SSL
-		    hnd->shnd,
-#endif
-		    hnd->linebuf, LINEBUF_SZ, hnd->overbuf, OVERBUF_SZ,
-		    &hnd->mehptr, tok, trem);
+		n = ircio_read(hnd->sh, &hnd->rctx, tok, trem);
 
 		if (n < 0) { //read error
 			W("(%p) read failed", hnd);
@@ -311,11 +292,7 @@ icon_write(iconn hnd, const char *line)
 		return false;
 
 
-	if (ircio_write_ex(hnd->sck,
-#ifdef WITH_SSL
-	    hnd->shnd,
-#endif
-	    line) == -1) {
+	if (ircio_write(hnd->sh, line) == -1) {
 		W("(%p) failed to write '%s'", hnd, line);
 		icon_reset(hnd);
 		return false;
@@ -394,7 +371,8 @@ bool
 icon_set_ssl(iconn hnd, bool on)
 {
 #ifndef WITH_SSL
-	W("library was not compiled with SSL support");
+	if (on)
+		W("library was not compiled with SSL support");
 	return false;
 #else
 
@@ -466,7 +444,7 @@ icon_sockfd(iconn hnd)
 	if (!hnd || hnd->state != ON)
 		return -1;
 
-	return hnd->sck;
+	return hnd->sh.sck;
 }
 
 

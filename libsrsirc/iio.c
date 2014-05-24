@@ -30,256 +30,160 @@
 
 #include "iio.h"
 
-
-#define ISDELIM(C) ((C)=='\n' || (C) == '\r')
+#define ISDELIM(C) ((C) == '\n' || (C) == '\r')
 
 /* local helpers */
+static char* find_delim(struct readctx *ctx);
+static int read_more(sckhld sh, struct readctx *ctx, uint64_t to_us);
+static int wait_for_readable(int sck, uint64_t to_us);
+static bool writeall(sckhld sh, const char *buf);
+static ssize_t readwrap(sckhld sh, void *buf, size_t sz);
+static ssize_t sendwrap(sckhld sh, const void *buf, size_t len, int flags);
 static int tokenize(char *buf, tokarr *tok);
-static char *skip2lws(char *s, bool tab_is_ws); //fwd ptr until whitespace
-static int writeall(int sck,
-#ifdef WITH_SSL
-    SSL *shnd,
-#endif
-    const char *buf); //write a full string
+static char* skip2lws(char *s, bool tab_is_ws);
 
 /* pub if implementation */
 int
-ircio_read(int sck, char *tokbuf, size_t tokbuf_sz, char *workbuf,
-    size_t workbuf_sz, char **mehptr, tokarr *tok,
-    uint64_t to_us)
-{
-#ifdef WITH_SSL
-	return ircio_read_ex(sck, NULL, tokbuf, tokbuf_sz, workbuf,
-	    workbuf_sz, mehptr, tok, to_us);
-#else
-	return ircio_read_ex(sck, tokbuf, tokbuf_sz, workbuf,
-	    workbuf_sz, mehptr, tok, to_us);
-#endif
-}
-
-int
-ircio_read_ex(int sck,
-#ifdef WITH_SSL
-    SSL *shnd,
-#endif
-    char *tokbuf, size_t tokbuf_sz, char *workbuf,
-    size_t workbuf_sz, char **mehptr, tokarr *tok,
-    uint64_t to_us)
+ircio_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
 {
 	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
-	V("invoke(sck:%d, tokbuf: %p, tokbuf_sz: %zu, workbuf: %p, "
-	    "workbuf_sz: %zu, mehptr: %p (*:%p), to_us: %"PRIu64", tsend: %"PRIu64")",
-	    sck, tokbuf, tokbuf_sz, workbuf, workbuf_sz, mehptr, *mehptr,
-	    to_us, tsend);
-	if (!*mehptr) {
-		V("fresh invoke (*mehptr is NULL). init workbuf, "
-		    "pointing *mehptr to it");
-		*mehptr = workbuf;
-		workbuf[0] = '\0';
-	} else {
-		V("first ten of *mehptr: '%.10s'", *mehptr);
-		/*if (ircdbg_getlvl() == LOG_VIVI)
-			hexdump(workbuf, workbuf_sz, "workbuf");*/
+
+	while (ctx->wptr < ctx->eptr && ISDELIM(*ctx->wptr)) /* skip leading delims */
+		ctx->wptr++;
+
+	if (ctx->wptr == ctx->eptr) /* empty buffer, use the opportunity.. */
+		ctx->wptr = ctx->eptr = ctx->workbuf;
+
+	char *delim;
+	while (!(delim = find_delim(ctx))) {
+		uint64_t trem = 0;
+		if (ic_check_timeout(tsend, &trem))
+			return 0;
+
+		int r = read_more(sh, ctx, trem);
+		if (r <= 0)
+			return r;
 	}
 
-	while(ISDELIM(**mehptr)) {
-		V("skipping a leading delim");
-		(*mehptr)++;
-	}
-
-	char *end = *mehptr;
-
-	while(*end && !ISDELIM(*end))
-		end++;
-
-	if (!*end) {
-		V("didn't find delim in workbuf, need moar dataz");
-		size_t len = (size_t)(end - *mehptr);
-		V("%zu bytes already in workbuf", len);
-		if (*mehptr != workbuf) {
-			size_t mehdist = (size_t)(*mehptr - workbuf);
-			V("*mehptr doesn't point at workbuf's start "
-			    "(dist: %zu), shifting %zu bytes to the start",
-			    mehdist, len);
-
-			/*if (ircdbg_getlvl() == LOG_VIVI)
-				hexdump(workbuf, workbuf_sz,
-				    "workbuf before shift");*/
-			memmove(workbuf, *mehptr, len);
-			V("zeroing %zu bytes", workbuf_sz - len);
-			memset(workbuf + len, 0, workbuf_sz - len);
-			*mehptr = workbuf;
-			end -= mehdist;
-			V("end is %p (%"PRIu8" (%c))", end, *end, *end);
-			/*if (ircdbg_getlvl() == LOG_VIVI)
-				hexdump(workbuf, workbuf_sz,
-				    "workbuf after shift");*/
-		}
-
-		for(;;) {
-			if (len + 1 >= workbuf_sz) {
-				W("(sck:%d) input too long", sck);
-				return -1;
-			}
-			for(;;) {
-				struct timeval tout;
-				uint64_t trem = 0;
-				if (ic_check_timeout(tsend, &trem)) {
-					V("(sck:%d) timeout in select", sck);
-					return 0;
-				} else if (tsend)
-					ic_tconv(&tout, &trem, false);
-
-				fd_set fds;
-				FD_ZERO(&fds);
-				FD_SET(sck, &fds);
-				errno = 0;
-				V("selecting...");
-				int r = select(sck+1, &fds, NULL, NULL,
-				    tsend ? &tout : NULL);
-
-				if (r < 0) {
-					if (errno == EINTR) {
-						WE("(sck:%d) select got "
-						    "while selecting",sck);
-						return 0;
-					}
-					WE("(sck:%d) select() failed",sck);
-					return -1;
-				} else if (r == 1) {
-					break;
-				} else if (r != 0)
-					W("wtf select returned %d", r);
-			}
-			V("reading max %zu byte", workbuf_sz - len - 1);
-			ssize_t n;
-			errno = 0;
-#ifdef WITH_SSL
-			if (shnd)
-				n = (ssize_t)SSL_read(shnd, end,
-				    workbuf_sz - len - 1);
-			else
-				n = read(sck, end, workbuf_sz - len - 1);
-#else
-			n = read(sck, end, workbuf_sz - len - 1);
-#endif
-			if (n <= 0) {
-				if (n == 0)
-					W("(sck%d) read: EOF", sck);
-				else
-					WE("(sck%d) read failed (%zd)",
-					    sck, n);
-				return -1;
-			}
-			V("read returned %zd", n);
-			bool gotdelim = false;
-			char *delim = NULL;
-			while(n--) {
-				if (!gotdelim && ISDELIM(*end)) {
-					delim = end;
-					V("found a delim");
-					gotdelim = true;
-				}
-
-				end++;
-				len++;
-			}
-			assert (*end == '\0');
-
-			if (gotdelim) {
-				end = delim;
-				break;
-			}
-			V("no delim found so far");
-		}
-	}
-	/*if (ircdbg_getlvl() == LOG_VIVI)
-		hexdump(workbuf, workbuf_sz, "workbuf aftr both loops");*/
-
-	assert (*end);
-	size_t len = (size_t)(end - *mehptr);
-	V("got %zu bytes till delim in workbuf", len);
-	if (len + 1 >= tokbuf_sz)
-		len = tokbuf_sz - 1;
-	V("copying %zu bytes into tokbuf", len);
-	strncpy(tokbuf, *mehptr, len);
-	tokbuf[len] = '\0';
-	*mehptr = end+1;
-	V("first ten of *mehptr: '%.10s'", *mehptr);
-	V("tokenizing, then done!");
-	D("read a line: '%s'", tokbuf);
-	return tokenize(tokbuf, tok);
+	char *linestart = ctx->wptr;
+	size_t linelen = delim - linestart;
+	*delim = '\0';
+	ctx->wptr += linelen + 1;
+	return tokenize(linestart, tok);
 }
 
-int
-ircio_write(int sck, const char *line)
+bool
+ircio_write(sckhld sh, const char *line)
 {
-#ifdef WITH_SSL
-	return ircio_write_ex(sck, NULL, line);
-#else
-	return ircio_write_ex(sck, line);
-#endif
-}
-
-int
-ircio_write_ex(int sck,
-#ifdef WITH_SSL
-    SSL *shnd,
-#endif
-    const char *line)
-{
-	V("invoke(sck:%d, line: %s", sck, line);
-	if (sck < 0 || !line)
-		return -1;
-
 	size_t len = strlen(line);
 	int needbr = len < 2 || line[len-2] != '\r' || line[len-1] != '\n';
 
-#ifdef WITH_SSL
-	if (!writeall(sck, shnd, line)
-	    || (needbr && !writeall(sck, shnd, "\r\n"))) {
-#else
-	if (!writeall(sck, line) || (needbr && !writeall(sck, "\r\n"))) {
-#endif
-		W("(sck%d) writeall() failed for line: %s", sck, line);
-		return -1;
-	}
-
-	return (int)(len + (needbr ? 2 : 0));
+	return writeall(sh, line) && (!needbr || writeall(sh, "\r\n"));
 }
 
 /* local helpers implementation */
-static int
-writeall(int sck,
-#ifdef WITH_SSL
-    SSL *shnd,
-#endif
-    const char *buf)
+static char*
+find_delim(struct readctx *ctx)
 {
-	V("invoke");
+	for (char *ptr = ctx->wptr; ptr < ctx->eptr; ptr++)
+		if (ISDELIM(*ptr))
+			return ptr;
+	return NULL;
+}
+
+static int
+read_more(sckhld sh, struct readctx *ctx, uint64_t to_us)
+{
+	size_t remain = sizeof ctx->workbuf - (ctx->eptr - ctx->workbuf);
+	if (!remain) {
+		if (ctx->wptr == ctx->workbuf) {
+			E("input too long");
+			return -1;
+		}
+		
+		W("moving");
+		size_t datalen = (size_t)(ctx->eptr - ctx->wptr);
+		memmove(ctx->workbuf, ctx->wptr, datalen);
+		ctx->wptr = ctx->workbuf;
+		ctx->eptr = &ctx->workbuf[datalen];
+		remain = sizeof ctx->workbuf - (ctx->eptr - ctx->workbuf);
+	}
+
+	int r = wait_for_readable(sh.sck, to_us);
+	if (r != 1)
+		return r;
+
+	ssize_t n = readwrap(sh, ctx->eptr, remain);
+	if (n <= 0) {
+		n == 0 ?  W("read: EOF") : WE("read failed");
+		return -1;
+	}
+
+	ctx->eptr += n;
+	return 1;
+}
+
+static int
+wait_for_readable(int sck, uint64_t to_us)
+{
+	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+
+	for(;;) {
+		struct timeval tout;
+		uint64_t trem = 0;
+		if (ic_check_timeout(tsend, &trem))
+			return 0;
+
+		if (tsend)
+			ic_tconv(&tout, &trem, false);
+
+		fd_set fds;
+		FD_ZERO(&fds);
+		FD_SET(sck, &fds);
+		int r = select(sck+1, &fds, NULL, NULL, tsend ? &tout : NULL);
+
+		if (r < 0) {
+			int e = errno;
+			WE("select");
+			return e == EINTR ? 0 : 1;
+		} else if (r == 1 && FD_ISSET(sck, &fds)) {
+			return 1;
+		}
+	}
+}
+
+static bool
+writeall(sckhld sh, const char *buf)
+{
 	size_t cnt = 0;
 	size_t len = strlen(buf);
 	while(cnt < len) {
-		errno = 0;
-		ssize_t n;
-		V("calling send()/SSL_write(), len: %zu", len - cnt);
-#ifdef WITH_SSL
-		if (shnd)
-			n = (ssize_t)SSL_write(shnd, buf + cnt, len - cnt);
-		else
-			n = send(sck, buf + cnt, len - cnt, MSG_NOSIGNAL);
-#else
-		n = send(sck, buf + cnt, len - cnt, MSG_NOSIGNAL);
-#endif
-		if (n < 0) {
-			WE("(sck%d) send() failed", sck);
-			return 0;
-		}
-		V("send/SSL_write() returned %zd", n);
+		ssize_t n = sendwrap(sh, buf + cnt, len - cnt, MSG_NOSIGNAL);
+		if (n < 0)
+			return false;
 		cnt += n;
 	}
-	V("success");
-	return 1;
+	return true;
+}
+
+static ssize_t
+readwrap(sckhld sh, void *buf, size_t sz)
+{
+#ifdef WITH_SSL
+	if (sh.shnd)
+		return (ssize_t)SSL_read(sh.shnd, buf, sz);
+#endif
+	return read(sh.sck, buf, sz);
+}
+
+static ssize_t
+sendwrap(sckhld sh, const void *buf, size_t len, int flags)
+{
+#ifdef WITH_SSL
+	if (sh.shnd)
+		return (ssize_t)SSL_write(sh.shnd, buf, len);
+#endif
+	return send(sh.sck, buf, len, flags);
 }
 
 static int
