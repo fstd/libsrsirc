@@ -339,7 +339,7 @@ main(int argc, char **argv)
 		}
 
 		tokarr tok;
-		int r = irc_read(g_irc, &tok, 100000);
+		int r = irc_read(g_irc, &tok, 3000000);
 
 		if (r == 0)
 			continue;
