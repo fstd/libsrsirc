@@ -36,7 +36,14 @@
 
 // ----- logging interface -----
 
+#define LOG_TRACE (LOG_VIVI+1)
 #define LOG_VIVI (LOG_DEBUG+1)
+
+#define T(F,A...)                                                            \
+    ircdbg_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,F,##A)
+
+#define TE(F,A...)                                                           \
+    ircdbg_log(LOG_MODULE,LOG_TRACE,errno,__FILE__,__LINE__,__func__,F,##A)
 
 #define V(F,A...)                                                            \
     ircdbg_log(LOG_MODULE,LOG_VIVI,-1,__FILE__,__LINE__,__func__,F,##A)

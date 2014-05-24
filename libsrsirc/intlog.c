@@ -27,6 +27,7 @@
 #define COL_WHITEINV "\033[07;37;01m"
 #define COL_GRAY "\033[30;01m"
 #define COL_GRAYINV "\033[07;30;01m"
+#define COL_LBLUE "\033[34;01m"
 #define COL_RST "\033[0m"
 
 #define COUNTOF(ARR) (sizeof (ARR) / sizeof (ARR)[0])
@@ -171,6 +172,7 @@ static const char*
 lvlnam(int lvl)
 {
 	return lvl == LOG_DEBUG ? "DBG" :
+	       lvl == LOG_TRACE ? "TRC" :
 	       lvl == LOG_VIVI ? "VIV" :
 	       lvl == LOG_INFO ? "INF" :
 	       lvl == LOG_NOTICE ? "NOT" :
@@ -183,6 +185,7 @@ static const char*
 lvlcol(int lvl)
 {
 	return lvl == LOG_DEBUG ? COL_GRAY :
+	       lvl == LOG_TRACE ? COL_LBLUE :
 	       lvl == LOG_VIVI ? COL_GRAYINV :
 	       lvl == LOG_INFO ? COL_WHITE :
 	       lvl == LOG_NOTICE ? COL_GREEN :
