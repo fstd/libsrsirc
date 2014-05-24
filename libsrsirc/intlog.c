@@ -200,6 +200,17 @@ isdigitstr(const char *p)
 	return true;
 }
 
+static int
+getenv_m(const char *nam, char *dest, size_t destsz)
+{
+	const char *v = getenv(nam);
+	if (!v)
+		return -1;
+
+	snprintf(dest, destsz, "%s", v);
+	return 0;
+}
+
 static void
 ircdbg_init(void)
 {
@@ -208,7 +219,7 @@ ircdbg_init(void)
 		s_lvlarr[i] = INT_MIN;
 
 	char v[128];
-	if (getenv_r("LIBSRSIRC_DEBUG", v, sizeof v) == 0 && v[0]) {
+	if (getenv_m("LIBSRSIRC_DEBUG", v, sizeof v) == 0 && v[0]) {
 		for (char *tok = strtok(v, " "); tok; tok = strtok(NULL, " ")) {
 			char *eq = strchr(tok, '=');
 			if (eq) {

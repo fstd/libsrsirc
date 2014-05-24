@@ -89,8 +89,6 @@ void ircdbg_syslog(const char *ident, int facility);
 
 void ircdbg_setlvl(int mod, int lvl);
 int ircdbg_getlvl(int mod);
-void ircdbg_setdeflvl(int lvl);
-int ircdbg_getdeflvl(void);
 
 void ircdbg_setfancy(bool fancy);
 bool ircdbg_getfancy(void);
