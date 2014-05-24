@@ -6,6 +6,8 @@
 # include <config.h>
 #endif
 
+#define LOG_MODULE MOD_IMSG
+
 /* C */
 #include <stdlib.h>
 #include <stdio.h>

@@ -9,11 +9,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <ctype.h>
 #include <string.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <time.h>
 
 #include "intlog.h"
+
+#define DEF_LVL LOG_CRIT
 
 #define COL_REDINV "\033[07;31;01m"
 #define COL_RED "\033[31;01m"
@@ -25,15 +29,31 @@
 #define COL_GRAYINV "\033[07;30;01m"
 #define COL_RST "\033[0m"
 
+#define COUNTOF(ARR) (sizeof (ARR) / sizeof (ARR)[0])
+
+const char *modnames[NUM_MODS] = {
+	[MOD_IRC] = "irc",
+	[MOD_COMMON] = "common",
+	[MOD_IRC_UTIL] = "util",
+	[MOD_ICONN] = "iconn",
+	[MOD_IIO] = "iio",
+	[MOD_PROXY] = "proxy",
+	[MOD_IMSG] = "imsg",
+	[MOD_UNKNOWN] = "(??" "?)"
+};
+
 
 static bool s_open;
 static bool s_stderr = true;
-static int s_lvl = -1;
 static bool s_fancy;
+static bool s_init;
+static int s_lvlarr[NUM_MODS];
 
 static const char* lvlnam(int lvl);
 static const char* lvlcol(int lvl);
 
+
+static void ircdbg_init(void);
 
 // ----- public interface implementation -----
 
@@ -77,39 +97,25 @@ ircdbg_getfancy(void)
 
 
 void
-ircdbg_setlvl(int lvl)
+ircdbg_setlvl(int mod, int lvl)
 {
-	s_lvl = lvl;
+	s_lvlarr[mod] = lvl;
 }
-
 
 int
-ircdbg_getlvl(void)
+ircdbg_getlvl(int mod)
 {
-	return s_lvl;
+	return s_lvlarr[mod];
 }
 
-
 void
-ircdbg_log(int lvl, int errn, const char *file, int line, const char *func,
+ircdbg_log(int mod, int lvl, int errn, const char *file, int line, const char *func,
     const char *fmt, ...)
 {
-	if (s_lvl == -1) {
-		const char *v = getenv("LIBSRSIRC_DEBUG");
-		s_lvl = v ? v[0] - '0' : LOG_ERR;
-		v = getenv("LIBSRSIRC_DEBUG_TARGET");
-		if (v && strcmp(v, "syslog") == 0)
-			ircdbg_syslog("libsrsirc", LOG_USER);
-		else
-			ircdbg_stderr();
-		v = getenv("LIBSRSIRC_DEBUG_FANCY");
-		if (v && v[0] != '0')
-			ircdbg_setfancy(true);
-		else
-			ircdbg_setfancy(false);
-	}
+	if (!s_init)
+		ircdbg_init();
 
-	if (lvl > s_lvl)
+	if (lvl > s_lvlarr[mod])
 		return;
 
 	char buf[4096];
@@ -183,4 +189,67 @@ lvlcol(int lvl)
 	       lvl == LOG_WARNING ? COL_YELLOW :
 	       lvl == LOG_CRIT ? COL_REDINV :
 	       lvl == LOG_ERR ? COL_RED : COL_WHITEINV;
+}
+
+static bool
+isdigitstr(const char *p)
+{
+	while (*p)
+		if (!isdigit((unsigned char)*p++))
+			return false;
+	return true;
+}
+
+static void
+ircdbg_init(void)
+{
+	int deflvl = DEF_LVL;
+	for (size_t i = 0; i < COUNTOF(s_lvlarr); i++)
+		s_lvlarr[i] = INT_MIN;
+
+	char v[128];
+	if (getenv_r("LIBSRSIRC_DEBUG", v, sizeof v) == 0 && v[0]) {
+		for (char *tok = strtok(v, " "); tok; tok = strtok(NULL, " ")) {
+			char *eq = strchr(tok, '=');
+			if (eq) {
+				if (tok[0] == '=' || !isdigitstr(eq+1))
+					continue;
+
+				*eq = '\0';
+				size_t mod = 0;
+				for (; mod < COUNTOF(modnames); mod++)
+					if (strcmp(modnames[mod], tok) == 0)
+						break;
+
+				if (mod < COUNTOF(s_lvlarr))
+					s_lvlarr[mod] = (int)strtol(eq+1, NULL, 10);
+
+				*eq = '=';
+				continue;
+			}
+			if (isdigitstr(tok)) {
+				/* special case: a stray number
+				 * means set default loglevel */
+				deflvl = (int)strtol(tok, NULL, 10);
+			}
+		}
+	}
+
+	for (size_t i = 0; i < COUNTOF(s_lvlarr); i++)
+		if (s_lvlarr[i] == INT_MIN)
+			s_lvlarr[i] = deflvl;
+
+	const char *vv = getenv("LIBSRSIRC_DEBUG_TARGET");
+	if (vv && strcmp(vv, "syslog") == 0)
+		ircdbg_syslog("libsrsirc", LOG_USER);
+	else
+		ircdbg_stderr();
+
+	vv = getenv("LIBSRSIRC_DEBUG_FANCY");
+	if (vv && vv[0] != '0')
+		ircdbg_setfancy(true);
+	else
+		ircdbg_setfancy(false);
+
+	s_init = true;
 }

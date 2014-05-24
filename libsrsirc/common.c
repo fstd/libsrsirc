@@ -6,6 +6,8 @@
 # include <config.h>
 #endif
 
+#define LOG_MODULE MOD_COMMON
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

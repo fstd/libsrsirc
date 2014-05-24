@@ -1,6 +1,11 @@
 /* proxy.c - Proxy subroutines implementation (socks4/socks5/http)
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
+#if HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+#define LOG_MODULE MOD_PROXY
 
 #include <stdio.h>
 #include <stdint.h>

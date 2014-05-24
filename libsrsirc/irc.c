@@ -6,6 +6,8 @@
 # include <config.h>
 #endif
 
+#define LOG_MODULE MOD_IRC
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
