@@ -62,7 +62,7 @@
  *  As hopefully becomes visible, the number of arguments can be determined
  *    by looking at the index of the first element to hold a NULL pointer,
  *    starting with index 1.
- *    
+ *
  *  Note protocol parsing is not as strict as it could be, i.e. instead of
  *    requiring a single space to delimit parameters, any sequence of
  *    whitespace will do, empty lines are ignored, leading and trailing

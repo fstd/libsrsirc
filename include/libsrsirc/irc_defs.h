@@ -75,8 +75,7 @@ struct readctx {
 	char *eptr; //pointer to one after end of current valid data
 };
 
-struct iconn_s
-{
+struct iconn_s {
 	char *host;
 	uint16_t port;
 
@@ -94,8 +93,7 @@ struct iconn_s
 };
 
 
-struct irc_s
-{
+struct irc_s {
 	char mynick[MAX_NICK_LEN];
 	char myhost[MAX_HOST_LEN];
 	bool service;

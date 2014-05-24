@@ -245,7 +245,7 @@ irc_read(irc hnd, tokarr *tok, uint64_t to_us)
 			failure = true;
 		}
 	}
-	
+
 	if (failure)
 		irc_reset(hnd);
 	//D("(%p) done reading", hnd);

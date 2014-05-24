@@ -232,7 +232,7 @@ int ic_consocket(const char *host, uint16_t port,
 			uint64_t strem = 0;
 			uint64_t htrem = 0;
 
-			if (ic_check_timeout(hardtsend, &htrem) 
+			if (ic_check_timeout(hardtsend, &htrem)
 			    || ic_check_timeout(softtsend, &strem)) {
 				W("timeout reached while in 3WHS");
 				break;

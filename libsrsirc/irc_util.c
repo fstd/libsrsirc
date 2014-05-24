@@ -203,7 +203,7 @@ parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
 		*ssl = false;
 
 	strncpy(hoststr, line + (line[0] == '['), hoststr_sz);
-	
+
 	char *ptr = strstr(hoststr, "/ssl");
 	if (!ptr)
 		ptr = strstr(hoststr, "/SSL");

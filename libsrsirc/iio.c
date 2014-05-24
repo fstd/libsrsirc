@@ -102,8 +102,7 @@ read_more(sckhld sh, struct readctx *ctx, uint64_t to_us)
 			E("input too long");
 			return -1;
 		}
-		
-		W("moving");
+
 		size_t datalen = (size_t)(ctx->eptr - ctx->wptr);
 		memmove(ctx->workbuf, ctx->wptr, datalen);
 		ctx->wptr = ctx->workbuf;

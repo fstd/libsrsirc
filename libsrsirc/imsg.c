@@ -217,7 +217,7 @@ handle_NICK(irc hnd, tokarr *msg, size_t nargs)
 
 	if (!istrcasecmp(nick, hnd->mynick, hnd->casemapping))
 		ic_strNcpy(hnd->mynick, (*msg)[2], sizeof hnd->mynick);
-	
+
 	return 0;
 }
 
@@ -314,15 +314,15 @@ handle(irc hnd, tokarr *msg)
 	uint8_t retflags = 0;
 	size_t ac = countargs(msg);
 
-	if (strcmp((*msg)[1], "001") == 0) 
+	if (strcmp((*msg)[1], "001") == 0)
 		retflags |= handle_001(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "002") == 0) 
+	else if (strcmp((*msg)[1], "002") == 0)
 	      retflags |= handle_002(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "003") == 0) 
+	else if (strcmp((*msg)[1], "003") == 0)
 	      retflags |= handle_003(hnd, msg, ac);
 	else if (strcmp((*msg)[1], "004") == 0)
 	      retflags |= handle_004(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "PING") == 0) 
+	else if (strcmp((*msg)[1], "PING") == 0)
 	      retflags |= handle_PING(hnd, msg, ac);
 	else if (strcmp((*msg)[1], "432") == 0) //errorneous nick
 	      retflags |= handle_432(hnd, msg, ac);
@@ -342,11 +342,11 @@ handle(irc hnd, tokarr *msg)
 	      retflags |= handle_465(hnd, msg, ac);
 	else if (strcmp((*msg)[1], "466") == 0) //will be banned
 	      retflags |= handle_466(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "NICK") == 0) 
+	else if (strcmp((*msg)[1], "NICK") == 0)
 	      retflags |= handle_NICK(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "ERROR") == 0) 
+	else if (strcmp((*msg)[1], "ERROR") == 0)
 	      retflags |= handle_ERROR(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "005") == 0) 
+	else if (strcmp((*msg)[1], "005") == 0)
 	      retflags |= handle_005(hnd, msg, ac);
 
 	return retflags;

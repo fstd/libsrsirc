@@ -399,7 +399,7 @@ handle_irc(tokarr *tok)
 
 		if (g_sett.ignore_cs && !istrcasecmp(nick, "ChanServ", irc_casemap(g_irc)))
 			return;
-				
+
 		if (g_sett.trgmode)
 			printf("%s %s %s %s\n",
 			    nick, (*tok)[0], (*tok)[2], (*tok)[3]);
@@ -430,7 +430,7 @@ strtou8_cap(const char *nptr, char **endptr, int base)
 	unsigned long l = strtoul(nptr, endptr, base);
 	if (l > UINT8_MAX)
 		l = UINT8_MAX;
-	
+
 	return (uint8_t)l;
 }
 
@@ -717,7 +717,7 @@ isdigitstr(const char *str)
 	while (*str)
 		if (!isdigit((unsigned char)*str++))
 			return false;
-	
+
 	return true;
 }
 
