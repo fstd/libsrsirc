@@ -292,7 +292,7 @@ icon_write(iconn hnd, const char *line)
 		return false;
 
 
-	if (ircio_write(hnd->sh, line) == -1) {
+	if (!ircio_write(hnd->sh, line)) {
 		W("(%p) failed to write '%s'", hnd, line);
 		icon_reset(hnd);
 		return false;
