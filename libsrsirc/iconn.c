@@ -272,7 +272,7 @@ icon_read(iconn hnd, tokarr *tok, uint64_t to_us)
 	if (last > 2)
 		hnd->colon_trail = (*tok)[last-1][-1] == ':';
 
-	V("(%p) got a msg with %zu args", hnd, last);
+	D("(%p) got a msg ('%s', %zu args)", hnd, tok[1], last);
 
 	return 1;
 }
@@ -290,14 +290,7 @@ icon_write(iconn hnd, const char *line)
 		return false;
 	}
 
-	char buf[1024];
-	strncpy(buf, line, sizeof buf);
-	buf[sizeof buf - 1] = '\0';
-	char *endptr = buf + strlen(buf) - 1;
-	while(endptr >= buf && (*endptr == '\r' || *endptr == '\n'))
-		*endptr-- = '\0';
-
-	D("(%p) wrote a line: '%s'", hnd, buf);
+	D("(%p) wrote: '%s'", hnd, line);
 	return true;
 
 }
