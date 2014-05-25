@@ -2,8 +2,8 @@
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
-#ifndef PROXY_H
-#define PROXY_H
+#ifndef LIBSRSIRC_PROXY_H
+#define LIBSRSIRC_PROXY_H 1
 
 #include <stdbool.h>
 
@@ -16,4 +16,4 @@ bool proxy_logon_socks4(int sck, const char *host, uint16_t port,
 bool proxy_logon_socks5(int sck, const char *host, uint16_t port,
     uint64_t to_us);
 
-#endif
+#endif /* LIBSRSIRC_PROXY_H */

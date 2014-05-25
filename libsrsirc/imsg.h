@@ -1,9 +1,9 @@
-/* imsg.h - protocl message handler prototypes
+/* imsg.h - protocol message handlers
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
-#ifndef MSGHANDLE_H
-#define MSGHANDLE_H 1
+#ifndef LIBSRSIRC_IMSG_H
+#define LIBSRSIRC_IMSG_H 1
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -12,5 +12,4 @@
 
 uint8_t handle(irc hnd, tokarr *msg);
 
-#endif /* MSGHANDLE_H */
-
+#endif /* LIBSRSIRC_IMSG_H */

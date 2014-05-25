@@ -1,16 +1,9 @@
 /* intlog.h - library debugging interface
  * libsrsirc - a lightweight serious IRC lib - (C) 2014, Timo Buhrmester
 * See README for contact-, COPYING for license information. */
-/* former interface
-#define W(FMT, A...) W_(warn, 1, FMT, ##A)
-#define DE(FMT, A...) W_(warn, 2, FMT, ##A)
 
-#define W(FMT, A...) W_(warnx, 1, FMT, ##A)
-#define D(FMT, A...) W_(warnx, 2, FMT, ##A)
-*/
-
-#ifndef INTLOG_H
-#define INTLOG_H 1
+#ifndef LIBSRSIRC_INTLOG_H
+#define LIBSRSIRC_INTLOG_H 1
 
 #include <stdbool.h>
 #include <errno.h>
@@ -27,17 +20,19 @@
 #define MOD_UNKNOWN 7
 #define NUM_MODS 8 /* when adding modules, don't forget intlog.c's `modnames' */
 
+/* our two higher-than-debug custom loglevels */
+#define LOG_TRACE (LOG_VIVI+1)
+#define LOG_VIVI (LOG_DEBUG+1)
+
 #ifndef LOG_MODULE
 # define LOG_MODULE MOD_UNKNOWN
 #endif
 
-//[DINWE](): log with Debug, Info, Notice, Warn, Error severity.
-//[DINWE]E(): similar, but also append ``errno'' message
+//[TVDINWE](): log with Trace, Vivi, Debug, Info, Notice, Warn, Error severity.
+//[TVDINWE]E(): similar, but also append ``errno'' message
+//C(), CE(): as above, but also call exit(EXIT_FAILURE)
 
 // ----- logging interface -----
-
-#define LOG_TRACE (LOG_VIVI+1)
-#define LOG_VIVI (LOG_DEBUG+1)
 
 #define T(F,A...)                                                            \
     ircdbg_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,F,##A)
@@ -83,11 +78,11 @@
 
 #define C(F,A...) do {                                                       \
     ircdbg_log(LOG_MODULE,LOG_CRIT,-1,__FILE__,__LINE__,__func__,F,##A);     \
-    exit(EXIT_FAILURE); } while(0)
+    exit(EXIT_FAILURE); } while (0)
 
 #define CE(F,A...) do {                                                      \
     ircdbg_log(LOG_MODULE,LOG_CRIT,errno,__FILE__,__LINE__,__func__,F,##A);  \
-    exit(EXIT_FAILURE); } while(0)
+    exit(EXIT_FAILURE); } while (0)
 
 // ----- logger control interface -----
 
@@ -109,4 +104,4 @@ void ircdbg_log(int mod, int lvl, int errn, const char *file, int line,
 #endif
     ;
 
-#endif /* INTLOG_H */
+#endif /* LIBSRSIRC_INTLOG_H */

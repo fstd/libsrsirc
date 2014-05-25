@@ -2,8 +2,8 @@
  * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
-#ifndef SRS_IRC_UTIL_H
-#define SRS_IRC_UTIL_H 1
+#ifndef LIBSRSIRC_IRC_UTIL_H
+#define LIBSRSIRC_IRC_UTIL_H 1
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -67,4 +67,4 @@ size_t countargs(tokarr *tok);
 tokarr *ic_clonearr(tokarr *arr);
 void ic_freearr(tokarr *arr);
 
-#endif /* SRS_IRC_UTIL_H */
+#endif /* LIBSRSIRC_IRC_UTIL_H */

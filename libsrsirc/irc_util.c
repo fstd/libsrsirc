@@ -161,7 +161,7 @@ itolower(char *dest, size_t destsz, const char *str, int casemap)
 {
 	size_t c = 0;
 	char *ptr = dest;
-	while(c < destsz) {
+	while (c < destsz) {
 		*ptr++ = ichartolower(*str, casemap);
 
 		if (!*str)
@@ -256,7 +256,7 @@ void
 sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
 {
 	snprintf(dest, dest_sz, "(%p) '%s' '%s'", tag, (*msg)[0], (*msg)[1]);
-	for(size_t i = 2; i < COUNTOF(*msg); i++) {
+	for (size_t i = 2; i < COUNTOF(*msg); i++) {
 		if (!(*msg)[i])
 			break;
 		ic_strNcat(dest, " '", dest_sz);
@@ -370,7 +370,7 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
 		ptr++;
 	}
 	D("done parsing, result:");
-	for(size_t i = 0; i < nummodes; i++) {
+	for (size_t i = 0; i < nummodes; i++) {
 		D("modearr[%zu]: '%s'", i, modearr[i]);
 	}
 
@@ -435,7 +435,7 @@ tokarr *ic_clonearr(tokarr *arr)
 		return NULL;
 	}
 
-	for(size_t i = 0; i < COUNTOF(*arr); i++) {
+	for (size_t i = 0; i < COUNTOF(*arr); i++) {
 		if ((*arr)[i]) {
 			if (!((*res)[i] = strdup((*arr)[i]))) {
 				EE("strdup");
@@ -457,7 +457,7 @@ void
 ic_freearr(tokarr *arr)
 {
 	if (arr) {
-		for(size_t i = 0; i < COUNTOF(*arr); i++)
+		for (size_t i = 0; i < COUNTOF(*arr); i++)
 			free((*arr)[i]);
 		free(arr);
 	}

@@ -1,5 +1,5 @@
-/* irc_ext.c - Front-end implementation
- * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
+/* irc_ext.c - some more irc functionality (see also irc.c)
+ * libsrsirc - a lightweight serious IRC lib - (C) 2014, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #if HAVE_CONFIG_H

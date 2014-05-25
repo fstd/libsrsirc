@@ -1,5 +1,5 @@
-/* irc.c - Front-end implementation
- * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
+/* irc.c - basic irc functionality (see also irc_ext.c)
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #if HAVE_CONFIG_H
@@ -78,7 +78,7 @@ irc_init(void)
 	r->conto_soft_us = DEF_CONTO_SOFT;
 	r->conto_hard_us = DEF_CONTO_HARD;
 
-	for(int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++)
 		r->logonconv[i] = NULL;
 
 
@@ -124,7 +124,7 @@ irc_dispose(irc hnd)
 	free(hnd->serv_dist);
 	free(hnd->serv_info);
 
-	for(int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++)
 		ic_freearr(hnd->logonconv[i]);
 
 	D("(%p) disposed", hnd);
@@ -143,7 +143,7 @@ irc_connect(irc hnd)
 	update_strprop(&hnd->banmsg, NULL);
 	hnd->banned = false;
 
-	for(int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++) {
 		ic_freearr(hnd->logonconv[i]);
 		hnd->logonconv[i] = NULL;
 	}

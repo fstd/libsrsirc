@@ -1,5 +1,5 @@
-/* iio.c - Back-end, i/o processing
- * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
+/* iio.c - i/o processing, protocol tokenization
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #if HAVE_CONFIG_H
@@ -124,7 +124,7 @@ wait_for_readable(int sck, uint64_t to_us)
 {
 	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
 
-	for(;;) {
+	for (;;) {
 		struct timeval tout;
 		uint64_t trem = 0;
 		if (ic_check_timeout(tsend, &trem))
@@ -153,7 +153,7 @@ writeall(sckhld sh, const char *buf)
 {
 	size_t cnt = 0;
 	size_t len = strlen(buf);
-	while(cnt < len) {
+	while (cnt < len) {
 		ssize_t n = sendwrap(sh, buf + cnt, len - cnt, MSG_NOSIGNAL);
 		if (n < 0)
 			return false;
@@ -185,7 +185,7 @@ sendwrap(sckhld sh, const void *buf, size_t len, int flags)
 static int
 tokenize(char *buf, tokarr *tok)
 {
-	for(size_t i = 0; i < COUNTOF(*tok); ++i)
+	for (size_t i = 0; i < COUNTOF(*tok); ++i)
 		(*tok)[i] = NULL;
 
 	if (*buf == ':') { /* message has a prefix */
@@ -220,7 +220,7 @@ tokenize(char *buf, tokarr *tok)
 static char*
 nexttok(char *buf)
 {
-	while(*buf && *buf != ' ') /* walk until end of (former) token */
+	while (*buf && *buf != ' ') /* walk until end of (former) token */
 		buf++;
 
 	if (!*buf)

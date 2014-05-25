@@ -55,7 +55,7 @@ proxy_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 	D(DBGSPEC" wrote HTTP CONNECT, reading response",
 	    sck, host, port);
 	size_t c = 0;
-	while(c < sizeof buf && (c < 4 || buf[c-4] != '\r' ||
+	while (c < sizeof buf && (c < 4 || buf[c-4] != '\r' ||
 	    buf[c-3] != '\n' || buf[c-2] != '\r' || buf[c-1] != '\n')) {
 		errno = 0;
 		n = read(sck, &buf[c], 1);
@@ -108,7 +108,7 @@ proxy_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 	/*FIXME this doesntwork if host is not an ipv4 addr but dns*/
 	uint32_t ip = inet_addr(host);
 	char name[6];
-	for(size_t i = 0; i < sizeof name - 1; i++)
+	for (size_t i = 0; i < sizeof name - 1; i++)
 		name[i] = rand() % 26 + 'a';
 	name[sizeof name - 1] = '\0';
 
@@ -142,7 +142,7 @@ proxy_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 	    sck, host, port);
 	char resp[8];
 	c = 0;
-	while(c < 8) {
+	while (c < 8) {
 		errno = 0;
 		n = read(sck, &resp+c, 8-c);
 		if (n <= 0) {
@@ -201,7 +201,7 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	    sck, host, port);
 	char resp[128];
 	c = 0;
-	while(c < 2) {
+	while (c < 2) {
 		errno = 0;
 		n = read(sck, &resp+c, 2-c);
 		if (n <= 0) {
@@ -223,7 +223,7 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 		c += n;
 	}
 
-	if(resp[0] != 5) {
+	if (resp[0] != 5) {
 		W(DBGSPEC" unexpected response %"PRIu8" %"PRIu8" (no socks5?)",
 		    sck, host, port, resp[0], resp[1]);
 		return false;
@@ -243,7 +243,7 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	int type = guess_hosttype(host);
 	struct in_addr ia4;
 	struct in6_addr ia6;
-	switch(type) {
+	switch (type) {
 	case HOST_IPV4:
 		connect[c++] = 1;
 		n = inet_pton(AF_INET, host, &ia4);
@@ -298,7 +298,7 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 
 	size_t l = 4;
 	c = 0;
-	while(c < l) {
+	while (c < l) {
 		errno = 0;
 		n = read(sck, resp + c, l - c);
 		if (n <= 0) {
@@ -327,7 +327,7 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	}
 
 	bool dns = false;
-	switch(resp[3]) {
+	switch (resp[3]) {
 	case 1: //ipv4
 		l = 4;
 		break;
@@ -346,7 +346,7 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 
 	c = 0;
 	l += 2; //port
-	while(c < l) {
+	while (c < l) {
 		errno = 0;
 		/* read the very first byte seperately */
 		n = read(sck, resp + c, c ? l - c : 1);
@@ -385,7 +385,7 @@ guess_hosttype(const char *host)
 	if (strchr(host, '['))
 		return HOST_IPV6;
 	int dc = 0;
-	while(*host) {
+	while (*host) {
 		if (*host == '.')
 			dc++;
 		else if (!isdigit((unsigned char)*host))

@@ -1,5 +1,5 @@
-/* iconn.c
- * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
+/* iconn.c - irc connection handling
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #if HAVE_CONFIG_H
@@ -267,7 +267,7 @@ icon_read(iconn hnd, tokarr *tok, uint64_t to_us)
 	}
 
 	size_t last = 2;
-	for(; last < COUNTOF(*tok) && (*tok)[last]; last++);
+	for (; last < COUNTOF(*tok) && (*tok)[last]; last++);
 
 	if (last > 2)
 		hnd->colon_trail = (*tok)[last-1][-1] == ':';
@@ -314,7 +314,7 @@ bool
 icon_set_proxy(iconn hnd, const char *host, uint16_t port, int ptype)
 {
 	char *n = NULL;
-	switch(ptype) {
+	switch (ptype) {
 	case IRCPX_HTTP:
 	case IRCPX_SOCKS4:
 	case IRCPX_SOCKS5:

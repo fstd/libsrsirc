@@ -1,9 +1,9 @@
-/* irc.h - Front-end (main) interface.
- * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
+/* irc.h - very basic front-end interface (irc_ext.h has the rest)
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
-#ifndef SRS_IRC_BASIC_H
-#define SRS_IRC_BASIC_H 1
+#ifndef LIBSRSIRC_IRC_H
+#define LIBSRSIRC_IRC_H 1
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -25,4 +25,5 @@ bool irc_set_pass(irc hnd, const char *srvpass);
 bool irc_set_uname(irc hnd, const char *uname);
 bool irc_set_fname(irc hnd, const char *fname);
 bool irc_set_nick(irc hnd, const char *nick);
-#endif /* SRS_IRC_BASIC_H */
+
+#endif /* LIBSRSIRC_IRC_H */

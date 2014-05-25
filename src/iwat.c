@@ -1,5 +1,5 @@
 /* iwat.c - IRC netwat, the example appliwation of libsrsirc
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2014, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #if HAVE_CONFIG_H
@@ -34,7 +34,7 @@
 #define W_(FNC, THR, FMT, A...) do {                              \
     if (g_sett.verb < THR) break;                                 \
     FNC("%s:%d:%s() - " FMT, __FILE__, __LINE__, __func__, ##A);  \
-    } while(0)
+    } while (0)
 
 #define W(FMT, A...) W_(warn, 1, FMT, ##A)
 #define WV(FMT, A...) W_(warn, 2, FMT, ##A)
@@ -43,10 +43,10 @@
 #define WVX(FMT, A...) W_(warnx, 2, FMT, ##A)
 
 #define E(FMT, A...) do { W_(warn, 0, FMT, ##A); \
-    exit(EXIT_FAILURE);} while(0)
+    exit(EXIT_FAILURE);} while (0)
 
 #define EX(FMT, A...) do { W_(warnx, 0, FMT, ##A); \
-    exit(EXIT_FAILURE);} while(0)
+    exit(EXIT_FAILURE);} while (0)
 
 static struct settings_s {
 	uint64_t scto_us;
@@ -113,7 +113,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 {
 	char *a0 = (*argv)[0];
 
-	for(int ch; (ch = getopt(*argc, *argv, "n:u:f:p:P:T:W:rqvh")) != -1; ){
+	for (int ch; (ch = getopt(*argc, *argv, "n:u:f:p:P:T:W:rqvh")) != -1;) {
 		switch (ch) {
 		      case 'n':
 			irc_set_nick(g_irc, optarg);
@@ -290,7 +290,7 @@ usage(FILE *str, const char *a0, int ec)
 	LH("\t\tpxspec   := pxtype:hostspec");
 	LH("\t\tpxtype   := 'HTTP' | 'SOCKS4' | 'SOCKS5'");
 	LH("");
-	LH("(C) 2012, Timo Buhrmester (contact: #fstd @ irc.freenode.org)");
+	LH("(C) 2012-14, Timo Buhrmester (contact: #fstd @ irc.freenode.org)");
 	#undef LH
 	#undef STR
 	#undef XSTR

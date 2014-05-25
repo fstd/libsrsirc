@@ -1,9 +1,9 @@
-/* imsg.h - protocl message handler prototypes
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
+/* irc_defs.h - definitions, data types, etc
+ * libsrsirc - a lightweight serious IRC lib - (C) 2014, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
-#ifndef IRCDEFS_H
-#define IRCDEFS_H 1
+#ifndef LIBSRSIRC_IRC_DEFS_H
+#define LIBSRSIRC_IRC_DEFS_H 1
 
 #include <stdint.h>
 
@@ -134,4 +134,4 @@ struct irc_s {
 };
 
 
-#endif /* IRCDEFS_H */
+#endif /* LIBSRSIRC_IRC_DEFS_H */

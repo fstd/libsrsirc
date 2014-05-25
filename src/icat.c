@@ -1,5 +1,5 @@
 /* icat.c - IRC netcat, the example application of libsrsirc
- * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #if HAVE_CONFIG_H
@@ -46,7 +46,7 @@
 #define W_(FNC, THR, FMT, A...) do {                                  \
     if (g_sett.verb < THR) break; \
     FNC("%s:%d:%s() - " FMT, __FILE__, __LINE__, __func__, ##A);  \
-    } while(0)
+    } while (0)
 
 #define W(FMT, A...) W_(warn, 1, FMT, ##A)
 #define WV(FMT, A...) W_(warn, 2, FMT, ##A)
@@ -55,10 +55,10 @@
 #define WVX(FMT, A...) W_(warnx, 2, FMT, ##A)
 
 #define E(FMT, A...) do { W_(warn, 0, FMT, ##A); \
-    exit(EXIT_FAILURE);} while(0)
+    exit(EXIT_FAILURE);} while (0)
 
 #define EX(FMT, A...) do { W_(warnx, 0, FMT, ##A); \
-    exit(EXIT_FAILURE);} while(0)
+    exit(EXIT_FAILURE);} while (0)
 
 static struct settings_s {
 	bool trgmode;
@@ -212,7 +212,7 @@ life(void)
 	int r;
 	bool stdineof = false;
 	g_nexthb = timestamp_us() + g_sett.heartbeat_us;
-	for(;;) {
+	for (;;) {
 		bool canreadstdin = false, canreadirc = false;
 
 		r = select2(&canreadstdin, &canreadirc,
@@ -330,7 +330,7 @@ select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, uint64_t to_us)
 	if (fd2 >= 0)
 		FD_SET(fd2, &read_set);
 
-	for(;;) {
+	for (;;) {
 		if (tsend) {
 			trem = tsend - timestamp_us();
 			if (trem <= 0)
@@ -367,7 +367,7 @@ static void
 handle_stdin(char *line)
 {
 	char *end = line + strlen(line) - 1;
-	while(end >= line && (*end == '\r' || *end == '\n'))
+	while (end >= line && (*end == '\r' || *end == '\n'))
 		*end-- = '\0';
 
 	if (strlen(line) == 0)
@@ -447,7 +447,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 {
 	char *a0 = (*argv)[0];
 
-	for(int ch; (ch = getopt(*argc, *argv,
+	for (int ch; (ch = getopt(*argc, *argv,
 	    "vqchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNjiI")) != -1;) {
 		switch (ch) {
 		      case 'n':
@@ -520,7 +520,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 					STRACAT(sett->chanlist, tok);
 					STRACAT(sett->keylist, "x");
 				}
-			} while((tok = strtok(NULL, " ")));
+			} while ((tok = strtok(NULL, " ")));
 			free(str);
 			}
 		break;case 'l':
@@ -658,7 +658,7 @@ iprintf(const char *fmt, ...)
 		if (!(ptr = g_outQ = malloc(sizeof *g_outQ)))
 			E("malloc failed");
 	} else {
-		while(ptr->next)
+		while (ptr->next)
 			ptr = ptr->next;
 		if (!(ptr->next = malloc(sizeof *ptr->next)))
 			E("malloc failed");
@@ -681,7 +681,7 @@ strNcat(char *dest, const char *src, size_t destsz)
 	size_t rem = destsz - (len + 1);
 
 	char *ptr = dest + len;
-	while(rem-- && *src) {
+	while (rem-- && *src) {
 		*ptr++ = *src++;
 	}
 	*ptr = '\0';
@@ -800,7 +800,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	LH("\t\tkey      := 'verysecret'");
 	SH("!! Try -H for a more complete usage statement. !!");
 	BH("");
-	BH("(C) 2012, Timo Buhrmester (contact: #fstd @ irc.freenode.org)");
+	BH("(C) 2012-14, Timo Buhrmester (contact: #fstd @ irc.freenode.org)");
 	#undef SH
 	#undef LH
 	#undef BH

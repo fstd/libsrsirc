@@ -1,5 +1,5 @@
-/* common.c - routines commonly used throughout the lib
- * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
+/* common.c - lib-internal IRC-unrelated common routines
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #if HAVE_CONFIG_H
@@ -24,9 +24,10 @@
 #include <arpa/inet.h>
 #include <inttypes.h>
 
-#include <intlog.h>
+/* local */
+#include "intlog.h"
 
-#include <common.h>
+#include "common.h"
 
 
 void
@@ -38,7 +39,7 @@ ic_strNcat(char *dest, const char *src, size_t destsz)
 	size_t rem = destsz - (len + 1);
 
 	char *ptr = dest + len;
-	while(rem-- && *src) {
+	while (rem-- && *src) {
 		*ptr++ = *src++;
 	}
 	*ptr = '\0';
@@ -48,48 +49,11 @@ size_t
 ic_strCchr(const char *dst, char c)
 {
 	size_t r = 0;
-	while(*dst)
+	while (*dst)
 		if (*dst++ == c)
 			r++;
 	return r;
 }
-
-/*
-void*
-ic_xmalloc(size_t num)
-{
-	void *new = malloc(num);
-	if (!new)
-		CE("malloc failed");
-	return new;
-}
-
-void*
-ic_xrealloc(void *p, size_t num)
-{
-	void *new = realloc(p, num);
-	if (!new)
-		CE("realloc failed");
-
-	return new;
-}
-
-void*
-ic_xcalloc(size_t num, size_t size)
-{
-	void *new = ic_xmalloc(num * size);
-	memset(new, 0, num * size);
-	return new;
-}
-
-char*
-ic_xstrdup(const char *str)
-{
-	if (str)
-		return strcpy(ic_xmalloc(strlen(str) + 1), str);
-	return NULL;
-}
-*/
 
 uint64_t
 ic_timestamp_us(void)
@@ -225,7 +189,7 @@ int ic_consocket(const char *host, uint16_t port,
 
 		bool success = false;
 
-		for(;;) {
+		for (;;) {
 			fd_set fds;
 			FD_ZERO(&fds);
 			FD_SET(sck, &fds);
@@ -291,18 +255,6 @@ int ic_consocket(const char *host, uint16_t port,
 
 	return sck;
 }
-
-/*
-char*
-ic_strmdup(const char *str, size_t minlen)
-{
-	size_t len = strlen(str);
-	char *s = malloc((len > minlen ? len : minlen) + 1);
-	if (s)
-		strcpy(s, str);
-	return s;
-}
-*/
 
 bool
 update_strprop(char **field, const char *val)

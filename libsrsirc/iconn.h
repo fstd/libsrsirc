@@ -2,8 +2,8 @@
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
-#ifndef SRS_IRC_CON_H
-#define SRS_IRC_CON_H 1
+#ifndef LIBSRSIRC_ICONN_H
+#define LIBSRSIRC_ICONN_H 1
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -32,4 +32,4 @@ bool icon_get_ssl(iconn hnd);
 bool icon_colon_trail(iconn hnd);
 int icon_sockfd(iconn hnd);
 
-#endif /* SRS_IRC_CON_H */
+#endif /* LIBSRSIRC_ICONN_H */

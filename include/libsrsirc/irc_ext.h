@@ -1,9 +1,9 @@
-/* irc_ext.h - Front-end (main) interface.
- * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
+/* irc_ext.h - less commonly used part of the main interface
+ * libsrsirc - a lightweight serious IRC lib - (C) 2014, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
-#ifndef SRS_IRC_EXT_H
-#define SRS_IRC_EXT_H 1
+#ifndef LIBSRSIRC_IRC_EXT_H
+#define LIBSRSIRC_IRC_EXT_H 1
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -54,4 +54,4 @@ long irc_get_service_type(irc hnd);
 const char* irc_get_service_info(irc hnd);
 bool irc_get_ssl(irc hnd);
 
-#endif /* SRS_IRC_EXT_H */
+#endif /* LIBSRSIRC_IRC_EXT_H */
