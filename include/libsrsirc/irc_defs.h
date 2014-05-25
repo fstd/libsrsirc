@@ -28,11 +28,11 @@
 #define DEF_SERV_DIST "*"
 #define DEF_SERV_TYPE 0
 #define DEF_SERV_INFO "serious business irc service"
+#define DEF_HCTO_US 120000000ul /* hard connect timeout (overall) */
+#define DEF_SCTO_US 15000000ul /* soft connect timeout (per A/AAAA record) */
 #define DEF_UMODES "iswo"
 #define DEF_CMODES "opsitnml"
 
-#define DEF_CONTO_HARD 120000000ul
-#define DEF_CONTO_SOFT 15000000ul
 
 #define MAX_NICK_LEN 64
 #define MAX_HOST_LEN 128
