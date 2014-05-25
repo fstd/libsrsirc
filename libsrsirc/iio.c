@@ -42,7 +42,7 @@ static bool writeall(sckhld sh, const char *buf);
 static ssize_t readwrap(sckhld sh, void *buf, size_t sz);
 static ssize_t sendwrap(sckhld sh, const void *buf, size_t len, int flags);
 static int tokenize(char *buf, tokarr *tok);
-static char* skip2lws(char *s);
+static char* nexttok(char *buf);
 
 /* pub if implementation */
 int
@@ -185,66 +185,52 @@ sendwrap(sckhld sh, const void *buf, size_t len, int flags)
 static int
 tokenize(char *buf, tokarr *tok)
 {
-	if (!*buf) {
+	for(size_t i = 0; i < COUNTOF(*tok); ++i)
+		(*tok)[i] = NULL;
+
+	if (*buf == ':') { /* message has a prefix */
+		(*tok)[0] = buf + 1; /* disregard the colon */
+		if (!(buf = nexttok(buf))) {
+			E("protocol error (no more tokens after prefix)");
+			return -1;
+		}
+	} else if (*buf == ' ') { /* this would lead to parsing issues */
+		E("protocol error (leading whitespace)");
+		return -1;
+	} else if (!*buf) {
 		E("protocol error (empty line)");
 		return -1;
 	}
 
-	for(size_t i = 0; i < COUNTOF(*tok); ++i)
-		(*tok)[i] = NULL;
-
-	if (*buf == ':') {
-		(*tok)[0] = buf + 1;
-		buf = skip2lws(buf);
-		if (!buf) {
-			E("protocol error (pfx but no cmd)");
-			return -1;
-		}
-		while(*buf == ' ')
-			*buf++ = '\0';
-		V("extracted pfx: %s, rest: %s", (*tok)[0], buf);
-	} else if (*buf == ' ') {
-		E("protocol error (leading whitespace)");
-		return -1;
-	}
-
-	(*tok)[1] = buf;
-	buf = skip2lws(buf);
-	if (buf) {
-		while(*buf == ' ')
-			*buf++ = '\0';
-	}
-	V("extracted cmd: %s, rest: %s", (*tok)[1], buf);
+	(*tok)[1] = buf; /* command */
 
 	size_t argc = 2;
-	while(buf && *buf && argc < COUNTOF(*tok)) {
-		V("iter (argc: %zu) buf is: %s", argc, buf);
-		if (*buf == ':') {
-			(*tok)[argc++] = buf + 1;
-			V("extracted trailing (len: %zu), arg[%zu]: %s",
-			    strlen(buf+1), argc-1, (*tok)[argc-1]);
+	while (argc < COUNTOF(*tok) && (buf = nexttok(buf))) {
+		if (*buf == ':') { /* `trailing' arg */
+			(*tok)[argc++] = buf + 1; /* disregard the colon */
 			break;
 		}
-		(*tok)[argc++] = buf;
 
-		buf = skip2lws(buf);
-		if (buf) {
-			while (*buf == ' ')
-				*buf++ = '\0';
-			V("jumped over ws: %s", buf);
-		}
-		V("extracted arg[%zu]: %s, rest: %s",
-		    argc-1, (*tok)[argc-1], buf);
+		(*tok)[argc++] = buf;
 	}
 
-	V("done!");
 	return 1;
 }
 
 static char*
-skip2lws(char *s)
+nexttok(char *buf)
 {
-	while(*s && *s != ' ')
-		s++;
-	return *s ? s : NULL;
+	while(*buf && *buf != ' ') /* walk until end of (former) token */
+		buf++;
+
+	if (!*buf)
+		return NULL; /* there's no next token */
+
+	while (*buf == ' ') /* walk over token delimiter, zero it out */
+		*buf++ = '\0';
+
+	if (!*buf)
+		return NULL; /* trailing whitespace, but no next token */
+
+	return buf; /* return pointer to beginning of the next token */
 }
