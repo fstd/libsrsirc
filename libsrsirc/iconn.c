@@ -257,11 +257,11 @@ icon_read(iconn hnd, tokarr *tok, uint64_t to_us)
 		return -1;
 
 	int n;
-	if (!(n = ircio_read(hnd->sh, &hnd->rctx, tok, to_us)))
+	if (!(n = iio_read(hnd->sh, &hnd->rctx, tok, to_us)))
 		return 0; /* timeout */
 
 	if (n < 0) {
-		W("(%p) ircio_read failed", hnd);
+		W("(%p) iio_read failed", hnd);
 		icon_reset(hnd);
 		return -1;
 	}
@@ -284,7 +284,7 @@ icon_write(iconn hnd, const char *line)
 		return false;
 
 
-	if (!ircio_write(hnd->sh, line)) {
+	if (!iio_write(hnd->sh, line)) {
 		W("(%p) failed to write '%s'", hnd, line);
 		icon_reset(hnd);
 		return false;
