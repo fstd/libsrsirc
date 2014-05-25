@@ -16,7 +16,7 @@
 #include <libsrsirc/irc_defs.h>
 
 /* iio_read
- * Read one message from the ircd, tokenize and populate `tok' the results.
+ * Read one message from the ircd, tokenize and populate `tok' with the results.
  *
  * Params: `sh':    Structure holding socket and, if enabled, SSL handle
  *         `ctx':   Read context structure primarily holding the read buffer
@@ -44,6 +44,6 @@ int iio_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us);
  *
  * Returns true on success, false on failure
  */
-bool iio_write(sckhld sck, const char *line);
+bool iio_write(sckhld sh, const char *line);
 
 #endif /* LIBSRSIRC_IIO_H */
