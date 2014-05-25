@@ -28,7 +28,7 @@
  *                  (*tok)[1] will point to the (mandatory) "command"
  *                  (*tok)[2+n] will point to the n-th "argument", if it
  *                      exists; NULL otherwise (for 0 <= n < sizeof *tok - 2)
- *         `to_us': Rimeout in microseconds (0 = no timeout)
+ *         `to_us': Timeout in microseconds (0 = no timeout)
  *
  * Returns 1 on success; 0 on timeout; -1 on failure
  */
