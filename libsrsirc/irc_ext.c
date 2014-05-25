@@ -156,8 +156,8 @@ irc_set_service_info(irc hnd, const char *info)
 bool
 irc_set_connect_timeout(irc hnd, uint64_t soft, uint64_t hard)
 {
-	hnd->conto_hard_us = hard;
-	hnd->conto_soft_us = soft;
+	hnd->hcto_us = hard;
+	hnd->scto_us = soft;
 	return true;
 }
 

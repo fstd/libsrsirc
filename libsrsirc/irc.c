@@ -75,8 +75,8 @@ irc_init(void)
 	r->casemapping = CMAP_RFC1459;
 	r->conflags = DEF_CONFLAGS;
 	r->serv_type = DEF_SERV_TYPE;
-	r->conto_soft_us = DEF_CONTO_SOFT;
-	r->conto_hard_us = DEF_CONTO_HARD;
+	r->scto_us = DEF_SCTO_US;
+	r->hcto_us = DEF_HCTO_US;
 
 	for (int i = 0; i < 4; i++)
 		r->logonconv[i] = NULL;
@@ -136,8 +136,8 @@ irc_dispose(irc hnd)
 bool
 irc_connect(irc hnd)
 {
-	uint64_t tsend = hnd->conto_hard_us ?
-	    ic_timestamp_us() + hnd->conto_hard_us : 0;
+	uint64_t tsend = hnd->hcto_us ?
+	    ic_timestamp_us() + hnd->hcto_us : 0;
 
 	update_strprop(&hnd->lasterr, NULL);
 	update_strprop(&hnd->banmsg, NULL);
@@ -148,7 +148,7 @@ irc_connect(irc hnd)
 		hnd->logonconv[i] = NULL;
 	}
 
-	if (!icon_connect(hnd->con, hnd->conto_soft_us, hnd->conto_hard_us))
+	if (!icon_connect(hnd->con, hnd->scto_us, hnd->hcto_us))
 		return false;
 
 	if (!send_logon(hnd))
