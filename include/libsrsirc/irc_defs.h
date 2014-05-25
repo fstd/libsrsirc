@@ -19,7 +19,6 @@
 
 #define DEF_HOST "localhost"
 #define DEF_PORT ((uint16_t)6667)
-
 #define DEF_PASS ""
 #define DEF_NICK "srsirc"
 #define DEF_UNAME "bsnsirc"
@@ -30,10 +29,12 @@
 #define DEF_SERV_INFO "serious business irc service"
 #define DEF_HCTO_US 120000000ul /* hard connect timeout (overall) */
 #define DEF_SCTO_US 15000000ul /* soft connect timeout (per A/AAAA record) */
+
+/* as per the RFC noone cares about... */
 #define DEF_UMODES "iswo"
 #define DEF_CMODES "opsitnml"
 
-
+/* arbitrary but empirically established  */
 #define MAX_NICK_LEN 64
 #define MAX_HOST_LEN 128
 #define MAX_UMODES_LEN 64
