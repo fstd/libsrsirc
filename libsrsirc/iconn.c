@@ -272,7 +272,7 @@ icon_read(iconn hnd, tokarr *tok, uint64_t to_us)
 	if (last > 2)
 		hnd->colon_trail = (*tok)[last-1][-1] == ':';
 
-	D("(%p) got a msg ('%s', %zu args)", hnd, tok[1], last);
+	D("(%p) got a msg ('%s', %zu args)", hnd, (*tok)[1], last);
 
 	return 1;
 }
