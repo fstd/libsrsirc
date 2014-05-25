@@ -48,8 +48,6 @@ static char* skip2lws(char *s, bool tab_is_ws);
 int
 ircio_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
 {
-	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
-
 	while (ctx->wptr < ctx->eptr && ISDELIM(*ctx->wptr)) /* skip leading delims */
 		ctx->wptr++;
 
