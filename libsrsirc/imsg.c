@@ -309,45 +309,48 @@ handle_005(irc hnd, tokarr *msg, size_t nargs)
 
 
 uint8_t
-handle(irc hnd, tokarr *msg)
+handle(irc hnd, tokarr *msg, bool logon)
 {
-	uint8_t retflags = 0;
 	size_t ac = countargs(msg);
 
-	if (strcmp((*msg)[1], "001") == 0)
-		retflags |= handle_001(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "002") == 0)
-	      retflags |= handle_002(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "003") == 0)
-	      retflags |= handle_003(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "004") == 0)
-	      retflags |= handle_004(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "PING") == 0)
-	      retflags |= handle_PING(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "432") == 0) //errorneous nick
-	      retflags |= handle_432(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "433") == 0) //nick in use
-	      retflags |= handle_433(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "436") == 0) //nick collision
-	      retflags |= handle_436(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "437") == 0) //unavail resource
-	      retflags |= handle_437(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "464") == 0) //passwd missmatch
-	      retflags |= handle_464(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "383") == 0) //we're service
-	      retflags |= handle_383(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "484") == 0) //restricted
-	      retflags |= handle_484(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "465") == 0) //banned
-	      retflags |= handle_465(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "466") == 0) //will be banned
-	      retflags |= handle_466(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "NICK") == 0)
-	      retflags |= handle_NICK(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "ERROR") == 0)
-	      retflags |= handle_ERROR(hnd, msg, ac);
-	else if (strcmp((*msg)[1], "005") == 0)
-	      retflags |= handle_005(hnd, msg, ac);
+	if (strcmp((*msg)[1], "PING") == 0)
+	      return handle_PING(hnd, msg, ac);
 
-	return retflags;
+	if (logon) {
+		if (strcmp((*msg)[1], "001") == 0)
+			return handle_001(hnd, msg, ac);
+		else if (strcmp((*msg)[1], "002") == 0)
+			return handle_002(hnd, msg, ac);
+		else if (strcmp((*msg)[1], "003") == 0)
+			return handle_003(hnd, msg, ac);
+		else if (strcmp((*msg)[1], "004") == 0)
+			return handle_004(hnd, msg, ac);
+		else if (strcmp((*msg)[1], "432") == 0) //errorneous nick
+			return handle_432(hnd, msg, ac);
+		else if (strcmp((*msg)[1], "433") == 0) //nick in use
+			return handle_433(hnd, msg, ac);
+		else if (strcmp((*msg)[1], "436") == 0) //nick collision
+			return handle_436(hnd, msg, ac);
+		else if (strcmp((*msg)[1], "437") == 0) //unavail resource
+			return handle_437(hnd, msg, ac);
+		else if (strcmp((*msg)[1], "464") == 0) //passwd missmatch
+			return handle_464(hnd, msg, ac);
+		else if (strcmp((*msg)[1], "383") == 0) //we're service
+			return handle_383(hnd, msg, ac);
+		else if (strcmp((*msg)[1], "484") == 0) //restricted
+			return handle_484(hnd, msg, ac);
+	} else {
+		if (strcmp((*msg)[1], "465") == 0) //banned
+			return handle_465(hnd, msg, ac);
+		else if (strcmp((*msg)[1], "466") == 0) //will be banned
+			return handle_466(hnd, msg, ac);
+		else if (strcmp((*msg)[1], "NICK") == 0)
+			return handle_NICK(hnd, msg, ac);
+		else if (strcmp((*msg)[1], "ERROR") == 0)
+			return handle_ERROR(hnd, msg, ac);
+		else if (strcmp((*msg)[1], "005") == 0)
+			return handle_005(hnd, msg, ac);
+	}
+
+	return 0;
 }

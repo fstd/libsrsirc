@@ -10,6 +10,15 @@
 
 #include <libsrsirc/irc_defs.h>
 
-uint8_t handle(irc hnd, tokarr *msg);
+#define CANT_PROCEED (1<<0)
+# define OUT_OF_NICKS (1<<1)
+# define AUTH_ERR (1<<2)
+# define PROTO_ERR (1<<3)
+# define IO_ERR (1<<4)
+#define LOGON_COMPLETE (1<<5)
+
+/* returns the bitwise OR of one or more of the above
+ * bitmasks, or 0 for nothing special */
+uint8_t handle(irc hnd, tokarr *msg, bool logon);
 
 #endif /* LIBSRSIRC_IMSG_H */

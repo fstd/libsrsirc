@@ -188,7 +188,7 @@ irc_connect(irc hnd)
 		 * seeing 004 or 383 makes us consider ourselves logged on
 		 * note that we do not wait for 005, but we will later
 		 * parse it as we ran across it. */
-		uint8_t flags = handle(hnd, &msg);
+		uint8_t flags = handle(hnd, &msg, true);
 
 		if (flags & CANT_PROCEED) {
 			if (flags & AUTH_ERR) {
@@ -237,7 +237,7 @@ irc_read(irc hnd, tokarr *tok, uint64_t to_us)
 		W("(%p) icon_read() failed", hnd);
 		failure = true;
 	} else if (r != 0) {
-		uint8_t flags = handle(hnd, tok);
+		uint8_t flags = handle(hnd, tok, false);
 
 		if (flags & CANT_PROCEED) {
 			W("(%p) failed to handle, can't proceed (f:%x)",
