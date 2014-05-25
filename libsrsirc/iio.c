@@ -48,17 +48,23 @@ static char* nexttok(char *buf);
 int
 ircio_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
 {
-	while (ctx->wptr < ctx->eptr && ISDELIM(*ctx->wptr)) /* skip leading delims */
-		ctx->wptr++;
+	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+
+	while (ctx->wptr < ctx->eptr && ISDELIM(*ctx->wptr))
+		ctx->wptr++; /* skip leading line delimiters */
 
 	if (ctx->wptr == ctx->eptr) /* empty buffer, use the opportunity.. */
 		ctx->wptr = ctx->eptr = ctx->workbuf;
 
 	char *delim;
-	if (!(delim = find_delim(ctx))) {
-		int r = read_more(sh, ctx, to_us);
-		if (r <= 0 || !(delim = find_delim(ctx)))
-			return r == 1 ? 0 : r;
+	while (!(delim = find_delim(ctx))) {
+		uint64_t trem = 0;
+		if (ic_check_timeout(tsend, &trem))
+			return 0;
+
+		int r = read_more(sh, ctx, trem);
+		if (r <= 0)
+			return r;
 	}
 
 	char *linestart = ctx->wptr;
