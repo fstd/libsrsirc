@@ -57,19 +57,16 @@ ircio_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
 		ctx->wptr = ctx->eptr = ctx->workbuf;
 
 	char *delim;
-	while (!(delim = find_delim(ctx))) {
-		uint64_t trem = 0;
-		if (ic_check_timeout(tsend, &trem))
-			return 0;
-
-		int r = read_more(sh, ctx, trem);
-		if (r <= 0)
-			return r;
+	if (!(delim = find_delim(ctx))) {
+		int r = read_more(sh, ctx, to_us);
+		if (r <= 0 || !(delim = find_delim(ctx)))
+			return r == 1 ? 0 : r;
 	}
 
 	char *linestart = ctx->wptr;
 	size_t linelen = delim - linestart;
 	*delim = '\0';
+	D("read a line: '%s'", linestart);
 	ctx->wptr += linelen + 1;
 	return tokenize(linestart, tok);
 }
@@ -193,24 +190,22 @@ tokenize(char *buf, tokarr *tok)
 	if (!buf || !tok)
 		return -1;
 
-	V("tokenizing: %s", buf);
+	size_t len = strlen(buf);
+	V("tokenizing '%s' (len: %zu)", buf, len);
+	if (len == 0) {
+		E("protocol error (empty line)");
+		return -1;
+	}
+
 	for(size_t i = 0; i < COUNTOF(*tok); ++i)
 		(*tok)[i] = NULL;
-
-	while(isspace((unsigned char)*buf))
-		*buf++ = '\0';
-
-	size_t len = strlen(buf);
-	V("len is %zu, jumped over ws: %s", len, buf);
-	if (len == 0)
-		return 0;
 
 	if (*buf == ':') {
 		(*tok)[0] = buf + 1;
 		buf = skip2lws(buf, true);
 		if (!buf) {
-			W("parse erro, pfx but no cmd");
-			return -1;//parse err, pfx but no cmd
+			E("protocol error (pfx but no cmd)");
+			return -1;
 		}
 		while(isspace((unsigned char)*buf))
 			*buf++ = '\0';

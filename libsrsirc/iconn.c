@@ -156,7 +156,7 @@ icon_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 			snprintf(ps, sizeof ps, " via %s:%s:%" PRIu16,
 			    pxtypestr(hnd->ptype), hnd->phost, hnd->pport);
 
-		D("(%p) wanna connect to %s:%"PRIu16"%s, "
+		I("(%p) wanna connect to %s:%"PRIu16"%s, "
 		    "sto: %"PRIu64"us, hto: %"PRIu64"us",
 		    hnd, hnd->host, hnd->port, ps, softto_us, hardto_us);
 	}
@@ -256,25 +256,15 @@ icon_read(iconn hnd, tokarr *tok, uint64_t to_us)
 	if (!hnd || hnd->state != ON)
 		return -1;
 
-	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
-	D("(%p) wanna read (timeout: %"PRIu64")", hnd, to_us);
-
 	int n;
-	/* read a line, ignoring empty lines */
-	do {
-		uint64_t trem;
-		if (ic_check_timeout(tsend, &trem)) {
-			V("(%p) timeout hit", hnd);
-			return 0;
-		}
-		n = ircio_read(hnd->sh, &hnd->rctx, tok, trem);
+	if (!(n = ircio_read(hnd->sh, &hnd->rctx, tok, to_us)))
+		return 0; /* timeout */
 
-		if (n < 0) { //read error
-			W("(%p) read failed", hnd);
-			icon_reset(hnd);
-			return -1;
-		}
-	} while(n == 0);
+	if (n < 0) {
+		W("(%p) ircio_read failed", hnd);
+		icon_reset(hnd);
+		return -1;
+	}
 
 	size_t last = 2;
 	for(; last < COUNTOF(*tok) && (*tok)[last]; last++);
@@ -282,7 +272,7 @@ icon_read(iconn hnd, tokarr *tok, uint64_t to_us)
 	if (last > 2)
 		hnd->colon_trail = (*tok)[last-1][-1] == ':';
 
-	D("(%p) done reading", hnd);
+	V("(%p) got a msg with %zu args", hnd, last);
 
 	return 1;
 }
@@ -346,6 +336,7 @@ icon_set_proxy(iconn hnd, const char *host, uint16_t port, int ptype)
 		hnd->ptype = ptype;
 		free(hnd->phost);
 		hnd->phost = n;
+		I("set proxy to %s:%s:%"PRIu16, pxtypestr(hnd->ptype), n, port);
 		break;
 	default:
 		E("illegal proxy type %d", ptype);
@@ -366,6 +357,7 @@ icon_set_server(iconn hnd, const char *host, uint16_t port)
 	free(hnd->host);
 	hnd->host = n;
 	hnd->port = port ? port : DEF_PORT;
+	I("set server to %s:%"PRIu16, n, port);
 	return true;
 }
 
@@ -394,6 +386,7 @@ icon_set_ssl(iconn hnd, bool on)
 		hnd->sctx = NULL;
 	}
 
+	I("ssl %sabled", on ? "en" : "dis");
 	hnd->ssl = on;
 
 	return true;
