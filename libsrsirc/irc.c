@@ -190,23 +190,8 @@ irc_connect(irc hnd)
 		 * parse it as we ran across it. */
 		uint8_t flags = handle(hnd, &msg, true);
 
-		if (flags & CANT_PROCEED) {
-			if (flags & AUTH_ERR) {
-				E("(%p) failed to authenticate", hnd);
-			} else if (flags & IO_ERR) {
-				E("(%p) i/o error", hnd);
-			} else if (flags & OUT_OF_NICKS) {
-				E("(%p) out of nicks", hnd);
-			} else if (flags & PROTO_ERR) {
-				char line[1024];
-				sndumpmsg(line, sizeof line, NULL, &msg);
-				E("(%p) proto error on '%s' (ct:%d, f:%x)",
-				    hnd, line,
-				    icon_colon_trail(hnd->con), flags);
-			}
-
+		if (flags & CANT_PROCEED)
 			goto irc_connect_fail;
-		}
 
 		if (flags & LOGON_COMPLETE)
 			success = true;
@@ -230,27 +215,16 @@ irc_online(irc hnd)
 int
 irc_read(irc hnd, tokarr *tok, uint64_t to_us)
 {
-	//D("(%p) wanna read (timeout: %"PRIu64")", hnd, to_us);
-	bool failure = false;
 	int r = icon_read(hnd->con, tok, to_us);
-	if (r == -1) {
-		W("(%p) icon_read() failed", hnd);
-		failure = true;
-	} else if (r != 0) {
-		uint8_t flags = handle(hnd, tok, false);
+	if (r == 0)
+		return 0;
 
-		if (flags & CANT_PROCEED) {
-			W("(%p) failed to handle, can't proceed (f:%x)",
-			    hnd, flags);
-			failure = true;
-		}
+	if (r < 0 || handle(hnd, tok, false) & CANT_PROCEED) {
+		irc_reset(hnd);
+		return -1;
 	}
 
-	if (failure)
-		irc_reset(hnd);
-	//D("(%p) done reading", hnd);
-
-	return failure ? -1 : r;
+	return 1;
 }
 
 bool
@@ -258,10 +232,8 @@ irc_write(irc hnd, const char *line)
 {
 	bool r = icon_write(hnd->con, line);
 
-	if (!r) {
-		W("(%p) icon_write() failed", hnd);
+	if (!r)
 		irc_reset(hnd);
-	}
 
 	return r;
 }

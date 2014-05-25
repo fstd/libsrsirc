@@ -252,7 +252,7 @@ parse_identity(char *nick, size_t nicksz, char *uname, size_t unamesz,
 
 
 
-void
+char*
 sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
 {
 	snprintf(dest, dest_sz, "(%p) '%s' '%s'", tag, (*msg)[0], (*msg)[1]);
@@ -263,6 +263,8 @@ sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
 		ic_strNcat(dest, (*msg)[i], dest_sz);
 		ic_strNcat(dest, "'", dest_sz);
 	}
+
+	return dest;
 }
 
 void

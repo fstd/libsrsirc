@@ -162,6 +162,7 @@ handle_383(irc hnd, tokarr *msg, size_t nargs)
 	ic_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
 	hnd->ver[0] = '\0';
 	hnd->service = true;
+	D("(%p) got beloved 383", hnd);
 
 	return LOGON_COMPLETE;
 }
@@ -170,7 +171,7 @@ static uint8_t
 handle_484(irc hnd, tokarr *msg, size_t nargs)
 {
 	hnd->restricted = true;
-
+	I("(%p) we're 'restricted'", hnd);
 	return 0;
 }
 
@@ -202,6 +203,8 @@ handle_ERROR(irc hnd, tokarr *msg, size_t nargs)
 	hnd->lasterr = strdup((*msg)[2] ? (*msg)[2] : "");
 	if (!hnd->lasterr)
 		EE("strdup");
+	else
+		W("sever said ERROR: '%s'", hnd->lasterr);
 	return 0; /* not strictly a case for CANT_PROCEED */
 }
 
@@ -215,8 +218,10 @@ handle_NICK(irc hnd, tokarr *msg, size_t nargs)
 	if (!pfx_extract_nick(nick, sizeof nick, (*msg)[0]))
 		return CANT_PROCEED|PROTO_ERR;
 
-	if (!istrcasecmp(nick, hnd->mynick, hnd->casemapping))
+	if (!istrcasecmp(nick, hnd->mynick, hnd->casemapping)) {
 		ic_strNcpy(hnd->mynick, (*msg)[2], sizeof hnd->mynick);
+		I("my nick is now '%s'", hnd->mynick);
+	}
 
 	return 0;
 }
@@ -312,45 +317,62 @@ uint8_t
 handle(irc hnd, tokarr *msg, bool logon)
 {
 	size_t ac = countargs(msg);
+	uint8_t retflags = 0;
 
 	if (strcmp((*msg)[1], "PING") == 0)
-	      return handle_PING(hnd, msg, ac);
-
-	if (logon) {
+	      retflags |= handle_PING(hnd, msg, ac);
+	else if (logon) {
 		if (strcmp((*msg)[1], "001") == 0)
-			return handle_001(hnd, msg, ac);
+			retflags |= handle_001(hnd, msg, ac);
 		else if (strcmp((*msg)[1], "002") == 0)
-			return handle_002(hnd, msg, ac);
+			retflags |= handle_002(hnd, msg, ac);
 		else if (strcmp((*msg)[1], "003") == 0)
-			return handle_003(hnd, msg, ac);
+			retflags |= handle_003(hnd, msg, ac);
 		else if (strcmp((*msg)[1], "004") == 0)
-			return handle_004(hnd, msg, ac);
+			retflags |= handle_004(hnd, msg, ac);
 		else if (strcmp((*msg)[1], "432") == 0) //errorneous nick
-			return handle_432(hnd, msg, ac);
+			retflags |= handle_432(hnd, msg, ac);
 		else if (strcmp((*msg)[1], "433") == 0) //nick in use
-			return handle_433(hnd, msg, ac);
+			retflags |= handle_433(hnd, msg, ac);
 		else if (strcmp((*msg)[1], "436") == 0) //nick collision
-			return handle_436(hnd, msg, ac);
+			retflags |= handle_436(hnd, msg, ac);
 		else if (strcmp((*msg)[1], "437") == 0) //unavail resource
-			return handle_437(hnd, msg, ac);
+			retflags |= handle_437(hnd, msg, ac);
 		else if (strcmp((*msg)[1], "464") == 0) //passwd missmatch
-			return handle_464(hnd, msg, ac);
+			retflags |= handle_464(hnd, msg, ac);
 		else if (strcmp((*msg)[1], "383") == 0) //we're service
-			return handle_383(hnd, msg, ac);
+			retflags |= handle_383(hnd, msg, ac);
 		else if (strcmp((*msg)[1], "484") == 0) //restricted
-			return handle_484(hnd, msg, ac);
+			retflags |= handle_484(hnd, msg, ac);
 	} else {
 		if (strcmp((*msg)[1], "465") == 0) //banned
-			return handle_465(hnd, msg, ac);
+			retflags |= handle_465(hnd, msg, ac);
 		else if (strcmp((*msg)[1], "466") == 0) //will be banned
-			return handle_466(hnd, msg, ac);
+			retflags |= handle_466(hnd, msg, ac);
 		else if (strcmp((*msg)[1], "NICK") == 0)
-			return handle_NICK(hnd, msg, ac);
+			retflags |= handle_NICK(hnd, msg, ac);
 		else if (strcmp((*msg)[1], "ERROR") == 0)
-			return handle_ERROR(hnd, msg, ac);
+			retflags |= handle_ERROR(hnd, msg, ac);
 		else if (strcmp((*msg)[1], "005") == 0)
-			return handle_005(hnd, msg, ac);
+			retflags |= handle_005(hnd, msg, ac);
 	}
 
-	return 0;
+	if (retflags & CANT_PROCEED) {
+		if (retflags & AUTH_ERR) {
+			E("(%p) failed to authenticate", hnd);
+		} else if (retflags & IO_ERR) {
+			E("(%p) i/o error", hnd);
+		} else if (retflags & OUT_OF_NICKS) {
+			E("(%p) out of nicks", hnd);
+		} else if (retflags & PROTO_ERR) {
+			char line[1024];
+			E("(%p) proto error on '%s' (ct:%d)",
+			    hnd, sndumpmsg(line, sizeof line, NULL, msg),
+			    icon_colon_trail(hnd->con));
+		} else {
+			E("(%p) can't proceed for unknown reasons", hnd);
+		}
+	}
+
+	return retflags;
 }

@@ -50,8 +50,7 @@ void parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
 bool parse_identity(char *nick, size_t nicksz, char *uname, size_t unamesz,
     char *fname, size_t fnamesz, const char *identity);
 
-void sndumpmsg(char *dest, size_t dest_sz, void *tag,
-    tokarr *msg);
+char* sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg);
 
 void dumpmsg(void *tag, tokarr *msg);
 
