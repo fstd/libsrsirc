@@ -141,7 +141,7 @@ wait_for_readable(int sck, uint64_t to_us)
 		if (r < 0) {
 			int e = errno;
 			WE("select");
-			return e == EINTR ? 0 : 1;
+			return e == EINTR ? 0 : -1;
 		} else if (r == 1 && FD_ISSET(sck, &fds)) {
 			return 1;
 		}
