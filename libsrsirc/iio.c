@@ -98,7 +98,7 @@ find_delim(struct readctx *ctx)
 	return NULL;
 }
 
-/* attempt to read more data from the ircd into out read buffer.
+/* attempt to read more data from the ircd into our read buffer.
  * returns 1 if something was read; 0 on timeout; -1 on failure */
 static int
 read_more(sckhld sh, struct readctx *ctx, uint64_t to_us)
