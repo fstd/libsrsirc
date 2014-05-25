@@ -13,7 +13,7 @@
 # include <openssl/err.h>
 #endif
 
-#define MAX_IRCARGS ((size_t)15)
+#define MAX_IRCARGS ((size_t)17)
 
 #define WORKBUF_SZ 4096
 
