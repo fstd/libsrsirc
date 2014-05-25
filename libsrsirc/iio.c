@@ -42,7 +42,7 @@ static bool writeall(sckhld sh, const char *buf);
 static ssize_t readwrap(sckhld sh, void *buf, size_t sz);
 static ssize_t sendwrap(sckhld sh, const void *buf, size_t len, int flags);
 static int tokenize(char *buf, tokarr *tok);
-static char* skip2lws(char *s, bool tab_is_ws);
+static char* skip2lws(char *s);
 
 /* pub if implementation */
 int
@@ -185,12 +185,7 @@ sendwrap(sckhld sh, const void *buf, size_t len, int flags)
 static int
 tokenize(char *buf, tokarr *tok)
 {
-	if (!buf || !tok)
-		return -1;
-
-	size_t len = strlen(buf);
-	V("tokenizing '%s' (len: %zu)", buf, len);
-	if (len == 0) {
+	if (!*buf) {
 		E("protocol error (empty line)");
 		return -1;
 	}
@@ -200,20 +195,23 @@ tokenize(char *buf, tokarr *tok)
 
 	if (*buf == ':') {
 		(*tok)[0] = buf + 1;
-		buf = skip2lws(buf, true);
+		buf = skip2lws(buf);
 		if (!buf) {
 			E("protocol error (pfx but no cmd)");
 			return -1;
 		}
-		while(isspace((unsigned char)*buf))
+		while(*buf == ' ')
 			*buf++ = '\0';
 		V("extracted pfx: %s, rest: %s", (*tok)[0], buf);
+	} else if (*buf == ' ') {
+		E("protocol error (leading whitespace)");
+		return -1;
 	}
 
 	(*tok)[1] = buf;
-	buf = skip2lws(buf, true);
+	buf = skip2lws(buf);
 	if (buf) {
-		while(isspace((unsigned char)*buf))
+		while(*buf == ' ')
 			*buf++ = '\0';
 	}
 	V("extracted cmd: %s, rest: %s", (*tok)[1], buf);
@@ -229,10 +227,9 @@ tokenize(char *buf, tokarr *tok)
 		}
 		(*tok)[argc++] = buf;
 
-		/* have seen a channel with <Tab> in its name */
-		buf = skip2lws(buf, false);
+		buf = skip2lws(buf);
 		if (buf) {
-			while(isspace((unsigned char)*buf))
+			while (*buf == ' ')
 				*buf++ = '\0';
 			V("jumped over ws: %s", buf);
 		}
@@ -245,10 +242,9 @@ tokenize(char *buf, tokarr *tok)
 }
 
 static char*
-skip2lws(char *s, bool tab_is_ws)
+skip2lws(char *s)
 {
-	while(*s &&
-	    (!isspace((unsigned char)*s) || (*s == '\t' && !tab_is_ws)))
+	while(*s && *s != ' ')
 		s++;
 	return *s ? s : NULL;
 }
