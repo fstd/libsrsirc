@@ -81,10 +81,10 @@ irc_sockfd(irc hnd)
 	return icon_sockfd(hnd->con);
 }
 
-const char *const *const*
-irc_logonconv(irc hnd)
+tokarr *(* /* ew.  returns pointer to array of 4 pointers to tokarr */
+irc_logonconv(irc hnd))[4]
 {
-	return (const char *const *const*)hnd->logonconv;
+	return &hnd->logonconv;
 }
 
 const char *const*
@@ -99,19 +99,17 @@ irc_005modepfx(irc hnd)
 	return (const char *const*)hnd->m005modepfx;
 }
 
-bool
+void
 irc_regcb_conread(irc hnd, fp_con_read cb, void *tag)
 {
 	hnd->cb_con_read = cb;
 	hnd->tag_con_read = tag;
-	return true;
 }
 
-bool
+void
 irc_regcb_mutnick(irc hnd, fp_mut_nick cb)
 {
 	hnd->cb_mut_nick = cb;
-	return true;
 }
 
 bool
@@ -120,18 +118,16 @@ irc_set_proxy(irc hnd, const char *host, uint16_t port, int ptype)
 	return icon_set_proxy(hnd->con, host, port, ptype);
 }
 
-bool
+void
 irc_set_conflags(irc hnd, uint8_t flags)
 {
 	hnd->conflags = flags;
-	return true;
 }
 
-bool
+void
 irc_set_service_connect(irc hnd, bool enabled)
 {
 	hnd->serv_con = enabled;
-	return true;
 }
 
 bool
@@ -153,12 +149,11 @@ irc_set_service_info(irc hnd, const char *info)
 	return update_strprop(&hnd->serv_info, info);
 }
 
-bool
+void
 irc_set_connect_timeout(irc hnd, uint64_t soft, uint64_t hard)
 {
 	hnd->hcto_us = hard;
 	hnd->scto_us = soft;
-	return true;
 }
 
 bool
