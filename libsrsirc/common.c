@@ -121,8 +121,14 @@ int ic_consocket(const char *host, uint16_t port,
 		return -1;
 	}
 
-	int sck = -1;
+	size_t count = 0;
+	for (struct addrinfo *ai = ai_list; ai; ai = ai->ai_next)
+		count++;
 
+	if (softto && hardto && softto * count < hardto)
+		softto = hardto / count;
+
+	int sck = -1;
 	D("iterating over result list...");
 	for (struct addrinfo *ai = ai_list; ai; ai = ai->ai_next) {
 		uint64_t softtsend = softto ? ic_timestamp_us() + softto : 0;
