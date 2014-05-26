@@ -93,7 +93,7 @@ icon_init_fail:
 	return NULL;
 }
 
-bool
+void
 icon_reset(iconn hnd)
 {
 	D("(%p) resetting", hnd);
@@ -115,11 +115,9 @@ icon_reset(iconn hnd)
 	hnd->sh.sck = -1;
 	hnd->state = OFF;
 	hnd->rctx.wptr = hnd->rctx.eptr = hnd->rctx.workbuf;
-
-	return true;
 }
 
-bool
+void
 icon_dispose(iconn hnd)
 {
 	icon_reset(hnd);
@@ -134,8 +132,6 @@ icon_dispose(iconn hnd)
 
 	D("(%p) disposed", hnd);
 	free(hnd);
-
-	return true;
 }
 
 bool
