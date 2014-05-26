@@ -103,18 +103,16 @@ irc_init_fail:
 	return NULL;
 }
 
-bool
+void
 irc_reset(irc hnd)
 {
-	return icon_reset(hnd->con);
+	icon_reset(hnd->con);
 }
 
-bool
+void
 irc_dispose(irc hnd)
 {
-	if (!icon_dispose(hnd->con))
-		return false;
-
+	icon_dispose(hnd->con);
 	free(hnd->lasterr);
 	free(hnd->banmsg);
 	free(hnd->pass);
@@ -129,8 +127,6 @@ irc_dispose(irc hnd)
 
 	D("(%p) disposed", hnd);
 	free(hnd);
-
-	return true;
 }
 
 bool
