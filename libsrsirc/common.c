@@ -27,6 +27,8 @@
 /* local */
 #include "intlog.h"
 
+#include <libsrsirc/irc_defs.h>
+
 #include "common.h"
 
 
@@ -299,4 +301,20 @@ ic_check_timeout(uint64_t tsend, uint64_t *trem)
 		*trem = tsend - now;
 
 	return false;
+}
+
+int
+ic_pxtypeno(const char *typestr)
+{
+	return (strcasecmp(typestr, "socks4") == 0) ? IRCPX_SOCKS4 :
+	       (strcasecmp(typestr, "socks5") == 0) ? IRCPX_SOCKS5 :
+	       (strcasecmp(typestr, "http") == 0) ? IRCPX_HTTP : -1;
+}
+
+const char*
+ic_pxtypestr(int type)
+{
+	return (type == IRCPX_HTTP) ? "HTTP" :
+	       (type == IRCPX_SOCKS4) ? "SOCKS4" :
+	       (type == IRCPX_SOCKS5) ? "SOCKS5" : "unknown";
 }

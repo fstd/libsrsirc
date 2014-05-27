@@ -42,6 +42,15 @@
 #define MAX_VER_LEN 128
 
 
+#define CMAP_RFC1459 0
+#define CMAP_STRICT_RFC1459 1
+#define CMAP_ASCII 2
+
+#define IRCPX_HTTP 0
+#define IRCPX_SOCKS4 1 // NOT socks4a
+#define IRCPX_SOCKS5 2
+
+
 #ifdef WITH_SSL
 typedef SSL *SSLTYPE;
 typedef SSL_CTX *SSLCTXTYPE;

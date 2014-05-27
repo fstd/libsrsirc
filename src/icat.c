@@ -462,17 +462,14 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			irc_set_pass(g_irc, optarg);
 		break;case 'P':
 			{
-			char typestr[16];
 			char host[256];
 			uint16_t port;
-			int typeno;
-			if (!parse_pxspec(typestr, sizeof typestr, host,
-			    sizeof host, &port, optarg))
+			int ptype;
+			if (!parse_pxspec(&ptype, host, sizeof host, &port,
+			    optarg))
 				EX("failed to parse pxspec '%s'", optarg);
-			if ((typeno = pxtypeno(typestr)) == -1)
-				EX("unknown proxy type '%s'", typestr);
 
-			irc_set_proxy(g_irc, host, port, typeno);
+			irc_set_proxy(g_irc, host, port, ptype);
 			}
 		break;case 't':
 			WVX("enabled target mode");

@@ -15,6 +15,10 @@
 #include "common.h"
 #include <libsrsirc/irc_ext.h>
 
+/*
+ * the functions in here are all documented in irc_ext.h
+ */
+
 const char*
 irc_myhost(irc hnd)
 {

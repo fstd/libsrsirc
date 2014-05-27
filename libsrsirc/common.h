@@ -27,4 +27,7 @@ int ic_consocket(const char *host, uint16_t port,
     uint64_t softto, uint64_t hardto);
 bool update_strprop(char **field, const char *val);
 
+int ic_pxtypeno(const char *typestr);
+const char *ic_pxtypestr(int type);
+
 #endif /* LIBSRSIRC_COMMON_H */

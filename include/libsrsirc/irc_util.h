@@ -10,14 +10,6 @@
 
 #include <libsrsirc/irc_defs.h>
 
-#define CMAP_RFC1459 0
-#define CMAP_STRICT_RFC1459 1
-#define CMAP_ASCII 2
-
-#define IRCPX_HTTP 0
-#define IRCPX_SOCKS4 1 // NOT socks4a
-#define IRCPX_SOCKS5 2
-
 struct sockaddr;
 struct hostspec {
 	char addrstr[48];
@@ -31,8 +23,6 @@ struct pxspec {
 };
 
 
-int pxtypeno(const char *typestr);
-const char *pxtypestr(int type);
 /* resolve and connect */
 bool pfx_extract_nick(char *dest, size_t dest_sz, const char *pfx);
 bool pfx_extract_uname(char *dest, size_t dest_sz, const char *pfx);
@@ -41,8 +31,8 @@ int istrcasecmp(const char *n1, const char *n2, int casemapping);
 int istrncasecmp(const char *n1, const char *n2, size_t len, int casemap);
 char ichartolower(char c, int casemap);
 void itolower(char *dest, size_t destsz, const char *str, int casemap);
-bool parse_pxspec(char *pxtypestr, size_t pxtypestr_sz, char *hoststr,
-    size_t hoststr_sz, uint16_t *port, const char *line);
+bool parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz, uint16_t *port,
+    const char *line);
 
 void parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
     bool *ssl, const char *line);

@@ -29,21 +29,6 @@
 
 static int classify_chanmode(char c, const char *const *chmodes);
 
-int
-pxtypeno(const char *typestr)
-{
-	return (strcasecmp(typestr, "socks4") == 0) ? IRCPX_SOCKS4 :
-	       (strcasecmp(typestr, "socks5") == 0) ? IRCPX_SOCKS5 :
-	       (strcasecmp(typestr, "http") == 0) ? IRCPX_HTTP : -1;
-}
-
-const char*
-pxtypestr(int type)
-{
-	return (type == IRCPX_HTTP) ? "HTTP" :
-	       (type == IRCPX_SOCKS4) ? "SOCKS4" :
-	       (type == IRCPX_SOCKS5) ? "SOCKS5" : "unknown";
-}
 
 bool
 pfx_extract_nick(char *dest, size_t dest_sz, const char *pfx)
@@ -173,8 +158,8 @@ itolower(char *dest, size_t destsz, const char *str, int casemap)
 }
 
 bool
-parse_pxspec(char *pxtypestr, size_t pxtypestr_sz, char *hoststr,
-    size_t hoststr_sz, uint16_t *port, const char *line)
+parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz, uint16_t *port,
+    const char *line)
 {
 	char linebuf[128];
 	strncpy(linebuf, line, sizeof linebuf);
@@ -184,11 +169,14 @@ parse_pxspec(char *pxtypestr, size_t pxtypestr_sz, char *hoststr,
 	if (!ptr)
 		return false;
 
-	size_t num = (size_t)(ptr - linebuf) < pxtypestr_sz ?
-	    (size_t)(ptr - linebuf) : pxtypestr_sz - 1;
+	char pxtypestr[7];
+	size_t num = (size_t)(ptr - linebuf) < sizeof pxtypestr ?
+	    (size_t)(ptr - linebuf) : sizeof pxtypestr - 1;
 
 	strncpy(pxtypestr, linebuf, num);
 	pxtypestr[num] = '\0';
+
+	*ptype = ic_pxtypeno(pxtypestr);
 
 	parse_hostspec(hoststr, hoststr_sz, port, NULL, ptr + 1);
 	return true;
