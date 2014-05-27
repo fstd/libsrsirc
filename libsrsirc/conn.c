@@ -68,7 +68,7 @@ conn_init(void)
 
 	errno = preverrno;
 	r->rctx.wptr = r->rctx.eptr = r->rctx.workbuf;
-	r->port = DEF_PORT;
+	r->port = 0;
 	r->phost = NULL;
 	r->pport = 0;
 	r->ptype = -1;
@@ -142,8 +142,12 @@ conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 
 	uint64_t tsend = hardto_us ? com_timestamp_us() + hardto_us : 0;
 
+	uint16_t realport = hnd->port;
+	if (!realport)
+		realport = hnd->ssl ? DEF_PORT_SSL : DEF_PORT_PLAIN;
+
 	char *host = hnd->ptype != -1 ? hnd->phost : hnd->host;
-	uint16_t port = hnd->ptype != -1 ? hnd->pport : hnd->port;
+	uint16_t port = hnd->ptype != -1 ? hnd->pport : realport;
 
 	{
 		char ps[64];
@@ -154,7 +158,7 @@ conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 
 		I("(%p) wanna connect to %s:%"PRIu16"%s, "
 		    "sto: %"PRIu64"us, hto: %"PRIu64"us",
-		    hnd, hnd->host, hnd->port, ps, softto_us, hardto_us);
+		    hnd, hnd->host, realport, ps, softto_us, hardto_us);
 	}
 
 	struct sockaddr sa;
@@ -187,13 +191,13 @@ conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 		D("(%p) logging on to proxy", hnd);
 		if (hnd->ptype == IRCPX_HTTP)
 			ok = px_logon_http(hnd->sh.sck, hnd->host,
-			    hnd->port, trem);
+			    realport, trem);
 		else if (hnd->ptype == IRCPX_SOCKS4)
 			ok = px_logon_socks4(hnd->sh.sck, hnd->host,
-			    hnd->port, trem);
+			    realport, trem);
 		else if (hnd->ptype == IRCPX_SOCKS5)
 			ok = px_logon_socks5(hnd->sh.sck, hnd->host,
-			    hnd->port, trem);
+			    realport, trem);
 
 		if (!ok) {
 			W("(%p) proxy logon failed", hnd);
@@ -345,7 +349,7 @@ conn_set_server(iconn hnd, const char *host, uint16_t port)
 	}
 	free(hnd->host);
 	hnd->host = n;
-	hnd->port = port ? port : DEF_PORT;
+	hnd->port = port;
 	I("set server to %s:%"PRIu16, n, port);
 	return true;
 }

@@ -25,8 +25,6 @@
 #include <libsrsirc/irc_ext.h>
 #include <libsrsirc/util.h>
 
-#define DEF_PORT_PLAIN 6667
-#define DEF_PORT_SSL 6697
 #define MAX_CHANS 32
 #define MAX_CHANLIST 512
 
@@ -609,9 +607,6 @@ init(int *argc, char ***argv, struct settings_s *sett)
 			EX("invalid server specified (use 'srv:port' instead of 'srv port')");
 
 		/* we choke on all other sorts of invalid addresses/hostnames later */
-
-		if (port == 0)
-			port = ssl ? DEF_PORT_SSL : DEF_PORT_PLAIN;
 
 		struct srvlist_s *node = malloc(sizeof *node);
 		if (!node)

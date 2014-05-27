@@ -23,9 +23,6 @@
 #include <libsrsirc/irc_ext.h>
 #include <libsrsirc/util.h>
 
-#define DEF_PORT_PLAIN 6667
-#define DEF_PORT_SSL 6697
-
 #define DEF_CONTO_SOFT_MS 15000u
 #define DEF_CONTO_HARD_MS 120000u
 #define DEF_CONFAILWAIT_S 10
@@ -206,9 +203,6 @@ init(int *argc, char ***argv, struct settings_s *sett)
 		ut_parse_hostspec(host, sizeof host, &port, &ssl, (*argv)[i]);
 
 		/* we choke on all other sorts of invalid addresses/hostnames later */
-
-		if (port == 0)
-			port = ssl ? DEF_PORT_SSL : DEF_PORT_PLAIN;
 
 		struct srvlist_s *node = malloc(sizeof *node);
 		if (!node)

@@ -170,7 +170,8 @@ bool irc_set_service_info(irc hnd, const char *info);
 /* irc_get_host - tell the host of the irc server we use or intend to use */
 const char* irc_get_host(irc hnd);
 
-/* irc_get_port - tell the port of the irc server we use or intend to use */
+/* irc_get_port - tell the port of the irc server we use or intend to use
+ * A return value of zero means we use the default port */
 uint16_t irc_get_port(irc hnd);
 
 /* irc_get_px_host - tell the host of the proxy we use or intend to use */
