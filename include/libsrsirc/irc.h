@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include <libsrsirc/irc_defs.h>
+#include <libsrsirc/defs.h>
 
 /* Overview:
  *

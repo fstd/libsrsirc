@@ -30,7 +30,7 @@
 #include "common.h"
 #include <intlog.h>
 
-#include "iio.h"
+#include "io.h"
 
 #define ISDELIM(C) ((C) == '\n' || (C) == '\r')
 
@@ -45,9 +45,9 @@ static ssize_t read_wrap(sckhld sh, void *buf, size_t sz);
 static ssize_t send_wrap(sckhld sh, const void *buf, size_t len, int flags);
 
 
-/* Documented in iio.h */
+/* Documented in io.h */
 int
-iio_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
+io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
 {
 	uint64_t tsend = to_us ? com_timestamp_us() + to_us : 0;
 
@@ -76,9 +76,9 @@ iio_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
 	return tokenize(linestart, tok) ? 1 : -1;
 }
 
-/* Documented in iio.h */
+/* Documented in io.h */
 bool
-iio_write(sckhld sh, const char *line)
+io_write(sckhld sh, const char *line)
 {
 	size_t len = strlen(line);
 	int needbr = len < 2 || line[len-2] != '\r' || line[len-1] != '\n';

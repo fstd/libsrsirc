@@ -23,7 +23,7 @@
 #include <err.h>
 
 #include <libsrsirc/irc_ext.h>
-#include <libsrsirc/irc_util.h>
+#include <libsrsirc/util.h>
 
 #define DEF_PORT_PLAIN 6667
 #define DEF_PORT_SSL 6697
@@ -157,7 +157,7 @@ process_irc(void)
 		return -1;
 	} else if (r == 1) {
 		char buf[1024];
-		sndumpmsg(buf, sizeof buf, NULL, &tok);
+		ut_snut_dumpmsg(buf, sizeof buf, NULL, &tok);
 		WVX("%s", buf);
 		handle_irc(&tok);
 		return 1;
@@ -394,10 +394,10 @@ handle_irc(tokarr *tok)
 		irc_write(g_irc, resp);
 	} else if (strcmp((*tok)[1], "PRIVMSG") == 0) {
 		char nick[32];
-		if (!pfx_extract_nick(nick, sizeof nick, (*tok)[0]))
+		if (!ut_pfx2nick(nick, sizeof nick, (*tok)[0]))
 			return;
 
-		if (g_sett.ignore_cs && !istrcasecmp(nick, "ChanServ", irc_casemap(g_irc)))
+		if (g_sett.ignore_cs && !ut_istrcmp(nick, "ChanServ", irc_casemap(g_irc)))
 			return;
 
 		if (g_sett.trgmode)
@@ -465,7 +465,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			char host[256];
 			uint16_t port;
 			int ptype;
-			if (!parse_pxspec(&ptype, host, sizeof host, &port,
+			if (!ut_parse_pxspec(&ptype, host, sizeof host, &port,
 			    optarg))
 				EX("failed to parse pxspec '%s'", optarg);
 
@@ -601,7 +601,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 		char host[256];
 		uint16_t port;
 		bool ssl = false;
-		parse_hostspec(host, sizeof host, &port, &ssl, (*argv)[i]);
+		ut_parse_hostspec(host, sizeof host, &port, &ssl, (*argv)[i]);
 
 		if (isdigitstr(host)) /* catch netcat and telnet invocation syntax */
 			EX("invalid server specified (use 'srv:port' instead of 'srv port')");
@@ -722,7 +722,7 @@ static bool
 conread(tokarr *msg, void *tag)
 {
 	char buf[1024];
-	sndumpmsg(buf, sizeof buf, tag, msg);
+	ut_snut_dumpmsg(buf, sizeof buf, tag, msg);
 	WVX("%s", buf);
 	return true;
 }

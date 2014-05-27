@@ -9,7 +9,7 @@
 #include <stddef.h>
 
 #include <libsrsirc/irc.h>
-#include <libsrsirc/irc_defs.h>
+#include <libsrsirc/defs.h>
 /* Overview:
  *
  * const char *irc_myhost(irc hnd);
@@ -41,9 +41,9 @@
  *
  * const char* irc_get_host(irc hnd);
  * uint16_t irc_get_port(irc hnd);
- * const char* irc_get_proxy_host(irc hnd);
- * uint16_t irc_get_proxy_port(irc hnd);
- * int irc_get_proxy_type(irc hnd);
+ * const char* irc_get_px_host(irc hnd);
+ * uint16_t irc_get_px_port(irc hnd);
+ * int irc_get_px_type(irc hnd);
  * const char* irc_get_pass(irc hnd);
  * const char* irc_get_uname(irc hnd);
  * const char* irc_get_fname(irc hnd);
@@ -117,7 +117,7 @@ const char *const *irc_005chanmodes(irc hnd);
 const char *const *irc_005modepfx(irc hnd);
 
 /* irc_regcb_conread - register callback for msgs which are read at logon time
- * Params: `cb': a function pointer of appropriate type (see irc_defs.h)
+ * Params: `cb': a function pointer of appropriate type (see defs.h)
  *         `tag`: user data, passed to `cb' as-is on every call */
 void irc_regcb_conread(irc hnd, fp_con_read cb, void *tag);
 
@@ -172,15 +172,15 @@ const char* irc_get_host(irc hnd);
 /* irc_get_port - tell the port of the irc server we use or intend to use */
 uint16_t irc_get_port(irc hnd);
 
-/* irc_get_proxy_host - tell the host of the proxy we use or intend to use */
-const char* irc_get_proxy_host(irc hnd);
+/* irc_get_px_host - tell the host of the proxy we use or intend to use */
+const char* irc_get_px_host(irc hnd);
 
-/* irc_get_proxy_port - tell the port of the proxy we use or intend to use */
-uint16_t irc_get_proxy_port(irc hnd);
+/* irc_get_px_port - tell the port of the proxy we use or intend to use */
+uint16_t irc_get_px_port(irc hnd);
 
-/* irc_get_proxy_type - tell the type of the proxy we use or intend to use
+/* irc_get_px_type - tell the type of the proxy we use or intend to use
  * Returns one of IRCPX_[HTTP|SOCKS4|SOCKS5] or -1 for no proxy */
-int irc_get_proxy_type(irc hnd);
+int irc_get_px_type(irc hnd);
 
 /* irc_get_pass - tell the password we may have set earlier by irc_set_pass() */
 const char* irc_get_pass(irc hnd);

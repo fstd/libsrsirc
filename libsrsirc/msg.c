@@ -14,12 +14,12 @@
 #include <string.h>
 
 #include "common.h"
-#include <libsrsirc/irc_defs.h>
-#include "iconn.h"
-#include <libsrsirc/irc_util.h>
+#include <libsrsirc/defs.h>
+#include "conn.h"
+#include <libsrsirc/util.h>
 #include <intlog.h>
 
-#include "imsg.h"
+#include "msg.h"
 
 
 static uint8_t
@@ -88,7 +88,7 @@ handle_PING(irc hnd, tokarr *msg, size_t nargs)
 
 	char buf[64];
 	snprintf(buf, sizeof buf, "PONG :%s\r\n", (*msg)[2]);
-	return icon_write(hnd->con, buf) ? 0 : IO_ERR;
+	return conn_write(hnd->con, buf) ? 0 : IO_ERR;
 }
 
 static uint8_t
@@ -108,7 +108,7 @@ handle_XXX(irc hnd, tokarr *msg, size_t nargs)
 
 	char buf[MAX_NICK_LEN];
 	snprintf(buf, sizeof buf, "NICK %s\r\n", hnd->mynick);
-	return icon_write(hnd->con, buf) ? 0 : IO_ERR;
+	return conn_write(hnd->con, buf) ? 0 : IO_ERR;
 }
 
 static uint8_t
@@ -215,10 +215,10 @@ handle_NICK(irc hnd, tokarr *msg, size_t nargs)
 		return CANT_PROCEED|PROTO_ERR;
 
 	char nick[128];
-	if (!pfx_extract_nick(nick, sizeof nick, (*msg)[0]))
+	if (!ut_pfx2nick(nick, sizeof nick, (*msg)[0]))
 		return CANT_PROCEED|PROTO_ERR;
 
-	if (!istrcasecmp(nick, hnd->mynick, hnd->casemapping)) {
+	if (!ut_istrcmp(nick, hnd->mynick, hnd->casemapping)) {
 		com_strNcpy(hnd->mynick, (*msg)[2], sizeof hnd->mynick);
 		I("my nick is now '%s'", hnd->mynick);
 	}
@@ -314,10 +314,12 @@ handle_005(irc hnd, tokarr *msg, size_t nargs)
 
 
 uint8_t
-handle(irc hnd, tokarr *msg, bool logon)
+msg_handle(irc hnd, tokarr *msg, bool logon)
 {
-	size_t ac = countargs(msg);
 	uint8_t retflags = 0;
+	size_t ac = 2;
+	while (ac < COUNTOF(*msg) && (*msg)[ac])
+		ac++;
 
 	if (strcmp((*msg)[1], "PING") == 0)
 	      retflags |= handle_PING(hnd, msg, ac);
@@ -367,8 +369,8 @@ handle(irc hnd, tokarr *msg, bool logon)
 		} else if (retflags & PROTO_ERR) {
 			char line[1024];
 			E("(%p) proto error on '%s' (ct:%d)",
-			    hnd, sndumpmsg(line, sizeof line, NULL, msg),
-			    icon_colon_trail(hnd->con));
+			    hnd, ut_snut_dumpmsg(line, sizeof line, NULL, msg),
+			    conn_colon_trail(hnd->con));
 		} else {
 			E("(%p) can't proceed for unknown reasons", hnd);
 		}

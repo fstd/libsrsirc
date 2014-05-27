@@ -21,7 +21,7 @@
 #include <err.h>
 
 #include <libsrsirc/irc_ext.h>
-#include <libsrsirc/irc_util.h>
+#include <libsrsirc/util.h>
 
 #define DEF_PORT_PLAIN 6667
 #define DEF_PORT_SSL 6697
@@ -128,7 +128,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			char host[256];
 			uint16_t port;
 			int ptype;
-			if (!parse_pxspec(&ptype, host, sizeof host, &port,
+			if (!ut_parse_pxspec(&ptype, host, sizeof host, &port,
 			    optarg))
 				EX("failed to parse pxspec '%s'", optarg);
 
@@ -203,7 +203,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 		char host[256];
 		uint16_t port;
 		bool ssl = false;
-		parse_hostspec(host, sizeof host, &port, &ssl, (*argv)[i]);
+		ut_parse_hostspec(host, sizeof host, &port, &ssl, (*argv)[i]);
 
 		/* we choke on all other sorts of invalid addresses/hostnames later */
 
@@ -240,7 +240,7 @@ static bool
 conread(tokarr *msg, void *tag)
 {
 	char buf[1024];
-	sndumpmsg(buf, sizeof buf, tag, msg);
+	ut_snut_dumpmsg(buf, sizeof buf, tag, msg);
 	WVX("%s", buf);
 	return true;
 }
@@ -349,7 +349,7 @@ main(int argc, char **argv)
 		else if (strcmp(tok[1], "PRIVMSG") == 0) {
 			if (strncmp(tok[3], "ECHO ", 5) == 0) {
 				char nick[64];
-				pfx_extract_nick(nick, sizeof nick, tok[0]);
+				ut_pfx2nick(nick, sizeof nick, tok[0]);
 				iprintf("PRIVMSG %s :%s\r\n", nick, tok[3]+5);
 			} else if (strcmp(tok[3], "DIE") == 0) {
 				failure = false;

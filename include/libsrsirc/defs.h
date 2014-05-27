@@ -1,4 +1,4 @@
-/* irc_defs.h - definitions, data types, etc
+/* defs.h - definitions, data types, etc
  * libsrsirc - a lightweight serious IRC lib - (C) 2014, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 

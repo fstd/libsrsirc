@@ -14,9 +14,9 @@
 #include <strings.h>
 
 #include "common.h"
-#include <libsrsirc/irc_util.h>
-#include "iconn.h"
-#include "imsg.h"
+#include <libsrsirc/util.h>
+#include "conn.h"
+#include "msg.h"
 
 #include <intlog.h>
 
@@ -31,7 +31,7 @@ irc_init(void)
 	irc r = NULL;
 	int preverrno = errno;
 	errno = 0;
-	if (!(con = icon_init()))
+	if (!(con = conn_init()))
 		goto irc_init_fail;
 
 
@@ -71,7 +71,7 @@ irc_init(void)
 
 	r->service = r->restricted = r->banned = r->serv_con = false;
 	r->cb_con_read = NULL;
-	r->cb_mut_nick = mutilate_nick;
+	r->cb_mut_nick = ut_mut_nick;
 	r->casemapping = CMAP_RFC1459;
 	r->conflags = DEF_CONFLAGS;
 	r->serv_type = DEF_SERV_TYPE;
@@ -98,7 +98,7 @@ irc_init_fail:
 	}
 
 	if (con)
-		icon_dispose(con);
+		conn_dispose(con);
 
 	return NULL;
 }
@@ -106,13 +106,13 @@ irc_init_fail:
 void
 irc_reset(irc hnd)
 {
-	icon_reset(hnd->con);
+	conn_reset(hnd->con);
 }
 
 void
 irc_dispose(irc hnd)
 {
-	icon_dispose(hnd->con);
+	conn_dispose(hnd->con);
 	free(hnd->lasterr);
 	free(hnd->banmsg);
 	free(hnd->pass);
@@ -144,7 +144,7 @@ irc_connect(irc hnd)
 		hnd->logonconv[i] = NULL;
 	}
 
-	if (!icon_connect(hnd->con, hnd->scto_us, hnd->hcto_us))
+	if (!conn_connect(hnd->con, hnd->scto_us, hnd->hcto_us))
 		return false;
 
 	if (!send_logon(hnd))
@@ -164,7 +164,7 @@ irc_connect(irc hnd)
 			goto irc_connect_fail;
 		}
 
-		if ((r = icon_read(hnd->con, &msg, trem)) < 0)
+		if ((r = conn_read(hnd->con, &msg, trem)) < 0)
 			goto irc_connect_fail;
 
 		if (r == 0)
@@ -184,7 +184,7 @@ irc_connect(irc hnd)
 		 * seeing 004 or 383 makes us consider ourselves logged on
 		 * note that we do not wait for 005, but we will later
 		 * parse it as we ran across it. */
-		uint8_t flags = handle(hnd, &msg, true);
+		uint8_t flags = msg_handle(hnd, &msg, true);
 
 		if (flags & CANT_PROCEED)
 			goto irc_connect_fail;
@@ -205,17 +205,17 @@ irc_connect_fail:
 bool
 irc_online(irc hnd)
 {
-	return icon_online(hnd->con);
+	return conn_online(hnd->con);
 }
 
 int
 irc_read(irc hnd, tokarr *tok, uint64_t to_us)
 {
-	int r = icon_read(hnd->con, tok, to_us);
+	int r = conn_read(hnd->con, tok, to_us);
 	if (r == 0)
 		return 0;
 
-	if (r < 0 || handle(hnd, tok, false) & CANT_PROCEED) {
+	if (r < 0 || msg_handle(hnd, tok, false) & CANT_PROCEED) {
 		irc_reset(hnd);
 		return -1;
 	}
@@ -226,7 +226,7 @@ irc_read(irc hnd, tokarr *tok, uint64_t to_us)
 bool
 irc_write(irc hnd, const char *line)
 {
-	bool r = icon_write(hnd->con, line);
+	bool r = conn_write(hnd->con, line);
 
 	if (!r)
 		irc_reset(hnd);
@@ -243,7 +243,7 @@ irc_mynick(irc hnd)
 bool
 irc_set_server(irc hnd, const char *host, uint16_t port)
 {
-	return icon_set_server(hnd->con, host, port);
+	return conn_set_server(hnd->con, host, port);
 }
 
 bool
@@ -273,7 +273,7 @@ irc_set_nick(irc hnd, const char *nick)
 static bool
 send_logon(irc hnd)
 {
-	if (!icon_online(hnd->con))
+	if (!conn_online(hnd->con))
 		return false;
 	char aBuf[256];
 	char *pBuf = aBuf;

@@ -27,7 +27,7 @@
 /* local */
 #include "intlog.h"
 
-#include <libsrsirc/irc_defs.h>
+#include <libsrsirc/defs.h>
 
 #include "common.h"
 

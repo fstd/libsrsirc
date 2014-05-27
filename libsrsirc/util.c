@@ -16,12 +16,12 @@
 #include <strings.h>
 #include <limits.h>
 
-#include "proxy.h"
+#include "px.h"
 #include "common.h"
 
 #include <intlog.h>
 
-#include <libsrsirc/irc_util.h>
+#include <libsrsirc/util.h>
 
 #define CHANMODE_CLASS_A 1 /*don't change;see int classify_chanmode(char)*/
 #define CHANMODE_CLASS_B 2
@@ -32,7 +32,7 @@ static int classify_chanmode(char c, const char *const *chmodes);
 
 
 bool
-pfx_extract_nick(char *dest, size_t dest_sz, const char *pfx)
+ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx)
 {
 	if (!dest || !dest_sz || !pfx)
 		return false;
@@ -51,7 +51,7 @@ pfx_extract_nick(char *dest, size_t dest_sz, const char *pfx)
 }
 
 bool
-pfx_extract_uname(char *dest, size_t dest_sz, const char *pfx)
+ut_pfx2uname(char *dest, size_t dest_sz, const char *pfx)
 {
 	if (!dest || !dest_sz || !pfx)
 		return false;
@@ -72,7 +72,7 @@ pfx_extract_uname(char *dest, size_t dest_sz, const char *pfx)
 }
 
 bool
-pfx_extract_host(char *dest, size_t dest_sz, const char *pfx)
+ut_pfx2host(char *dest, size_t dest_sz, const char *pfx)
 {
 	if (!dest || !dest_sz || !pfx)
 		return false;
@@ -89,23 +89,23 @@ pfx_extract_host(char *dest, size_t dest_sz, const char *pfx)
 }
 
 int
-istrcasecmp(const char *n1, const char *n2, int casemap)
+ut_istrcmp(const char *n1, const char *n2, int casemap)
 {
 	size_t l1 = strlen(n1);
 	size_t l2 = strlen(n2);
 
-	return istrncasecmp(n1, n2, (l1 < l2 ? l1 : l2) + 1, casemap);
+	return ut_istrncmp(n1, n2, (l1 < l2 ? l1 : l2) + 1, casemap);
 }
 
 int
-istrncasecmp(const char *n1, const char *n2, size_t len, int casemap)
+ut_istrncmp(const char *n1, const char *n2, size_t len, int casemap)
 {
 	if (len == 0)
 		return 0;
 
 	while (*n1 && *n2) {
-		char c1 = ichartolower(*n1, casemap);
-		char c2 = ichartolower(*n2, casemap);
+		char c1 = ut_tolower(*n1, casemap);
+		char c2 = ut_tolower(*n2, casemap);
 		if (c1 != c2)
 			return c1 - c2;
 
@@ -122,7 +122,7 @@ istrncasecmp(const char *n1, const char *n2, size_t len, int casemap)
 }
 
 char
-ichartolower(char c, int casemap)
+ut_tolower(char c, int casemap)
 {
 	int rangeinc;
 	switch (casemap) {
@@ -143,12 +143,12 @@ ichartolower(char c, int casemap)
 }
 
 void
-itolower(char *dest, size_t destsz, const char *str, int casemap)
+ut_strtolower(char *dest, size_t destsz, const char *str, int casemap)
 {
 	size_t c = 0;
 	char *ptr = dest;
 	while (c < destsz) {
-		*ptr++ = ichartolower(*str, casemap);
+		*ptr++ = ut_tolower(*str, casemap);
 
 		if (!*str)
 			break;
@@ -159,11 +159,11 @@ itolower(char *dest, size_t destsz, const char *str, int casemap)
 }
 
 bool
-parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz, uint16_t *port,
-    const char *line)
+ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz, uint16_t *port,
+    const char *pxspec)
 {
 	char linebuf[128];
-	strncpy(linebuf, line, sizeof linebuf);
+	strncpy(linebuf, pxspec, sizeof linebuf);
 	linebuf[sizeof linebuf - 1] = '\0';
 
 	char *ptr = strchr(linebuf, ':');
@@ -177,21 +177,21 @@ parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz, uint16_t *port,
 	strncpy(pxtypestr, linebuf, num);
 	pxtypestr[num] = '\0';
 
-	*ptype = proxy_typenum(pxtypestr);
+	*ptype = px_typenum(pxtypestr);
 
-	parse_hostspec(hoststr, hoststr_sz, port, NULL, ptr + 1);
+	ut_parse_hostspec(hoststr, hoststr_sz, port, NULL, ptr + 1);
 	return true;
 
 }
 
 void
-parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
-    bool *ssl, const char *line)
+ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
+    bool *ssl, const char *hostspec)
 {
 	if (ssl)
 		*ssl = false;
 
-	strncpy(hoststr, line + (line[0] == '['), hoststr_sz);
+	strncpy(hoststr, hostspec + (hostspec[0] == '['), hoststr_sz);
 
 	char *ptr = strstr(hoststr, "/ssl");
 	if (!ptr)
@@ -217,32 +217,9 @@ parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
 		*port = 0;
 }
 
-bool
-parse_identity(char *nick, size_t nicksz, char *uname, size_t unamesz,
-    char *fname, size_t fnamesz, const char *identity)
-{
-	char ident[256];
-	com_strNcpy(ident, identity, sizeof ident);
-
-	char *p = strchr(ident, ' ');
-	if (p)
-		com_strNcpy(fname, (*p = '\0', p + 1), fnamesz);
-	else
-		return false;
-	p = strchr(ident, '!');
-	if (p)
-		com_strNcpy(uname, (*p = '\0', p + 1), unamesz);
-	else
-		return false;
-
-	com_strNcpy(nick, ident, nicksz);
-	return true;
-}
-
-
 
 char*
-sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
+ut_snut_dumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
 {
 	snprintf(dest, dest_sz, "(%p) '%s' '%s'", tag, (*msg)[0], (*msg)[1]);
 	for (size_t i = 2; i < COUNTOF(*msg); i++) {
@@ -257,23 +234,23 @@ sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
 }
 
 void
-dumpmsg(void *tag, tokarr *msg)
+ut_dumpmsg(void *tag, tokarr *msg)
 {
 	char buf[1024];
-	sndumpmsg(buf, sizeof buf, tag, msg);
+	ut_snut_dumpmsg(buf, sizeof buf, tag, msg);
 	fprintf(stderr, "%s\n", buf);
 }
 
 
 bool
-cr(tokarr *msg, void *tag)
+ut_conread(tokarr *msg, void *tag)
 {
-	dumpmsg(tag, msg);
+	ut_dumpmsg(tag, msg);
 	return true;
 }
 
 char**
-parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
+ut_parse_005_cmodes(const char *const *arr, size_t argcount, size_t *num,
     const char *modepfx005chr, const char *const *chmodes)
 {
 	char *modes = strdup(arr[0]);
@@ -289,7 +266,7 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
 	char **modearr = malloc(nummodes * sizeof *modearr);
 	if (!modearr) {
 		EE("malloc");
-		goto parse_chanmodes_fail;
+		goto ut_parse_005_cmodes_fail;
 	}
 
 	for (size_t i = 0; i < nummodes; i++)
@@ -348,7 +325,7 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
 		    strlen(arg) + 1 : 0)));
 		if (!modearr[j]) {
 			EE("malloc");
-			goto parse_chanmodes_fail;
+			goto ut_parse_005_cmodes_fail;
 		}
 
 		modearr[j][0] = enable ? '+' : '-';
@@ -369,7 +346,7 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
 	free(modes);
 	return modearr;
 
-parse_chanmodes_fail:
+ut_parse_005_cmodes_fail:
 	if (modearr)
 		for (size_t i = 0; i < nummodes; i++)
 			free(modearr[i]);
@@ -391,7 +368,7 @@ classify_chanmode(char c, const char *const *chmodes)
 }
 
 void
-mutilate_nick(char *nick, size_t nick_sz)
+ut_mut_nick(char *nick, size_t nick_sz)
 {
 	size_t len = strlen(nick);
 	if (len < 9) {
@@ -407,16 +384,6 @@ mutilate_nick(char *nick, size_t nick_sz)
 			nick[len - 1] = '0';
 	}
 }
-
-size_t
-countargs(tokarr *tok)
-{
-	size_t ac = 2;
-	while (ac < COUNTOF(*tok) && (*tok)[ac])
-		ac++;
-	return ac;
-}
-
 
 tokarr *ut_clonearr(tokarr *arr)
 {

@@ -34,13 +34,13 @@
 #endif
 
 #include "common.h"
-#include <libsrsirc/irc_util.h>
-#include "iio.h"
+#include <libsrsirc/util.h>
+#include "io.h"
 #include <intlog.h>
 
-#include "proxy.h"
+#include "px.h"
 
-#include "iconn.h"
+#include "conn.h"
 
 #define INV -1
 #define OFF 0
@@ -52,19 +52,19 @@ static bool s_sslinit;
 #endif
 
 iconn
-icon_init(void)
+conn_init(void)
 {
 	iconn r = NULL;
 	int preverrno = errno;
 	errno = 0;
 
 	if (!(r = malloc(sizeof *r)))
-		goto icon_init_fail;
+		goto conn_init_fail;
 
 	r->host = NULL;
 
 	if (!(r->host = strdup(DEF_HOST)))
-		goto icon_init_fail;
+		goto conn_init_fail;
 
 	errno = preverrno;
 	r->rctx.wptr = r->rctx.eptr = r->rctx.workbuf;
@@ -83,7 +83,7 @@ icon_init(void)
 
 	return r;
 
-icon_init_fail:
+conn_init_fail:
 	EE("failed to initialize iconn handle");
 	if (r) {
 		free(r->host);
@@ -94,7 +94,7 @@ icon_init_fail:
 }
 
 void
-icon_reset(iconn hnd)
+conn_reset(iconn hnd)
 {
 	D("(%p) resetting", hnd);
 
@@ -118,12 +118,12 @@ icon_reset(iconn hnd)
 }
 
 void
-icon_dispose(iconn hnd)
+conn_dispose(iconn hnd)
 {
-	icon_reset(hnd);
+	conn_reset(hnd);
 
 #ifdef WITH_SSL
-	icon_set_ssl(hnd, false); //dispose ssl context if existing
+	conn_set_ssl(hnd, false); //dispose ssl context if existing
 #endif
 
 	free(hnd->host);
@@ -135,7 +135,7 @@ icon_dispose(iconn hnd)
 }
 
 bool
-icon_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
+conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 {
 	if (!hnd || hnd->state != OFF)
 		return false;
@@ -150,7 +150,7 @@ icon_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 		ps[0] = '\0';
 		if (hnd->ptype != -1)
 			snprintf(ps, sizeof ps, " via %s:%s:%" PRIu16,
-			    proxy_typestr(hnd->ptype), hnd->phost, hnd->pport);
+			    px_typestr(hnd->ptype), hnd->phost, hnd->pport);
 
 		I("(%p) wanna connect to %s:%"PRIu16"%s, "
 		    "sto: %"PRIu64"us, hto: %"PRIu64"us",
@@ -172,7 +172,7 @@ icon_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 
 	D("(%p) connected socket %d for %s:%"PRIu16"", hnd, sh.sck, host, port);
 
-	hnd->sh = sh; //must be set here for proxy_logon
+	hnd->sh = sh; //must be set here for px_logon
 
 	uint64_t trem = 0;
 	if (hnd->ptype != -1) {
@@ -186,13 +186,13 @@ icon_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 		bool ok = false;
 		D("(%p) logging on to proxy", hnd);
 		if (hnd->ptype == IRCPX_HTTP)
-			ok = proxy_logon_http(hnd->sh.sck, hnd->host,
+			ok = px_logon_http(hnd->sh.sck, hnd->host,
 			    hnd->port, trem);
 		else if (hnd->ptype == IRCPX_SOCKS4)
-			ok = proxy_logon_socks4(hnd->sh.sck, hnd->host,
+			ok = px_logon_socks4(hnd->sh.sck, hnd->host,
 			    hnd->port, trem);
 		else if (hnd->ptype == IRCPX_SOCKS5)
-			ok = proxy_logon_socks5(hnd->sh.sck, hnd->host,
+			ok = px_logon_socks5(hnd->sh.sck, hnd->host,
 			    hnd->port, trem);
 
 		if (!ok) {
@@ -247,18 +247,18 @@ icon_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 }
 
 int
-icon_read(iconn hnd, tokarr *tok, uint64_t to_us)
+conn_read(iconn hnd, tokarr *tok, uint64_t to_us)
 {
 	if (!hnd || hnd->state != ON)
 		return -1;
 
 	int n;
-	if (!(n = iio_read(hnd->sh, &hnd->rctx, tok, to_us)))
+	if (!(n = io_read(hnd->sh, &hnd->rctx, tok, to_us)))
 		return 0; /* timeout */
 
 	if (n < 0) {
-		W("(%p) iio_read failed", hnd);
-		icon_reset(hnd);
+		W("(%p) io_read failed", hnd);
+		conn_reset(hnd);
 		return -1;
 	}
 
@@ -274,15 +274,15 @@ icon_read(iconn hnd, tokarr *tok, uint64_t to_us)
 }
 
 bool
-icon_write(iconn hnd, const char *line)
+conn_write(iconn hnd, const char *line)
 {
 	if (!hnd || hnd->state != ON || !line)
 		return false;
 
 
-	if (!iio_write(hnd->sh, line)) {
+	if (!io_write(hnd->sh, line)) {
 		W("(%p) failed to write '%s'", hnd, line);
-		icon_reset(hnd);
+		conn_reset(hnd);
 		return false;
 	}
 
@@ -292,13 +292,13 @@ icon_write(iconn hnd, const char *line)
 }
 
 bool
-icon_online(iconn hnd)
+conn_online(iconn hnd)
 {
 	return hnd->state == ON;
 }
 
 bool
-icon_colon_trail(iconn hnd)
+conn_colon_trail(iconn hnd)
 {
 	if (!hnd || hnd->state != ON)
 		return false;
@@ -307,7 +307,7 @@ icon_colon_trail(iconn hnd)
 }
 
 bool
-icon_set_proxy(iconn hnd, const char *host, uint16_t port, int ptype)
+conn_set_proxy(iconn hnd, const char *host, uint16_t port, int ptype)
 {
 	char *n = NULL;
 	switch (ptype) {
@@ -325,7 +325,7 @@ icon_set_proxy(iconn hnd, const char *host, uint16_t port, int ptype)
 		hnd->ptype = ptype;
 		free(hnd->phost);
 		hnd->phost = n;
-		I("set proxy to %s:%s:%"PRIu16, proxy_typestr(hnd->ptype), n, port);
+		I("set proxy to %s:%s:%"PRIu16, px_typestr(hnd->ptype), n, port);
 		break;
 	default:
 		E("illegal proxy type %d", ptype);
@@ -336,7 +336,7 @@ icon_set_proxy(iconn hnd, const char *host, uint16_t port, int ptype)
 }
 
 bool
-icon_set_server(iconn hnd, const char *host, uint16_t port)
+conn_set_server(iconn hnd, const char *host, uint16_t port)
 {
 	char *n;
 	if (!(n = strdup(host?host:DEF_HOST))) {
@@ -351,7 +351,7 @@ icon_set_server(iconn hnd, const char *host, uint16_t port)
 }
 
 bool
-icon_set_ssl(iconn hnd, bool on)
+conn_set_ssl(iconn hnd, bool on)
 {
 #ifndef WITH_SSL
 	if (on)
@@ -383,37 +383,37 @@ icon_set_ssl(iconn hnd, bool on)
 }
 
 const char*
-icon_get_proxy_host(iconn hnd)
+conn_get_px_host(iconn hnd)
 {
 	return hnd->phost;
 }
 
 uint16_t
-icon_get_proxy_port(iconn hnd)
+conn_get_px_port(iconn hnd)
 {
 	return hnd->pport;
 }
 
 int
-icon_get_proxy_type(iconn hnd)
+conn_get_px_type(iconn hnd)
 {
 	return hnd->ptype;
 }
 
 const char*
-icon_get_host(iconn hnd)
+conn_get_host(iconn hnd)
 {
 	return hnd->host;
 }
 
 uint16_t
-icon_get_port(iconn hnd)
+conn_get_port(iconn hnd)
 {
 	return hnd->port;
 }
 
 bool
-icon_get_ssl(iconn hnd)
+conn_get_ssl(iconn hnd)
 {
 #ifdef WITH_SSL
 	return hnd->ssl;
@@ -423,7 +423,7 @@ icon_get_ssl(iconn hnd)
 }
 
 int
-icon_sockfd(iconn hnd)
+conn_sockfd(iconn hnd)
 {
 	if (!hnd || hnd->state != ON)
 		return -1;

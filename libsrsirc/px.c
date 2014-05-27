@@ -8,7 +8,6 @@
 #define LOG_MODULE MOD_PROXY
 
 #include <stdio.h>
-#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -18,11 +17,11 @@
 #include <unistd.h>
 #include <inttypes.h>
 
-#include <libsrsirc/irc_defs.h>
+#include <libsrsirc/defs.h>
 #include "common.h"
 #include <intlog.h>
 
-#include "proxy.h"
+#include "px.h"
 
 #define HOST_IPV4 0
 #define HOST_IPV6 1
@@ -33,7 +32,7 @@ static int guess_hosttype(const char *host);
 #define DBGSPEC "(%d,%s,%"PRIu16")"
 
 bool
-proxy_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
+px_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 {
 	uint64_t tsend = to_us ? com_timestamp_us() + to_us : 0;
 	char buf[256];
@@ -100,7 +99,7 @@ proxy_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 
 /* SOCKS4 doesntsupport ipv6 */
 bool
-proxy_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
+px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 {
 	uint64_t tsend = to_us ? com_timestamp_us() + to_us : 0;
 	unsigned char logon[14];
@@ -170,7 +169,7 @@ proxy_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 }
 
 bool
-proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
+px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 {
 	uint64_t tsend = to_us ? com_timestamp_us() + to_us : 0;
 	unsigned char logon[14];
@@ -379,6 +378,22 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	return true;
 }
 
+int
+px_typenum(const char *typestr)
+{
+	return (strcasecmp(typestr, "socks4") == 0) ? IRCPX_SOCKS4 :
+	       (strcasecmp(typestr, "socks5") == 0) ? IRCPX_SOCKS5 :
+	       (strcasecmp(typestr, "http") == 0) ? IRCPX_HTTP : -1;
+}
+
+const char*
+px_typestr(int typenum)
+{
+	return (typenum == IRCPX_HTTP) ? "HTTP" :
+	       (typenum == IRCPX_SOCKS4) ? "SOCKS4" :
+	       (typenum == IRCPX_SOCKS5) ? "SOCKS5" : "unknown";
+}
+
 /*dumb heuristic to tell apart domain name/ip4/ip6 addr XXX FIXME */
 static int
 guess_hosttype(const char *host)
@@ -396,18 +411,3 @@ guess_hosttype(const char *host)
 	return dc == 3 ? HOST_IPV4 : HOST_DNS;
 }
 
-int
-proxy_typenum(const char *typestr)
-{
-	return (strcasecmp(typestr, "socks4") == 0) ? IRCPX_SOCKS4 :
-	       (strcasecmp(typestr, "socks5") == 0) ? IRCPX_SOCKS5 :
-	       (strcasecmp(typestr, "http") == 0) ? IRCPX_HTTP : -1;
-}
-
-const char*
-proxy_typestr(int typenum)
-{
-	return (typenum == IRCPX_HTTP) ? "HTTP" :
-	       (typenum == IRCPX_SOCKS4) ? "SOCKS4" :
-	       (typenum == IRCPX_SOCKS5) ? "SOCKS5" : "unknown";
-}

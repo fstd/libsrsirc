@@ -8,7 +8,7 @@
 
 #define LOG_MODULE MOD_IRC
 
-#include "iconn.h"
+#include "conn.h"
 
 #include <intlog.h>
 
@@ -76,13 +76,13 @@ irc_banned(irc hnd)
 bool
 irc_colon_trail(irc hnd)
 {
-	return icon_colon_trail(hnd->con);
+	return conn_colon_trail(hnd->con);
 }
 
 int
 irc_sockfd(irc hnd)
 {
-	return icon_sockfd(hnd->con);
+	return conn_sockfd(hnd->con);
 }
 
 tokarr *(* /* ew.  returns pointer to array of 4 pointers to tokarr */
@@ -119,7 +119,7 @@ irc_regcb_mutnick(irc hnd, fp_mut_nick cb)
 bool
 irc_set_proxy(irc hnd, const char *host, uint16_t port, int ptype)
 {
-	return icon_set_proxy(hnd->con, host, port, ptype);
+	return conn_set_proxy(hnd->con, host, port, ptype);
 }
 
 void
@@ -163,37 +163,37 @@ irc_set_connect_timeout(irc hnd, uint64_t soft, uint64_t hard)
 bool
 irc_set_ssl(irc hnd, bool on)
 {
-	return icon_set_ssl(hnd->con, on);
+	return conn_set_ssl(hnd->con, on);
 }
 
 const char*
 irc_get_host(irc hnd)
 {
-	return icon_get_host(hnd->con);
+	return conn_get_host(hnd->con);
 }
 
 uint16_t
 irc_get_port(irc hnd)
 {
-	return icon_get_port(hnd->con);
+	return conn_get_port(hnd->con);
 }
 
 const char*
-irc_get_proxy_host(irc hnd)
+irc_get_px_host(irc hnd)
 {
-	return icon_get_proxy_host(hnd->con);
+	return conn_get_px_host(hnd->con);
 }
 
 uint16_t
-irc_get_proxy_port(irc hnd)
+irc_get_px_port(irc hnd)
 {
-	return icon_get_proxy_port(hnd->con);
+	return conn_get_px_port(hnd->con);
 }
 
 int
-irc_get_proxy_type(irc hnd)
+irc_get_px_type(irc hnd)
 {
-	return icon_get_proxy_type(hnd->con);
+	return conn_get_px_type(hnd->con);
 }
 
 const char*
@@ -253,5 +253,5 @@ irc_get_service_info(irc hnd)
 bool
 irc_get_ssl(irc hnd)
 {
-	return icon_get_ssl(hnd->con);
+	return conn_get_ssl(hnd->con);
 }
