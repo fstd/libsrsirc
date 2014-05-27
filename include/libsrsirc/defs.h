@@ -14,128 +14,68 @@
 # include <openssl/err.h>
 #endif
 
+/* max number of tokens as per RFC1459/2812 */
 #define MAX_IRCARGS ((size_t)17)
 
-#define WORKBUF_SZ 4096
-
+/* default server to connect to */
 #define DEF_HOST "localhost"
-#define DEF_PORT ((uint16_t)6667)
-#define DEF_PASS ""
+
+/* default TCP port for plaintext IRC */
+#define DEF_PORT_PLAIN ((uint16_t)6667)
+
+/* default TCP port for SSL IRC */
+#define DEF_PORT_SSL ((uint16_t)6697)
+
+/* default nickname to use */
 #define DEF_NICK "srsirc"
+
+/* default IRC user name */
 #define DEF_UNAME "bsnsirc"
+
+/* default IRC full name */
 #define DEF_FNAME "serious business irc"
+
+/* default USER message flags */
 #define DEF_CONFLAGS 0
-#define DEF_SERV_DIST "*"
+
+/* default `distribution' for service logon */
+#define DEF_SERV_DIST "*" 
+
+/* default `distribution; string for service logon */
 #define DEF_SERV_TYPE 0
-#define DEF_SERV_INFO "serious business irc service"
-#define DEF_HCTO_US 120000000ul /* hard connect timeout (overall) */
-#define DEF_SCTO_US 15000000ul /* soft connect timeout (per A/AAAA record) */
 
-/* as per the RFC noone cares about... */
-#define DEF_UMODES "iswo"
-#define DEF_CMODES "opsitnml"
+/* default `info' string for service logon */
+#define DEF_SERV_INFO "srsbsns srvc"
 
-/* arbitrary but empirically established  */
-#define MAX_NICK_LEN 64
-#define MAX_HOST_LEN 128
-#define MAX_UMODES_LEN 64
-#define MAX_CMODES_LEN 64
-#define MAX_VER_LEN 128
+/* hard connect timeout in us (overall) */
+#define DEF_HCTO_US 120000000ul
 
+/* soft connect timeout (per A/AAAA record) */
+#define DEF_SCTO_US 15000000ul
 
-#define CMAP_RFC1459 0
-#define CMAP_STRICT_RFC1459 1
-#define CMAP_ASCII 2
+/* the three `case mappings' 005 ISUPPORT "specify" */
+#define CMAP_RFC1459 0        /* [}{|A-Z] are uppercase [][\a-z] */
+#define CMAP_STRICT_RFC1459 1 /* [}{|^A-Z] are uppercase [][\~a-z] */
+#define CMAP_ASCII 2          /* [A-Z] are uppercase [a-z] */
 
+/* proxy type constants */
 #define IRCPX_HTTP 0
-#define IRCPX_SOCKS4 1 // NOT socks4a
+#define IRCPX_SOCKS4 1 /* NOT socks4a */
 #define IRCPX_SOCKS5 2
 
 
-#ifdef WITH_SSL
-typedef SSL *SSLTYPE;
-typedef SSL_CTX *SSLCTXTYPE;
-#else
-typedef void *SSLTYPE;
-typedef void *SSLCTXTYPE;
-#endif
-
-typedef struct sckhld {
-	int sck;
-	SSLTYPE shnd;
-} sckhld;
-
-typedef struct iconn_s* iconn;
+/* the main handle type for our irc objects - this is what irc_init() returns */
 typedef struct irc_s* irc;
 
+/* tokarr is the type we store pointers to a tokenized IRC protocol msg in */
 typedef char *tokarr[MAX_IRCARGS];
 
+/* type of the function which is called on IRC protocol messages read at logon
+ * time.  Return false to abort the attempt to log on. see irc_regcb_conread */
 typedef bool (*fp_con_read)(tokarr *msg, void* tag);
+
+/* type of the function to come up with new nicknames, if at logon time our
+ * desired nickname is unavailable. see irc_regcb_mutnick */
 typedef void (*fp_mut_nick)(char *nick, size_t nick_sz);
-
-struct readctx {
-	char workbuf[WORKBUF_SZ];
-	char *wptr; //pointer to begin of current valid data
-	char *eptr; //pointer to one after end of current valid data
-};
-
-struct iconn_s {
-	char *host;
-	uint16_t port;
-
-	char *phost;
-	uint16_t pport;
-	int ptype;
-
-	sckhld sh;
-	int state;
-
-	struct readctx rctx;
-	bool colon_trail;
-	bool ssl;
-	SSLCTXTYPE sctx;
-};
-
-
-struct irc_s {
-	char mynick[MAX_NICK_LEN];
-	char myhost[MAX_HOST_LEN];
-	bool service;
-	char umodes[MAX_UMODES_LEN];
-	char cmodes[MAX_CMODES_LEN];
-	char ver[MAX_VER_LEN];
-	char *lasterr;
-
-	/* zero timeout means no timeout */
-	uint64_t hcto_us;/*connect() timeout per A/AAAA record*/
-	uint64_t scto_us;/*overall irc_connect() timeout*/
-
-	bool restricted;
-	bool banned;
-	char *banmsg;
-
-	int casemapping;
-
-	char *pass;
-	char *nick;
-	char *uname;
-	char *fname;
-	uint8_t conflags;
-	bool serv_con;
-	char *serv_dist;
-	long serv_type;
-	char *serv_info;
-
-	tokarr *logonconv[4];
-	char m005chanmodes[4][64];
-	char m005modepfx[2][32];
-
-	fp_con_read cb_con_read;
-	void *tag_con_read;
-	fp_mut_nick cb_mut_nick;
-
-	struct iconn_s *con;
-};
-
 
 #endif /* LIBSRSIRC_IRC_DEFS_H */

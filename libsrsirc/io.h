@@ -14,6 +14,7 @@
 #endif
 
 #include <libsrsirc/defs.h>
+#include "intdefs.h"
 
 /* io_read
  * Read one message from the ircd, tokenize and populate `tok' with the results.

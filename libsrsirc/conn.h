@@ -9,6 +9,7 @@
 #include <stddef.h>
 
 #include <libsrsirc/defs.h>
+#include "intdefs.h"
 
 iconn conn_init(void);
 void conn_reset(iconn hnd);
