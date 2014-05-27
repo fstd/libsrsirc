@@ -10,16 +10,7 @@
 
 #include <libsrsirc/defs.h>
 
-struct hostspec {
-	char addrstr[48];
-	uint16_t port;
-};
 
-struct pxspec {
-	int type;
-	char addrstr[48];
-	uint16_t port;
-};
 /* Overview:
  *
  * void ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx);
