@@ -150,7 +150,7 @@ icon_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 		ps[0] = '\0';
 		if (hnd->ptype != -1)
 			snprintf(ps, sizeof ps, " via %s:%s:%" PRIu16,
-			    ic_pxtypestr(hnd->ptype), hnd->phost, hnd->pport);
+			    proxy_typestr(hnd->ptype), hnd->phost, hnd->pport);
 
 		I("(%p) wanna connect to %s:%"PRIu16"%s, "
 		    "sto: %"PRIu64"us, hto: %"PRIu64"us",
@@ -325,7 +325,7 @@ icon_set_proxy(iconn hnd, const char *host, uint16_t port, int ptype)
 		hnd->ptype = ptype;
 		free(hnd->phost);
 		hnd->phost = n;
-		I("set proxy to %s:%s:%"PRIu16, ic_pxtypestr(hnd->ptype), n, port);
+		I("set proxy to %s:%s:%"PRIu16, proxy_typestr(hnd->ptype), n, port);
 		break;
 	default:
 		E("illegal proxy type %d", ptype);

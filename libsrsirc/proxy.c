@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <inttypes.h>
 
+#include <libsrsirc/irc_defs.h>
 #include "common.h"
 #include <intlog.h>
 
@@ -393,4 +394,20 @@ guess_hosttype(const char *host)
 		host++;
 	}
 	return dc == 3 ? HOST_IPV4 : HOST_DNS;
+}
+
+int
+proxy_typenum(const char *typestr)
+{
+	return (strcasecmp(typestr, "socks4") == 0) ? IRCPX_SOCKS4 :
+	       (strcasecmp(typestr, "socks5") == 0) ? IRCPX_SOCKS5 :
+	       (strcasecmp(typestr, "http") == 0) ? IRCPX_HTTP : -1;
+}
+
+const char*
+proxy_typestr(int typenum)
+{
+	return (typenum == IRCPX_HTTP) ? "HTTP" :
+	       (typenum == IRCPX_SOCKS4) ? "SOCKS4" :
+	       (typenum == IRCPX_SOCKS5) ? "SOCKS5" : "unknown";
 }

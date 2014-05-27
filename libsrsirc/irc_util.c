@@ -16,6 +16,7 @@
 #include <strings.h>
 #include <limits.h>
 
+#include "proxy.h"
 #include "common.h"
 
 #include <intlog.h>
@@ -176,7 +177,7 @@ parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz, uint16_t *port,
 	strncpy(pxtypestr, linebuf, num);
 	pxtypestr[num] = '\0';
 
-	*ptype = ic_pxtypeno(pxtypestr);
+	*ptype = proxy_typenum(pxtypestr);
 
 	parse_hostspec(hoststr, hoststr_sz, port, NULL, ptr + 1);
 	return true;

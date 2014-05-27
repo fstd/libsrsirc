@@ -25,9 +25,7 @@ void ic_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 int ic_consocket(const char *host, uint16_t port,
     struct sockaddr *sockaddr, size_t *addrlen,
     uint64_t softto, uint64_t hardto);
-bool update_strprop(char **field, const char *val);
 
-int ic_pxtypeno(const char *typestr);
-const char *ic_pxtypestr(int type);
+bool ic_update_strprop(char **field, const char *val);
 
 #endif /* LIBSRSIRC_COMMON_H */

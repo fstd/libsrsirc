@@ -5,6 +5,7 @@
 #ifndef LIBSRSIRC_IRC_DEFS_H
 #define LIBSRSIRC_IRC_DEFS_H 1
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef WITH_SSL

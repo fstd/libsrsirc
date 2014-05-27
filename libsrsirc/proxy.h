@@ -16,4 +16,7 @@ bool proxy_logon_socks4(int sck, const char *host, uint16_t port,
 bool proxy_logon_socks5(int sck, const char *host, uint16_t port,
     uint64_t to_us);
 
+int proxy_typenum(const char *typestr);
+const char *proxy_typestr(int typenum);
+
 #endif /* LIBSRSIRC_PROXY_H */

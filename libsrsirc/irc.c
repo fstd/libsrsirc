@@ -135,8 +135,8 @@ irc_connect(irc hnd)
 	uint64_t tsend = hnd->hcto_us ?
 	    ic_timestamp_us() + hnd->hcto_us : 0;
 
-	update_strprop(&hnd->lasterr, NULL);
-	update_strprop(&hnd->banmsg, NULL);
+	ic_update_strprop(&hnd->lasterr, NULL);
+	ic_update_strprop(&hnd->banmsg, NULL);
 	hnd->banned = false;
 
 	for (int i = 0; i < 4; i++) {
@@ -249,25 +249,25 @@ irc_set_server(irc hnd, const char *host, uint16_t port)
 bool
 irc_set_pass(irc hnd, const char *srvpass)
 {
-	return update_strprop(&hnd->pass, srvpass);
+	return ic_update_strprop(&hnd->pass, srvpass);
 }
 
 bool
 irc_set_uname(irc hnd, const char *uname)
 {
-	return update_strprop(&hnd->uname, uname);
+	return ic_update_strprop(&hnd->uname, uname);
 }
 
 bool
 irc_set_fname(irc hnd, const char *fname)
 {
-	return update_strprop(&hnd->fname, fname);
+	return ic_update_strprop(&hnd->fname, fname);
 }
 
 bool
 irc_set_nick(irc hnd, const char *nick)
 {
-	return update_strprop(&hnd->nick, nick);
+	return ic_update_strprop(&hnd->nick, nick);
 }
 
 static bool
