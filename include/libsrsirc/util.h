@@ -20,6 +20,34 @@ struct pxspec {
 	char addrstr[48];
 	uint16_t port;
 };
+/* Overview:
+ *
+ * void ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx);
+ * void ut_pfx2uname(char *dest, size_t dest_sz, const char *pfx);
+ * void ut_pfx2host(char *dest, size_t dest_sz, const char *pfx);
+ *
+ * int ut_istrcmp(const char *n1, const char *n2, int casemap);
+ * int ut_istrncmp(const char *n1, const char *n2, size_t len, int casemap);
+ * char ut_tolower(char c, int casemap);
+ * void ut_strtolower(char *dest, size_t destsz, const char *str, int casemap);
+ *
+ * void ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
+ *     bool *ssl, const char *hostspec);
+ * bool ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz,
+ *     uint16_t *port, const char *pxspec);
+ *
+ * char* ut_sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg);
+ * void ut_dumpmsg(void *tag, tokarr *msg);
+ *
+ * bool ut_conread(tokarr *msg, void *tag);
+ * void ut_mut_nick(char *nick, size_t nick_sz);
+ *
+ * char** ut_parse_005_cmodes(const char *const *arr, size_t argcnt,
+ *     size_t *num, const char *modepfx005chr, const char *const *chmodes);
+ *
+ * tokarr *ut_clonearr(tokarr *arr);
+ * void ut_freearr(tokarr *arr);
+ */
 
 
 
@@ -92,16 +120,16 @@ void ut_dumpmsg(void *tag, tokarr *msg);
 /* ut_conread - dump-to-stderr conread handler (see irc_regcb_conread()) */
 bool ut_conread(tokarr *msg, void *tag);
 
-/* ut_parse_005_cmodes - oh well. if you need this documented, email me. */
-char** ut_parse_005_cmodes(const char *const *arr, size_t argcnt, size_t *num,
-    const char *modepfx005chr, const char *const *chmodes);
-
 /* ut_mut_nick - Default "nick mutilation" function to generate new nicknames
  *     if, at logon time, the nickname we want is unavailable
  * Params: `nick':  when called, holds the nickname which was unavailable.
  *                  when returning, it should hold the new nickname to try
  *         `nick_sz': size of the nick buffer (honor it!) */
 void ut_mut_nick(char *nick, size_t nick_sz);
+
+/* ut_parse_005_cmodes - oh well. if you need this documented, email me. */
+char** ut_parse_005_cmodes(const char *const *arr, size_t argcnt,
+    size_t *num, const char *modepfx005chr, const char *const *chmodes);
 
 /* ut_clonearr - deep-copy a tokarr (usually containing a tokenized irc message)
  * Params: `arr': pointer to the tokarr to clone
