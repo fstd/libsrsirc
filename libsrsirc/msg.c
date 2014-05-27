@@ -369,7 +369,7 @@ msg_handle(irc hnd, tokarr *msg, bool logon)
 		} else if (retflags & PROTO_ERR) {
 			char line[1024];
 			E("(%p) proto error on '%s' (ct:%d)",
-			    hnd, ut_snut_dumpmsg(line, sizeof line, NULL, msg),
+			    hnd, ut_sndumpmsg(line, sizeof line, NULL, msg),
 			    conn_colon_trail(hnd->con));
 		} else {
 			E("(%p) can't proceed for unknown reasons", hnd);

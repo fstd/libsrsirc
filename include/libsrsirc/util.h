@@ -36,7 +36,7 @@ bool ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz,
 void ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
     bool *ssl, const char *hostspec);
 
-char* ut_snut_dumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg);
+char* ut_sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg);
 
 void ut_dumpmsg(void *tag, tokarr *msg);
 

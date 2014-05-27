@@ -240,7 +240,7 @@ static bool
 conread(tokarr *msg, void *tag)
 {
 	char buf[1024];
-	ut_snut_dumpmsg(buf, sizeof buf, tag, msg);
+	ut_sndumpmsg(buf, sizeof buf, tag, msg);
 	WVX("%s", buf);
 	return true;
 }

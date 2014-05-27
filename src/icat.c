@@ -157,7 +157,7 @@ process_irc(void)
 		return -1;
 	} else if (r == 1) {
 		char buf[1024];
-		ut_snut_dumpmsg(buf, sizeof buf, NULL, &tok);
+		ut_sndumpmsg(buf, sizeof buf, NULL, &tok);
 		WVX("%s", buf);
 		handle_irc(&tok);
 		return 1;
@@ -722,7 +722,7 @@ static bool
 conread(tokarr *msg, void *tag)
 {
 	char buf[1024];
-	ut_snut_dumpmsg(buf, sizeof buf, tag, msg);
+	ut_sndumpmsg(buf, sizeof buf, tag, msg);
 	WVX("%s", buf);
 	return true;
 }

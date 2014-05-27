@@ -219,7 +219,7 @@ ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
 
 
 char*
-ut_snut_dumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
+ut_sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
 {
 	snprintf(dest, dest_sz, "(%p) '%s' '%s'", tag, (*msg)[0], (*msg)[1]);
 	for (size_t i = 2; i < COUNTOF(*msg); i++) {
@@ -237,7 +237,7 @@ void
 ut_dumpmsg(void *tag, tokarr *msg)
 {
 	char buf[1024];
-	ut_snut_dumpmsg(buf, sizeof buf, tag, msg);
+	ut_sndumpmsg(buf, sizeof buf, tag, msg);
 	fprintf(stderr, "%s\n", buf);
 }
 
