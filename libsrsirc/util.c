@@ -31,13 +31,13 @@
 static int classify_chanmode(char c, const char *const *chmodes);
 
 
-bool
+void
 ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx)
 {
-	if (!dest || !dest_sz || !pfx)
-		return false;
-	strncpy(dest, pfx, dest_sz);
-	dest[dest_sz-1] = '\0';
+	if (!dest_sz)
+		return;
+
+	com_strNcpy(dest, pfx, dest_sz);
 
 	char *ptr = strchr(dest, '@');
 	if (ptr)
@@ -46,17 +46,15 @@ ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx)
 	ptr = strchr(dest, '!');
 	if (ptr)
 		*ptr = '\0';
-
-	return true;
 }
 
-bool
+void
 ut_pfx2uname(char *dest, size_t dest_sz, const char *pfx)
 {
-	if (!dest || !dest_sz || !pfx)
-		return false;
-	strncpy(dest, pfx, dest_sz);
-	dest[dest_sz-1] = '\0';
+	if (!dest_sz)
+		return;
+
+	com_strNcpy(dest, pfx, dest_sz);
 
 	char *ptr = strchr(dest, '@');
 	if (ptr)
@@ -67,25 +65,21 @@ ut_pfx2uname(char *dest, size_t dest_sz, const char *pfx)
 		memmove(dest, ptr+1, strlen(ptr+1)+1);
 	else
 		*dest = '\0';
-
-	return true;
 }
 
-bool
+void
 ut_pfx2host(char *dest, size_t dest_sz, const char *pfx)
 {
-	if (!dest || !dest_sz || !pfx)
-		return false;
-	strncpy(dest, pfx, dest_sz);
-	dest[dest_sz-1] = '\0';
+	if (!dest_sz)
+		return;
+
+	com_strNcpy(dest, pfx, dest_sz);
 
 	char *ptr = strchr(dest, '@');
 	if (ptr)
 		memmove(dest, ptr+1, strlen(ptr+1)+1);
 	else
 		*dest = '\0';
-
-	return true;
 }
 
 int
@@ -163,8 +157,7 @@ ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz, uint16_t *port,
     const char *pxspec)
 {
 	char linebuf[128];
-	strncpy(linebuf, pxspec, sizeof linebuf);
-	linebuf[sizeof linebuf - 1] = '\0';
+	com_strNcpy(linebuf, pxspec, sizeof linebuf);
 
 	char *ptr = strchr(linebuf, ':');
 	if (!ptr)
@@ -174,10 +167,13 @@ ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz, uint16_t *port,
 	size_t num = (size_t)(ptr - linebuf) < sizeof pxtypestr ?
 	    (size_t)(ptr - linebuf) : sizeof pxtypestr - 1;
 
-	strncpy(pxtypestr, linebuf, num);
-	pxtypestr[num] = '\0';
+	com_strNcpy(pxtypestr, linebuf, num + 1);
 
-	*ptype = px_typenum(pxtypestr);
+	int p = px_typenum(pxtypestr);
+	if (p == -1)
+		return false;
+
+	*ptype = p;
 
 	ut_parse_hostspec(hoststr, hoststr_sz, port, NULL, ptr + 1);
 	return true;
@@ -191,7 +187,7 @@ ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
 	if (ssl)
 		*ssl = false;
 
-	strncpy(hoststr, hostspec + (hostspec[0] == '['), hoststr_sz);
+	com_strNcpy(hoststr, hostspec + (hostspec[0] == '['), hoststr_sz);
 
 	char *ptr = strstr(hoststr, "/ssl");
 	if (!ptr)

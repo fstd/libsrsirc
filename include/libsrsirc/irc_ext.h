@@ -118,7 +118,8 @@ const char *const *irc_005modepfx(irc hnd);
 
 /* irc_regcb_conread - register callback for msgs which are read at logon time
  * Params: `cb': a function pointer of appropriate type (see defs.h)
- *         `tag`: user data, passed to `cb' as-is on every call */
+ *         `tag`: user data, passed to `cb' as-is on every call
+ * If the registered function returns false, the attempt to log on is aborted */
 void irc_regcb_conread(irc hnd, fp_con_read cb, void *tag);
 
 /* irc_regcb_mutnick - register a function which is called when, while logging

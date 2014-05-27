@@ -82,11 +82,13 @@ com_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts)
 }
 
 char*
-com_strNcpy(char *dst, const char *src, size_t len)
+com_strNcpy(char *dst, const char *src, size_t dst_sz)
 {
-	char *r = strncpy(dst, src, len);
-	dst[len-1] = '\0';
-	return r;
+	dst[dst_sz-1] = '\0';
+	while (--dst_sz)
+		if (!(*dst++ = *src++))
+			break;
+	return dst;
 }
 
 int com_consocket(const char *host, uint16_t port,

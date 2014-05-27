@@ -215,8 +215,10 @@ handle_NICK(irc hnd, tokarr *msg, size_t nargs)
 		return CANT_PROCEED|PROTO_ERR;
 
 	char nick[128];
-	if (!ut_pfx2nick(nick, sizeof nick, (*msg)[0]))
+	if (!(*msg)[0])
 		return CANT_PROCEED|PROTO_ERR;
+
+	ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
 
 	if (!ut_istrcmp(nick, hnd->mynick, hnd->casemapping)) {
 		com_strNcpy(hnd->mynick, (*msg)[2], sizeof hnd->mynick);

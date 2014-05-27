@@ -394,8 +394,10 @@ handle_irc(tokarr *tok)
 		irc_write(g_irc, resp);
 	} else if (strcmp((*tok)[1], "PRIVMSG") == 0) {
 		char nick[32];
-		if (!ut_pfx2nick(nick, sizeof nick, (*tok)[0]))
+		if (!(*tok)[0])
 			return;
+
+		ut_pfx2nick(nick, sizeof nick, (*tok)[0]);
 
 		if (g_sett.ignore_cs && !ut_istrcmp(nick, "ChanServ", irc_casemap(g_irc)))
 			return;

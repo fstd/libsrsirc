@@ -108,7 +108,7 @@ struct irc_s {
 
 	/* zero timeout means no timeout */
 	uint64_t hcto_us;/*connect() timeout per A/AAAA record*/
-	uint64_t scto_us;/*overall ircbas_connect() timeout*/
+	uint64_t scto_us;/*overall irc_connect() timeout*/
 
 	bool restricted;
 	bool banned;
