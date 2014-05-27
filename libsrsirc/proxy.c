@@ -35,7 +35,7 @@ static int guess_hosttype(const char *host);
 bool
 proxy_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 {
-	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? com_timestamp_us() + to_us : 0;
 	char buf[256];
 	snprintf(buf, sizeof buf, "CONNECT %s:%d HTTP/1.0\r\nHost: %s:%d"
 	    "\r\n\r\n", host, port, host, port);
@@ -65,7 +65,7 @@ proxy_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 				W(DBGSPEC" unexpected EOF",
 				    sck, host, port);
 			else if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				if (!ic_check_timeout(tsend, NULL)) {
+				if (!com_check_timeout(tsend, NULL)) {
 					usleep(10000);
 					continue;
 				}
@@ -102,7 +102,7 @@ proxy_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 bool
 proxy_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 {
-	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? com_timestamp_us() + to_us : 0;
 	unsigned char logon[14];
 	uint16_t nport = htons(port);
 
@@ -148,7 +148,7 @@ proxy_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 		n = read(sck, &resp+c, 8-c);
 		if (n <= 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				if (!ic_check_timeout(tsend, NULL)) {
+				if (!com_check_timeout(tsend, NULL)) {
 					usleep(10000);
 					continue;
 				}
@@ -172,7 +172,7 @@ proxy_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 bool
 proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 {
-	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? com_timestamp_us() + to_us : 0;
 	unsigned char logon[14];
 
 	if (!port) {
@@ -207,7 +207,7 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 		n = read(sck, &resp+c, 2-c);
 		if (n <= 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				if (!ic_check_timeout(tsend, NULL)) {
+				if (!com_check_timeout(tsend, NULL)) {
 					usleep(10000);
 					continue;
 				}
@@ -304,7 +304,7 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 		n = read(sck, resp + c, l - c);
 		if (n <= 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				if (!ic_check_timeout(tsend, NULL)) {
+				if (!com_check_timeout(tsend, NULL)) {
 					usleep(10000);
 					continue;
 				}
@@ -353,7 +353,7 @@ proxy_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 		n = read(sck, resp + c, c ? l - c : 1);
 		if (n <= 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				if (!ic_check_timeout(tsend, NULL)) {
+				if (!com_check_timeout(tsend, NULL)) {
 					usleep(10000);
 					continue;
 				}

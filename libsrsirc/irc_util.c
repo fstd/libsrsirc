@@ -222,20 +222,20 @@ parse_identity(char *nick, size_t nicksz, char *uname, size_t unamesz,
     char *fname, size_t fnamesz, const char *identity)
 {
 	char ident[256];
-	ic_strNcpy(ident, identity, sizeof ident);
+	com_strNcpy(ident, identity, sizeof ident);
 
 	char *p = strchr(ident, ' ');
 	if (p)
-		ic_strNcpy(fname, (*p = '\0', p + 1), fnamesz);
+		com_strNcpy(fname, (*p = '\0', p + 1), fnamesz);
 	else
 		return false;
 	p = strchr(ident, '!');
 	if (p)
-		ic_strNcpy(uname, (*p = '\0', p + 1), unamesz);
+		com_strNcpy(uname, (*p = '\0', p + 1), unamesz);
 	else
 		return false;
 
-	ic_strNcpy(nick, ident, nicksz);
+	com_strNcpy(nick, ident, nicksz);
 	return true;
 }
 
@@ -248,9 +248,9 @@ sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
 	for (size_t i = 2; i < COUNTOF(*msg); i++) {
 		if (!(*msg)[i])
 			break;
-		ic_strNcat(dest, " '", dest_sz);
-		ic_strNcat(dest, (*msg)[i], dest_sz);
-		ic_strNcat(dest, "'", dest_sz);
+		com_strNcat(dest, " '", dest_sz);
+		com_strNcat(dest, (*msg)[i], dest_sz);
+		com_strNcat(dest, "'", dest_sz);
 	}
 
 	return dest;
@@ -283,8 +283,8 @@ parse_chanmodes(const char *const *arr, size_t argcount, size_t *num,
 	}
 
 	const char *arg;
-	size_t nummodes = strlen(modes) - (ic_strCchr(modes,'-')
-	    + ic_strCchr(modes,'+'));
+	size_t nummodes = strlen(modes) - (com_strCchr(modes,'-')
+	    + com_strCchr(modes,'+'));
 
 	char **modearr = malloc(nummodes * sizeof *modearr);
 	if (!modearr) {
@@ -418,7 +418,7 @@ countargs(tokarr *tok)
 }
 
 
-tokarr *ic_clonearr(tokarr *arr)
+tokarr *ut_clonearr(tokarr *arr)
 {
 	tokarr *res = malloc(sizeof *res);
 	if (!res) {
@@ -439,13 +439,13 @@ tokarr *ic_clonearr(tokarr *arr)
 
 clonearr_fail:
 
-	ic_freearr(res);
+	ut_freearr(res);
 	return NULL;
 }
 
 
 void
-ic_freearr(tokarr *arr)
+ut_freearr(tokarr *arr)
 {
 	if (arr) {
 		for (size_t i = 0; i < COUNTOF(*arr); i++)

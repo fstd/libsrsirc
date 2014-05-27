@@ -41,12 +41,12 @@ irc_init(void)
 	r->pass = r->nick = r->uname = r->fname = r->serv_dist
 	    = r->serv_info = r->lasterr = r->banmsg = NULL;
 
-	ic_strNcpy(r->m005chanmodes[0], "b", sizeof r->m005chanmodes[0]);
-	ic_strNcpy(r->m005chanmodes[1], "k", sizeof r->m005chanmodes[1]);
-	ic_strNcpy(r->m005chanmodes[2], "l", sizeof r->m005chanmodes[2]);
-	ic_strNcpy(r->m005chanmodes[3], "psitnm", sizeof r->m005chanmodes[3]);
-	ic_strNcpy(r->m005modepfx[0], "ov", sizeof r->m005modepfx[0]);
-	ic_strNcpy(r->m005modepfx[1], "@+", sizeof r->m005modepfx[1]);
+	com_strNcpy(r->m005chanmodes[0], "b", sizeof r->m005chanmodes[0]);
+	com_strNcpy(r->m005chanmodes[1], "k", sizeof r->m005chanmodes[1]);
+	com_strNcpy(r->m005chanmodes[2], "l", sizeof r->m005chanmodes[2]);
+	com_strNcpy(r->m005chanmodes[3], "psitnm", sizeof r->m005chanmodes[3]);
+	com_strNcpy(r->m005modepfx[0], "ov", sizeof r->m005modepfx[0]);
+	com_strNcpy(r->m005modepfx[1], "@+", sizeof r->m005modepfx[1]);
 
 	if (!(r->pass = strdup(DEF_PASS)))
 		goto irc_init_fail;
@@ -123,7 +123,7 @@ irc_dispose(irc hnd)
 	free(hnd->serv_info);
 
 	for (int i = 0; i < 4; i++)
-		ic_freearr(hnd->logonconv[i]);
+		ut_freearr(hnd->logonconv[i]);
 
 	D("(%p) disposed", hnd);
 	free(hnd);
@@ -133,14 +133,14 @@ bool
 irc_connect(irc hnd)
 {
 	uint64_t tsend = hnd->hcto_us ?
-	    ic_timestamp_us() + hnd->hcto_us : 0;
+	    com_timestamp_us() + hnd->hcto_us : 0;
 
-	ic_update_strprop(&hnd->lasterr, NULL);
-	ic_update_strprop(&hnd->banmsg, NULL);
+	com_update_strprop(&hnd->lasterr, NULL);
+	com_update_strprop(&hnd->banmsg, NULL);
 	hnd->banned = false;
 
 	for (int i = 0; i < 4; i++) {
-		ic_freearr(hnd->logonconv[i]);
+		ut_freearr(hnd->logonconv[i]);
 		hnd->logonconv[i] = NULL;
 	}
 
@@ -152,14 +152,14 @@ irc_connect(irc hnd)
 
 	I("(%p) connection established, IRC logon sequence sent", hnd);
 
-	ic_strNcpy(hnd->mynick, hnd->nick, sizeof hnd->mynick);
+	com_strNcpy(hnd->mynick, hnd->nick, sizeof hnd->mynick);
 	tokarr msg;
 
 	bool success = false;
 	uint64_t trem = 0;
 	int r;
 	do {
-		if (ic_check_timeout(tsend, &trem)) {
+		if (com_check_timeout(tsend, &trem)) {
 			W("(%p) timeout waiting for 004", hnd);
 			goto irc_connect_fail;
 		}
@@ -249,25 +249,25 @@ irc_set_server(irc hnd, const char *host, uint16_t port)
 bool
 irc_set_pass(irc hnd, const char *srvpass)
 {
-	return ic_update_strprop(&hnd->pass, srvpass);
+	return com_update_strprop(&hnd->pass, srvpass);
 }
 
 bool
 irc_set_uname(irc hnd, const char *uname)
 {
-	return ic_update_strprop(&hnd->uname, uname);
+	return com_update_strprop(&hnd->uname, uname);
 }
 
 bool
 irc_set_fname(irc hnd, const char *fname)
 {
-	return ic_update_strprop(&hnd->fname, fname);
+	return com_update_strprop(&hnd->fname, fname);
 }
 
 bool
 irc_set_nick(irc hnd, const char *nick)
 {
-	return ic_update_strprop(&hnd->nick, nick);
+	return com_update_strprop(&hnd->nick, nick);
 }
 
 static bool

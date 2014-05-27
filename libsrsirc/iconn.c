@@ -140,7 +140,7 @@ icon_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 	if (!hnd || hnd->state != OFF)
 		return false;
 
-	uint64_t tsend = hardto_us ? ic_timestamp_us() + hardto_us : 0;
+	uint64_t tsend = hardto_us ? com_timestamp_us() + hardto_us : 0;
 
 	char *host = hnd->ptype != -1 ? hnd->phost : hnd->host;
 	uint16_t port = hnd->ptype != -1 ? hnd->pport : hnd->port;
@@ -161,12 +161,12 @@ icon_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 	size_t addrlen;
 
 	sckhld sh;
-	sh.sck = ic_consocket(host, port, &sa, &addrlen,
+	sh.sck = com_consocket(host, port, &sa, &addrlen,
 	    softto_us, hardto_us);
 	sh.shnd = NULL;
 
 	if (sh.sck < 0) {
-		W("(%p) ic_consocket failed for %s:%"PRIu16"", hnd, host, port);
+		W("(%p) com_consocket failed for %s:%"PRIu16"", hnd, host, port);
 		return false;
 	}
 
@@ -176,7 +176,7 @@ icon_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 
 	uint64_t trem = 0;
 	if (hnd->ptype != -1) {
-		if (ic_check_timeout(tsend, &trem)) {
+		if (com_check_timeout(tsend, &trem)) {
 			W("(%p) timeout", hnd);
 			close(sh.sck);
 			hnd->sh.sck = -1;

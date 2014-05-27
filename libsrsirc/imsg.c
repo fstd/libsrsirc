@@ -28,17 +28,17 @@ handle_001(irc hnd, tokarr *msg, size_t nargs)
 	if (nargs < 3)
 		return CANT_PROCEED|PROTO_ERR;
 
-	ic_freearr(hnd->logonconv[0]);
-	hnd->logonconv[0] = ic_clonearr(msg);
-	ic_strNcpy(hnd->mynick, (*msg)[2],sizeof hnd->mynick);
+	ut_freearr(hnd->logonconv[0]);
+	hnd->logonconv[0] = ut_clonearr(msg);
+	com_strNcpy(hnd->mynick, (*msg)[2],sizeof hnd->mynick);
 	char *tmp;
 	if ((tmp = strchr(hnd->mynick, '@')))
 		*tmp = '\0';
 	if ((tmp = strchr(hnd->mynick, '!')))
 		*tmp = '\0';
 
-	ic_strNcpy(hnd->umodes, DEF_UMODES, sizeof hnd->umodes);
-	ic_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
+	com_strNcpy(hnd->umodes, DEF_UMODES, sizeof hnd->umodes);
+	com_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
 	hnd->ver[0] = '\0';
 	hnd->service = false;
 
@@ -48,8 +48,8 @@ handle_001(irc hnd, tokarr *msg, size_t nargs)
 static uint8_t
 handle_002(irc hnd, tokarr *msg, size_t nargs)
 {
-	ic_freearr(hnd->logonconv[1]);
-	hnd->logonconv[1] = ic_clonearr(msg);
+	ut_freearr(hnd->logonconv[1]);
+	hnd->logonconv[1] = ut_clonearr(msg);
 
 	return 0;
 }
@@ -57,8 +57,8 @@ handle_002(irc hnd, tokarr *msg, size_t nargs)
 static uint8_t
 handle_003(irc hnd, tokarr *msg, size_t nargs)
 {
-	ic_freearr(hnd->logonconv[2]);
-	hnd->logonconv[2] = ic_clonearr(msg);
+	ut_freearr(hnd->logonconv[2]);
+	hnd->logonconv[2] = ut_clonearr(msg);
 
 	return 0;
 }
@@ -69,12 +69,12 @@ handle_004(irc hnd, tokarr *msg, size_t nargs)
 	if (nargs < 7)
 		return CANT_PROCEED|PROTO_ERR;
 
-	ic_freearr(hnd->logonconv[3]);
-	hnd->logonconv[3] = ic_clonearr(msg);
-	ic_strNcpy(hnd->myhost, (*msg)[3],sizeof hnd->myhost);
-	ic_strNcpy(hnd->umodes, (*msg)[5], sizeof hnd->umodes);
-	ic_strNcpy(hnd->cmodes, (*msg)[6], sizeof hnd->cmodes);
-	ic_strNcpy(hnd->ver, (*msg)[4], sizeof hnd->ver);
+	ut_freearr(hnd->logonconv[3]);
+	hnd->logonconv[3] = ut_clonearr(msg);
+	com_strNcpy(hnd->myhost, (*msg)[3],sizeof hnd->myhost);
+	com_strNcpy(hnd->umodes, (*msg)[5], sizeof hnd->umodes);
+	com_strNcpy(hnd->cmodes, (*msg)[6], sizeof hnd->cmodes);
+	com_strNcpy(hnd->ver, (*msg)[4], sizeof hnd->ver);
 	D("(%p) got beloved 004", hnd);
 
 	return LOGON_COMPLETE;
@@ -148,18 +148,18 @@ handle_383(irc hnd, tokarr *msg, size_t nargs)
 	if (nargs < 3)
 		return CANT_PROCEED|PROTO_ERR;
 
-	ic_strNcpy(hnd->mynick, (*msg)[2],sizeof hnd->mynick);
+	com_strNcpy(hnd->mynick, (*msg)[2],sizeof hnd->mynick);
 	char *tmp;
 	if ((tmp = strchr(hnd->mynick, '@')))
 		*tmp = '\0';
 	if ((tmp = strchr(hnd->mynick, '!')))
 		*tmp = '\0';
 
-	ic_strNcpy(hnd->myhost, (*msg)[0] ? (*msg)[0] : hnd->con->host,
+	com_strNcpy(hnd->myhost, (*msg)[0] ? (*msg)[0] : hnd->con->host,
 	    sizeof hnd->myhost);
 
-	ic_strNcpy(hnd->umodes, DEF_UMODES, sizeof hnd->umodes);
-	ic_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
+	com_strNcpy(hnd->umodes, DEF_UMODES, sizeof hnd->umodes);
+	com_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
 	hnd->ver[0] = '\0';
 	hnd->service = true;
 	D("(%p) got beloved 383", hnd);
@@ -219,7 +219,7 @@ handle_NICK(irc hnd, tokarr *msg, size_t nargs)
 		return CANT_PROCEED|PROTO_ERR;
 
 	if (!istrcasecmp(nick, hnd->mynick, hnd->casemapping)) {
-		ic_strNcpy(hnd->mynick, (*msg)[2], sizeof hnd->mynick);
+		com_strNcpy(hnd->mynick, (*msg)[2], sizeof hnd->mynick);
 		I("my nick is now '%s'", hnd->mynick);
 	}
 
@@ -250,7 +250,7 @@ handle_005_PREFIX(irc hnd, const char *val)
 	if (!val[0])
 		return CANT_PROCEED|PROTO_ERR;
 
-	ic_strNcpy(str, val + 1, sizeof str);
+	com_strNcpy(str, val + 1, sizeof str);
 	char *p = strchr(str, ')');
 	if (!p)
 		return CANT_PROCEED|PROTO_ERR;
@@ -261,8 +261,8 @@ handle_005_PREFIX(irc hnd, const char *val)
 	if (slen == 0 || slen != strlen(p))
 		return CANT_PROCEED|PROTO_ERR;
 
-	ic_strNcpy(hnd->m005modepfx[0], str, sizeof hnd->m005modepfx[0]);
-	ic_strNcpy(hnd->m005modepfx[1], p, sizeof hnd->m005modepfx[1]);
+	com_strNcpy(hnd->m005modepfx[0], str, sizeof hnd->m005modepfx[0]);
+	com_strNcpy(hnd->m005modepfx[1], p, sizeof hnd->m005modepfx[1]);
 
 	return 0;
 }
@@ -275,12 +275,12 @@ handle_005_CHANMODES(irc hnd, const char *val)
 
 	int c = 0;
 	char argbuf[64];
-	ic_strNcpy(argbuf, val, sizeof argbuf);
+	com_strNcpy(argbuf, val, sizeof argbuf);
 	char *ptr = strtok(argbuf, ",");
 
 	while (ptr) {
 		if (c < 4)
-			ic_strNcpy(hnd->m005chanmodes[c++], ptr,
+			com_strNcpy(hnd->m005chanmodes[c++], ptr,
 			    sizeof hnd->m005chanmodes[0]);
 		ptr = strtok(NULL, ",");
 	}

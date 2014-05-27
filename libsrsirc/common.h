@@ -14,18 +14,18 @@
 
 #define COUNTOF(ARR) (sizeof (ARR) / sizeof (ARR)[0])
 
-void ic_strNcat(char *dest, const char *src, size_t destsz);
-char* ic_strNcpy(char *dst, const char *src, size_t len);
-size_t ic_strCchr(const char *dst, char c);
+void com_strNcat(char *dest, const char *src, size_t destsz);
+char* com_strNcpy(char *dst, const char *src, size_t len);
+size_t com_strCchr(const char *dst, char c);
 
-uint64_t ic_timestamp_us(void);
-bool ic_check_timeout(uint64_t tsend, uint64_t *trem);
-void ic_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
+uint64_t com_timestamp_us(void);
+bool com_check_timeout(uint64_t tsend, uint64_t *trem);
+void com_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 
-int ic_consocket(const char *host, uint16_t port,
+int com_consocket(const char *host, uint16_t port,
     struct sockaddr *sockaddr, size_t *addrlen,
     uint64_t softto, uint64_t hardto);
 
-bool ic_update_strprop(char **field, const char *val);
+bool com_update_strprop(char **field, const char *val);
 
 #endif /* LIBSRSIRC_COMMON_H */

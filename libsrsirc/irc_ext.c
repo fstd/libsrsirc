@@ -137,7 +137,7 @@ irc_set_service_connect(irc hnd, bool enabled)
 bool
 irc_set_service_dist(irc hnd, const char *dist)
 {
-	return ic_update_strprop(&hnd->serv_dist, dist);
+	return com_update_strprop(&hnd->serv_dist, dist);
 }
 
 bool
@@ -150,7 +150,7 @@ irc_set_service_type(irc hnd, long type)
 bool
 irc_set_service_info(irc hnd, const char *info)
 {
-	return ic_update_strprop(&hnd->serv_info, info);
+	return com_update_strprop(&hnd->serv_info, info);
 }
 
 void

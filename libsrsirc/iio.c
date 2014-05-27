@@ -49,7 +49,7 @@ static ssize_t send_wrap(sckhld sh, const void *buf, size_t len, int flags);
 int
 iio_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
 {
-	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? com_timestamp_us() + to_us : 0;
 
 	while (ctx->wptr < ctx->eptr && ISDELIM(*ctx->wptr))
 		ctx->wptr++; /* skip leading line delimiters */
@@ -60,7 +60,7 @@ iio_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
 	char *delim;
 	while (!(delim = find_delim(ctx))) {
 		uint64_t trem = 0;
-		if (ic_check_timeout(tsend, &trem))
+		if (com_check_timeout(tsend, &trem))
 			return 0;
 
 		int r = read_more(sh, ctx, trem);
@@ -197,16 +197,16 @@ next_tok(char *buf)
 static int
 wait_for_readable(int sck, uint64_t to_us)
 {
-	uint64_t tsend = to_us ? ic_timestamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? com_timestamp_us() + to_us : 0;
 
 	for (;;) {
 		struct timeval tout;
 		uint64_t trem = 0;
-		if (ic_check_timeout(tsend, &trem))
+		if (com_check_timeout(tsend, &trem))
 			return 0;
 
 		if (tsend)
-			ic_tconv(&tout, &trem, false);
+			com_tconv(&tout, &trem, false);
 
 		fd_set fds;
 		FD_ZERO(&fds);

@@ -33,7 +33,7 @@
 
 
 void
-ic_strNcat(char *dest, const char *src, size_t destsz)
+com_strNcat(char *dest, const char *src, size_t destsz)
 {
 	size_t len = strlen(dest);
 	if (len + 1 >= destsz)
@@ -48,7 +48,7 @@ ic_strNcat(char *dest, const char *src, size_t destsz)
 }
 
 size_t
-ic_strCchr(const char *dst, char c)
+com_strCchr(const char *dst, char c)
 {
 	size_t r = 0;
 	while (*dst)
@@ -58,20 +58,20 @@ ic_strCchr(const char *dst, char c)
 }
 
 uint64_t
-ic_timestamp_us(void)
+com_timestamp_us(void)
 {
 	struct timeval t;
 	uint64_t ts = 0;
 	if (gettimeofday(&t, NULL) != 0)
 		EE("gettimeofday");
 	else
-		ic_tconv(&t, &ts, true);
+		com_tconv(&t, &ts, true);
 
 	return ts;
 }
 
 void
-ic_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts)
+com_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts)
 {
 	if (tv_to_ts)
 		*ts = (uint64_t)tv->tv_sec * 1000000 + tv->tv_usec;
@@ -82,18 +82,18 @@ ic_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts)
 }
 
 char*
-ic_strNcpy(char *dst, const char *src, size_t len)
+com_strNcpy(char *dst, const char *src, size_t len)
 {
 	char *r = strncpy(dst, src, len);
 	dst[len-1] = '\0';
 	return r;
 }
 
-int ic_consocket(const char *host, uint16_t port,
+int com_consocket(const char *host, uint16_t port,
     struct sockaddr *sockaddr, size_t *addrlen,
     uint64_t softto, uint64_t hardto)
 {
-	D("ic_consocket() called: host='%s', port=%"PRIu16", sto=%"PRIu64", hto=%"PRIu64")",
+	D("com_consocket() called: host='%s', port=%"PRIu16", sto=%"PRIu64", hto=%"PRIu64")",
 	    host, port, softto, hardto);
 
 	struct addrinfo *ai_list = NULL;
@@ -106,7 +106,7 @@ int ic_consocket(const char *host, uint16_t port,
 	char portstr[6];
 	snprintf(portstr, sizeof portstr, "%"PRIu16"", port);
 
-	uint64_t hardtsend = hardto ? ic_timestamp_us() + hardto : 0;
+	uint64_t hardtsend = hardto ? com_timestamp_us() + hardto : 0;
 
 	D("calling getaddrinfo on '%s:%s' (AF_UNSPEC, SOCK_STREAM)",
 	    host, portstr);
@@ -133,7 +133,7 @@ int ic_consocket(const char *host, uint16_t port,
 	int sck = -1;
 	D("iterating over result list...");
 	for (struct addrinfo *ai = ai_list; ai; ai = ai->ai_next) {
-		uint64_t softtsend = softto ? ic_timestamp_us() + softto : 0;
+		uint64_t softtsend = softto ? com_timestamp_us() + softto : 0;
 
 		I("next result, creating socket (fam=%d, styp=%d, prot=%d)",
 		    ai->ai_family, ai->ai_socktype, ai->ai_protocol);
@@ -167,7 +167,7 @@ int ic_consocket(const char *host, uint16_t port,
 
 		char portstr[7];
 		snprintf(portstr, sizeof portstr, ":%"PRIu16"", peerport);
-		ic_strNcat(peeraddr, portstr, sizeof peeraddr);
+		com_strNcat(peeraddr, portstr, sizeof peeraddr);
 
 		int opt = 1;
 		socklen_t optlen = sizeof opt;
@@ -204,14 +204,14 @@ int ic_consocket(const char *host, uint16_t port,
 			uint64_t strem = 0;
 			uint64_t htrem = 0;
 
-			if (ic_check_timeout(hardtsend, &htrem)
-			    || ic_check_timeout(softtsend, &strem)) {
+			if (com_check_timeout(hardtsend, &htrem)
+			    || com_check_timeout(softtsend, &strem)) {
 				W("timeout reached while in 3WHS");
 				break;
 			}
 
 			if (hardtsend || softtsend)
-				ic_tconv(&tout,
+				com_tconv(&tout,
 				    htrem < strem ? &htrem : &strem, false);
 
 			errno = 0;
@@ -265,7 +265,7 @@ int ic_consocket(const char *host, uint16_t port,
 }
 
 bool
-ic_update_strprop(char **field, const char *val)
+com_update_strprop(char **field, const char *val)
 {
 	char *n = NULL;
 	if (val) {
@@ -282,7 +282,7 @@ ic_update_strprop(char **field, const char *val)
 }
 
 bool
-ic_check_timeout(uint64_t tsend, uint64_t *trem)
+com_check_timeout(uint64_t tsend, uint64_t *trem)
 {
 	if (!tsend) {
 		if (trem)
@@ -290,7 +290,7 @@ ic_check_timeout(uint64_t tsend, uint64_t *trem)
 		return false;
 	}
 
-	uint64_t now = ic_timestamp_us();
+	uint64_t now = com_timestamp_us();
 	if (now >= tsend) {
 		if (trem)
 			*trem = 0;
