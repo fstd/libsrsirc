@@ -48,9 +48,6 @@ irc_init(void)
 	com_strNcpy(r->m005modepfx[0], "ov", sizeof r->m005modepfx[0]);
 	com_strNcpy(r->m005modepfx[1], "@+", sizeof r->m005modepfx[1]);
 
-	if (!(r->pass = strdup(DEF_PASS)))
-		goto irc_init_fail;
-
 	size_t len = strlen(DEF_NICK);
 	if (!(r->nick = malloc((len > 9 ? len : 9) + 1)))
 		goto irc_init_fail;
