@@ -1,4 +1,4 @@
-/* iio.c - i/o processing, protocol tokenization
+/* io.c - i/o processing, protocol tokenization
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 

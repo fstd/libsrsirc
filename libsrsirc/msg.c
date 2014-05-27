@@ -1,4 +1,4 @@
-/* imsg.c - protocol message handlers
+/* msg.c - protocol message handlers
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 

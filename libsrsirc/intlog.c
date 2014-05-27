@@ -36,10 +36,10 @@ const char *modnames[NUM_MODS] = {
 	[MOD_IRC] = "irc",
 	[MOD_COMMON] = "common",
 	[MOD_IRC_UTIL] = "util",
-	[MOD_ICONN] = "iconn",
-	[MOD_IIO] = "iio",
-	[MOD_PROXY] = "proxy",
-	[MOD_IMSG] = "imsg",
+	[MOD_ICONN] = "conn",
+	[MOD_IIO] = "io",
+	[MOD_PROXY] = "px",
+	[MOD_IMSG] = "msg",
 	[MOD_UNKNOWN] = "(??" "?)"
 };
 

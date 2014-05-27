@@ -117,9 +117,9 @@ irc_regcb_mutnick(irc hnd, fp_mut_nick cb)
 }
 
 bool
-irc_set_proxy(irc hnd, const char *host, uint16_t port, int ptype)
+irc_set_px(irc hnd, const char *host, uint16_t port, int ptype)
 {
-	return conn_set_proxy(hnd->con, host, port, ptype);
+	return conn_set_px(hnd->con, host, port, ptype);
 }
 
 void

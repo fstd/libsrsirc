@@ -24,7 +24,7 @@ const char *conn_get_px_host(iconn hnd);
 uint16_t conn_get_px_port(iconn hnd);
 int conn_get_px_type(iconn hnd);
 bool conn_set_server(iconn hnd, const char *host, uint16_t port);
-bool conn_set_proxy(iconn hnd, const char *host, uint16_t port, int ptype);
+bool conn_set_px(iconn hnd, const char *host, uint16_t port, int ptype);
 bool conn_set_ssl(iconn hnd, bool on);
 bool conn_get_ssl(iconn hnd);
 

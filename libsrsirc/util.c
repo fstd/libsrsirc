@@ -1,4 +1,4 @@
-/* irc_util.c - Implementation of misc. functions related to IRC
+/* util.c - Implementation of misc. functions related to IRC
  * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 

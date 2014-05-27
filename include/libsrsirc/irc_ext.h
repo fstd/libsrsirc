@@ -141,12 +141,12 @@ bool irc_set_ssl(irc hnd, bool on);
  *     If in conflict, the hard timeout will overrule.  0 means no timeout. */
 void irc_set_connect_timeout(irc hnd, uint64_t soft, uint64_t hard);
 
-/* irc_set_proxy - set HTTP/SOCKS4/SOCKS5 proxy server to use
+/* irc_set_px - set HTTP/SOCKS4/SOCKS5 proxy server to use
  * Params: `host':  Proxy host, may be an IPv4 or IPv6 address or a DNS name
  *         `port':  Proxy port (1 <= `port' <= 65535)
  *         `ptype`: Proxy type, one of IRCPX_[HTTP|SOCKS4|SOCKS5].
  * Returns true on success, false on failure (out of memory, illegal args) */
-bool irc_set_proxy(irc hnd, const char *host, uint16_t port, int ptype);
+bool irc_set_px(irc hnd, const char *host, uint16_t port, int ptype);
 
 /* irc_set_conflags - set flags for the USER message at log on time.  This is
  *     a bit mask for which RFC2812 defines two bits: bit 3 (i.e. 8) leads to

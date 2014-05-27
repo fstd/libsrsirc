@@ -469,7 +469,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			    optarg))
 				EX("failed to parse pxspec '%s'", optarg);
 
-			irc_set_proxy(g_irc, host, port, ptype);
+			irc_set_px(g_irc, host, port, ptype);
 			}
 		break;case 't':
 			WVX("enabled target mode");

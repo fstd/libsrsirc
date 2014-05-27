@@ -1,4 +1,4 @@
-/* iconn.c - irc connection handling
+/* conn.c - irc connection handling
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
@@ -307,7 +307,7 @@ conn_colon_trail(iconn hnd)
 }
 
 bool
-conn_set_proxy(iconn hnd, const char *host, uint16_t port, int ptype)
+conn_set_px(iconn hnd, const char *host, uint16_t port, int ptype)
 {
 	char *n = NULL;
 	switch (ptype) {
