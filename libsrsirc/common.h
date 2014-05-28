@@ -22,9 +22,8 @@ uint64_t com_timestamp_us(void);
 bool com_check_timeout(uint64_t tsend, uint64_t *trem);
 void com_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 
-int com_consocket(const char *host, uint16_t port,
-    struct sockaddr *sockaddr, size_t *addrlen,
-    uint64_t softto, uint64_t hardto);
+int com_consocket(const char *host, uint16_t port, char *peeraddr,
+    size_t peeraddr_sz, uint16_t *peerport, uint64_t softto, uint64_t hardto);
 
 bool com_update_strprop(char **field, const char *val);
 

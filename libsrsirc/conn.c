@@ -161,12 +161,12 @@ conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 		    hnd, hnd->host, realport, ps, softto_us, hardto_us);
 	}
 
-	struct sockaddr sa;
-	size_t addrlen;
+	char peerhost[256];
+	uint16_t peerport;
 
 	sckhld sh;
-	sh.sck = com_consocket(host, port, &sa, &addrlen,
-	    softto_us, hardto_us);
+	sh.sck = com_consocket(host, port, peerhost, sizeof peerhost,
+	    &peerport, softto_us, hardto_us);
 	sh.shnd = NULL;
 
 	if (sh.sck < 0) {
