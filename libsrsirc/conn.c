@@ -358,6 +358,7 @@ bool
 conn_set_ssl(iconn hnd, bool on)
 {
 #ifndef WITH_SSL
+	(void)hnd;
 	if (on)
 		W("library was not compiled with SSL support");
 	return false;
@@ -422,6 +423,7 @@ conn_get_ssl(iconn hnd)
 #ifdef WITH_SSL
 	return hnd->ssl;
 #else
+	(void)hnd;
 	return false;
 #endif
 }

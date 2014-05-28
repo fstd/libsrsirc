@@ -142,23 +142,26 @@ ircdbg_log(int mod, int lvl, int errn, const char *file, int line, const char *f
 		if (ptr)
 			*ptr = '\0';
 
+		vsnprintf(buf2, sizeof buf2, fmt, vl);
+
 		snprintf(buf, sizeof buf, "%s%s: libsrsirc: %s: %s:%d:%s(): %s%s%s\n",
 		    s_fancy ? lvlcol(lvl) : "", timebuf, lvlnam(lvl), file, line,
-		    func, fmt, errmsg, s_fancy ? COL_RST : "");
+		    func, buf2, errmsg, s_fancy ? COL_RST : "");
 
-		vsnprintf(buf2, sizeof buf2, buf, vl);
-		char *c = buf2;
+		char *c = buf;
 		while (*c) {
 			if (*c == '\n' || *c == '\r')
 				*c = '$';
 			c++;
 		}
 		*(c-1) = '\n';
-		fputs(buf2, stderr);
+		fputs(buf, stderr);
 	} else {
+		vsnprintf(buf2, sizeof buf2, fmt, vl);
+
 		snprintf(buf, sizeof buf, "%s:%d:%s(): %s%s",
-		    file, line, func, fmt, errmsg);
-		vsyslog(lvl, buf, vl);
+		    file, line, func, buf2, errmsg);
+		syslog(lvl, buf);
 	}
 
 	va_end(vl);
