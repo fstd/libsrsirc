@@ -161,7 +161,7 @@ ircdbg_log(int mod, int lvl, int errn, const char *file, int line, const char *f
 
 		snprintf(buf, sizeof buf, "%s:%d:%s(): %s%s",
 		    file, line, func, buf2, errmsg);
-		syslog(lvl, buf);
+		syslog(lvl, "%s", buf);
 	}
 
 	va_end(vl);
