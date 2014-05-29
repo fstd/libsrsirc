@@ -88,7 +88,7 @@ irc_init(void)
 	r->scto_us = DEF_SCTO_US;
 	r->hcto_us = DEF_HCTO_US;
 
-	for (int i = 0; i < 4; i++)
+	for (size_t i = 0; i < COUNTOF(r->logonconv); i++)
 		r->logonconv[i] = NULL;
 
 
@@ -135,7 +135,7 @@ irc_dispose(irc hnd)
 	free(hnd->serv_dist);
 	free(hnd->serv_info);
 
-	for (int i = 0; i < 4; i++)
+	for (size_t i = 0; i < COUNTOF(hnd->logonconv); i++)
 		ut_freearr(hnd->logonconv[i]);
 
 	D("(%p) disposed", hnd);
@@ -152,7 +152,7 @@ irc_connect(irc hnd)
 	com_update_strprop(&hnd->banmsg, NULL);
 	hnd->banned = false;
 
-	for (int i = 0; i < 4; i++) {
+	for (size_t i = 0; i < COUNTOF(hnd->logonconv); i++) {
 		ut_freearr(hnd->logonconv[i]);
 		hnd->logonconv[i] = NULL;
 	}
