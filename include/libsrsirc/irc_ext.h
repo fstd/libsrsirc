@@ -24,8 +24,8 @@
  * bool irc_colon_trail(irc hnd);
  * int irc_sockfd(irc hnd);
  * tokarr *(*irc_logonconv(irc hnd))[4];
- * const char *const *irc_005chanmodes(irc hnd);
- * const char *const *irc_005modepfx(irc hnd);
+ * const char* irc_005chanmodes(irc hnd, size_t class);
+ * const char* irc_005modepfx(irc hnd, bool symbols);
  *
  * void irc_regcb_conread(irc hnd, fp_con_read cb, void *tag);
  * void irc_regcb_mutnick(irc hnd, fp_mut_nick mn);
@@ -103,18 +103,18 @@ tokarr *(*irc_logonconv(irc hnd))[4];
 
 /* irc_005chanmodes - tell what channel modes the ircd claimed to support in
  *     the (non-standard but almost universally implemented) 005-message.
- * Returns what originally was an array holding 4 pointers to char (strings),
- *     each consisting of the supported channel mode chars for the respective
- *     "class" of channel modes (see the 005 ISUPPORT "spec") */
-const char *const *irc_005chanmodes(irc hnd);
+ * Params: `class': "class" of channel modes to return (there are four, 0 - 3)
+ * Returns a pointer to a string consisting of the supported channel modes
+ *     for the given class (see 005 ISUPPORT "spec") */
+const char *irc_005chanmodes(irc hnd, size_t class);
 
 /* irc_005modepfx - tell what channel mode prefixes the ircd claimed to support
  *     in the (non-standard) but almost universally implemented) 005-message.
- * Returns what originally was an array holding 2 pointers to char (strings),
- *     the former one holding the mode prefix chars in descending order of power
- *     (e.g. "ov" (for ops and voice)), the latter holding the associated
- *     prefix chars (e.g. "@+"). */
-const char *const *irc_005modepfx(irc hnd);
+ * Params: `symbols': Determine whether (true) we return the mode prefix
+ *             symbols (e.g. "@+"), or (when false) the associated mode
+ *             letters (e.g. "ov").
+ * Returns a string of mode symbols or letters, in descending order of power. */
+const char* irc_005modepfx(irc hnd, bool symbols);
 
 /* irc_regcb_conread - register callback for msgs which are read at logon time
  * Params: `cb': a function pointer of appropriate type (see defs.h)

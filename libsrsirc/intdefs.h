@@ -24,6 +24,10 @@
 #define MAX_CMODES_LEN 64
 #define MAX_VER_LEN 128
 
+/* not so empirically established */
+#define MAX_005_CHMD 64
+#define MAX_005_MDPFX 32
+
 
 #ifdef WITH_SSL
 typedef SSL *SSLTYPE;
@@ -96,8 +100,8 @@ struct irc_s {
 	char *serv_info;
 
 	tokarr *logonconv[4];
-	char m005chanmodes[4][64];
-	char m005modepfx[2][32];
+	char *m005chanmodes[4];
+	char *m005modepfx[2];
 
 	fp_con_read cb_con_read;
 	void *tag_con_read;

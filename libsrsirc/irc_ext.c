@@ -91,16 +91,18 @@ irc_logonconv(irc hnd))[4]
 	return &hnd->logonconv;
 }
 
-const char *const*
-irc_005chanmodes(irc hnd)
+const char*
+irc_005chanmodes(irc hnd, size_t class) /* suck it, $(CXX) */
 {
-	return (const char *const*)hnd->m005chanmodes;
+	if (class >= COUNTOF(hnd->m005chanmodes))
+		return NULL;
+	return hnd->m005chanmodes[class];
 }
 
-const char *const*
-irc_005modepfx(irc hnd)
+const char*
+irc_005modepfx(irc hnd, bool symbols)
 {
-	return (const char *const*)hnd->m005modepfx;
+	return hnd->m005modepfx[symbols];
 }
 
 void

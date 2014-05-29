@@ -34,12 +34,25 @@ irc_init(void)
 	if (!(con = conn_init()))
 		goto irc_init_fail;
 
-
 	if (!(r = malloc(sizeof (*(irc)0))))
 		goto irc_init_fail;
 
 	r->pass = r->nick = r->uname = r->fname = r->serv_dist
 	    = r->serv_info = r->lasterr = r->banmsg = NULL;
+
+	for (size_t i = 0; i < COUNTOF(r->m005chanmodes); i++)
+		r->m005chanmodes[i] = NULL;
+
+	for (size_t i = 0; i < COUNTOF(r->m005modepfx); i++)
+		r->m005modepfx[i] = NULL;
+
+	for (size_t i = 0; i < COUNTOF(r->m005chanmodes); i++)
+		if (!(r->m005chanmodes[i] = malloc(MAX_005_CHMD)))
+			goto irc_init_fail;
+
+	for (size_t i = 0; i < COUNTOF(r->m005modepfx); i++)
+		if (!(r->m005modepfx[i] = malloc(MAX_005_MDPFX)))
+			goto irc_init_fail;
 
 	com_strNcpy(r->m005chanmodes[0], "b", sizeof r->m005chanmodes[0]);
 	com_strNcpy(r->m005chanmodes[1], "k", sizeof r->m005chanmodes[1]);
@@ -91,7 +104,10 @@ irc_init_fail:
 		free(r->fname);
 		free(r->serv_dist);
 		free(r->serv_info);
-		free(r);
+		for (size_t i = 0; i < COUNTOF(r->m005chanmodes); i++)
+			free(r->m005chanmodes[i]);
+		for (size_t i = 0; i < COUNTOF(r->m005modepfx); i++)
+			free(r->m005modepfx[i]);
 	}
 
 	if (con)
