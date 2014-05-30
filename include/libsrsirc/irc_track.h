@@ -17,11 +17,14 @@ struct chan {
 	char *modestr;
 	uint64_t tscreate;
 	uint64_t tstopic;
-	smap memb;
+	bool active;
+	smap memb; //map nick to string of modepfx symbols, most powerful first
 };
 
 struct user {
-	char *ident; //may be just a nick, or nick!uname@host
+	char *ident; //nick or nick!uname@host, as far as we've seen it
 };
+
+bool trk_init(bool track_users); //we always track chans, (if we're enabled)
 
 #endif /* LIBSRSIRC_IRC_TRACK_H */
