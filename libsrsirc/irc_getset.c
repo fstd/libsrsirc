@@ -15,6 +15,9 @@
 
 #include "common.h"
 
+
+/* Determiners - read-only access to information we keep track of */
+
 bool
 irc_online(irc hnd)
 {
@@ -114,9 +117,7 @@ irc_005modepfx(irc hnd, bool symbols)
 }
 
 
-
-
-
+/* Getters - retrieve values previously set by the Setters */
 
 const char*
 irc_get_host(irc hnd)
@@ -202,18 +203,15 @@ irc_get_service_info(irc hnd)
 	return hnd->serv_info;
 }
 
+
+/* Setters - set library parameters (none of these takes effect before the
+ * next call to irc_connect() is done */
+
 bool
 irc_get_ssl(irc hnd)
 {
 	return conn_get_ssl(hnd->con);
 }
-
-
-
-
-
-
-
 
 bool
 irc_set_server(irc hnd, const char *host, uint16_t port)
@@ -294,4 +292,3 @@ irc_set_ssl(irc hnd, bool on)
 {
 	return conn_set_ssl(hnd->con, on);
 }
-
