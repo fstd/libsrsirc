@@ -17,6 +17,7 @@
 #include <libsrsirc/util.h>
 #include "conn.h"
 #include "msg.h"
+#include "irc_msghnd.h"
 
 #include <intlog.h>
 
@@ -35,6 +36,9 @@ irc_init(void)
 		goto irc_init_fail;
 
 	if (!(r = malloc(sizeof (*(irc)0))))
+		goto irc_init_fail;
+
+	if (!imh_regall())
 		goto irc_init_fail;
 
 	r->pass = r->nick = r->uname = r->fname = r->serv_dist
@@ -215,12 +219,6 @@ irc_connect_fail:
 	return false;
 }
 
-bool
-irc_online(irc hnd)
-{
-	return conn_online(hnd->con);
-}
-
 int
 irc_read(irc hnd, tokarr *tok, uint64_t to_us)
 {
@@ -247,41 +245,6 @@ irc_write(irc hnd, const char *line)
 	return r;
 }
 
-const char*
-irc_mynick(irc hnd)
-{
-	return hnd->mynick;
-}
-
-bool
-irc_set_server(irc hnd, const char *host, uint16_t port)
-{
-	return conn_set_server(hnd->con, host, port);
-}
-
-bool
-irc_set_pass(irc hnd, const char *srvpass)
-{
-	return com_update_strprop(&hnd->pass, srvpass);
-}
-
-bool
-irc_set_uname(irc hnd, const char *uname)
-{
-	return com_update_strprop(&hnd->uname, uname);
-}
-
-bool
-irc_set_fname(irc hnd, const char *fname)
-{
-	return com_update_strprop(&hnd->fname, fname);
-}
-
-bool
-irc_set_nick(irc hnd, const char *nick)
-{
-	return com_update_strprop(&hnd->nick, nick);
-}
 
 static bool
 send_logon(irc hnd)
@@ -319,3 +282,17 @@ send_logon(irc hnd)
 
 	return irc_write(hnd, aBuf);
 }
+
+void
+irc_regcb_conread(irc hnd, fp_con_read cb, void *tag)
+{
+	hnd->cb_con_read = cb;
+	hnd->tag_con_read = tag;
+}
+
+void
+irc_regcb_mutnick(irc hnd, fp_mut_nick cb)
+{
+	hnd->cb_mut_nick = cb;
+}
+

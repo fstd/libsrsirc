@@ -573,7 +573,8 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
 		W("setvbuf stdout");
 
-	g_irc = irc_init();
+	if (!(g_irc = irc_init()))
+		EX("failed to initialize irc object");
 
 	irc_set_nick(g_irc, "icat");
 	irc_set_uname(g_irc, "icat");
