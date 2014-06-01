@@ -6,11 +6,14 @@
 # include <config.h>
 #endif
 
+#define LOG_MODULE MOD_SMAP
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
+#include "intlog.h"
 
 #include "ptrlist.h"
 #include "smap.h"
@@ -45,17 +48,15 @@ smap_init(size_t bucketsz)
 	h->bucketsz = bucketsz;
 	h->count = 0;
 	h->iterating = false;
+	h->keybucket = h->valbucket = NULL;
+
 	h->keybucket = malloc(h->bucketsz * sizeof *h->keybucket);
-	if (!h->keybucket) {
-		free(h);
-		return NULL;
-	}
+	if (!h->keybucket)
+		goto smap_init_fail;
+
 	h->valbucket = malloc(h->bucketsz * sizeof *h->valbucket);
-	if (!h->valbucket) {
-		free(h->keybucket);
-		free(h);
-		return NULL;
-	}
+	if (!h->valbucket)
+		goto smap_init_fail;
 
 	for (size_t i = 0; i < h->bucketsz; i++) {
 		h->valbucket[i] = NULL;
@@ -67,6 +68,16 @@ smap_init(size_t bucketsz)
 	h->keydupfn = strkeydup;
 
 	return h;
+
+smap_init_fail:
+	if (h) {
+		free(h->keybucket);
+		free(h->valbucket);
+	}
+
+	free(h);
+
+	return NULL;
 }
 
 void
@@ -102,28 +113,61 @@ smap_dispose(smap h)
 	free(h);
 }
 
-void
+bool
 smap_put(smap h, const char *key, void *elem)
 {
 	if (!h || !key || !elem)
-		return;
+		return false;
 
+	bool allocated = false;
+	bool halfinserted = false;
 	size_t ind = h->hfn(key) % h->bucketsz;
-	
+
 	ptrlist_t kl = h->keybucket[ind];
 	ptrlist_t vl = h->valbucket[ind];
 	if (!kl) {
-		kl = h->keybucket[ind] = ptrlist_init();
-		vl = h->valbucket[ind] = ptrlist_init();
+		allocated = true;
+		if (!(kl = h->keybucket[ind] = ptrlist_init()))
+			goto smap_put_fail;
+
+		if (!(vl = h->valbucket[ind] = ptrlist_init()))
+			goto smap_put_fail;
 	}
 
+	char *kd = NULL;
 	ssize_t i = ptrlist_findeqfn(kl, h->efn, key);
 	if (i == -1) {
-		ptrlist_insert(kl, 0, h->keydupfn(key));
-		ptrlist_insert(vl, 0, elem);
+		kd = h->keydupfn(key);
+		if (!kd)
+			goto smap_put_fail;
+
+		if (!ptrlist_insert(kl, 0, kd))
+			goto smap_put_fail;
+
+		halfinserted = true;
+
+		if (!ptrlist_insert(vl, 0, elem))
+			goto smap_put_fail;
+
+
 		h->count++;
 	} else
 		ptrlist_replace(vl, i, elem);
+
+	return true;
+
+smap_put_fail:
+	if (allocated) {
+		ptrlist_dispose(kl);
+		ptrlist_dispose(vl);
+		h->keybucket[ind] = NULL;
+		h->valbucket[ind] = NULL;
+	}
+
+	if (halfinserted)
+		ptrlist_remove(kl, 0);
+
+	free(kd);
 }
 
 void*
@@ -316,7 +360,7 @@ streq(const void *s1, const void *s2)
 static void*
 strkeydup(const char *s)
 {
-	return strdup((const char*)s);
+	return strdup(s);
 }
 
 static size_t

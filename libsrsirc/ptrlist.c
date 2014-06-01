@@ -6,12 +6,15 @@
 # include <config.h>
 #endif
 
+#define LOG_MODULE MOD_PLST
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-#include <libsrsirc/ptrlist.h>
+#include "intlog.h"
+#include "ptrlist.h"
 
 struct pl_node {
 	void *data;

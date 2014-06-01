@@ -17,7 +17,7 @@ typedef struct smap *smap;
 smap smap_init(size_t bucketsz);
 void smap_clear(smap m);
 void smap_dispose(smap m);
-void smap_put(smap m, const char *key, void *elem);
+bool smap_put(smap m, const char *key, void *elem);
 void* smap_get(smap m, const char *key);
 bool smap_del(smap m, const char *key);
 size_t smap_count(smap m);
