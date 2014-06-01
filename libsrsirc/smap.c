@@ -280,7 +280,7 @@ smap_next(smap h, const char **key, void **val)
 				*val = NULL;
 
 			h->iterating = false;
-			return true;
+			return false;
 		}
 
 		k = ptrlist_get(h->keybucket[h->buckiter], h->listiter);

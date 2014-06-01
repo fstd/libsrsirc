@@ -30,6 +30,11 @@ ptrlist_t
 ptrlist_init(void)
 {
 	struct ptrlist *l = malloc(sizeof *l);
+	if (!l) {
+		EE("malloc");
+		return NULL;
+	}
+
 	l->head = NULL;
 	l->iter = NULL;
 	return l;
