@@ -39,7 +39,7 @@ irc_myhost(irc hnd)
 int
 irc_casemap(irc hnd)
 {
-	return hnd->casemapping;
+	return hnd->casemap;
 }
 
 bool

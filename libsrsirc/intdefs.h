@@ -101,7 +101,7 @@ struct irc_s {
 	bool banned;
 	char *banmsg;
 
-	int casemapping;
+	int casemap;
 
 	char *pass;
 	char *nick;

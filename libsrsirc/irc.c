@@ -89,7 +89,7 @@ irc_init(void)
 	r->service = r->restricted = r->banned = r->serv_con = false;
 	r->cb_con_read = NULL;
 	r->cb_mut_nick = ut_mut_nick;
-	r->casemapping = CMAP_RFC1459;
+	r->casemap = CMAP_RFC1459;
 	r->conflags = DEF_CONFLAGS;
 	r->serv_type = DEF_SERV_TYPE;
 	r->scto_us = DEF_SCTO_US;
