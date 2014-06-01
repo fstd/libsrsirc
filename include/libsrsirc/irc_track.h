@@ -6,25 +6,9 @@
 #define LIBSRSIRC_IRC_TRACK_H 1
 
 #include <libsrsirc/defs.h>
-#include "smap.h"
 
-typedef struct chan chan;
-typedef struct user user;
+bool trk_init(irc hnd); //we always track chans, (if we're enabled)
 
-struct chan {
-	char *name;
-	char *topic;
-	char *modestr;
-	uint64_t tscreate;
-	uint64_t tstopic;
-	bool active;
-	smap memb; //map nick to string of modepfx symbols, most powerful first
-};
-
-struct user {
-	char *ident; //nick or nick!uname@host, as far as we've seen it
-};
-
-bool trk_init(bool track_users); //we always track chans, (if we're enabled)
+void trk_dump(irc hnd);
 
 #endif /* LIBSRSIRC_IRC_TRACK_H */

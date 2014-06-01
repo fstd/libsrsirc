@@ -21,32 +21,23 @@
 
 #include "msg.h"
 
-struct msghnd {
-	char cmd[32];
-	hnd_fn hndfn;
-	const char *dbginfo;
-	void *tag;
-};
-
-static struct msghnd msghnds[32]; //XXX enough?
-
 bool
-msg_reghnd(const char *cmd, hnd_fn hndfn, const char *dbginfo, void *tag)
+msg_reghnd(irc hnd, const char *cmd, hnd_fn hndfn, const char *dbginfo)
 {
 	size_t i = 0;
-	for (;i < COUNTOF(msghnds); i++)
-		if (!msghnds[i].cmd[0])
+	D("'%s' registering '%s'-handler", dbginfo, cmd);
+	for (;i < COUNTOF(hnd->msghnds); i++)
+		if (!hnd->msghnds[i].cmd[0])
 			break;
 
-	if (i == COUNTOF(msghnds)) {
+	if (i == COUNTOF(hnd->msghnds)) {
 		E("can't register msg handler, array full");
 		return false;
 	}
 
-	msghnds[i].dbginfo = dbginfo;
-	msghnds[i].hndfn = hndfn;
-	msghnds[i].tag = tag;
-	com_strNcpy(msghnds[i].cmd, cmd, sizeof msghnds[i].cmd);
+	hnd->msghnds[i].dbginfo = dbginfo;
+	hnd->msghnds[i].hndfn = hndfn;
+	com_strNcpy(hnd->msghnds[i].cmd, cmd, sizeof hnd->msghnds[i].cmd);
 	return true;
 }
 
@@ -59,13 +50,13 @@ msg_handle(irc hnd, tokarr *msg, bool logon)
 	while (ac < COUNTOF(*msg) && (*msg)[ac])
 		ac++;
 
-	for (;i < COUNTOF(msghnds); i++) {
-		if (!msghnds[i].cmd[0])
+	for (;i < COUNTOF(hnd->msghnds); i++) {
+		if (!hnd->msghnds[i].cmd[0])
 			break;
 
-		if (strcmp((*msg)[1], msghnds[i].cmd) == 0) {
-			D("dispatch a '%s' to '%s'", (*msg)[1], msghnds[i].dbginfo);
-			res |= msghnds[i].hndfn(hnd, msg, ac, logon, msghnds[i].tag);
+		if (strcmp((*msg)[1], hnd->msghnds[i].cmd) == 0) {
+			D("dispatch a '%s' to '%s'", (*msg)[1], hnd->msghnds[i].dbginfo);
+			res |= hnd->msghnds[i].hndfn(hnd, msg, ac, logon);
 			if (!(res & CANT_PROCEED))
 				continue;
 
@@ -73,6 +64,8 @@ msg_handle(irc hnd, tokarr *msg, bool logon)
 				E("failed to authenticate");
 			} else if (res & IO_ERR) {
 				E("i/o error");
+			} else if (res & ALLOC_ERR) {
+				E("memory allocation failed");
 			} else if (res & OUT_OF_NICKS) {
 				E("out of nicks");
 			} else if (res & PROTO_ERR) {
