@@ -8,6 +8,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "smap.h"
+
 /* receive buffer size */
 #define WORKBUF_SZ 4096
 
@@ -27,6 +29,8 @@
 /* not so empirically established */
 #define MAX_005_CHMD 64
 #define MAX_005_MDPFX 32
+#define MAX_CHAN_LEN 256
+#define MAX_MODEPFX 8
 
 
 #ifdef WITH_SSL
@@ -118,6 +122,12 @@ struct irc_s {
 	fp_mut_nick cb_mut_nick;
 
 	struct msghnd msghnds[64]; //XXX enough?
+
+	/* tracking specific -- should probably split this up somehow */
+	bool endofnames;
+	smap chans;
+
+
 	struct iconn_s *con;
 };
 
