@@ -7,6 +7,7 @@
 
 /* simple and stupid single linked list with void* data elements */
 
+
 #include <stdbool.h>
 
 typedef struct ptrlist *ptrlist_t;

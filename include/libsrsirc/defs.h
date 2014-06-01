@@ -39,7 +39,7 @@
 #define DEF_CONFLAGS 0
 
 /* default `distribution' for service logon */
-#define DEF_SERV_DIST "*" 
+#define DEF_SERV_DIST "*"
 
 /* default `distribution; string for service logon */
 #define DEF_SERV_TYPE 0

@@ -40,34 +40,34 @@ ptrlist_init(void)
 	return l;
 }
 
-void 
+void
 ptrlist_dispose(ptrlist_t l)
 {
 	ptrlist_clear(l);
 	free(l);
 }
 
-size_t 
+size_t
 ptrlist_count(ptrlist_t l)
 {
 	if (!l || !l->head)
 		return 0;
-	
+
 	/* XXX cache? */
 	struct pl_node *n = l->head;
 	size_t c = 1;
 	while ((n = n->next))
 		c++;
-	
+
 	return c;
 }
 
-void 
+void
 ptrlist_clear(ptrlist_t l)
 {
 	if (!l)
 		return;
-	
+
 	struct pl_node *n = l->head;
 	while (n) {
 		struct pl_node *tmp = n->next;
@@ -104,13 +104,13 @@ ptrlist_insert(ptrlist_t l, ssize_t i, void *data)
 		prev = n;
 		n = n->next;
 	}
-	
+
 	if (i) {
 		n->next = newnode;
 		newnode->next = NULL;
 	} else {
 		newnode->next = n;
-		if (prev) 
+		if (prev)
 			prev->next = newnode;
 		else
 			l->head = newnode;
@@ -136,9 +136,9 @@ ptrlist_replace(ptrlist_t l, size_t i, void *data)
 
 	if (i > 0)
 		return false;
-	
+
 	n->data = data;
-	
+
 	return true;
 }
 
@@ -159,14 +159,14 @@ ptrlist_remove(ptrlist_t l, size_t i)
 
 	if (i > 0)
 		return false;
-	
+
 	if (!prev)
 		l->head = n->next;
 	else
 		prev->next = n->next;
-	
+
 	free(n);
-	
+
 	return true;
 }
 
@@ -272,7 +272,7 @@ ptrlist_first(ptrlist_t l)
 {
 	if (!l || !l->head)
 		return NULL;
-	
+
 	l->iter = l->head;
 	return l->iter->data;
 }
@@ -282,7 +282,7 @@ ptrlist_next(ptrlist_t l)
 {
 	if (!l || !l->iter || !l->iter->next)
 		return NULL;
-	
+
 	l->iter = l->iter->next;
 	return l->iter->data;
 }

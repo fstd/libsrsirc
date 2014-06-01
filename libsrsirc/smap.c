@@ -177,14 +177,14 @@ smap_get(smap h, const char *key)
 		return NULL;
 
 	size_t ind = h->hfn(key) % h->bucketsz;
-	
+
 	ptrlist_t kl = h->keybucket[ind];
 	if (!kl)
 		return NULL;
 	ptrlist_t vl = h->valbucket[ind];
 
 	ssize_t i = ptrlist_findeqfn(kl, h->efn, key);
-	
+
 	return i == -1 ? NULL : ptrlist_get(vl, i);
 }
 
@@ -195,14 +195,14 @@ smap_del(smap h, const char *key)
 		return false;
 
 	size_t ind = h->hfn(key) % h->bucketsz;
-	
+
 	ptrlist_t kl = h->keybucket[ind];
 	if (!kl)
 		return false;
 	ptrlist_t vl = h->valbucket[ind];
 
 	ssize_t i = ptrlist_findeqfn(kl, h->efn, key);
-	
+
 	if (i == -1)
 		return false;
 
@@ -224,13 +224,13 @@ smap_first(smap h, const char **key, void **val)
 {
 	if (!h)
 		return false;
-	
+
 	h->buckiter = 0;
 
 	while (h->buckiter < h->bucketsz && (!h->keybucket[h->buckiter]
 	    || ptrlist_count(h->keybucket[h->buckiter]) == 0))
 		h->buckiter++;
-	
+
 	if (h->buckiter == h->bucketsz) {
 		if (key)
 			*key = NULL;
@@ -241,7 +241,7 @@ smap_first(smap h, const char **key, void **val)
 
 		return true;
 	}
-	
+
 	void *k = ptrlist_get(h->keybucket[h->buckiter], 0);
 	void *v = ptrlist_get(h->valbucket[h->buckiter], 0);
 
@@ -253,7 +253,7 @@ smap_first(smap h, const char **key, void **val)
 		*val = v;
 
 	h->iterating = true;
-	
+
 	return true;
 }
 
@@ -262,7 +262,7 @@ smap_next(smap h, const char **key, void **val)
 {
 	if (!h || !h->iterating)
 		return false;
-	
+
 	void *k = ptrlist_get(h->keybucket[h->buckiter], h->listiter);
 
 	if (!k) {
@@ -294,9 +294,9 @@ smap_next(smap h, const char **key, void **val)
 		*key = k;
 	if (val)
 		*val = v;
-	
+
 	return true;
-	
+
 }
 
 void
