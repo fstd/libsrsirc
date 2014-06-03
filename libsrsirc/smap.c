@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "intlog.h"
 
@@ -86,12 +87,21 @@ smap_clear(smap h)
 	if (!h)
 		return;
 
+	void *e;
 	for (size_t i = 0; i < h->bucketsz; i++) {
 		if (h->keybucket[i]) {
+			if ((e = ptrlist_first(h->keybucket[i])))
+				do {
+					free(e);
+				} while ((e = ptrlist_next(h->keybucket[i])));
 			ptrlist_dispose(h->keybucket[i]);
 			h->keybucket[i] = NULL;
 		}
 		if (h->valbucket[i]) {
+			if ((e = ptrlist_first(h->valbucket[i])))
+				do {
+					free(e);
+				} while ((e = ptrlist_next(h->valbucket[i])));
 			ptrlist_dispose(h->valbucket[i]);
 			h->valbucket[i] = NULL;
 		}
@@ -122,6 +132,7 @@ smap_put(smap h, const char *key, void *elem)
 	bool allocated = false;
 	bool halfinserted = false;
 	size_t ind = h->hfn(key) % h->bucketsz;
+	char *kd = NULL;
 
 	ptrlist_t kl = h->keybucket[ind];
 	ptrlist_t vl = h->valbucket[ind];
@@ -134,7 +145,6 @@ smap_put(smap h, const char *key, void *elem)
 			goto smap_put_fail;
 	}
 
-	char *kd = NULL;
 	ssize_t i = ptrlist_findeqfn(kl, h->efn, key);
 	if (i == -1) {
 		kd = h->keydupfn(key);
@@ -168,6 +178,8 @@ smap_put_fail:
 		ptrlist_remove(kl, 0);
 
 	free(kd);
+
+	return false;
 }
 
 void*
@@ -239,7 +251,7 @@ smap_first(smap h, const char **key, void **val)
 
 		h->iterating = false;
 
-		return true;
+		return false;
 	}
 
 	void *k = ptrlist_get(h->keybucket[h->buckiter], 0);

@@ -22,10 +22,10 @@
 #include "msg.h"
 
 bool
-msg_reghnd(irc hnd, const char *cmd, hnd_fn hndfn, const char *dbginfo)
+msg_reghnd(irc hnd, const char *cmd, hnd_fn hndfn, const char *module)
 {
 	size_t i = 0;
-	D("'%s' registering '%s'-handler", dbginfo, cmd);
+	D("'%s' registering '%s'-handler", module, cmd);
 	for (;i < COUNTOF(hnd->msghnds); i++)
 		if (!hnd->msghnds[i].cmd[0])
 			break;
@@ -35,10 +35,20 @@ msg_reghnd(irc hnd, const char *cmd, hnd_fn hndfn, const char *dbginfo)
 		return false;
 	}
 
-	hnd->msghnds[i].dbginfo = dbginfo;
+	hnd->msghnds[i].module = module;
 	hnd->msghnds[i].hndfn = hndfn;
 	com_strNcpy(hnd->msghnds[i].cmd, cmd, sizeof hnd->msghnds[i].cmd);
 	return true;
+}
+
+void
+msg_unregall(irc hnd, const char *module)
+{
+	size_t i = 0;
+	for (;i < COUNTOF(hnd->msghnds); i++)
+		if (hnd->msghnds[i].cmd[0]
+		    && strcmp(hnd->msghnds[i].module, module) == 0)
+			hnd->msghnds[i].cmd[0] = '\0';
 }
 
 uint8_t
@@ -55,7 +65,7 @@ msg_handle(irc hnd, tokarr *msg, bool logon)
 			break;
 
 		if (strcmp((*msg)[1], hnd->msghnds[i].cmd) == 0) {
-			D("dispatch a '%s' to '%s'", (*msg)[1], hnd->msghnds[i].dbginfo);
+			D("dispatch a '%s' to '%s'", (*msg)[1], hnd->msghnds[i].module);
 			res |= hnd->msghnds[i].hndfn(hnd, msg, ac, logon);
 			if (!(res & CANT_PROCEED))
 				continue;

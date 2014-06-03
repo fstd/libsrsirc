@@ -8,6 +8,7 @@
 
 #define LOG_MODULE MOD_TRACK
 
+#include <stdlib.h>
 #include <string.h>
 
 #include <intlog.h>
@@ -31,6 +32,9 @@ static uint8_t h_PART(irc h, tokarr *msg, size_t nargs, bool logon);
 static uint8_t h_QUIT(irc h, tokarr *msg, size_t nargs, bool logon);
 static uint8_t h_NICK(irc h, tokarr *msg, size_t nargs, bool logon);
 static uint8_t h_KICK(irc h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_MODE(irc h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_324(irc h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_TOPIC(irc h, tokarr *msg, size_t nargs, bool logon);
 
 bool
 trk_init(irc h)
@@ -45,13 +49,24 @@ trk_init(irc h)
 	fail = fail || !msg_reghnd(h, "QUIT", h_QUIT, "track");
 	fail = fail || !msg_reghnd(h, "NICK", h_NICK, "track");
 	fail = fail || !msg_reghnd(h, "KICK", h_KICK, "track");
+	fail = fail || !msg_reghnd(h, "MODE", h_MODE, "track");
+	fail = fail || !msg_reghnd(h, "324", h_324, "track");
+	fail = fail || !msg_reghnd(h, "TOPIC", h_TOPIC, "track");
 
-	if (fail)
+	if (fail || !ucb_init(h)) {
+		msg_unregall(h, "track");
 		return false;
+	}
 
 	h->endofnames = true;
+	return true;
+}
 
-	return ucb_init(h);
+void
+trk_deinit(irc h)
+{
+	ucb_deinit(h);
+	msg_unregall(h, "track");
 }
 
 
@@ -89,12 +104,42 @@ h_JOIN(irc h, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 h_332(irc h, tokarr *msg, size_t nargs, bool logon)
 {
+	if (!(*msg)[0] || nargs < 5)
+		return PROTO_ERR;
+
+	chan c = get_chan(h, (*msg)[3]);
+	if (!c) {
+		W("we don't know channel '%s'!", (*msg)[3]);
+		return 0;
+	}
+	free(c->topic);
+	if (!(c->topic = strdup((*msg)[4]))) {
+		EE("strdup");
+		return ALLOC_ERR;
+	}
+
 	return 0;
 }
 
 static uint8_t
 h_333(irc h, tokarr *msg, size_t nargs, bool logon)
 {
+	if (!(*msg)[0] || nargs < 6)
+		return PROTO_ERR;
+
+	chan c = get_chan(h, (*msg)[3]);
+	if (!c) {
+		W("we don't know channel '%s'!", (*msg)[3]);
+		return 0;
+	}
+	free(c->topicnick);
+	if (!(c->topicnick = strdup((*msg)[4]))) {
+		EE("strdup");
+		return ALLOC_ERR;
+	}
+	
+	c->tstopic = (uint64_t)strtoull((*msg)[5], NULL, 10);
+
 	return 0;
 }
 
@@ -106,7 +151,7 @@ h_353(irc h, tokarr *msg, size_t nargs, bool logon)
 
 	chan c = get_chan(h, (*msg)[4]);
 	if (!c) {
-		W("we don't know channel '%s'!", (*msg)[2]);
+		W("we don't know channel '%s'!", (*msg)[4]);
 		return 0;
 	}
 
@@ -153,7 +198,7 @@ h_366(irc h, tokarr *msg, size_t nargs, bool logon)
 
 	chan c = get_chan(h, (*msg)[3]);
 	if (!c) {
-		W("we don't know channel '%s'!", (*msg)[2]);
+		W("we don't know channel '%s'!", (*msg)[3]);
 		return 0;
 	}
 	c->desync = false;
@@ -217,7 +262,7 @@ h_KICK(irc h, tokarr *msg, size_t nargs, bool logon)
 		return 0;
 	}
 
-	if (ut_istrcmp((*msg)[3], h->mynick, h->casemap)) == 0)
+	if (ut_istrcmp((*msg)[3], h->mynick, h->casemap) == 0)
 		c->desync = true;
 
 	drop_memb(h, c, (*msg)[3]);
@@ -257,6 +302,170 @@ h_NICK(irc h, tokarr *msg, size_t nargs, bool logon)
 
 	return res;
 }
+
+static uint8_t
+h_TOPIC(irc h, tokarr *msg, size_t nargs, bool logon)
+{
+	if (!(*msg)[0] || nargs < 4)
+		return PROTO_ERR;
+
+	char nick[MAX_NICK_LEN];
+	ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
+
+	chan c = get_chan(h, (*msg)[2]);
+	if (!c) {
+		W("we don't know channel '%s'!", (*msg)[2]);
+		return 0;
+	}
+	free(c->topic);
+	free(c->topicnick);
+	c->topicnick = NULL;
+	if (!(c->topic = strdup((*msg)[3])) || !(c->topicnick = strdup(nick))) {
+		EE("strdup");
+		return ALLOC_ERR;
+	}
+
+	return 0;
+}
+
+static uint8_t
+h_MODE_chanmode(irc h, tokarr *msg, size_t nargs, bool logon)
+{
+	uint8_t res = 0;
+
+	if (!(*msg)[0] || nargs < 4)
+		return PROTO_ERR;
+
+	char nick[MAX_NICK_LEN];
+	ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
+
+	chan c = get_chan(h, (*msg)[2]);
+	if (!c) {
+		W("we don't know channel '%s'!", (*msg)[2]);
+		return 0;
+	}
+
+	size_t num;
+	char **p = ut_parse_MODE(h, msg, &num, false);
+	if (!p)
+		return ALLOC_ERR;
+
+	for (size_t i = 0; i < num; i++) {
+		bool enab = p[i][0] == '+';
+		char *ptr = strchr(h->m005modepfx[0], p[i][1]);
+		if (ptr) {
+			char sym = h->m005modepfx[1][ptr - h->m005modepfx[0]];
+			update_modepfx(h, c, p[i] + 3, sym, enab); //XXX check?
+		} else {
+			if (enab) {
+				if (!add_chanmode(h, c, p[i] + 1))
+					res |= ALLOC_ERR;
+			} else
+				drop_chanmode(h, c, p[i] + 1);
+		}
+	}
+	
+	for (size_t i = 0; i < num; i++)
+		free(p[i]);
+		
+	free(p);
+
+	return res;
+}
+
+static uint8_t
+h_MODE_usermode(irc h, tokarr *msg, size_t nargs, bool logon)
+{
+	if (nargs < 4)
+		return PROTO_ERR;
+
+	const char *p = (*msg)[3];
+	bool enab = true;
+	char c;
+	while ((c = *p++)) {
+		if (c == '+' || c == '-') {
+			enab = c == '+';
+			continue;
+		}
+		char *m = strchr(h->myumodes, c);
+		if (enab == !!m) {
+			W("user mode '%c' %s set ('%s')", c,
+			    enab?"already":"not", h->myumodes);
+			continue;
+		}
+
+		if (!enab) {
+			*m++ = '\0';
+			while (*m) {
+				m[-1] = *m;
+				*m++ = '\0';
+			}
+		} else {
+			char mch[] = {c, '\0'};
+			com_strNcat(h->myumodes, mch, sizeof h->myumodes);
+		}
+	}
+
+	return 0;
+}
+
+static uint8_t
+h_MODE(irc h, tokarr *msg, size_t nargs, bool logon)
+{
+	uint8_t res = 0;
+
+	if (!(*msg)[0] || nargs < 4)
+		return PROTO_ERR;
+
+	char nick[MAX_NICK_LEN];
+	ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
+
+	if (strchr(h->m005chantypes, (*msg)[2][0]))
+		return h_MODE_chanmode(h, msg, nargs, logon);
+	else
+		return h_MODE_usermode(h, msg, nargs, logon);
+}
+
+static uint8_t
+h_324(irc h, tokarr *msg, size_t nargs, bool logon)
+{
+	uint8_t res = 0;
+
+	if (!(*msg)[0] || nargs < 5)
+		return PROTO_ERR;
+
+	chan c = get_chan(h, (*msg)[3]);
+	if (!c) {
+		W("we don't know channel '%s'!", (*msg)[3]);
+		return 0;
+	}
+
+	size_t num;
+	char **p = ut_parse_MODE(h, msg, &num, true);
+	if (!p)
+		return ALLOC_ERR;
+
+	clear_chanmodes(h, c);
+
+	for (size_t i = 0; i < num; i++) {
+		bool enab = p[i][0] == '+';
+		if (enab) {
+			if (!add_chanmode(h, c, p[i] + 1))
+				res |= ALLOC_ERR;
+		} else
+			drop_chanmode(h, c, p[i] + 1);
+	}
+	
+	for (size_t i = 0; i < num; i++)
+		free(p[i]);
+		
+	free(p);
+
+	return res;
+	return 0;
+}
+
+	
 
 void
 trk_dump(irc h)

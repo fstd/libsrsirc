@@ -77,6 +77,9 @@ char ut_tolower(char c, int casemap);
  *         `casemap': CMAP_* constant (usually what irc_casemap() returns) */
 void ut_strtolower(char *dest, size_t destsz, const char *str, int casemap);
 
+/* ut_strtolower_ip - like ut_strtolower, but do it in-place */
+void ut_strtolower_ip(char *str, int casemap);
+
 /* ut_parse_hostspec - parse a "host specifier" (i.e. something "host:port"-ish)
  * Params: `hoststr': buffer where the host part will be put in
  *         `hoststr_sz' : size of said buffer (\0-termination is ensured)
@@ -118,9 +121,11 @@ bool ut_conread(tokarr *msg, void *tag);
  *         `nick_sz': size of the nick buffer (honor it!) */
 void ut_mut_nick(char *nick, size_t nick_sz);
 
-/* ut_parse_005_cmodes - oh well. if you need this documented, email me. */
-char** ut_parse_005_cmodes(const char *const *arr, size_t argcnt,
-    size_t *num, const char *modepfx005chr, const char *const *chmodes);
+/* ut_parse_MODE - oh well. if you need this documented, email me. */
+char** ut_parse_MODE(irc h, tokarr *msg, size_t *num, bool is324);
+
+/* ut_classify_chanmode - tell class (see 005 ISUPPORT spec) of a chanmode */
+int ut_classify_chanmode(irc h, char c);
 
 /* ut_clonearr - deep-copy a tokarr (usually containing a tokenized irc message)
  * Params: `arr': pointer to the tokarr to clone

@@ -22,13 +22,8 @@
 #include <intlog.h>
 
 #include <libsrsirc/util.h>
+#include "intdefs.h"
 
-#define CHANMODE_CLASS_A 1 /*don't change;see int classify_chanmode(char)*/
-#define CHANMODE_CLASS_B 2
-#define CHANMODE_CLASS_C 3
-#define CHANMODE_CLASS_D 4
-
-static int classify_chanmode(char c, const char *const *chmodes);
 
 
 void
@@ -134,6 +129,15 @@ ut_tolower(char c, int casemap)
 		return c + ('a'-'A');
 	else
 		return c;
+}
+
+void
+ut_strtolower_ip(char *str, int casemap)
+{
+	while (*str) {
+		char lower = ut_tolower(*str, casemap);
+		*str++ = lower;
+	}
 }
 
 void
@@ -246,10 +250,13 @@ ut_conread(tokarr *msg, void *tag)
 }
 
 char**
-ut_parse_005_cmodes(const char *const *arr, size_t argcount, size_t *num,
-    const char *modepfx005chr, const char *const *chmodes)
+ut_parse_MODE(irc h, tokarr *msg, size_t *num, bool is324)
 {
-	char *modes = strdup(arr[0]);
+	size_t ac = 2;
+	while (ac < COUNTOF(*msg) && (*msg)[ac])
+		ac++;
+
+	char *modes = strdup((*msg)[3 + is324]);
 	if (!modes) {
 		EE("strdup");
 		return NULL;
@@ -268,12 +275,12 @@ ut_parse_005_cmodes(const char *const *arr, size_t argcount, size_t *num,
 	for (size_t i = 0; i < nummodes; i++)
 		modearr[i] = NULL; //for safe cleanup
 
-	size_t i = 1;
+	size_t i = 4 + is324;
 	int j = 0, cl;
 	char *ptr = modes;
 	int enable = 1;
-	D("modes: '%s', nummodes: %zu, modepfx005chr: '%s'",
-	    modes, nummodes, modepfx005chr);
+	D("modes: '%s', nummodes: %zu, m005modepfx: '%s'",
+	    modes, nummodes, h->m005modepfx[0]);
 	while (*ptr) {
 		char c = *ptr;
 		D("next modechar is '%c', enable ATM: %d", c, enable);
@@ -288,27 +295,25 @@ ut_parse_005_cmodes(const char *const *arr, size_t argcount, size_t *num,
 			ptr++;
 			continue;
 		default:
-			cl = classify_chanmode(c, chmodes);
+			cl = ut_classify_chanmode(h, c);
 			D("classified mode '%c' to class %d", c, cl);
 			switch (cl) {
 			case CHANMODE_CLASS_A:
-				arg = (i > argcount) ? ("*") : arr[i++];
+				arg = i > ac ? "*" : (*msg)[i++];
 				break;
 			case CHANMODE_CLASS_B:
-				arg = (i > argcount) ? ("*") : arr[i++];
+				arg = i > ac ? "*" : (*msg)[i++];
 				break;
 			case CHANMODE_CLASS_C:
 				if (enable)
-					arg = (i > argcount) ?
-					    ("*") : arr[i++];
+					arg = i > ac ?  "*" : (*msg)[i++];
 				break;
 			case CHANMODE_CLASS_D:
 				break;
 			default:/*error?*/
-				if (strchr(modepfx005chr, c)) {
-					arg = (i > argcount) ?
-					    ("*") : arr[i++];
-				} else {
+				if (strchr(h->m005modepfx[0], c))
+					arg = i > ac ? "*" : (*msg)[i++];
+				else {
 					W("unknown chanmode '%c'", c);
 					ptr++;
 					continue;
@@ -317,8 +322,8 @@ ut_parse_005_cmodes(const char *const *arr, size_t argcount, size_t *num,
 		}
 		if (arg)
 			D("arg is '%s'", arg);
-		modearr[j] = malloc((3 + ((arg != NULL) ?
-		    strlen(arg) + 1 : 0)));
+
+		modearr[j] = malloc((3 + (arg ? strlen(arg) + 1 : 0)));
 		if (!modearr[j]) {
 			EE("malloc");
 			goto ut_parse_005_cmodes_fail;
@@ -327,9 +332,9 @@ ut_parse_005_cmodes(const char *const *arr, size_t argcount, size_t *num,
 		modearr[j][0] = enable ? '+' : '-';
 		modearr[j][1] = c;
 		modearr[j][2] = arg ? ' ' : '\0';
-		if (arg) {
+		if (arg)
 			strcpy(modearr[j] + 3, arg);
-		}
+
 		j++;
 		ptr++;
 	}
@@ -352,11 +357,11 @@ ut_parse_005_cmodes_fail:
 	return NULL;
 }
 
-static int
-classify_chanmode(char c, const char *const *chmodes)
+int
+ut_classify_chanmode(irc h, char c)
 {
 	for (int z = 0; z < 4; ++z) {
-		if ((chmodes[z]) && (strchr(chmodes[z], c) != NULL))
+		if (h->m005chanmodes[z] && strchr(h->m005chanmodes[z], c))
 			/*XXX this locks the chantype class constants */
 			return z+1;
 	}

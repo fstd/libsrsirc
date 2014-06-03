@@ -21,6 +21,7 @@
 #include <err.h>
 
 #include <libsrsirc/irc_ext.h>
+#include <libsrsirc/irc_track.h>
 #include <libsrsirc/util.h>
 
 #define DEF_CONTO_SOFT_MS 15000u
@@ -179,6 +180,8 @@ init(int *argc, char ***argv, struct settings_s *sett)
 		W("setvbuf stdout");
 
 	g_irc = irc_init();
+
+	irc_set_track(g_irc, true);
 
 	irc_set_nick(g_irc, "iwat");
 	irc_set_uname(g_irc, "iwat");
@@ -345,9 +348,14 @@ main(int argc, char **argv)
 				char nick[64];
 				ut_pfx2nick(nick, sizeof nick, tok[0]);
 				iprintf("PRIVMSG %s :%s\r\n", nick, tok[3]+5);
+			} else if (strncmp(tok[3], "DO ", 3) == 0) {
+				iprintf("%s\r\n", tok[3]+3);
 			} else if (strcmp(tok[3], "DIE") == 0) {
 				failure = false;
 				break;
+			} else if (strcmp(tok[3], "DUMP") == 0) {
+				irc_dump(g_irc);
+				trk_dump(g_irc);
 			}
 		}
 	}

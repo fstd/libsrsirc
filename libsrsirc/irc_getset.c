@@ -281,6 +281,12 @@ irc_set_service_info(irc hnd, const char *info)
 }
 
 void
+irc_set_track(irc hnd, bool on)
+{
+	hnd->tracking = on;
+}
+
+void
 irc_set_connect_timeout(irc hnd, uint64_t soft, uint64_t hard)
 {
 	hnd->hcto_us = hard;

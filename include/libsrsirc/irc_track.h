@@ -7,8 +7,12 @@
 
 #include <libsrsirc/defs.h>
 
-bool trk_init(irc hnd); //we always track chans, (if we're enabled)
+/* enable tracking for the given irc object.  call between irc_init() and
+ * irc_connect(), don't call multiple times for the same `hnd' */
+bool trk_init(irc hnd);
+void trk_deinit(irc hnd);
 
+/* for debugging */
 void trk_dump(irc hnd);
 
 #endif /* LIBSRSIRC_IRC_TRACK_H */

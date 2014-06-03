@@ -22,7 +22,8 @@
 # define SHITCODEZ_ERR (CANT_PROCEED|(1<<6)) // condition which must be a bug
 #define LOGON_COMPLETE (1<<7) // we now consider ourselves logged on
 
-bool msg_reghnd(irc hnd, const char *cmd, hnd_fn hndfn, const char *dbginfo);
+bool msg_reghnd(irc hnd, const char *cmd, hnd_fn hndfn, const char *module);
+void msg_unregall(irc hnd, const char *module);
 
 
 /* returns the bitwise OR of one or more of the above

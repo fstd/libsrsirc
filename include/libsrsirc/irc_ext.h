@@ -38,6 +38,7 @@
  * bool irc_set_service_dist(irc hnd, const char *dist);
  * bool irc_set_service_type(irc hnd, long type);
  * bool irc_set_service_info(irc hnd, const char *info);
+ * bool irc_set_track(irc hnd, bool on);
  *
  * const char* irc_get_host(irc hnd);
  * uint16_t irc_get_port(irc hnd);
@@ -166,6 +167,9 @@ bool irc_set_service_type(irc hnd, long type);
 
 /* irc_set_service_info - set the "service info" string for service log on */
 bool irc_set_service_info(irc hnd, const char *info);
+
+/* irc_set_track - enable or disable channel- and user tracking */
+bool irc_set_track(irc hnd, bool on);
 
 /* irc_get_host - tell the host of the irc server we use or intend to use */
 const char* irc_get_host(irc hnd);

@@ -238,8 +238,8 @@ handle_005_PREFIX(irc hnd, const char *val)
 	if (slen == 0 || slen != strlen(p))
 		return PROTO_ERR;
 
-	com_strNcpy(hnd->m005modepfx[0], str, sizeof hnd->m005modepfx[0]);
-	com_strNcpy(hnd->m005modepfx[1], p, sizeof hnd->m005modepfx[1]);
+	com_strNcpy(hnd->m005modepfx[0], str, MAX_005_MDPFX);
+	com_strNcpy(hnd->m005modepfx[1], p, MAX_005_MDPFX);
 
 	return 0;
 }
@@ -257,8 +257,7 @@ handle_005_CHANMODES(irc hnd, const char *val)
 
 	while (ptr) {
 		if (c < 4)
-			com_strNcpy(hnd->m005chanmodes[c++], ptr,
-			    sizeof hnd->m005chanmodes[0]);
+			com_strNcpy(hnd->m005chanmodes[c++], ptr, MAX_005_CHMD);
 		ptr = strtok(NULL, ",");
 	}
 
@@ -266,6 +265,13 @@ handle_005_CHANMODES(irc hnd, const char *val)
 		W("005 chanmodes: expected 4 params, got %i. arg: \"%s\"",
 		    c, val);
 
+	return 0;
+}
+
+static uint8_t
+handle_005_CHANTYPES(irc hnd, const char *val)
+{
+	com_strNcpy(hnd->m005chantypes, val, MAX_005_CHTYP);
 	return 0;
 }
 
@@ -281,6 +287,8 @@ handle_005(irc hnd, tokarr *msg, size_t nargs, bool logon)
 			ret |= handle_005_PREFIX(hnd, (*msg)[z] + 7);
 		else if (strncasecmp((*msg)[z], "CHANMODES=", 10) == 0)
 			ret |= handle_005_CHANMODES(hnd, (*msg)[z] + 10);
+		else if (strncasecmp((*msg)[z], "CHANTYPES=", 10) == 0)
+			ret |= handle_005_CHANTYPES(hnd, (*msg)[z] + 10);
 
 		if (ret & CANT_PROCEED)
 			return ret;
