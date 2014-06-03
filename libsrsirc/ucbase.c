@@ -49,10 +49,10 @@ ucb_clear(irc h)
 		clear_memb(h, c);
 		free(c->topicnick);
 		free(c->topic);
-		free(c);
 		for (size_t i = 0; i < c->modes_sz; i++)
 			free(c->modes[i]);
 		free(c->modes);
+		free(c);
 	} while (smap_next(h->chans, NULL, &e));
 	
 	smap_clear(h->chans);
