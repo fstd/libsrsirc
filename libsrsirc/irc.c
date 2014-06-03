@@ -143,6 +143,7 @@ irc_reset(irc hnd)
 void
 irc_dispose(irc hnd)
 {
+	trk_deinit(hnd);
 	conn_dispose(hnd->con);
 	free(hnd->lasterr);
 	free(hnd->banmsg);
