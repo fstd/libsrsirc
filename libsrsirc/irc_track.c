@@ -415,8 +415,6 @@ h_MODE_usermode(irc h, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 h_MODE(irc h, tokarr *msg, size_t nargs, bool logon)
 {
-	uint8_t res = 0;
-
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 

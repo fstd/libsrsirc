@@ -22,10 +22,10 @@ void* smap_get(smap m, const char *key);
 bool smap_del(smap m, const char *key);
 size_t smap_count(smap m);
 
-bool smap_first(smap m, const char **key, void **val);
-bool smap_next(smap m, const char **key, void **val);
+bool smap_first(smap m, char **key, void **val);
+bool smap_next(smap m, char **key, void **val);
 
-void smap_dump(smap m, smap_op_fn keyop, smap_op_fn valop);
+void smap_dump(smap m, smap_op_fn valop);
 void smap_dumpstat(smap m);
 
 #endif /* LIBSRSIRC_HASHMAP_H */

@@ -16,66 +16,45 @@
 
 #include "intlog.h"
 
-#include "ptrlist.h"
+#include "bucklist.h"
 #include "smap.h"
 
-static bool streq(const void *s1, const void *s2);
-static void* strkeydup(const char *s);
 static size_t strhash_small(const char *s);
 
 struct smap {
-	ptrlist_t *keybucket;
-	ptrlist_t *valbucket;
-	size_t bucketsz;
+	bucklist_t *buck;
+	size_t bsz;
 	size_t count;
 
 	bool iterating;
-	size_t buckiter;
+	size_t bit;
 	size_t listiter;
-
-	smap_hash_fn hfn;
-	smap_eq_fn efn;
-	smap_keydup_fn keydupfn;
 };
 
 
 smap
-smap_init(size_t bucketsz)
+smap_init(size_t bsz)
 {
 	struct smap *h = malloc(sizeof *h);
 	if (!h)
 		return NULL;
 
-	h->bucketsz = bucketsz;
+	h->bsz = bsz;
 	h->count = 0;
 	h->iterating = false;
-	h->keybucket = h->valbucket = NULL;
 
-	h->keybucket = malloc(h->bucketsz * sizeof *h->keybucket);
-	if (!h->keybucket)
+	h->buck = malloc(h->bsz * sizeof *h->buck);
+	if (!h->buck)
 		goto smap_init_fail;
 
-	h->valbucket = malloc(h->bucketsz * sizeof *h->valbucket);
-	if (!h->valbucket)
-		goto smap_init_fail;
-
-	for (size_t i = 0; i < h->bucketsz; i++) {
-		h->valbucket[i] = NULL;
-		h->keybucket[i] = NULL;
-	}
-
-	h->hfn = strhash_small;
-	h->efn = streq;
-	h->keydupfn = strkeydup;
+	for (size_t i = 0; i < h->bsz; i++)
+		h->buck[i] = NULL;
 
 	return h;
 
 smap_init_fail:
-	if (h) {
-		free(h->keybucket);
-		free(h->valbucket);
-	}
-
+	if (h)
+		free(h->buck);
 	free(h);
 
 	return NULL;
@@ -84,23 +63,18 @@ smap_init_fail:
 void
 smap_clear(smap h)
 {
-	if (!h)
-		return;
-
 	void *e;
-	for (size_t i = 0; i < h->bucketsz; i++) {
-		if (h->keybucket[i]) {
-			if ((e = ptrlist_first(h->keybucket[i])))
-				do {
-					free(e);
-				} while ((e = ptrlist_next(h->keybucket[i])));
-			ptrlist_dispose(h->keybucket[i]);
-			h->keybucket[i] = NULL;
-		}
-		if (h->valbucket[i]) {
-			ptrlist_dispose(h->valbucket[i]);
-			h->valbucket[i] = NULL;
-		}
+	for (size_t i = 0; i < h->bsz; i++) {
+		if (!h->buck[i])
+			continue;
+
+		if (bucklist_first(h->buck[i], NULL, &e))
+			do {
+				free(e);
+			} while (bucklist_next(h->buck[i], NULL, &e));
+
+		bucklist_dispose(h->buck[i]);
+		h->buck[i] = NULL;
 	}
 
 	h->count = 0;
@@ -114,64 +88,47 @@ smap_dispose(smap h)
 
 	smap_clear(h);
 
-	free(h->keybucket);
-	free(h->valbucket);
+	free(h->buck);
 	free(h);
 }
 
 bool
 smap_put(smap h, const char *key, void *elem)
 {
-	if (!h || !key || !elem)
+	if (!key || !elem)
 		return false;
 
 	bool allocated = false;
-	bool halfinserted = false;
-	size_t ind = h->hfn(key) % h->bucketsz;
+	size_t ind = strhash_small(key) % h->bsz;
 	char *kd = NULL;
 
-	ptrlist_t kl = h->keybucket[ind];
-	ptrlist_t vl = h->valbucket[ind];
+	bucklist_t kl = h->buck[ind];
 	if (!kl) {
 		allocated = true;
-		if (!(kl = h->keybucket[ind] = ptrlist_init()))
-			goto smap_put_fail;
-
-		if (!(vl = h->valbucket[ind] = ptrlist_init()))
+		if (!(kl = h->buck[ind] = bucklist_init()))
 			goto smap_put_fail;
 	}
 
-	ssize_t i = ptrlist_findeqfn(kl, h->efn, key);
-	if (i == -1) {
-		kd = h->keydupfn(key);
+	void *e = bucklist_find(kl, key, NULL);
+	if (!e) {
+		kd = strdup(key);
 		if (!kd)
 			goto smap_put_fail;
 
-		if (!ptrlist_insert(kl, 0, kd))
+		if (!bucklist_insert(kl, 0, kd, elem))
 			goto smap_put_fail;
-
-		halfinserted = true;
-
-		if (!ptrlist_insert(vl, 0, elem))
-			goto smap_put_fail;
-
 
 		h->count++;
 	} else
-		ptrlist_replace(vl, i, elem);
+		bucklist_replace(kl, key, elem);
 
 	return true;
 
 smap_put_fail:
 	if (allocated) {
-		ptrlist_dispose(kl);
-		ptrlist_dispose(vl);
-		h->keybucket[ind] = NULL;
-		h->valbucket[ind] = NULL;
+		bucklist_dispose(kl);
+		h->buck[ind] = NULL;
 	}
-
-	if (halfinserted)
-		ptrlist_remove(kl, 0);
 
 	free(kd);
 
@@ -181,42 +138,31 @@ smap_put_fail:
 void*
 smap_get(smap h, const char *key)
 {
-	if (!h)
-		return NULL;
+	size_t ind = strhash_small(key) % h->bsz;
 
-	size_t ind = h->hfn(key) % h->bucketsz;
-
-	ptrlist_t kl = h->keybucket[ind];
+	bucklist_t kl = h->buck[ind];
 	if (!kl)
 		return NULL;
-	ptrlist_t vl = h->valbucket[ind];
 
-	ssize_t i = ptrlist_findeqfn(kl, h->efn, key);
-
-	return i == -1 ? NULL : ptrlist_get(vl, i);
+	return bucklist_find(kl, key, NULL);
 }
 
 bool
 smap_del(smap h, const char *key)
 {
-	if (!h)
-		return false;
+	size_t ind = strhash_small(key) % h->bsz;
 
-	size_t ind = h->hfn(key) % h->bucketsz;
-
-	ptrlist_t kl = h->keybucket[ind];
+	bucklist_t kl = h->buck[ind];
 	if (!kl)
 		return false;
-	ptrlist_t vl = h->valbucket[ind];
 
-	ssize_t i = ptrlist_findeqfn(kl, h->efn, key);
+	char *okey;
+	void *e = bucklist_remove(kl, key, &okey);
 
-	if (i == -1)
+	if (!e)
 		return false;
 
-	free(ptrlist_get(kl, i));
-	ptrlist_remove(kl, i);
-	ptrlist_remove(vl, i);
+	free(okey);
 	h->count--;
 	return true;
 }
@@ -224,111 +170,75 @@ smap_del(smap h, const char *key)
 size_t
 smap_count(smap h)
 {
-	return !h ? 0 : h->count;
+	return h->count;
 }
 
 bool
-smap_first(smap h, const char **key, void **val)
+smap_first(smap h, char **key, void **val)
 {
-	if (!h)
-		return false;
+	h->bit = 0;
+	while (h->bit < h->bsz &&
+	    (!h->buck[h->bit] || bucklist_isempty(h->buck[h->bit])))
+		h->bit++;
 
-	h->buckiter = 0;
+	if (h->bit == h->bsz) {
+		if (key) *key = NULL;
+		if (val) *val = NULL;
 
-	while (h->buckiter < h->bucketsz && (!h->keybucket[h->buckiter]
-	    || ptrlist_isempty(h->keybucket[h->buckiter])))
-		h->buckiter++;
-
-	if (h->buckiter == h->bucketsz) {
-		if (key)
-			*key = NULL;
-		if (val)
-			*val = NULL;
-
-		h->iterating = false;
-
-		return false;
+		return h->iterating = false;
 	}
 
-	void *k = ptrlist_get(h->keybucket[h->buckiter], 0);
-	void *v = ptrlist_get(h->valbucket[h->buckiter], 0);
+	bucklist_first(h->buck[h->bit], key, val);
 
-	h->listiter = 1;
-
-	if (key)
-		*key = k;
-	if (val)
-		*val = v;
-
-	h->iterating = true;
-
-	return true;
+	return h->iterating = true;
 }
 
 bool
-smap_next(smap h, const char **key, void **val)
+smap_next(smap h, char **key, void **val)
 {
-	if (!h || !h->iterating)
+	if (!h->iterating)
 		return false;
 
-	void *k = ptrlist_get(h->keybucket[h->buckiter], h->listiter);
+	if (bucklist_next(h->buck[h->bit], key, val))
+		return true;
 
-	if (!k) {
-		h->buckiter++;
-		h->listiter = 0;
+	do {
+		h->bit++;
+	} while (h->bit < h->bsz &&
+	    (!h->buck[h->bit] || bucklist_isempty(h->buck[h->bit])));
 
-		while (h->buckiter < h->bucketsz && (!h->keybucket[h->buckiter]
-		    || ptrlist_isempty(h->keybucket[h->buckiter])))
-			h->buckiter++;
+	if (h->bit == h->bsz) {
+		if (key) *key = NULL;
+		if (val) *val = NULL;
 
-		if (h->buckiter == h->bucketsz) {
-			if (key)
-				*key = NULL;
-			if (val)
-				*val = NULL;
-
-			h->iterating = false;
-			return false;
-		}
-
-		k = ptrlist_get(h->keybucket[h->buckiter], h->listiter);
+		return h->iterating = false;
 	}
 
-	void *v = ptrlist_get(h->valbucket[h->buckiter], h->listiter);
-
-	h->listiter++;
-
-	if (key)
-		*key = k;
-	if (val)
-		*val = v;
+	bucklist_first(h->buck[h->bit], key, val);
 
 	return true;
-
 }
 
 void
-smap_dump(smap h, smap_op_fn keyop, smap_op_fn valop)
+smap_dump(smap h, smap_op_fn valop)
 {
 	#define M(X, A...) fprintf(stderr, X, ##A)
 	M("===hashmap dump (count: %zu)===\n", h->count);
 	if (!h)
 		M("nullpointer...\n");
 
-	for (size_t i = 0; i < h->bucketsz; i++) {
-		if (h->keybucket[i] && ptrlist_count(h->keybucket[i])) {
+	for (size_t i = 0; i < h->bsz; i++) {
+		if (h->buck[i] && bucklist_count(h->buck[i])) {
 			fprintf(stderr, "[%zu]: ", i);
-			ptrlist_t kl = h->keybucket[i];
-			ptrlist_t vl = h->valbucket[i];
-			void *key = ptrlist_first(kl);
-			void *val = ptrlist_first(vl);
-			while (key) {
-				keyop(key);
-				fprintf(stderr, " --> ");
-				valop(val);
-				key = ptrlist_next(kl);
-				val = ptrlist_next(vl);
-			}
+			bucklist_t kl = h->buck[i];
+			char *key;
+			void *val;
+			if (bucklist_first(kl, &key, &val))
+				do {
+					fprintf(stderr, "'%s' --> ", key);
+					if (valop)
+						valop(val);
+				} while (bucklist_next(kl, &key, &val));
 			fprintf(stderr, "\n");
 		}
 	}
@@ -342,9 +252,9 @@ smap_dumpstat(smap h)
 	size_t used = 0;
 	size_t usedlen = 0;
 	size_t empty = 0;
-	for (size_t i = 0; i < h->bucketsz; i++) {
-		if (h->keybucket[i]) {
-			size_t c = ptrlist_count(h->keybucket[i]);
+	for (size_t i = 0; i < h->bsz; i++) {
+		if (h->buck[i]) {
+			size_t c = bucklist_count(h->buck[i]);
 			if (c > 0) {
 				used++;
 				usedlen += c;
@@ -354,22 +264,10 @@ smap_dumpstat(smap h)
 	}
 
 	fprintf(stderr, "hashmap stat: bucksz: %zu, used: %zu (%f%%) "
-	    "avg listlen: %f\n", h->bucketsz, used,
-	    ((double)used/h->bucketsz)*100.0, ((double)usedlen/used));
+	    "avg listlen: %f\n", h->bsz, used,
+	    ((double)used/h->bsz)*100.0, ((double)usedlen/used));
 }
 
-
-static bool
-streq(const void *s1, const void *s2)
-{
-	return strcmp((const char*)s1, (const char*)s2) == 0;
-}
-
-static void*
-strkeydup(const char *s)
-{
-	return strdup(s);
-}
 
 static size_t
 strhash_small(const char *s)

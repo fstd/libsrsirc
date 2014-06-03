@@ -326,7 +326,7 @@ void
 ucb_dump(irc h)
 {
 	N("=== ucb dump (%zu chans) ===", h->chans ? smap_count(h->chans) : 0);
-	const char *key;
+	char *key;
 	void *e1, *e2;
 	if (!smap_first(h->chans, &key, &e1))
 		return;
@@ -345,7 +345,7 @@ ucb_dump(irc h)
 			N("  mode '%s'", c->modes[i]);
 		}
 
-		const char *k;
+		char *k;
 		if (!smap_first(c->memb, &k, &e2))
 			continue;
 		do {
