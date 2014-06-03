@@ -20,6 +20,7 @@ ptrlist_t ptrlist_init(void);
 void ptrlist_dispose(ptrlist_t l);
 void ptrlist_clear(ptrlist_t l);
 size_t ptrlist_count(ptrlist_t l);
+bool ptrlist_isempty(ptrlist_t l);
 
 /* insert/remove/get by index */
 bool ptrlist_insert(ptrlist_t l, ssize_t i, void *data);

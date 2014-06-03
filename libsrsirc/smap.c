@@ -236,7 +236,7 @@ smap_first(smap h, const char **key, void **val)
 	h->buckiter = 0;
 
 	while (h->buckiter < h->bucketsz && (!h->keybucket[h->buckiter]
-	    || ptrlist_count(h->keybucket[h->buckiter]) == 0))
+	    || ptrlist_isempty(h->keybucket[h->buckiter])))
 		h->buckiter++;
 
 	if (h->buckiter == h->bucketsz) {
@@ -278,7 +278,7 @@ smap_next(smap h, const char **key, void **val)
 		h->listiter = 0;
 
 		while (h->buckiter < h->bucketsz && (!h->keybucket[h->buckiter]
-		    || ptrlist_count(h->keybucket[h->buckiter]) == 0))
+		    || ptrlist_isempty(h->keybucket[h->buckiter])))
 			h->buckiter++;
 
 		if (h->buckiter == h->bucketsz) {

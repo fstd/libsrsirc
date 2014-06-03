@@ -158,7 +158,7 @@ tokenize(char *buf, tokarr *tok)
 		E("protocol error (leading whitespace)");
 		return false;
 	} else if (!*buf) {
-		E("protocol error (empty line)");
+		E("bug (empty line)"); //this shouldn't be possible anymore
 		return false;
 	}
 

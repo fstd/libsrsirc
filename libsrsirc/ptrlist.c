@@ -62,6 +62,12 @@ ptrlist_count(ptrlist_t l)
 	return c;
 }
 
+bool
+ptrlist_isempty(ptrlist_t l)
+{
+	return !l || !l->head;
+}
+
 void
 ptrlist_clear(ptrlist_t l)
 {
@@ -227,7 +233,7 @@ ptrlist_findfn(ptrlist_t l, ptrlist_find_fn fndfn)
 }
 
 ssize_t
-ptrlist_findeqfn(ptrlist_t l, ptrlist_eq_fn eqfn, const void *needle)
+ptrlist_findeqfn(ptrlist_t l, ptrlist_eq_fn eqfn, const void *needle, void **data)
 {
 	if (!l || !l->head)
 		return -1;
@@ -235,7 +241,9 @@ ptrlist_findeqfn(ptrlist_t l, ptrlist_eq_fn eqfn, const void *needle)
 	ssize_t c = 0;
 	struct pl_node *n = l->head;
 	while (n) {
-		if (eqfn(n->data, needle))
+		if (eqfn(n->data, needle)) {
+			if (data)
+				*data = n->data;
 			return c;
 		c++;
 		n = n->next;
