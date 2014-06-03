@@ -98,10 +98,6 @@ smap_clear(smap h)
 			h->keybucket[i] = NULL;
 		}
 		if (h->valbucket[i]) {
-			if ((e = ptrlist_first(h->valbucket[i])))
-				do {
-					free(e);
-				} while ((e = ptrlist_next(h->valbucket[i])));
 			ptrlist_dispose(h->valbucket[i]);
 			h->valbucket[i] = NULL;
 		}
