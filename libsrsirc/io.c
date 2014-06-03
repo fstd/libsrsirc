@@ -128,6 +128,11 @@ read_more(sckhld sh, struct readctx *ctx, uint64_t to_us)
 		n == 0 ?  W("read: EOF") : WE("read failed");
 		return -1;
 	}
+
+	printf("read (%zd): ' ", n);
+	for (ssize_t i = 0; i < n; i++)
+		printf(" %02x", ctx->eptr[i]);
+	printf("'\n");
 	
 	D("read: %zd", n);
 
