@@ -295,7 +295,7 @@ h_NICK(irc h, tokarr *msg, size_t nargs, bool logon)
 
 		drop_memb(h, c, nick);
 		/* drop before add, else stuff like ':foo NICK FOO' leaks mem */
-		if (!add_memb(h, c, (*msg)[2], m->modepfx)) {
+		if (!add_memb(h, c, (*msg)[2], mpfx)) {
 			E("out of memory, chan '%s' desynced", c->extname);
 			res |= ALLOC_ERR;
 			c->desync = true;
