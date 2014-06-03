@@ -290,14 +290,17 @@ h_NICK(irc h, tokarr *msg, size_t nargs, bool logon)
 		memb m = get_memb(h, c, nick);
 		if (!m)
 			continue;
+		char mpfx[MAX_MODEPFX];
+		com_strNcpy(mpfx, m->modepfx, sizeof mpfx);
 
+		drop_memb(h, c, nick);
+		/* drop before add, else stuff like ':foo NICK FOO' leaks mem */
 		if (!add_memb(h, c, (*msg)[2], m->modepfx)) {
 			E("out of memory, chan '%s' desynced", c->extname);
 			res |= ALLOC_ERR;
 			c->desync = true;
 		}
 
-		drop_memb(h, c, nick);
 	} while (smap_next(h->chans, NULL, &e));
 
 	return res;
