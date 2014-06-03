@@ -47,6 +47,7 @@ ucb_clear(irc h)
 	do {
 		chan c = e;
 		clear_memb(h, c);
+		smap_dispose(c->memb);
 		free(c->topicnick);
 		free(c->topic);
 		for (size_t i = 0; i < c->modes_sz; i++)
