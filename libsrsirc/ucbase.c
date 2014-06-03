@@ -350,7 +350,7 @@ ucb_dump(irc h)
 			continue;
 		do {
 			memb m = e2;
-			N("    member '%s' ('%s', '%s')",
+			I("    member '%s' ('%s', '%s')",
 			    m->extnick, m->nick, m->modepfx);
 		} while (smap_next(c->memb, &k, &e2));
 	} while (smap_next(h->chans, &key, &e1));
