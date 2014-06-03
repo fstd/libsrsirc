@@ -109,7 +109,7 @@ read_more(sckhld sh, struct readctx *ctx, uint64_t to_us)
 			E("input too long");
 			return -1;
 		}
-
+		D("relocate");
 		/* make additional room by moving data to the beginning */
 		size_t datalen = (size_t)(ctx->eptr - ctx->wptr);
 		memmove(ctx->workbuf, ctx->wptr, datalen);
@@ -128,6 +128,8 @@ read_more(sckhld sh, struct readctx *ctx, uint64_t to_us)
 		n == 0 ?  W("read: EOF") : WE("read failed");
 		return -1;
 	}
+	
+	D("read: %zd", n);
 
 	ctx->eptr += n;
 	return 1;
