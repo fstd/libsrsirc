@@ -63,15 +63,15 @@ smap_init_fail:
 void
 smap_clear(smap h)
 {
-	void *e;
+	char *k;
 	for (size_t i = 0; i < h->bsz; i++) {
 		if (!h->buck[i])
 			continue;
 
-		if (bucklist_first(h->buck[i], NULL, &e))
+		if (bucklist_first(h->buck[i], &k, NULL))
 			do {
-				free(e);
-			} while (bucklist_next(h->buck[i], NULL, &e));
+				free(k);
+			} while (bucklist_next(h->buck[i], &k, NULL))
 
 		bucklist_dispose(h->buck[i]);
 		h->buck[i] = NULL;
