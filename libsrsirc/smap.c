@@ -71,7 +71,7 @@ smap_clear(smap h)
 		if (bucklist_first(h->buck[i], &k, NULL))
 			do {
 				free(k);
-			} while (bucklist_next(h->buck[i], &k, NULL))
+			} while (bucklist_next(h->buck[i], &k, NULL));
 
 		bucklist_dispose(h->buck[i]);
 		h->buck[i] = NULL;
