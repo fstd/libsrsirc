@@ -97,7 +97,7 @@ h_JOIN(irc h, tokarr *msg, size_t nargs, bool logon)
 		}
 
 		if (!add_memb(h, c, (*msg)[0], "")) {
-			E("out of memory, chan '%s' desynced", c->extname);
+			E("out of memory, chan '%s' desynced", c->name);
 			return ALLOC_ERR;
 		}
 	}
