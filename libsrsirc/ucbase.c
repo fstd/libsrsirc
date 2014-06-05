@@ -78,6 +78,38 @@ add_chan_fail:
 	return NULL;
 }
 
+bool
+drop_chan(irc h, chan c)
+{
+	if (!smap_del(h->chans, c->name))
+		return false;
+
+	void *e;
+	if (smap_first(c->memb, NULL, &e)) {
+		do {
+			memb m = e;
+			if (--m->u->nchans == 0) {
+				smap_del(h->users, m->u->nick);
+				free(m->u->nick);
+				free(m->u->uname);
+				free(m->u->host);
+				free(m->u->fname);
+				free(m->u);
+			}
+			free(m);
+		} while (smap_next(c->memb, NULL, &e));
+		smap_clear(c->memb);
+	}
+
+	free(c->topic);
+	free(c->topicnick);
+	for (size_t i = 0; i < c->modes_sz; i++)
+		free(c->modes[i]);
+	free(c->modes);
+	free(c);
+	return true;
+}
+
 chan
 get_chan(irc h, const char *name)
 {
@@ -91,41 +123,23 @@ get_memb(irc h, chan c, const char *nick)
 }
 
 bool
-add_memb(irc h, chan c, const char *nick, const char *mpfxstr)
+add_memb(irc h, chan c, user u, const char *mpfxstr)
 {
-	bool uadd = false;
-	memb m = NULL;
-	user u = get_user(h, nick);
-	if (!u) {
-		uadd = true;
-		if (!(u = add_user(h, nick)))
-			goto add_memb_fail;
+	memb m = alloc_memb(h, u, mpfxstr);
+	if (!m || !smap_put(c->memb, u->nick, m)) {
+		free(m);
+		return false;
 	}
-	
-	m = alloc_memb(h, u, mpfxstr);
-	if (!m || !smap_put(c->memb, nick, m))
-		goto add_memb_fail;
 
 	u->nchans++;
-	D("added member '%s' to chan '%s'", nick, c->name);
+	D("added member '%s' to chan '%s'", u->nick, c->name);
 	return true;
-
-add_memb_fail:
-	if (uadd)
-		drop_user(h, u);
-	free(m);
-	E("out of memory");
-	return false;
 }
 
 bool
-drop_memb(irc h, chan c, const char *nick)
+drop_memb(irc h, chan c, user u)
 {
-	user u = get_user(h, nick);
-	if (!u)
-		return false;
-	
-	memb m = smap_del(c->memb, nick);
+	memb m = smap_del(c->memb, u->nick);
 	if (m)
 		u->nchans--;
 
@@ -141,7 +155,9 @@ clear_memb(irc h, chan c)
 		return;
 	
 	do {
-		free(e);
+		memb m = e;
+		m->u->nchans--;
+		free(m);
 	} while (smap_next(c->memb, NULL, &e));
 	smap_clear(c->memb);
 }
@@ -368,7 +384,7 @@ drop_user(irc h, user u)
 	void *e;
 	if (smap_first(h->chans, NULL, &e))
 		do {
-			drop_memb(h, e, u->nick);
+			drop_memb(h, e, u);
 		} while (smap_next(h->chans, NULL, &e));
 	free(u->nick);
 	free(u->uname);

@@ -34,6 +34,7 @@ bool bucklist_replace(bucklist_t l, const char *key, void *val);
 /* iteration */
 bool bucklist_first(bucklist_t l, char **key, void **val);
 bool bucklist_next(bucklist_t l, char **key, void **val);
+void bucklist_del_iter(bucklist_t l);
 
 /* debug */
 void bucklist_dump(bucklist_t l, bucklist_op_fn op);

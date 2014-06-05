@@ -24,6 +24,7 @@ size_t smap_count(smap m);
 
 bool smap_first(smap m, char **key, void **val);
 bool smap_next(smap m, char **key, void **val);
+void smap_del_iter(smap h);
 
 void smap_dump(smap m, smap_op_fn valop);
 void smap_dumpstat(smap m);

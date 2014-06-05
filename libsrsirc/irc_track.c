@@ -96,8 +96,18 @@ h_JOIN(irc h, tokarr *msg, size_t nargs, bool logon)
 			return 0;
 		}
 
-		if (!add_memb(h, c, (*msg)[0], "")) {
+		user u = get_user(h, (*msg)[0]);
+		bool uadd = false;
+		if (!u) {
+			uadd = true;
+			if (!(u = add_user(h, (*msg)[0])))
+				return ALLOC_ERR;
+		}
+
+		if (!add_memb(h, c, u, "")) {
 			E("out of memory, chan '%s' desynced", c->name);
+			if (uadd)
+				drop_user(h, u);
 			return ALLOC_ERR;
 		}
 	}
@@ -182,8 +192,19 @@ h_353(irc h, tokarr *msg, size_t nargs, bool logon)
 
 		com_strNcpy(nick, p, len + 1);
 
-		if (!add_memb(h, c, nick, mpfx))
+		user u = get_user(h, nick);
+		bool uadd = false;
+		if (!u) {
+			uadd = true;
+			if (!(u = add_user(h, nick)))
+				return ALLOC_ERR;
+		}
+
+		if (!add_memb(h, c, u, mpfx)) {
+			if (uadd)
+				drop_user(h, u);
 			return ALLOC_ERR;
+		}
 
 		if (!*end)
 			break;
@@ -227,9 +248,15 @@ h_PART(irc h, tokarr *msg, size_t nargs, bool logon)
 	}
 
 	if (ut_istrcmp(nick, h->mynick, h->casemap) == 0)
-		c->desync = true;
-
-	drop_memb(h, c, nick);
+		drop_chan(h, c);
+	else {
+		user u = get_user(h, (*msg)[0]);
+		if (u) {
+			drop_memb(h, c, u);
+			if (u->nchans == 0)
+				drop_user(h, u);
+		}
+	}
 
 	return 0;
 }
@@ -242,15 +269,9 @@ h_QUIT(irc h, tokarr *msg, size_t nargs, bool logon)
 
 	touch_user(h, (*msg)[0]);
 
-	void *e;
-	if (!smap_first(h->chans, NULL, &e))
-		return 0;
-
-	do {
-		chan c = e;
-		drop_memb(h, c, (*msg)[0]);
-	} while (smap_next(h->chans, NULL, &e));
-	/* XXX drop user? */
+	user u = get_user(h, (*msg)[0]);
+	if (u)
+		drop_user(h, u);
 
 	return 0;
 }
@@ -269,9 +290,15 @@ h_KICK(irc h, tokarr *msg, size_t nargs, bool logon)
 	}
 
 	if (ut_istrcmp((*msg)[3], h->mynick, h->casemap) == 0)
-		c->desync = true;
-
-	drop_memb(h, c, (*msg)[3]);
+		drop_chan(h, c);
+	else {
+		user u = get_user(h, (*msg)[3]);
+		if (u) {
+			drop_memb(h, c, u);
+			if (u->nchans == 0)
+				drop_user(h, u);
+		}
+	}
 
 	return 0;
 }

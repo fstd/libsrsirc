@@ -27,6 +27,7 @@ struct pl_node {
 struct bucklist {
 	struct pl_node *head;
 	struct pl_node *iter;
+	struct pl_node *previter; //for delete while iteration
 	const char *cmap;
 };
 
@@ -219,6 +220,7 @@ bucklist_first(bucklist_t l, char **key, void **val)
 	if (!l->head)
 		return false;
 
+	l->previter = NULL;
 	l->iter = l->head;
 
 	if (key) *key = l->iter->key;
@@ -233,6 +235,7 @@ bucklist_next(bucklist_t l, char **key, void **val)
 	if (!l->iter || !l->iter->next)
 		return false;
 
+	l->previter = l->iter;
 	l->iter = l->iter->next;
 
 	if (key) *key = l->iter->key;
@@ -241,6 +244,18 @@ bucklist_next(bucklist_t l, char **key, void **val)
 	return true;
 }
 
+void
+bucklist_del_iter(bucklist_t l)
+{
+	struct pl_node *next = l->iter->next;
+	if (!l->previter)
+		l->head = next;
+	else
+		l->previter->next = next;
+	
+	free(l->iter);
+	l->iter = l->previter;
+}
 
 void
 bucklist_dump(bucklist_t l, bucklist_op_fn op)

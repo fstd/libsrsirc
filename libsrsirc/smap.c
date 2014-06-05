@@ -224,6 +224,13 @@ smap_next(smap h, char **key, void **val)
 }
 
 void
+smap_del_iter(smap h)
+{
+	if (h->iterating)
+		bucklist_del_iter(h->buck[h->bit]);
+}
+
+void
 smap_dump(smap h, smap_op_fn valop)
 {
 	#define M(X, A...) fprintf(stderr, X, ##A)
