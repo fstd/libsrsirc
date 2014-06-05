@@ -28,5 +28,6 @@ void smap_del_iter(smap h);
 
 void smap_dump(smap m, smap_op_fn valop);
 void smap_dumpstat(smap m);
+//void smap_test(void);
 
 #endif /* LIBSRSIRC_HASHMAP_H */

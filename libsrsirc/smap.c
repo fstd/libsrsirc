@@ -316,3 +316,23 @@ strhash_mid(const char *s, const char *cmap)
 	return (res[0] << 8) | res[1];
 }
 
+/*void smap_test(void) {
+
+	char *line = NULL;
+	size_t linesize = 0;
+	ssize_t linelen;
+
+	while ((linelen = getline(&line, &linesize, stdin)) != -1) {
+		char *s = strchr(line, '\n');
+		*s = 0;
+		size_t shs = strhash_small(line, g_cmap[0]);
+		size_t shm = strhash_mid(line, g_cmap[0]);
+		size_t shm4 = strhash_mid(line, g_cmap[0]) % 8192;
+		
+		printf("'%s' %zu %zu %zu\n", line, shs, shm, shm4);
+	}
+
+	if (ferror(stdin))
+		perror("getline");
+
+} */

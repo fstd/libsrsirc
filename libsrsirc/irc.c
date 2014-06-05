@@ -19,6 +19,7 @@
 #include <libsrsirc/util.h>
 #include "conn.h"
 #include "msg.h"
+#include "smap.h"
 #include "irc_msghnd.h"
 
 #include <intlog.h>
@@ -27,6 +28,8 @@
 #include <libsrsirc/irc_track.h>
 
 static bool send_logon(irc hnd);
+
+//void irc_test(void) { smap_test(); }
 
 irc
 irc_init(void)
