@@ -306,12 +306,12 @@ strhash_mid(const char *s, const char *cmap)
 {
 	uint8_t res[2] = { 0xaa, 0xaa };
 	uint8_t cur;
-	bool shift = false;
+	unsigned shift = 0;
 	bool first = true;
 	char *str = (char*)s;
 
 	while ((cur = cmap[(unsigned char)*str++]))
-		res[first = !first] ^= (cur << (shift = !shift));
+		res[first = !first] ^= cur << !!(++shift & 2);
 
 	return (res[0] << 8) | res[1];
 }
