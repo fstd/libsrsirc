@@ -292,11 +292,11 @@ strhash_small(const char *s, const char *cmap)
 {
 	uint8_t res = 0xaa;
 	uint8_t cur;
-	bool shift = false;
+	unsigned shift = 0;
 	char *str = (char*)s;
 
 	while ((cur = cmap[(unsigned char)*str++]))
-		res ^= (cur << (shift = !shift));
+		res ^= (cur << (++shift % 3));
 
 	return res;
 }
@@ -311,7 +311,7 @@ strhash_mid(const char *s, const char *cmap)
 	char *str = (char*)s;
 
 	while ((cur = cmap[(unsigned char)*str++]))
-		res[first = !first] ^= cur << !!(++shift & 2);
+		res[first = !first] ^= cur << (++shift % 3);
 
 	return (res[0] << 8) | res[1];
 }
