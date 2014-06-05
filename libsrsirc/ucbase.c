@@ -520,17 +520,14 @@ rename_user(irc h, const char *ident, const char *newnick)
 	char *nn = NULL;
 	if (justcase) {
 		com_strNcpy(u->nick, newnick, strlen(u->nick) + 1);
+		return true;
 	} else {
 		if (!(nn = strdup(newnick)))
 			return false; //oh shit.
+		free(u->nick);
+		u->nick = nn;
 	}
 
-	free(u->nick);
-	u->nick = nn;
-
-	if (justcase)
-		return true;
-	
 	if (!smap_put(h->users, newnick, u))
 		return false;
 	
