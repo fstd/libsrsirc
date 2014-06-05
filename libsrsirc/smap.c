@@ -21,6 +21,7 @@
 #include "smap.h"
 
 static size_t strhash_small(const char *s, const char *cmap);
+static size_t strhash_mid(const char *s, const char *cmap);
 
 struct smap {
 	bucklist_t *buck;
@@ -30,6 +31,8 @@ struct smap {
 	bool iterating;
 	size_t bit;
 	size_t listiter;
+
+	smap_hash_fn hfn;
 
 	const char *cmap;
 };
@@ -46,6 +49,7 @@ smap_init(size_t bsz, int cmap)
 	h->count = 0;
 	h->iterating = false;
 	h->cmap = g_cmap[cmap];
+	h->hfn = bsz <= 256 ? strhash_small : strhash_mid;
 
 	h->buck = malloc(h->bsz * sizeof *h->buck);
 	if (!h->buck)
@@ -103,7 +107,7 @@ smap_put(smap h, const char *key, void *elem)
 		return false;
 
 	bool allocated = false;
-	size_t ind = strhash_small(key, h->cmap) % h->bsz;
+	size_t ind = h->hfn(key, h->cmap) % h->bsz;
 	char *kd = NULL;
 
 	bucklist_t kl = h->buck[ind];
@@ -142,7 +146,7 @@ smap_put_fail:
 void*
 smap_get(smap h, const char *key)
 {
-	size_t ind = strhash_small(key, h->cmap) % h->bsz;
+	size_t ind = h->hfn(key, h->cmap) % h->bsz;
 
 	bucklist_t kl = h->buck[ind];
 	if (!kl)
@@ -154,7 +158,7 @@ smap_get(smap h, const char *key)
 void*
 smap_del(smap h, const char *key)
 {
-	size_t ind = strhash_small(key, h->cmap) % h->bsz;
+	size_t ind = h->hfn(key, h->cmap) % h->bsz;
 
 	bucklist_t kl = h->buck[ind];
 	if (!kl)
@@ -263,9 +267,12 @@ smap_dumpstat(smap h)
 	size_t used = 0;
 	size_t usedlen = 0;
 	size_t empty = 0;
+	size_t maxlen = 0;
 	for (size_t i = 0; i < h->bsz; i++) {
 		if (h->buck[i]) {
 			size_t c = bucklist_count(h->buck[i]);
+			if (c > maxlen)
+				maxlen = c;
 			if (c > 0) {
 				used++;
 				usedlen += c;
@@ -275,8 +282,8 @@ smap_dumpstat(smap h)
 	}
 
 	fprintf(stderr, "hashmap stat: bucksz: %zu, used: %zu (%f%%) "
-	    "avg listlen: %f\n", h->bsz, used,
-	    ((double)used/h->bsz)*100.0, ((double)usedlen/used));
+	    "avg listlen: %f, max listlen: %zu\n", h->bsz, used,
+	    ((double)used/h->bsz)*100.0, ((double)usedlen/used), maxlen);
 }
 
 
@@ -288,13 +295,24 @@ strhash_small(const char *s, const char *cmap)
 	bool shift = false;
 	char *str = (char*)s;
 
-	while ((cur = cmap[(unsigned char)*str++])) {
-		if ((shift = !shift))
-			cur <<= 3;
-
-		res ^= cur;
-	}
+	while ((cur = cmap[(unsigned char)*str++]))
+		res ^= (cur << (shift = !shift));
 
 	return res;
+}
+
+static size_t
+strhash_mid(const char *s, const char *cmap)
+{
+	uint8_t res[2] = { 0xaa, 0xaa };
+	uint8_t cur;
+	bool shift = false;
+	bool first = true;
+	char *str = (char*)s;
+
+	while ((cur = cmap[(unsigned char)*str++]))
+		res[first = !first] ^= (cur << (shift = !shift));
+
+	return (res[0] << 8) | res[1];
 }
 

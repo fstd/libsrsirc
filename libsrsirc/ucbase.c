@@ -28,7 +28,7 @@ ucb_init(irc h)
 	if (!(h->chans = smap_init(256, h->casemap)))
 		return false;
 
-	if (!(h->users = smap_init(256, h->casemap))) // XXX WAY too small
+	if (!(h->users = smap_init(4096, h->casemap)))
 		return smap_dispose(h->chans), false;
 	
 	return true;
@@ -458,7 +458,7 @@ ucb_dump(irc h)
 			u->dangling = true;
 		} while (smap_next(h->users, &key, &e1));
 
-	if (smap_first(h->chans, &key, &e1))
+	if (smap_first(h->chans, &key, &e1)) {
 		do {
 			chan c = e1;
 			N("channel '%s' (%zu membs) [topic: '%s' (by %s)"
@@ -481,15 +481,19 @@ ucb_dump(irc h)
 				I("    member '%s!%s@%s' ('%s')", m->u->nick, m->u->uname, m->u->host, m->modepfx);
 				m->u->dangling = false;
 			} while (smap_next(c->memb, &k, &e2));
+			smap_dumpstat(c->memb);
 		} while (smap_next(h->chans, &key, &e1));
+		smap_dumpstat(h->chans);
+	}
 
-	if (smap_first(h->users, &key, &e1))
+	if (smap_first(h->users, &key, &e1)) {
 		do {
 			user u = e1;
 			if (u->dangling)
 				N("dangling user '%s!%s@%s'", u->nick, u->uname, u->host);
 		} while (smap_next(h->users, &key, &e1));
-
+		smap_dumpstat(h->users);
+	}
 	N("=== end of dump ===");
 
 

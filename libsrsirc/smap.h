@@ -8,7 +8,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-typedef size_t (*smap_hash_fn)(const char *elem);
+typedef size_t (*smap_hash_fn)(const char *elem, const char *cmap);
 typedef void (*smap_op_fn)(const char *elem);
 typedef void* (*smap_keydup_fn)(const char *key);
 typedef bool (*smap_eq_fn)(const void *elem1, const void *elem2);
