@@ -17,7 +17,6 @@ typedef struct user *user;
 
 struct chan {
 	char name[MAX_CHAN_LEN];
-	char extname[MAX_CHAN_LEN];
 	char *topic;
 	char *topicnick;
 	uint64_t tscreate;

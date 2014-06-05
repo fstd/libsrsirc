@@ -60,7 +60,7 @@ add_chan(irc h, const char *name)
 	if (!smap_put(h->chans, name, c))
 		goto add_chan_fail;
 
-	D("added chan '%s' ('%s')", c->extname, c->name);
+	D("added chan '%s'", c->name);
 
 	return c;
 
@@ -443,8 +443,8 @@ ucb_dump(irc h)
 	if (smap_first(h->chans, &key, &e1))
 		do {
 			chan c = e1;
-			N("channel '%s' ('%s', %zu membs) [topic: '%s' (by %s)"
-			    ", tsc: %"PRIu64", tst: %"PRIu64"]", c->extname, c->name,
+			N("channel '%s' (%zu membs) [topic: '%s' (by %s)"
+			    ", tsc: %"PRIu64", tst: %"PRIu64"]", c->name,
 			    smap_count(c->memb), c->topic, c->topicnick, 
 			    c->tscreate, c->tstopic);
 
