@@ -16,6 +16,7 @@
 #include <libsrsirc/defs.h>
 #include "conn.h"
 #include <libsrsirc/util.h>
+#include <libsrsirc/irc_track.h>
 #include <intlog.h>
 #include "msg.h"
 
@@ -279,11 +280,13 @@ static uint8_t
 handle_005(irc hnd, tokarr *msg, size_t nargs, bool logon)
 {
 	uint8_t ret = 0;
+	bool have_casemap = false;
 
 	for (size_t z = 3; z < nargs; ++z) {
-		if (strncasecmp((*msg)[z], "CASEMAPPING=", 12) == 0)
+		if (strncasecmp((*msg)[z], "CASEMAPPING=", 12) == 0) {
 			ret |= handle_005_CASEMAPPING(hnd, (*msg)[z] + 12);
-		else if (strncasecmp((*msg)[z], "PREFIX=", 7) == 0)
+			have_casemap = true;
+		} else if (strncasecmp((*msg)[z], "PREFIX=", 7) == 0)
 			ret |= handle_005_PREFIX(hnd, (*msg)[z] + 7);
 		else if (strncasecmp((*msg)[z], "CHANMODES=", 10) == 0)
 			ret |= handle_005_CHANMODES(hnd, (*msg)[z] + 10);
@@ -292,6 +295,15 @@ handle_005(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 		if (ret & CANT_PROCEED)
 			return ret;
+	}
+
+	if (hnd->tracking && !hnd->tracking_enab && have_casemap) {
+		if (!trk_init(hnd))
+			E("failed to enable tracking");
+		else {
+			hnd->tracking_enab = true;
+			N("tracking enabled");
+		}
 	}
 
 	return ret;

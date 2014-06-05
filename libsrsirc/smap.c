@@ -17,9 +17,10 @@
 #include "intlog.h"
 
 #include "bucklist.h"
+#include "cmap.h"
 #include "smap.h"
 
-static size_t strhash_small(const char *s);
+static size_t strhash_small(const char *s, const char *cmap);
 
 struct smap {
 	bucklist_t *buck;
@@ -29,11 +30,13 @@ struct smap {
 	bool iterating;
 	size_t bit;
 	size_t listiter;
+
+	const char *cmap;
 };
 
 
 smap
-smap_init(size_t bsz)
+smap_init(size_t bsz, int cmap)
 {
 	struct smap *h = malloc(sizeof *h);
 	if (!h)
@@ -42,6 +45,7 @@ smap_init(size_t bsz)
 	h->bsz = bsz;
 	h->count = 0;
 	h->iterating = false;
+	h->cmap = g_cmap[cmap];
 
 	h->buck = malloc(h->bsz * sizeof *h->buck);
 	if (!h->buck)
@@ -99,13 +103,13 @@ smap_put(smap h, const char *key, void *elem)
 		return false;
 
 	bool allocated = false;
-	size_t ind = strhash_small(key) % h->bsz;
+	size_t ind = strhash_small(key, h->cmap) % h->bsz;
 	char *kd = NULL;
 
 	bucklist_t kl = h->buck[ind];
 	if (!kl) {
 		allocated = true;
-		if (!(kl = h->buck[ind] = bucklist_init()))
+		if (!(kl = h->buck[ind] = bucklist_init(h->cmap)))
 			goto smap_put_fail;
 	}
 
@@ -138,7 +142,7 @@ smap_put_fail:
 void*
 smap_get(smap h, const char *key)
 {
-	size_t ind = strhash_small(key) % h->bsz;
+	size_t ind = strhash_small(key, h->cmap) % h->bsz;
 
 	bucklist_t kl = h->buck[ind];
 	if (!kl)
@@ -147,24 +151,24 @@ smap_get(smap h, const char *key)
 	return bucklist_find(kl, key, NULL);
 }
 
-bool
+void*
 smap_del(smap h, const char *key)
 {
-	size_t ind = strhash_small(key) % h->bsz;
+	size_t ind = strhash_small(key, h->cmap) % h->bsz;
 
 	bucklist_t kl = h->buck[ind];
 	if (!kl)
-		return false;
+		return NULL;
 
 	char *okey;
 	void *e = bucklist_remove(kl, key, &okey);
 
 	if (!e)
-		return false;
+		return NULL;
 
 	free(okey);
 	h->count--;
-	return true;
+	return e;
 }
 
 size_t
@@ -270,14 +274,14 @@ smap_dumpstat(smap h)
 
 
 static size_t
-strhash_small(const char *s)
+strhash_small(const char *s, const char *cmap)
 {
 	uint8_t res = 0xaa;
 	uint8_t cur;
 	bool shift = false;
 	char *str = (char*)s;
 
-	while ((cur = *str++)) {
+	while ((cur = cmap[(unsigned char)*str++])) {
 		if ((shift = !shift))
 			cur <<= 3;
 

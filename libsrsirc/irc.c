@@ -47,7 +47,7 @@ irc_init(void)
 	for (size_t i = 0; i < COUNTOF(r->msghnds); i++)
 		r->msghnds[i].cmd[0] = '\0';
 
-	r->chans = NULL;
+	r->chans = r->users = NULL;
 	r->m005chantypes = NULL;
 
 	for (size_t i = 0; i < COUNTOF(r->m005chanmodes); i++)
@@ -176,8 +176,7 @@ irc_connect(irc hnd)
 	    com_timestamp_us() + hnd->hcto_us : 0;
 
 	trk_deinit(hnd);
-	if (hnd->tracking && !trk_init(hnd))
-		return false;
+	hnd->tracking_enab = false;
 
 	com_update_strprop(&hnd->lasterr, NULL);
 	com_update_strprop(&hnd->banmsg, NULL);
@@ -359,6 +358,7 @@ irc_dump(irc h)
 	N("m005chantypes: '%s'", h->m005chantypes);
 	N("tag_con_read: %p", h->tag_con_read);
 	N("tracking: %d", h->tracking);
+	N("tracking_enab: %d", h->tracking_enab);
 	N("endofnames: %d", h->endofnames);
 	for (size_t i = 0; i < COUNTOF(h->logonconv); i++) {
 		char line[1024];
@@ -366,6 +366,7 @@ irc_dump(irc h)
 		N("logonconv[%zu]: '%s'", i, line);
 	}
 	//smap chans
+	//smap users
 	//fp_con_read cb_con_read
 	//fp_mut_nick cb_mut_nick
 	//struct msghnd msghnds[64]

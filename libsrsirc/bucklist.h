@@ -16,7 +16,7 @@ typedef void (*bucklist_op_fn)(const void *e);
 typedef bool (*bucklist_eq_fn)(const void *e1, const void *e2);
 
 /* alloc/dispose/count/clear */
-bucklist_t bucklist_init(void);
+bucklist_t bucklist_init(const char *cmap);
 void bucklist_dispose(bucklist_t l);
 size_t bucklist_count(bucklist_t l);
 bool bucklist_isempty(bucklist_t l);
@@ -39,4 +39,3 @@ bool bucklist_next(bucklist_t l, char **key, void **val);
 void bucklist_dump(bucklist_t l, bucklist_op_fn op);
 
 #endif /* LIBSRSIRC_PTRLIST_H */
-

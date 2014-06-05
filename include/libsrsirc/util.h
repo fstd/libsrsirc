@@ -41,7 +41,6 @@
  */
 
 
-
 /* ut_pfx2nick - Extracts the nick part from a `nick[!user][@host]-style' prefix
  * Params: `dest': Buffer where the extracted nickname will be put in
  *         `dest_sz': Size of `dest' buffer (\0-termination is ensured)

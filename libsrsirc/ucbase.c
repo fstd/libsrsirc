@@ -25,58 +25,29 @@ static int compare_modepfx(irc h, char c1, char c2);
 bool
 ucb_init(irc h)
 {
-	return (h->chans = smap_init(256));
-}
+	if (!(h->chans = smap_init(256, h->casemap)))
+		return false;
 
-void
-ucb_deinit(irc h)
-{
-	if (h->chans)
-		ucb_clear(h);
-	smap_dispose(h->chans);
-	h->chans = NULL;
-}
-
-void
-ucb_clear(irc h)
-{
-	void *e;
-	if (!smap_first(h->chans, NULL, &e))
-		return;
+	if (!(h->users = smap_init(256, h->casemap))) // XXX WAY too small
+		return smap_dispose(h->chans), false;
 	
-	do {
-		chan c = e;
-		clear_memb(h, c);
-		smap_dispose(c->memb);
-		free(c->topicnick);
-		free(c->topic);
-		for (size_t i = 0; i < c->modes_sz; i++)
-			free(c->modes[i]);
-		free(c->modes);
-		free(c);
-	} while (smap_next(h->chans, NULL, &e));
-	
-	smap_clear(h->chans);
+	return true;
 }
 
 chan
 add_chan(irc h, const char *name)
 {
-	char lname[MAX_CHAN_LEN];
-	ut_strtolower(lname, sizeof lname, name, h->casemap);
-
 	chan c = malloc(sizeof *c);
 	if (!c)
 		goto add_chan_fail;
 
-	com_strNcpy(c->extname, name, sizeof c->extname);
-	com_strNcpy(c->name, lname, sizeof c->name);
+	com_strNcpy(c->name, name, sizeof c->name);
 	c->topic = c->topicnick = NULL;
 	c->tscreate = c->tstopic = 0;
 	c->desync = false;
 	c->modes = NULL;
 
-	if (!(c->memb = smap_init(256)))
+	if (!(c->memb = smap_init(256, h->casemap)))
 		goto add_chan_fail;
 
 	c->modes_sz = 16; //grows
@@ -86,7 +57,7 @@ add_chan(irc h, const char *name)
 	for (size_t i = 0; i < c->modes_sz; i++)
 		c->modes[i] = NULL;
 	
-	if (!smap_put(h->chans, lname, c))
+	if (!smap_put(h->chans, name, c))
 		goto add_chan_fail;
 
 	D("added chan '%s' ('%s')", c->extname, c->name);
@@ -110,10 +81,56 @@ add_chan_fail:
 chan
 get_chan(irc h, const char *name)
 {
-	char lname[MAX_CHAN_LEN];
-	ut_strtolower(lname, sizeof lname, name, h->casemap);
+	return smap_get(h->chans, name);
+}
 
-	return smap_get(h->chans, lname);
+memb
+get_memb(irc h, chan c, const char *nick)
+{
+	return smap_get(c->memb, nick);
+}
+
+bool
+add_memb(irc h, chan c, const char *nick, const char *mpfxstr)
+{
+	bool uadd = false;
+	memb m = NULL;
+	user u = get_user(h, nick);
+	if (!u) {
+		uadd = true;
+		if (!(u = add_user(h, nick)))
+			goto add_memb_fail;
+	}
+	
+	m = alloc_memb(h, u, mpfxstr);
+	if (!m || !smap_put(c->memb, nick, m))
+		goto add_memb_fail;
+
+	u->nchans++;
+	D("added member '%s' to chan '%s'", nick, c->name);
+	return true;
+
+add_memb_fail:
+	if (uadd)
+		drop_user(h, u);
+	free(m);
+	E("out of memory");
+	return false;
+}
+
+bool
+drop_memb(irc h, chan c, const char *nick)
+{
+	user u = get_user(h, nick);
+	if (!u)
+		return false;
+	
+	memb m = smap_del(c->memb, nick);
+	if (m)
+		u->nchans--;
+
+	free(m);
+	return m;
 }
 
 void
@@ -130,56 +147,13 @@ clear_memb(irc h, chan c)
 }
 
 memb
-get_memb(irc h, chan c, const char *nick)
+alloc_memb(irc h, user u, const char *mpfxstr)
 {
-	char lnick[MAX_NICK_LEN];
-	ut_strtolower(lnick, sizeof lnick, nick, h->casemap);
-
-	return smap_get(c->memb, lnick);
-}
-
-bool
-add_memb(irc h, chan c, const char *nick, const char *mpfxstr)
-{
-	memb m = alloc_memb(h, nick, mpfxstr);
-	if (!m || !smap_put(c->memb, m->nick, m))
-		goto add_memb_fail;
-
-	D("added member '%s' ('%s') to chan '%s'", m->extnick, m->nick, c->extname);
-	return true;
-
-add_memb_fail:
-	free(m);
-	E("out of memory");
-	return false;
-}
-
-
-bool
-drop_memb(irc h, chan c, const char *nick)
-{
-	memb m = get_memb(h, c, nick);
-	if (!m)
-		return false;
-
-	bool deleted = smap_del(c->memb, m->nick);
-	if (deleted)
-		free(m);
-	return deleted;
-}
-
-memb
-alloc_memb(irc h, const char *nick, const char *mpfxstr)
-{
-	char lnick[MAX_NICK_LEN];
-	ut_strtolower(lnick, sizeof lnick, nick, h->casemap);
-
 	memb m = malloc(sizeof *m);
 	if (!m)
 		goto alloc_memb_fail;
 
-	com_strNcpy(m->extnick, nick, sizeof m->extnick);
-	com_strNcpy(m->nick, lnick, sizeof m->nick);
+	m->u = u;
 	com_strNcpy(m->modepfx, mpfxstr, sizeof m->modepfx);
 
 	return m;
@@ -320,42 +294,239 @@ drop_chanmode(irc h, chan c, const char *modestr)
 	return true;
 }
 
+void
+touch_user_int(user u, const char *ident)
+{
+	if (!u->uname && strchr(ident, '!')) {
+		char unam[MAX_UNAME_LEN];
+		ut_pfx2uname(unam, sizeof unam, ident);
+		u->uname = strdup(unam); //pointless to check
+	}
 
+	if (!u->host && strchr(ident, '@')) {
+		char host[MAX_HOST_LEN];
+		ut_pfx2host(host, sizeof host, ident);
+		u->host = strdup(host); //pointless to check
+	}
+}
+
+user
+touch_user(irc h, const char *ident)
+{
+	user u = get_user(h, ident);
+	if (!u)
+		return NULL;
+
+	touch_user_int(u, ident);
+	return u;
+}
+
+
+user
+add_user(irc h, const char *ident) //ident may be a nick, or nick!uname@host style
+{
+	char nick[MAX_NICK_LEN];
+	ut_pfx2nick(nick, sizeof nick, ident);
+
+	user u = malloc(sizeof *u);
+	if (!u)
+		goto add_user_fail;
+
+	u->uname = u->host = u->fname = NULL;
+	u->nchans = 0;
+
+	if (!(u->nick = strdup(nick)))
+		goto add_user_fail;
+
+	if (!smap_put(h->users, nick, u))
+		goto add_user_fail;
+
+	touch_user_int(u, ident);
+
+	D("added user '%s' ('%s@%s')", u->nick, u->uname, u->host);
+
+	return u;
+
+add_user_fail:
+	if (u) {
+		free(u->nick);
+		free(u->uname);
+		free(u->host);
+	}
+
+	free(u);
+	E("out of memory");
+	return NULL;
+}
+
+bool
+drop_user(irc h, user u)
+{
+	if (!smap_del(h->users, u->nick))
+		return false;
+
+	void *e;
+	if (smap_first(h->chans, NULL, &e))
+		do {
+			drop_memb(h, e, u->nick);
+		} while (smap_next(h->chans, NULL, &e));
+	free(u->nick);
+	free(u->uname);
+	free(u->host);
+	free(u->fname);
+	free(u);
+
+	return true;
+}
+
+void
+ucb_deinit(irc h)
+{
+	ucb_clear(h);
+	smap_dispose(h->chans);
+	smap_dispose(h->users);
+	h->chans = h->users = NULL;
+}
+
+void
+ucb_clear(irc h)
+{
+	void *e;
+	if (h->chans) {
+		if (!smap_first(h->chans, NULL, &e))
+			return;
+		
+		do {
+			chan c = e;
+			clear_memb(h, c);
+			smap_dispose(c->memb);
+			free(c->topicnick);
+			free(c->topic);
+			for (size_t i = 0; i < c->modes_sz; i++)
+				free(c->modes[i]);
+			free(c->modes);
+			free(c);
+		} while (smap_next(h->chans, NULL, &e));
+		smap_clear(h->chans);
+	}
+
+	if (h->users) {
+		if (!smap_first(h->users, NULL, &e))
+			return;
+		
+		do {
+			user u = e;
+			free(u->nick);
+			free(u->uname);
+			free(u->host);
+			free(u->fname);
+			free(u);
+		} while (smap_next(h->users, NULL, &e));
+		smap_clear(h->users);
+	}
+}
 
 void
 ucb_dump(irc h)
 {
-	N("=== ucb dump (%zu chans) ===", h->chans ? smap_count(h->chans) : 0);
+	N("=== ucb dump (%zu chans, %zu users) ===",
+	    h->chans ? smap_count(h->chans) : 0,
+	    h->users ? smap_count(h->users) : 0);
 	char *key;
 	void *e1, *e2;
-	if (!smap_first(h->chans, &key, &e1))
-		return;
-
-	do {
-		chan c = e1;
-		N("channel '%s' ('%s', %zu membs) [topic: '%s' (by %s)"
-		    ", tsc: %"PRIu64", tst: %"PRIu64"]", c->extname, c->name,
-		    smap_count(c->memb), c->topic, c->topicnick, 
-		    c->tscreate, c->tstopic);
-
-		for (size_t i = 0; i < c->modes_sz; i++) {
-			if (!c->modes[i])
-				break;
-
-			N("  mode '%s'", c->modes[i]);
-		}
-
-		char *k;
-		if (!smap_first(c->memb, &k, &e2))
-			continue;
+	if (smap_first(h->users, &key, &e1))
 		do {
-			memb m = e2;
-			I("    member '%s' ('%s', '%s')",
-			    m->extnick, m->nick, m->modepfx);
-		} while (smap_next(c->memb, &k, &e2));
-	} while (smap_next(h->chans, &key, &e1));
+			user u = e1;
+			u->dangling = true;
+		} while (smap_next(h->users, &key, &e1));
+
+	if (smap_first(h->chans, &key, &e1))
+		do {
+			chan c = e1;
+			N("channel '%s' ('%s', %zu membs) [topic: '%s' (by %s)"
+			    ", tsc: %"PRIu64", tst: %"PRIu64"]", c->extname, c->name,
+			    smap_count(c->memb), c->topic, c->topicnick, 
+			    c->tscreate, c->tstopic);
+
+			for (size_t i = 0; i < c->modes_sz; i++) {
+				if (!c->modes[i])
+					break;
+
+				N("  mode '%s'", c->modes[i]);
+			}
+
+			char *k;
+			if (!smap_first(c->memb, &k, &e2))
+				continue;
+			do {
+				memb m = e2;
+				I("    member '%s!%s@%s' ('%s')", m->u->nick, m->u->uname, m->u->host, m->modepfx);
+				m->u->dangling = false;
+			} while (smap_next(c->memb, &k, &e2));
+		} while (smap_next(h->chans, &key, &e1));
+
+	if (smap_first(h->users, &key, &e1))
+		do {
+			user u = e1;
+			if (u->dangling)
+				N("dangling user '%s!%s@%s'", u->nick, u->uname, u->host);
+		} while (smap_next(h->users, &key, &e1));
 
 	N("=== end of dump ===");
 
 
+}
+
+user
+get_user(irc h, const char *ident)
+{
+	return smap_get(h->users, ident);
+}
+
+bool
+rename_user(irc h, const char *ident, const char *newnick)
+{
+	char nick[MAX_NICK_LEN];
+	ut_pfx2nick(nick, sizeof nick, ident);
+
+	bool justcase = ut_istrcmp(nick, newnick, h->casemap) == 0;
+
+	user u = get_user(h, ident);
+	if (!u)
+		return false;
+
+	char *nn = NULL;
+	if (justcase) {
+		com_strNcpy(u->nick, newnick, strlen(u->nick) + 1);
+	} else {
+		if (!(nn = strdup(newnick)))
+			return false; //oh shit.
+	}
+
+	free(u->nick);
+	u->nick = nn;
+
+	if (justcase)
+		return true;
+	
+	if (!smap_put(h->users, newnick, u))
+		return false;
+	
+	smap_del(h->users, ident);
+
+	void *e;
+	if (smap_first(h->chans, NULL, &e))
+		do {
+			chan c = e;
+			memb m = smap_get(c->memb, ident);
+			if (!m)
+				continue;
+
+			if (!smap_put(c->memb, newnick, m))
+				return false;
+
+			smap_del(c->memb, ident);
+		} while (smap_next(h->chans, NULL, &e));
+
+	return true;
 }

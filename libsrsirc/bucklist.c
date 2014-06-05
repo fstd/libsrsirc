@@ -14,6 +14,8 @@
 #include <string.h>
 
 #include "intlog.h"
+#include "cmap.h"
+
 #include "bucklist.h"
 
 struct pl_node {
@@ -25,10 +27,13 @@ struct pl_node {
 struct bucklist {
 	struct pl_node *head;
 	struct pl_node *iter;
+	const char *cmap;
 };
 
+static bool pfxeq(const char *n1, const char *n2, const char *cmap);
+
 bucklist_t
-bucklist_init(void)
+bucklist_init(const char *cmap)
 {
 	struct bucklist *l = malloc(sizeof *l);
 	if (!l) {
@@ -38,6 +43,7 @@ bucklist_init(void)
 
 	l->head = NULL;
 	l->iter = NULL;
+	l->cmap = cmap;
 	return l;
 }
 
@@ -133,7 +139,7 @@ bucklist_replace(bucklist_t l, const char *key, void *val)
 
 	struct pl_node *n = l->head;
 	while (n) {
-		if (strcmp(n->key, key) == 0) {
+		if (pfxeq(n->key, key, l->cmap)) {
 			n->val = val;
 			return true;
 		}
@@ -149,7 +155,7 @@ bucklist_remove(bucklist_t l, const char *key, char **origkey)
 	struct pl_node *n = l->head;
 	struct pl_node *prev = NULL;
 	while (n) {
-		if (strcmp(n->key, key) == 0) {
+		if (pfxeq(n->key, key, l->cmap)) {
 			if (origkey)
 				*origkey = n->key;
 			void *val = n->val;
@@ -196,7 +202,7 @@ bucklist_find(bucklist_t l, const char *key, char **origkey)
 {
 	struct pl_node *n = l->head;
 	while (n) {
-		if (strcmp(n->key, key) == 0) {
+		if (pfxeq(n->key, key, l->cmap)) {
 			if (origkey)
 				*origkey = n->key;
 			return n->val;
@@ -257,3 +263,18 @@ bucklist_dump(bucklist_t l, bucklist_op_fn op)
 	#undef M
 }
 
+
+bool
+pfxeq(const char *n1, const char *n2, const char *cmap)
+{
+	unsigned char c1, c2;
+	while ((c1 = cmap[(unsigned char)*n1]) & /* avoid short circuit */
+	    (c2 = cmap[(unsigned char)*n2])) {
+		if (c1 != c2)
+			return false;
+
+		n1++; n2++;
+	}
+
+	return c1 == c2;
+}

@@ -33,6 +33,8 @@ static uint8_t h_QUIT(irc h, tokarr *msg, size_t nargs, bool logon);
 static uint8_t h_NICK(irc h, tokarr *msg, size_t nargs, bool logon);
 static uint8_t h_KICK(irc h, tokarr *msg, size_t nargs, bool logon);
 static uint8_t h_MODE(irc h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_PRIVMSG(irc h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_NOTICE(irc h, tokarr *msg, size_t nargs, bool logon);
 static uint8_t h_324(irc h, tokarr *msg, size_t nargs, bool logon);
 static uint8_t h_TOPIC(irc h, tokarr *msg, size_t nargs, bool logon);
 
@@ -50,6 +52,8 @@ trk_init(irc h)
 	fail = fail || !msg_reghnd(h, "NICK", h_NICK, "track");
 	fail = fail || !msg_reghnd(h, "KICK", h_KICK, "track");
 	fail = fail || !msg_reghnd(h, "MODE", h_MODE, "track");
+	fail = fail || !msg_reghnd(h, "PRIVMSG", h_PRIVMSG, "track");
+	fail = fail || !msg_reghnd(h, "NOTICE", h_NOTICE, "track");
 	fail = fail || !msg_reghnd(h, "324", h_324, "track");
 	fail = fail || !msg_reghnd(h, "TOPIC", h_TOPIC, "track");
 
@@ -92,7 +96,7 @@ h_JOIN(irc h, tokarr *msg, size_t nargs, bool logon)
 			return 0;
 		}
 
-		if (!add_memb(h, c, nick, "")) {
+		if (!add_memb(h, c, (*msg)[0], "")) {
 			E("out of memory, chan '%s' desynced", c->extname);
 			return ALLOC_ERR;
 		}
@@ -214,6 +218,7 @@ h_PART(irc h, tokarr *msg, size_t nargs, bool logon)
 
 	char nick[MAX_NICK_LEN];
 	ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
+	touch_user(h, (*msg)[0]);
 
 	chan c = get_chan(h, (*msg)[2]);
 	if (!c) {
@@ -235,8 +240,7 @@ h_QUIT(irc h, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0])
 		return PROTO_ERR;
 
-	char nick[MAX_NICK_LEN];
-	ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
+	touch_user(h, (*msg)[0]);
 
 	void *e;
 	if (!smap_first(h->chans, NULL, &e))
@@ -244,8 +248,9 @@ h_QUIT(irc h, tokarr *msg, size_t nargs, bool logon)
 
 	do {
 		chan c = e;
-		drop_memb(h, c, nick);
+		drop_memb(h, c, (*msg)[0]);
 	} while (smap_next(h->chans, NULL, &e));
+	/* XXX drop user? */
 
 	return 0;
 }
@@ -256,6 +261,7 @@ h_KICK(irc h, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 
+	touch_user(h, (*msg)[0]);
 	chan c = get_chan(h, (*msg)[2]);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[2]);
@@ -278,31 +284,12 @@ h_NICK(irc h, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0] || nargs < 3)
 		return PROTO_ERR;
 
-	char nick[MAX_NICK_LEN];
-	ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
+	touch_user(h, (*msg)[0]);
 
-	void *e;
-	if (!smap_first(h->chans, NULL, &e))
-		return 0;
-
-	do {
-		chan c = e;
-		memb m = get_memb(h, c, nick);
-		if (!m)
-			continue;
-		char mpfx[MAX_MODEPFX];
-		com_strNcpy(mpfx, m->modepfx, sizeof mpfx);
-
-		drop_memb(h, c, nick);
-		/* drop before add, else stuff like ':foo NICK FOO' leaks mem */
-		if (!add_memb(h, c, (*msg)[2], mpfx)) {
-			E("out of memory, chan '%s' desynced", c->extname);
-			res |= ALLOC_ERR;
-			c->desync = true;
-		}
-
-	} while (smap_next(h->chans, NULL, &e));
-
+	if (!rename_user(h, (*msg)[0], (*msg)[2])) {
+		E("failed renaming user '%s' ('%s')", (*msg)[0], (*msg)[2]);
+		res |= ALLOC_ERR; //probably...
+	}
 	return res;
 }
 
@@ -312,6 +299,7 @@ h_TOPIC(irc h, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 
+	touch_user(h, (*msg)[0]);
 	char nick[MAX_NICK_LEN];
 	ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
 
@@ -338,9 +326,6 @@ h_MODE_chanmode(irc h, tokarr *msg, size_t nargs, bool logon)
 
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
-
-	char nick[MAX_NICK_LEN];
-	ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
 
 	chan c = get_chan(h, (*msg)[2]);
 	if (!c) {
@@ -418,14 +403,31 @@ h_MODE(irc h, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 
-	char nick[MAX_NICK_LEN];
-	ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
+	if (!strchr((*msg)[0], '.')) //servermode
+		touch_user(h, (*msg)[0]);
 
 	if (strchr(h->m005chantypes, (*msg)[2][0]))
 		return h_MODE_chanmode(h, msg, nargs, logon);
 	else
 		return h_MODE_usermode(h, msg, nargs, logon);
 }
+
+static uint8_t
+h_PRIVMSG(irc h, tokarr *msg, size_t nargs, bool logon)
+{
+	if ((*msg)[0] && !logon)
+		touch_user(h, (*msg)[0]);
+	return 0;
+}
+
+static uint8_t
+h_NOTICE(irc h, tokarr *msg, size_t nargs, bool logon)
+{
+	if ((*msg)[0] && !logon)
+		touch_user(h, (*msg)[0]);
+	return 0;
+}
+
 
 static uint8_t
 h_324(irc h, tokarr *msg, size_t nargs, bool logon)

@@ -24,8 +24,6 @@
 #include <libsrsirc/util.h>
 #include "intdefs.h"
 
-
-
 void
 ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx)
 {
@@ -109,7 +107,6 @@ ut_istrncmp(const char *n1, const char *n2, size_t len, int casemap)
 
 	return 0;
 }
-
 char
 ut_tolower(char c, int casemap)
 {

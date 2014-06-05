@@ -21,6 +21,7 @@
 
 /* arbitrary but empirically established */
 #define MAX_NICK_LEN 64
+#define MAX_UNAME_LEN 64
 #define MAX_HOST_LEN 128
 #define MAX_UMODES_LEN 64
 #define MAX_CMODES_LEN 64
@@ -127,9 +128,11 @@ struct irc_s {
 	struct msghnd msghnds[64]; //XXX enough?
 
 	/* tracking specific -- should probably split this up somehow */
-	bool tracking;
+	bool tracking; /* true if we want to track */
+	bool tracking_enab; /* tracking is enabled (after 005 CASEMAPPING) */
 	bool endofnames;
 	smap chans;
+	smap users;
 
 
 	struct iconn_s *con;

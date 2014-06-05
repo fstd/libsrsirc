@@ -14,12 +14,12 @@ typedef void* (*smap_keydup_fn)(const char *key);
 typedef bool (*smap_eq_fn)(const void *elem1, const void *elem2);
 typedef struct smap *smap;
 
-smap smap_init(size_t bucketsz);
+smap smap_init(size_t bucketsz, int cmap);
 void smap_clear(smap m);
 void smap_dispose(smap m);
 bool smap_put(smap m, const char *key, void *elem);
 void* smap_get(smap m, const char *key);
-bool smap_del(smap m, const char *key);
+void* smap_del(smap m, const char *key);
 size_t smap_count(smap m);
 
 bool smap_first(smap m, char **key, void **val);
