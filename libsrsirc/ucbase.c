@@ -101,6 +101,8 @@ drop_chan(irc h, chan c)
 		smap_clear(c->memb);
 	}
 
+	smap_dispose(c->memb);
+
 	free(c->topic);
 	free(c->topicnick);
 	for (size_t i = 0; i < c->modes_sz; i++)
