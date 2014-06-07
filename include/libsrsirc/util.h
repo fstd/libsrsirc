@@ -120,9 +120,11 @@ bool ut_conread(tokarr *msg, void *tag);
  *         `nick_sz': size of the nick buffer (honor it!) */
 void ut_mut_nick(char *nick, size_t nick_sz);
 
-/* ut_parse_005_cmodes - oh well. if you need this documented, email me. */
-char** ut_parse_005_cmodes(const char *const *arr, size_t argcnt,
-    size_t *num, const char *modepfx005chr, const char *const *chmodes);
+/* ut_parse_MODE - oh well. if you need this documented, email me. */
+char** ut_parse_MODE(irc h, tokarr *msg, size_t *num, bool is324);
+
+/* ut_classify_chanmode - tell class (see 005 ISUPPORT spec) of a chanmode */
+int ut_classify_chanmode(irc h, char c);
 
 /* ut_clonearr - deep-copy a tokarr (usually containing a tokenized irc message)
  * Params: `arr': pointer to the tokarr to clone
