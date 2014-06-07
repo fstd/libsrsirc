@@ -26,6 +26,7 @@
 #define DEF_CONTO_SOFT_MS 15000u
 #define DEF_CONTO_HARD_MS 120000u
 #define DEF_CONFAILWAIT_S 10
+#define DEF_HEARTBEAT_MS 300000
 #define DEF_VERB 1
 
 #define W_(FNC, THR, FMT, A...) do {                              \
@@ -49,6 +50,7 @@ static struct settings_s {
 	uint64_t scto_us;
 	uint64_t hcto_us;
 	int cfwait_s;
+	uint64_t heartbeat_us;
 	bool recon;
 	int verb;
 } g_sett;
@@ -61,12 +63,17 @@ static struct srvlist_s {
 } *g_srvlist;
 
 static irc g_irc;
+static uint64_t g_nexthb;
+static bool g_dumpplx = 0;
+
 
 
 static bool tryconnect(void);
 static void process_args(int *argc, char ***argv, struct settings_s *sett);
 static void init(int *argc, char ***argv, struct settings_s *sett);
 static bool conread(tokarr *msg, void *tag);
+static uint64_t timestamp_us(void);
+static void tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 static void usage(FILE *str, const char *a0, int ec);
 void cleanup(void);
 int main(int argc, char **argv);;
@@ -110,7 +117,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 {
 	char *a0 = (*argv)[0];
 
-	for (int ch; (ch = getopt(*argc, *argv, "n:u:f:p:P:T:W:rqvh")) != -1;) {
+	for (int ch; (ch = getopt(*argc, *argv, "n:u:f:p:P:T:W:rb:qvh")) != -1;) {
 		switch (ch) {
 		      case 'n':
 			irc_set_nick(g_irc, optarg);
@@ -153,6 +160,8 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			}
 		break;case 'W':
 			sett->cfwait_s = (int)strtol(optarg, NULL, 10);
+		break;case 'b':
+			sett->heartbeat_us = strtoull(optarg, NULL, 10) * 1000u;
 		break;case 'r':
 			sett->recon = true;
 		break;case 'q':
@@ -186,6 +195,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	irc_set_conflags(g_irc, 0);
 	irc_regcb_conread(g_irc, conread, 0);
 
+	sett->heartbeat_us = DEF_HEARTBEAT_MS*1000u;
 	sett->cfwait_s = DEF_CONFAILWAIT_S;
 	sett->verb = DEF_VERB;
 	sett->scto_us = DEF_CONTO_SOFT_MS*1000u;
@@ -249,7 +259,7 @@ usage(FILE *str, const char *a0, int ec)
 	LH("==========================");
 	LH("== iwat "PACKAGE_VERSION" - IRC wat ==");
 	LH("==========================");
-	fprintf(str, "usage: %s [-vchtkSnufFspPTCwlL] <hostspec> "
+	fprintf(str, "usage: %s [-vchtkSnufFspPTCwlLb] <hostspec> "
 	    "[<hostspec> ...]\n", a0);
 	LH("");
 	LH("\t<hostspec> specifies an IRC server to connect against");
@@ -270,6 +280,8 @@ usage(FILE *str, const char *a0, int ec)
 	LH("\t-n <str>: Use <str> as nick. Subject to mutilation if N/A");
 	LH("\t-u <str>: Use <str> as (IRC) username/ident");
 	LH("\t-f <str>: Use <str> as (IRC) fullname");
+	LH("\t-b <int>: Send heart beat PING every <int> ms."
+	    "[def: "XSTR(DEF_HEARTBEAT_MS)"]");
 	LH("\t-W <int>: Wait <int> seconds between attempts to connect."
 	    "[def: "XSTR(DEF_CONFAILWAIT_S)"]");
 	LH("\t-p <str>: Use <str> as server password");
@@ -305,6 +317,30 @@ cleanup(void)
 
 }
 
+static uint64_t
+timestamp_us(void)
+{
+	struct timeval t;
+	uint64_t ts = 0;
+	if (gettimeofday(&t, NULL) != 0)
+		E("gettimeofday");
+	else
+		tconv(&t, &ts, true);
+
+	return ts;
+}
+
+static void
+tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts)
+{
+	if (tv_to_ts)
+		*ts = (uint64_t)tv->tv_sec * 1000000u + tv->tv_usec;
+	else {
+		tv->tv_sec = *ts / 1000000u;
+		tv->tv_usec = *ts % 1000000u;
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -316,8 +352,10 @@ main(int argc, char **argv)
 		if (!irc_online(g_irc)) {
 			WVX("connecting...");
 
-			if (tryconnect())
+			if (tryconnect()) {
+				g_nexthb = timestamp_us() + g_sett.heartbeat_us;
 				continue;
+			}
 
 			WX("failed to connect/logon (%s)",
 			    g_sett.recon ? "retrying" : "giving up");
@@ -330,13 +368,21 @@ main(int argc, char **argv)
 		}
 
 		tokarr tok;
-		int r = irc_read(g_irc, &tok, 3000000);
-
-		if (r == 0)
-			continue;
+		uint64_t to = g_sett.heartbeat_us;
+		int r = irc_read(g_irc, &tok, to ? to : 1000000);
 
 		if (r < 0)
 			break;
+
+		if (r > 0)
+			g_nexthb = timestamp_us() + g_sett.heartbeat_us;
+		else if (g_sett.heartbeat_us && g_nexthb <= timestamp_us()) {
+			iprintf("PING %s\r\n", irc_myhost(g_irc));
+			g_nexthb = timestamp_us() + g_sett.heartbeat_us;
+		}
+
+		if (r == 0)
+			continue;
 
 		if (strcmp(tok[1], "PING") == 0)
 			iprintf("PONG :%s\r\n", tok[2]);

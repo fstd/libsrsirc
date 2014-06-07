@@ -34,7 +34,7 @@
 #define DEF_FREELINES 0u
 #define DEF_WAITQUIT_MS 3000u
 #define DEF_CONFAILWAIT_MS 10000u
-#define DEF_HEARBEAT_MS 0
+#define DEF_HEARTBEAT_MS 300000
 #define DEF_IGNORE_PM true
 #define DEF_IGNORE_CHANSERV true
 #define DEF_VERB 1
@@ -67,7 +67,7 @@ static struct settings_s {
 	uint64_t waitquit_us;
 	bool keeptrying;
 	uint64_t confailwait_us;
-	uint16_t heartbeat_us;
+	uint64_t heartbeat_us;
 	bool reconnect;
 	bool flush;
 	bool nojoin;
@@ -271,7 +271,7 @@ static void
 do_heartbeat(void)
 {
 	if (g_sett.heartbeat_us && g_nexthb <= timestamp_us()) {
-		iprintf("PING %s", irc_myhost(g_irc));
+		iprintf("PING %s\r\n", irc_myhost(g_irc));
 		g_nexthb = timestamp_us() + g_sett.heartbeat_us;
 	}
 }
@@ -586,7 +586,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	sett->freelines = DEF_FREELINES;
 	sett->waitquit_us = DEF_WAITQUIT_MS*1000u;
 	sett->confailwait_us = DEF_CONFAILWAIT_MS*1000u;
-	sett->heartbeat_us = DEF_HEARBEAT_MS*1000u;
+	sett->heartbeat_us = DEF_HEARTBEAT_MS*1000u;
 	sett->verb = DEF_VERB;
 	sett->conto_soft_us = DEF_CONTO_SOFT_MS*1000u;
 	sett->conto_hard_us = DEF_CONTO_HARD_MS*1000u;
@@ -770,7 +770,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	LH("\t-W <int>: Wait <int> ms between attempts to connect."
 	    "[def: "XSTR(DEF_CONFAILWAIT_MS)"]");
 	LH("\t-b <int>: Send heart beat PING every <int> ms."
-	    "[def: "XSTR(DEF_HEARBEAT_MS)"]");
+	    "[def: "XSTR(DEF_HEARTBEAT_MS)"]");
 	BH("\t-p <str>: Use <str> as server password");
 	fprintf(str, "\t-P <pxspec>: Use <pxspec> as proxy. "
 	    "See %s for format\n", sh?"man page":"below");
