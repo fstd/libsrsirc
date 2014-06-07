@@ -53,26 +53,31 @@ io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
 
 	while (ctx->wptr < ctx->eptr && ISDELIM(*ctx->wptr))
 		ctx->wptr++; /* skip leading line delimiters */
-
 	if (ctx->wptr == ctx->eptr) /* empty buffer, use the opportunity.. */
 		ctx->wptr = ctx->eptr = ctx->workbuf;
 
+	size_t linelen;
 	char *delim;
-	while (!(delim = find_delim(ctx))) {
-		uint64_t trem = 0;
-		if (com_check_timeout(tsend, &trem))
-			return 0;
+	char *linestart;
+	do {
+		while (!(delim = find_delim(ctx))) {
+			uint64_t trem = 0;
+			if (com_check_timeout(tsend, &trem))
+				return 0;
 
-		int r = read_more(sh, ctx, trem);
-		if (r <= 0)
-			return r;
-	}
+			int r = read_more(sh, ctx, trem);
+			if (r <= 0)
+				return r;
+		}
 
-	char *linestart = ctx->wptr;
-	size_t linelen = delim - linestart;
+		linestart = ctx->wptr;
+		linelen = delim - linestart;
+		ctx->wptr++;
+	} while (linelen == 0);
+	ctx->wptr += linelen;
+
 	*delim = '\0';
 	D("read a line: '%s'", linestart);
-	ctx->wptr += linelen + 1;
 	return tokenize(linestart, tok) ? 1 : -1;
 }
 
@@ -153,7 +158,7 @@ tokenize(char *buf, tokarr *tok)
 		E("protocol error (leading whitespace)");
 		return false;
 	} else if (!*buf) {
-		E("protocol error (empty line)");
+		E("bug (empty line)"); //this shouldn't be possible anymore
 		return false;
 	}
 
