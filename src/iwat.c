@@ -21,6 +21,7 @@
 #include <err.h>
 
 #include <libsrsirc/irc_ext.h>
+#include <libsrsirc/irc_track.h>
 #include <libsrsirc/util.h>
 
 #define DEF_CONTO_SOFT_MS 15000u
@@ -188,6 +189,8 @@ init(int *argc, char ***argv, struct settings_s *sett)
 		W("setvbuf stdout");
 
 	g_irc = irc_init();
+
+	irc_set_track(g_irc, true);
 
 	irc_set_nick(g_irc, "iwat");
 	irc_set_uname(g_irc, "iwat");
