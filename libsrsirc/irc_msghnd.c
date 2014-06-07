@@ -190,7 +190,7 @@ handle_NICK(irc hnd, tokarr *msg, size_t nargs, bool logon, void *tag)
 
 	ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
 
-	if (!ut_istrcmp(nick, hnd->mynick, hnd->casemapping)) {
+	if (!ut_istrcmp(nick, hnd->mynick, hnd->casemap)) {
 		com_strNcpy(hnd->mynick, (*msg)[2], sizeof hnd->mynick);
 		I("my nick is now '%s'", hnd->mynick);
 	}
@@ -202,13 +202,13 @@ static uint8_t
 handle_005_CASEMAPPING(irc hnd, const char *val)
 {
 	if (strcasecmp(val, "ascii") == 0)
-		hnd->casemapping = CMAP_ASCII;
+		hnd->casemap = CMAP_ASCII;
 	else if (strcasecmp(val, "strict-rfc1459") == 0)
-		hnd->casemapping = CMAP_STRICT_RFC1459;
+		hnd->casemap = CMAP_STRICT_RFC1459;
 	else {
 		if (strcasecmp(val, "rfc1459") != 0)
 			W("unknown 005 casemapping: '%s'", val);
-		hnd->casemapping = CMAP_RFC1459;
+		hnd->casemap = CMAP_RFC1459;
 	}
 
 	return 0;
