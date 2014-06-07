@@ -15,6 +15,8 @@
 #include <stdarg.h>
 #include <ctype.h>
 
+#include <signal.h>
+
 #include <unistd.h>
 #include <inttypes.h>
 #include <sys/time.h>
@@ -344,11 +346,18 @@ tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts)
 	}
 }
 
+void
+infohnd(int s)
+{
+	g_dumpplx = true;
+}
+
 int
 main(int argc, char **argv)
 {
 	init(&argc, &argv, &g_sett);
 	atexit(cleanup);
+	signal(DUMPSIG, infohnd);
 	bool failure = true;
 
 	for (;;) {
@@ -377,6 +386,13 @@ main(int argc, char **argv)
 		if (r < 0)
 			break;
 
+		if (g_dumpplx) {
+			irc_dump(g_irc);
+			if (irc_tracking_enab(g_irc))
+				trk_dump(g_irc);
+			g_dumpplx = false;
+		}
+
 		if (r > 0)
 			g_nexthb = timestamp_us() + g_sett.heartbeat_us;
 		else if (g_sett.heartbeat_us && g_nexthb <= timestamp_us()) {
@@ -399,6 +415,9 @@ main(int argc, char **argv)
 			} else if (strcmp(tok[3], "DIE") == 0) {
 				failure = false;
 				break;
+			} else if (strcmp(tok[3], "DUMP") == 0) {
+				irc_dump(g_irc);
+				trk_dump(g_irc);
 			}
 		}
 	}

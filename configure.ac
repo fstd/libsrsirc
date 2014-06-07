@@ -47,6 +47,14 @@ AC_DEFINE([_WITH_GETLINE], [1], [FreeBSD needs this to be defined])
 :
 fi
 
+if test "$(uname)" = "Linux"; then
+AC_DEFINE([DUMPSIG], [SIGUSR1], [SIGUSR1 on Linux, SIGINFO on the BSDs])
+:
+else
+AC_DEFINE([DUMPSIG], [SIGINFO], [SIGUSR1 on Linux, SIGINFO on the BSDs])
+:
+fi
+
 AC_HEADER_STDBOOL
 
 # Checks for typedefs, structures, and compiler characteristics.
