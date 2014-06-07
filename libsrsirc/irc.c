@@ -19,11 +19,13 @@
 #include <libsrsirc/util.h>
 #include "conn.h"
 #include "msg.h"
+#include "smap.h"
 #include "irc_msghnd.h"
 
 #include <intlog.h>
 
 #include <libsrsirc/irc.h>
+#include <libsrsirc/irc_track.h>
 
 static bool send_logon(irc hnd);
 
@@ -46,6 +48,7 @@ irc_init(void)
 	for (size_t i = 0; i < COUNTOF(r->msghnds); i++)
 		r->msghnds[i].cmd[0] = '\0';
 
+	r->chans = r->users = NULL;
 	r->m005chantypes = NULL;
 
 	for (size_t i = 0; i < COUNTOF(r->m005chanmodes); i++)
@@ -141,6 +144,7 @@ irc_reset(irc hnd)
 void
 irc_dispose(irc hnd)
 {
+	trk_deinit(hnd);
 	conn_dispose(hnd->con);
 	free(hnd->lasterr);
 	free(hnd->banmsg);
@@ -171,6 +175,9 @@ irc_connect(irc hnd)
 {
 	uint64_t tsend = hnd->hcto_us ?
 	    com_timestamp_us() + hnd->hcto_us : 0;
+
+	trk_deinit(hnd);
+	hnd->tracking_enab = false;
 
 	com_update_strprop(&hnd->lasterr, NULL);
 	com_update_strprop(&hnd->banmsg, NULL);

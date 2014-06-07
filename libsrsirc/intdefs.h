@@ -8,6 +8,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "smap.h"
+
 /* receive buffer size */
 #define WORKBUF_SZ 4096
 
@@ -124,6 +126,15 @@ struct irc_s {
 	fp_mut_nick cb_mut_nick;
 
 	struct msghnd msghnds[64]; //XXX enough?
+
+	/* tracking specific -- should probably split this up somehow */
+	bool tracking; /* true if we want to track */
+	bool tracking_enab; /* tracking is enabled (after 005 CASEMAPPING) */
+	bool endofnames;
+	smap chans;
+	smap users;
+
+
 	struct iconn_s *con;
 };
 

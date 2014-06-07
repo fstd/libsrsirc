@@ -16,6 +16,7 @@
 #include <libsrsirc/defs.h>
 #include "conn.h"
 #include <libsrsirc/util.h>
+#include <libsrsirc/irc_track.h>
 #include <intlog.h>
 #include "msg.h"
 

@@ -203,6 +203,12 @@ irc_get_service_info(irc hnd)
 	return hnd->serv_info;
 }
 
+bool
+irc_tracking_enab(irc hnd)
+{
+	return hnd->tracking && hnd->tracking_enab;
+}
+
 
 /* Setters - set library parameters (none of these takes effect before the
  * next call to irc_connect() is done */
@@ -278,6 +284,12 @@ bool
 irc_set_service_info(irc hnd, const char *info)
 {
 	return com_update_strprop(&hnd->serv_info, info);
+}
+
+void
+irc_set_track(irc hnd, bool on)
+{
+	hnd->tracking = on;
 }
 
 void
