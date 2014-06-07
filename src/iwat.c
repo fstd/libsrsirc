@@ -391,6 +391,8 @@ main(int argc, char **argv)
 				char nick[64];
 				ut_pfx2nick(nick, sizeof nick, tok[0]);
 				iprintf("PRIVMSG %s :%s\r\n", nick, tok[3]+5);
+			} else if (strncmp(tok[3], "DO ", 3) == 0) {
+				iprintf("%s\r\n", tok[3]+3);
 			} else if (strcmp(tok[3], "DIE") == 0) {
 				failure = false;
 				break;
