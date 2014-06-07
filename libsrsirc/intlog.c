@@ -42,6 +42,7 @@ const char *modnames[NUM_MODS] = {
 	[MOD_IMSG] = "msg",
 	[MOD_SMAP] = "smap",
 	[MOD_PLST] = "plst",
+	[MOD_UCBASE] = "ucbase",
 	[MOD_UNKNOWN] = "(??" "?)"
 };
 

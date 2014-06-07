@@ -19,8 +19,9 @@
 #define MOD_IMSG 6
 #define MOD_SMAP 7
 #define MOD_PLST 8
-#define MOD_UNKNOWN 9
-#define NUM_MODS 10 /* when adding modules, don't forget intlog.c's `modnames' */
+#define MOD_UCBASE 9
+#define MOD_UNKNOWN 10
+#define NUM_MODS 11 /* when adding modules, don't forget intlog.c's `modnames' */
 
 /* our two higher-than-debug custom loglevels */
 #define LOG_TRACE (LOG_VIVI+1)
