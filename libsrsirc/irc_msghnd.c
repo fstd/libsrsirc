@@ -86,7 +86,7 @@ handle_PING(irc hnd, tokarr *msg, size_t nargs, bool logon)
 		return PROTO_ERR;
 	
 	if (!logon)
-		return;
+		return 0;
 
 	char buf[256];
 	snprintf(buf, sizeof buf, "PONG :%s\r\n", (*msg)[2]);
