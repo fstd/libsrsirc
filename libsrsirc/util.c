@@ -249,21 +249,17 @@ char**
 ut_parse_005_cmodes(const char *const *arr, size_t argcount, size_t *num,
     const char *modepfx005chr, const char *const *chmodes)
 {
-	char *modes = strdup(arr[0]);
-	if (!modes) {
-		EE("strdup");
+	char *modes = com_strdup(arr[0]);
+	if (!modes)
 		return NULL;
-	}
 
 	const char *arg;
 	size_t nummodes = strlen(modes) - (com_strCchr(modes,'-')
 	    + com_strCchr(modes,'+'));
 
-	char **modearr = malloc(nummodes * sizeof *modearr);
-	if (!modearr) {
-		EE("malloc");
+	char **modearr = com_malloc(nummodes * sizeof *modearr);
+	if (!modearr)
 		goto ut_parse_005_cmodes_fail;
-	}
 
 	for (size_t i = 0; i < nummodes; i++)
 		modearr[i] = NULL; //for safe cleanup
@@ -317,12 +313,10 @@ ut_parse_005_cmodes(const char *const *arr, size_t argcount, size_t *num,
 		}
 		if (arg)
 			D("arg is '%s'", arg);
-		modearr[j] = malloc((3 + ((arg != NULL) ?
-		    strlen(arg) + 1 : 0)));
-		if (!modearr[j]) {
-			EE("malloc");
+
+		modearr[j] = com_malloc((3 + (arg ? strlen(arg) + 1 : 0)));
+		if (!modearr[j])
 			goto ut_parse_005_cmodes_fail;
-		}
 
 		modearr[j][0] = enable ? '+' : '-';
 		modearr[j][1] = c;
@@ -383,18 +377,14 @@ ut_mut_nick(char *nick, size_t nick_sz)
 
 tokarr *ut_clonearr(tokarr *arr)
 {
-	tokarr *res = malloc(sizeof *res);
-	if (!res) {
-		EE("malloc");
+	tokarr *res = com_malloc(sizeof *res);
+	if (!res)
 		return NULL;
-	}
 
 	for (size_t i = 0; i < COUNTOF(*arr); i++) {
 		if ((*arr)[i]) {
-			if (!((*res)[i] = strdup((*arr)[i]))) {
-				EE("strdup");
+			if (!((*res)[i] = com_strdup((*arr)[i])))
 				goto clonearr_fail;
-			}
 		} else
 			(*res)[i] = NULL;
 	}

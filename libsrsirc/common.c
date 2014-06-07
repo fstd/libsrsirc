@@ -288,12 +288,8 @@ bool
 com_update_strprop(char **field, const char *val)
 {
 	char *n = NULL;
-	if (val) {
-		if (!(n = strdup(val))) {
-			EE("strdup");
-			return false;
-		}
-	}
+	if (val && !(n = com_strdup(val)))
+		return false;
 
 	free(*field);
 	*field = n;
@@ -321,4 +317,22 @@ com_check_timeout(uint64_t tsend, uint64_t *trem)
 		*trem = tsend - now;
 
 	return false;
+}
+
+void*
+com_malloc(size_t sz)
+{
+	void *r = malloc(sz);
+	if (!r)
+		EE("malloc");
+	return r;
+}
+
+char*
+com_strdup(const char *s)
+{
+	char *r = strdup(s);
+	if (!r)
+		EE("strdup");
+	return r;
 }

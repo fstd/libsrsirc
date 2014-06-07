@@ -58,12 +58,12 @@ conn_init(void)
 	int preverrno = errno;
 	errno = 0;
 
-	if (!(r = malloc(sizeof *r)))
+	if (!(r = com_malloc(sizeof *r)))
 		goto conn_init_fail;
 
 	r->host = NULL;
 
-	if (!(r->host = strdup(DEF_HOST)))
+	if (!(r->host = com_strdup(DEF_HOST)))
 		goto conn_init_fail;
 
 	errno = preverrno;
@@ -321,10 +321,9 @@ conn_set_px(iconn hnd, const char *host, uint16_t port, int ptype)
 		if (!host || !port) //XXX `most' default port per type?
 			return false;
 
-		if (!(n = strdup(host))) {
-			EE("strdup failed");
+		if (!(n = com_strdup(host)))
 			return false;
-		}
+
 		hnd->pport = port;
 		hnd->ptype = ptype;
 		free(hnd->phost);
@@ -343,10 +342,9 @@ bool
 conn_set_server(iconn hnd, const char *host, uint16_t port)
 {
 	char *n;
-	if (!(n = strdup(host?host:DEF_HOST))) {
-		EE("strdup failed");
+	if (!(n = com_strdup(host?host:DEF_HOST)))
 		return false;
-	}
+
 	free(hnd->host);
 	hnd->host = n;
 	hnd->port = port;

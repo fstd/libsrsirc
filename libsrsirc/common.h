@@ -27,4 +27,7 @@ int com_consocket(const char *host, uint16_t port, char *peeraddr,
 
 bool com_update_strprop(char **field, const char *val);
 
+void* com_malloc(size_t sz);
+char* com_strdup(const char *s);
+
 #endif /* LIBSRSIRC_COMMON_H */

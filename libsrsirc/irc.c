@@ -35,7 +35,7 @@ irc_init(void)
 	if (!(con = conn_init()))
 		goto irc_init_fail;
 
-	if (!(r = malloc(sizeof (*(irc)0))))
+	if (!(r = com_malloc(sizeof (*(irc)0))))
 		goto irc_init_fail;
 
 	if (!imh_regall())
@@ -51,11 +51,11 @@ irc_init(void)
 		r->m005modepfx[i] = NULL;
 
 	for (size_t i = 0; i < COUNTOF(r->m005chanmodes); i++)
-		if (!(r->m005chanmodes[i] = malloc(MAX_005_CHMD)))
+		if (!(r->m005chanmodes[i] = com_malloc(MAX_005_CHMD)))
 			goto irc_init_fail;
 
 	for (size_t i = 0; i < COUNTOF(r->m005modepfx); i++)
-		if (!(r->m005modepfx[i] = malloc(MAX_005_MDPFX)))
+		if (!(r->m005modepfx[i] = com_malloc(MAX_005_MDPFX)))
 			goto irc_init_fail;
 
 	com_strNcpy(r->m005chanmodes[0], "b", sizeof r->m005chanmodes[0]);
@@ -66,14 +66,14 @@ irc_init(void)
 	com_strNcpy(r->m005modepfx[1], "@+", sizeof r->m005modepfx[1]);
 
 	size_t len = strlen(DEF_NICK);
-	if (!(r->nick = malloc((len > 9 ? len : 9) + 1)))
+	if (!(r->nick = com_malloc((len > 9 ? len : 9) + 1)))
 		goto irc_init_fail;
 	strcpy(r->nick, DEF_NICK);
 
-	if ((!(r->uname = strdup(DEF_UNAME)))
-	    || (!(r->fname = strdup(DEF_FNAME)))
-	    || (!(r->serv_dist = strdup(DEF_SERV_DIST)))
-	    || (!(r->serv_info = strdup(DEF_SERV_INFO))))
+	if ((!(r->uname = com_strdup(DEF_UNAME)))
+	    || (!(r->fname = com_strdup(DEF_FNAME)))
+	    || (!(r->serv_dist = com_strdup(DEF_SERV_DIST)))
+	    || (!(r->serv_info = com_strdup(DEF_SERV_INFO))))
 		goto irc_init_fail;
 
 	errno = preverrno;

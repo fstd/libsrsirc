@@ -156,9 +156,7 @@ handle_465(irc hnd, tokarr *msg, size_t nargs, bool logon, void *tag)
 	W("(%p) we're banned", hnd);
 	hnd->banned = true;
 	free(hnd->banmsg);
-	hnd->banmsg = strdup((*msg)[3] ? (*msg)[3] : "");
-	if (!hnd->banned)
-		EE("strdup");
+	hnd->banmsg = com_strdup((*msg)[3] ? (*msg)[3] : "");
 
 	return 0; /* well if we are, the server will sure disconnect ua s*/
 }
@@ -175,11 +173,8 @@ static uint8_t
 handle_ERROR(irc hnd, tokarr *msg, size_t nargs, bool logon, void *tag)
 {
 	free(hnd->lasterr);
-	hnd->lasterr = strdup((*msg)[2] ? (*msg)[2] : "");
-	if (!hnd->lasterr)
-		EE("strdup");
-	else
-		W("sever said ERROR: '%s'", hnd->lasterr);
+	hnd->lasterr = com_strdup((*msg)[2] ? (*msg)[2] : "");
+	W("sever said ERROR: '%s'", (*msg)[2]);
 	return 0; /* not strictly a case for CANT_PROCEED */
 }
 
