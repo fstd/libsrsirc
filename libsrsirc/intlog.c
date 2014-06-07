@@ -40,6 +40,8 @@ const char *modnames[NUM_MODS] = {
 	[MOD_IIO] = "io",
 	[MOD_PROXY] = "px",
 	[MOD_IMSG] = "msg",
+	[MOD_SMAP] = "smap",
+	[MOD_PLST] = "plst",
 	[MOD_UNKNOWN] = "(??" "?)"
 };
 
