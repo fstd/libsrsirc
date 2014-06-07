@@ -57,6 +57,8 @@ fi
 
 AC_HEADER_STDBOOL
 
+AC_CHECK_TYPES([ptrdiff_t])
+
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_INT64_T
 AC_TYPE_SIZE_T
