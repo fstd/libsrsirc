@@ -38,11 +38,11 @@ irc_init(void)
 	if (!(r = com_malloc(sizeof (*(irc)0))))
 		goto irc_init_fail;
 
-	if (!imh_regall())
-		goto irc_init_fail;
-
 	r->pass = r->nick = r->uname = r->fname = r->serv_dist
 	    = r->serv_info = r->lasterr = r->banmsg = NULL;
+
+	for (size_t i = 0; i < COUNTOF(r->msghnds); i++)
+		r->msghnds[i].cmd[0] = '\0';
 
 	for (size_t i = 0; i < COUNTOF(r->m005chanmodes); i++)
 		r->m005chanmodes[i] = NULL;
@@ -64,6 +64,9 @@ irc_init(void)
 	com_strNcpy(r->m005chanmodes[3], "psitnm", sizeof r->m005chanmodes[3]);
 	com_strNcpy(r->m005modepfx[0], "ov", sizeof r->m005modepfx[0]);
 	com_strNcpy(r->m005modepfx[1], "@+", sizeof r->m005modepfx[1]);
+
+	if (!imh_regall(r))
+		goto irc_init_fail;
 
 	size_t len = strlen(DEF_NICK);
 	if (!(r->nick = com_malloc((len > 9 ? len : 9) + 1)))

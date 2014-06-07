@@ -21,33 +21,34 @@
 
 #include "msg.h"
 
-struct msghnd {
-	char cmd[32];
-	hnd_fn hndfn;
-	const char *dbginfo;
-	void *tag;
-};
-
-static struct msghnd msghnds[32]; //XXX enough?
-
 bool
-msg_reghnd(const char *cmd, hnd_fn hndfn, const char *dbginfo, void *tag)
+msg_reghnd(irc hnd, const char *cmd, hnd_fn hndfn, const char *module)
 {
 	size_t i = 0;
-	for (;i < COUNTOF(msghnds); i++)
-		if (!msghnds[i].cmd[0])
+	D("'%s' registering '%s'-handler", module, cmd);
+	for (;i < COUNTOF(hnd->msghnds); i++)
+		if (!hnd->msghnds[i].cmd[0])
 			break;
 
-	if (i == COUNTOF(msghnds)) {
+	if (i == COUNTOF(hnd->msghnds)) {
 		E("can't register msg handler, array full");
 		return false;
 	}
 
-	msghnds[i].dbginfo = dbginfo;
-	msghnds[i].hndfn = hndfn;
-	msghnds[i].tag = tag;
-	com_strNcpy(msghnds[i].cmd, cmd, sizeof msghnds[i].cmd);
+	hnd->msghnds[i].module = module;
+	hnd->msghnds[i].hndfn = hndfn;
+	com_strNcpy(hnd->msghnds[i].cmd, cmd, sizeof hnd->msghnds[i].cmd);
 	return true;
+}
+
+void
+msg_unregall(irc hnd, const char *module)
+{
+	size_t i = 0;
+	for (;i < COUNTOF(hnd->msghnds); i++)
+		if (hnd->msghnds[i].cmd[0]
+		    && strcmp(hnd->msghnds[i].module, module) == 0)
+			hnd->msghnds[i].cmd[0] = '\0';
 }
 
 uint8_t
@@ -59,30 +60,41 @@ msg_handle(irc hnd, tokarr *msg, bool logon)
 	while (ac < COUNTOF(*msg) && (*msg)[ac])
 		ac++;
 
-	for (;i < COUNTOF(msghnds); i++) {
-		if (!msghnds[i].cmd[0])
+	for (;i < COUNTOF(hnd->msghnds); i++) {
+		if (!hnd->msghnds[i].cmd[0])
 			break;
 
-		if (strcmp((*msg)[1], msghnds[i].cmd) == 0) {
-			D("dispatch a '%s' to '%s'", (*msg)[1], msghnds[i].dbginfo);
-			res |= msghnds[i].hndfn(hnd, msg, ac, logon, msghnds[i].tag);
+		if (strcmp((*msg)[1], hnd->msghnds[i].cmd) == 0) {
+			D("dispatch a '%s' to '%s'", (*msg)[1], hnd->msghnds[i].module);
+			res |= hnd->msghnds[i].hndfn(hnd, msg, ac, logon);
 			if (!(res & CANT_PROCEED))
 				continue;
 
+			res &= ~CANT_PROCEED;
+
 			if (res & AUTH_ERR) {
 				E("failed to authenticate");
+				res |= CANT_PROCEED;
 			} else if (res & IO_ERR) {
 				E("i/o error");
+				res |= CANT_PROCEED;
+			} else if (res & ALLOC_ERR) {
+				E("memory allocation failed");
+				/* we do proceed for now */
 			} else if (res & OUT_OF_NICKS) {
 				E("out of nicks");
+				res |= CANT_PROCEED;
 			} else if (res & PROTO_ERR) {
 				char line[1024];
 				E("proto error on '%s' (ct:%d)",
 				    ut_sndumpmsg(line, sizeof line, NULL, msg),
 				    conn_colon_trail(hnd->con));
+				/* we do proceed for now */
 			} else {
 				E("can't proceed for unknown reasons");
+				/* we do proceed for now */
 			}
+
 
 			return res;
 		}

@@ -11,6 +11,6 @@
 #include <libsrsirc/defs.h>
 #include "intdefs.h"
 
-bool imh_regall(void);
+bool imh_regall(irc hnd);
 
 #endif /* LIBSRSIRC_IRC_MSGHND_H */

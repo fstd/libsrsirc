@@ -50,6 +50,16 @@ struct readctx {
 	char *eptr; /* pointer to one after end of current valid data */
 };
 
+
+/* protocol message handler function pointers */
+typedef uint8_t (*hnd_fn)(irc hnd, tokarr *msg, size_t nargs, bool logon);
+struct msghnd {
+	char cmd[32];
+	hnd_fn hndfn;
+	const char *module;
+};
+
+
 /* this is a relict of the former design */
 typedef struct iconn_s* iconn;
 struct iconn_s {
@@ -107,6 +117,7 @@ struct irc_s {
 	void *tag_con_read;
 	fp_mut_nick cb_mut_nick;
 
+	struct msghnd msghnds[64]; //XXX enough?
 	struct iconn_s *con;
 };
 
