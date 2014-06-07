@@ -132,4 +132,6 @@ bool irc_set_fname(irc hnd, const char *fname);
  */
 bool irc_set_nick(irc hnd, const char *nick);
 
+/* for debugging */
+void irc_dump(irc h);
 #endif /* LIBSRSIRC_IRC_H */

@@ -323,3 +323,55 @@ irc_regcb_mutnick(irc hnd, fp_mut_nick cb)
 	hnd->cb_mut_nick = cb;
 }
 
+void
+irc_dump(irc h)
+{
+	N("--- irc object %p dump---", h);
+	N("mynick: '%s'", h->mynick);
+	N("myhost: '%s'", h->myhost);
+	N("service: %d", h->service);
+	N("cmodes: '%s'", h->cmodes);
+	N("umodes: '%s'", h->umodes);
+	N("myumodes: '%s'", h->myumodes);
+	N("ver: '%s'", h->ver);
+	N("lasterr: '%s'", h->lasterr);
+	N("hcto_us: %"PRIu64, h->hcto_us);
+	N("scto_us: %"PRIu64, h->scto_us);
+	N("restricted: %d", h->restricted);
+	N("banned: %d", h->banned);
+	N("banmsg: '%s'", h->banmsg);
+	N("casemap: %d", h->casemap);
+	N("pass: '%s'", h->pass);
+	N("nick: '%s'", h->nick);
+	N("uname: '%s'", h->uname);
+	N("fname: '%s'", h->fname);
+	N("conflags: %"PRIu8, h->conflags);
+	N("serv_con: %d", h->serv_con);
+	N("serv_dist: '%s'", h->serv_dist);
+	N("serv_type: %ld", h->serv_type);
+	N("serv_info: '%s'", h->serv_info);
+	N("m005chanmodes[0]: '%s'", h->m005chanmodes[0]);
+	N("m005chanmodes[1]: '%s'", h->m005chanmodes[1]);
+	N("m005chanmodes[2]: '%s'", h->m005chanmodes[2]);
+	N("m005chanmodes[3]: '%s'", h->m005chanmodes[3]);
+	N("m005modepfx[0]: '%s'", h->m005modepfx[0]);
+	N("m005modepfx[1]: '%s'", h->m005modepfx[1]);
+	N("m005chantypes: '%s'", h->m005chantypes);
+	N("tag_con_read: %p", h->tag_con_read);
+	N("tracking: %d", h->tracking);
+	N("tracking_enab: %d", h->tracking_enab);
+	N("endofnames: %d", h->endofnames);
+	for (size_t i = 0; i < COUNTOF(h->logonconv); i++) {
+		char line[1024];
+		ut_sndumpmsg(line, sizeof line, NULL, h->logonconv[i]),
+		N("logonconv[%zu]: '%s'", i, line);
+	}
+	//smap chans
+	//smap users
+	//fp_con_read cb_con_read
+	//fp_mut_nick cb_mut_nick
+	//struct msghnd msghnds[64]
+	//struct iconn_s *con
+	N("--- end of dump ---");
+}
+
