@@ -22,14 +22,7 @@
 #include <intlog.h>
 
 #include <libsrsirc/util.h>
-
-#define CHANMODE_CLASS_A 1 /*don't change;see int classify_chanmode(char)*/
-#define CHANMODE_CLASS_B 2
-#define CHANMODE_CLASS_C 3
-#define CHANMODE_CLASS_D 4
-
-static int classify_chanmode(char c, const char *const *chmodes);
-
+#include "intdefs.h"
 
 void
 ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx)

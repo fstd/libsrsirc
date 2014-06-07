@@ -19,6 +19,7 @@
 
 /* arbitrary but empirically established */
 #define MAX_NICK_LEN 64
+#define MAX_UNAME_LEN 64
 #define MAX_HOST_LEN 128
 #define MAX_UMODES_LEN 64
 #define MAX_CMODES_LEN 64
@@ -27,6 +28,9 @@
 /* not so empirically established */
 #define MAX_005_CHMD 64
 #define MAX_005_MDPFX 32
+#define MAX_005_CHTYP 16
+#define MAX_CHAN_LEN 256
+#define MAX_MODEPFX 8
 
 
 #ifdef WITH_SSL
@@ -84,8 +88,9 @@ struct irc_s {
 	char mynick[MAX_NICK_LEN];
 	char myhost[MAX_HOST_LEN];
 	bool service;
-	char umodes[MAX_UMODES_LEN];
-	char cmodes[MAX_CMODES_LEN];
+	char cmodes[MAX_CMODES_LEN]; //supported chanmodes (as per 004, dun use)
+	char umodes[MAX_UMODES_LEN]; //supported usermodes
+	char myumodes[MAX_UMODES_LEN]; //actual usermodes
 	char ver[MAX_VER_LEN];
 	char *lasterr;
 
@@ -112,6 +117,7 @@ struct irc_s {
 	tokarr *logonconv[4];
 	char *m005chanmodes[4];
 	char *m005modepfx[2];
+	char *m005chantypes;
 
 	fp_con_read cb_con_read;
 	void *tag_con_read;

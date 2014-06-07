@@ -13,6 +13,8 @@
 #include <string.h>
 #include <strings.h>
 
+#include <inttypes.h>
+
 #include "common.h"
 #include <libsrsirc/util.h>
 #include "conn.h"
@@ -44,11 +46,16 @@ irc_init(void)
 	for (size_t i = 0; i < COUNTOF(r->msghnds); i++)
 		r->msghnds[i].cmd[0] = '\0';
 
+	r->m005chantypes = NULL;
+
 	for (size_t i = 0; i < COUNTOF(r->m005chanmodes); i++)
 		r->m005chanmodes[i] = NULL;
 
 	for (size_t i = 0; i < COUNTOF(r->m005modepfx); i++)
 		r->m005modepfx[i] = NULL;
+
+	if (!(r->m005chantypes = com_malloc(MAX_005_CHTYP)))
+		goto irc_init_fail;
 
 	for (size_t i = 0; i < COUNTOF(r->m005chanmodes); i++)
 		if (!(r->m005chanmodes[i] = com_malloc(MAX_005_CHMD)))
@@ -58,12 +65,13 @@ irc_init(void)
 		if (!(r->m005modepfx[i] = com_malloc(MAX_005_MDPFX)))
 			goto irc_init_fail;
 
-	com_strNcpy(r->m005chanmodes[0], "b", sizeof r->m005chanmodes[0]);
-	com_strNcpy(r->m005chanmodes[1], "k", sizeof r->m005chanmodes[1]);
-	com_strNcpy(r->m005chanmodes[2], "l", sizeof r->m005chanmodes[2]);
-	com_strNcpy(r->m005chanmodes[3], "psitnm", sizeof r->m005chanmodes[3]);
-	com_strNcpy(r->m005modepfx[0], "ov", sizeof r->m005modepfx[0]);
-	com_strNcpy(r->m005modepfx[1], "@+", sizeof r->m005modepfx[1]);
+	com_strNcpy(r->m005chantypes, "#&", MAX_005_CHTYP);
+	com_strNcpy(r->m005chanmodes[0], "b", MAX_005_CHMD);
+	com_strNcpy(r->m005chanmodes[1], "k", MAX_005_CHMD);
+	com_strNcpy(r->m005chanmodes[2], "l", MAX_005_CHMD);
+	com_strNcpy(r->m005chanmodes[3], "psitnm", MAX_005_CHMD);
+	com_strNcpy(r->m005modepfx[0], "ov", MAX_005_MDPFX);
+	com_strNcpy(r->m005modepfx[1], "@+", MAX_005_MDPFX);
 
 	if (!imh_regall(r))
 		goto irc_init_fail;
@@ -83,8 +91,8 @@ irc_init(void)
 
 	r->con = con;
 	/* persistent after reset */
-	r->mynick[0] = r->myhost[0] = r->umodes[0] = r->cmodes[0]
-	    = r->ver[0] = '\0';
+	r->mynick[0] = r->myhost[0] = r->umodes[0] = r->myumodes[0]
+	    = r->cmodes[0] = r->ver[0] = '\0';
 
 	r->service = r->restricted = r->banned = r->serv_con = false;
 	r->cb_con_read = NULL;
@@ -111,6 +119,7 @@ irc_init_fail:
 		free(r->fname);
 		free(r->serv_dist);
 		free(r->serv_info);
+		free(r->m005chantypes);
 		for (size_t i = 0; i < COUNTOF(r->m005chanmodes); i++)
 			free(r->m005chanmodes[i]);
 		for (size_t i = 0; i < COUNTOF(r->m005modepfx); i++)
@@ -144,6 +153,14 @@ irc_dispose(irc hnd)
 
 	for (size_t i = 0; i < COUNTOF(hnd->logonconv); i++)
 		ut_freearr(hnd->logonconv[i]);
+
+	free(hnd->m005chantypes);
+
+	for (size_t i = 0; i < COUNTOF(hnd->m005chanmodes); i++)
+		free(hnd->m005chanmodes[i]);
+
+	for (size_t i = 0; i < COUNTOF(hnd->m005modepfx); i++)
+		free(hnd->m005modepfx[i]);
 
 	D("(%p) disposed", hnd);
 	free(hnd);
