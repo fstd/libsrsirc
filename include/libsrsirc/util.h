@@ -41,7 +41,6 @@
  */
 
 
-
 /* ut_pfx2nick - Extracts the nick part from a `nick[!user][@host]-style' prefix
  * Params: `dest': Buffer where the extracted nickname will be put in
  *         `dest_sz': Size of `dest' buffer (\0-termination is ensured)
@@ -74,15 +73,18 @@ char ut_tolower(char c, int casemap);
  * Params: `dest': buffer where the resulting lowercase string will be put in
  *         `destsz': size of `dest' (\0-termination is ensured)
  *         `str': input string to have its uppercase characters lowered
- *         `casemap': CMAP_* constant (usually what irc_casemap() returns) */ 
+ *         `casemap': CMAP_* constant (usually what irc_casemap() returns) */
 void ut_strtolower(char *dest, size_t destsz, const char *str, int casemap);
+
+/* ut_strtolower_ip - like ut_strtolower, but do it in-place */
+void ut_strtolower_ip(char *str, int casemap);
 
 /* ut_parse_hostspec - parse a "host specifier" (i.e. something "host:port"-ish)
  * Params: `hoststr': buffer where the host part will be put in
  *         `hoststr_sz' : size of said buffer (\0-termination is ensured)
  *         `port': points to where the port will be put in (0 if none)
  *         `ssl': points to a bool which tells if SSL was wished for
- *         `hostspec': the host specifier to parse. format: host[:port]['/SSL'] 
+ *         `hostspec': the host specifier to parse. format: host[:port]['/SSL']
  *             where `host' can be a hostname, an IPv4- or an IPv6-Address,
  *             port is a 16 bit unsigned integer and the '/SSL' is literal */
 void ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,

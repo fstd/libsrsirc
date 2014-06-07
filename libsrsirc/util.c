@@ -114,7 +114,6 @@ ut_istrncmp(const char *n1, const char *n2, size_t len, int casemap)
 
 	return 0;
 }
-
 char
 ut_tolower(char c, int casemap)
 {
@@ -321,9 +320,9 @@ ut_parse_005_cmodes(const char *const *arr, size_t argcount, size_t *num,
 		modearr[j][0] = enable ? '+' : '-';
 		modearr[j][1] = c;
 		modearr[j][2] = arg ? ' ' : '\0';
-		if (arg) {
+		if (arg)
 			strcpy(modearr[j] + 3, arg);
-		}
+
 		j++;
 		ptr++;
 	}

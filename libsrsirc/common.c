@@ -108,7 +108,7 @@ com_consocket(const char *host, uint16_t port, char *peeraddr,
 	size_t count = com_resolve(host, port, &ai_list);
 	if (!count)
 		return -1;
-	
+
 	if (softto && hardto && softto * count < hardto)
 		softto = hardto / count;
 
@@ -191,7 +191,7 @@ tryhost(struct addrinfo *ai, char *peeraddr, size_t peeraddr_sz,
 
 		return sck;
 	}
-	
+
 	close(sck);
 	return -1;
 }
