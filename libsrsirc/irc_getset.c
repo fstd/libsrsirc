@@ -117,6 +117,12 @@ irc_005modepfx(irc hnd, bool symbols)
 }
 
 
+bool
+irc_tracking_enab(irc hnd)
+{
+	return hnd->tracking && hnd->tracking_enab;
+}
+
 /* Getters - retrieve values previously set by the Setters */
 
 const char*
@@ -204,20 +210,15 @@ irc_get_service_info(irc hnd)
 }
 
 bool
-irc_tracking_enab(irc hnd)
+irc_get_ssl(irc hnd)
 {
-	return hnd->tracking && hnd->tracking_enab;
+	return conn_get_ssl(hnd->con);
 }
 
 
 /* Setters - set library parameters (none of these takes effect before the
  * next call to irc_connect() is done */
 
-bool
-irc_get_ssl(irc hnd)
-{
-	return conn_get_ssl(hnd->con);
-}
 
 bool
 irc_set_server(irc hnd, const char *host, uint16_t port)

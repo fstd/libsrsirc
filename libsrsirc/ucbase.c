@@ -223,7 +223,8 @@ update_modepfx(irc h, chan c, const char *nick, char mpfxsym, bool enab)
 	char *p = strchr(m->modepfx, mpfxsym);
 
 	if (!!enab == !!p) {
-		W("enab: %d, p: '%s'", enab, p);
+		W("enab: %d, p: '%s' (c: '%s', n: '%s', mpfx: '%s', mpfxsym: '%c')",
+		    enab, p, c->name, m->u->nick, m->modepfx, mpfxsym);
 		return false;
 	}
 	
