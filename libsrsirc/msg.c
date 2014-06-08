@@ -62,7 +62,7 @@ msg_handle(irc hnd, tokarr *msg, bool logon)
 
 	for (;i < COUNTOF(hnd->msghnds); i++) {
 		if (!hnd->msghnds[i].cmd[0])
-			break;
+			continue;
 
 		if (strcmp((*msg)[1], hnd->msghnds[i].cmd) == 0) {
 			D("dispatch a '%s' to '%s'", (*msg)[1], hnd->msghnds[i].module);

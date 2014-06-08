@@ -125,6 +125,8 @@ struct irc_s {
 	void *tag_con_read;
 	fp_mut_nick cb_mut_nick;
 
+	bool dumb;
+
 	struct msghnd msghnds[64]; //XXX enough?
 
 	/* tracking specific -- should probably split this up somehow */

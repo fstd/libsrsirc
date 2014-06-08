@@ -307,26 +307,35 @@ handle_005(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 
 bool
-imh_regall(irc hnd)
+imh_regall(irc hnd, bool dumb)
 {
 	bool fail = false;
+	if (!dumb) {
+		fail = fail || !msg_reghnd(hnd, "PING", handle_PING, "irc");
+		fail = fail || !msg_reghnd(hnd, "432", handle_XXX, "irc");
+		fail = fail || !msg_reghnd(hnd, "433", handle_XXX, "irc");
+		fail = fail || !msg_reghnd(hnd, "436", handle_XXX, "irc");
+		fail = fail || !msg_reghnd(hnd, "437", handle_XXX, "irc");
+		fail = fail || !msg_reghnd(hnd, "464", handle_464, "irc");
+	}
+
+	fail = fail || !msg_reghnd(hnd, "NICK", handle_NICK, "irc");
+	fail = fail || !msg_reghnd(hnd, "ERROR", handle_ERROR, "irc");
 	fail = fail || !msg_reghnd(hnd, "001", handle_001, "irc");
 	fail = fail || !msg_reghnd(hnd, "002", handle_002, "irc");
 	fail = fail || !msg_reghnd(hnd, "003", handle_003, "irc");
 	fail = fail || !msg_reghnd(hnd, "004", handle_004, "irc");
-	fail = fail || !msg_reghnd(hnd, "PING", handle_PING, "irc");
-	fail = fail || !msg_reghnd(hnd, "432", handle_XXX, "irc");
-	fail = fail || !msg_reghnd(hnd, "433", handle_XXX, "irc");
-	fail = fail || !msg_reghnd(hnd, "436", handle_XXX, "irc");
-	fail = fail || !msg_reghnd(hnd, "437", handle_XXX, "irc");
-	fail = fail || !msg_reghnd(hnd, "464", handle_464, "irc");
 	fail = fail || !msg_reghnd(hnd, "383", handle_383, "irc");
 	fail = fail || !msg_reghnd(hnd, "484", handle_484, "irc");
 	fail = fail || !msg_reghnd(hnd, "465", handle_465, "irc");
 	fail = fail || !msg_reghnd(hnd, "466", handle_466, "irc");
-	fail = fail || !msg_reghnd(hnd, "ERROR", handle_ERROR, "irc");
-	fail = fail || !msg_reghnd(hnd, "NICK", handle_NICK, "irc");
 	fail = fail || !msg_reghnd(hnd, "005", handle_005, "irc");
 
 	return !fail;
+}
+
+void
+imh_unregall(irc hnd)
+{
+	msg_unregall(hnd, "irc");
 }

@@ -305,3 +305,15 @@ irc_set_ssl(irc hnd, bool on)
 {
 	return conn_set_ssl(hnd->con, on);
 }
+
+bool
+irc_get_dumb(irc hnd)
+{
+	return hnd->dumb;
+}
+
+void
+irc_set_dumb(irc hnd, bool dumbmode)
+{
+	hnd->dumb = dumbmode;
+}

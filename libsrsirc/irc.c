@@ -76,9 +76,6 @@ irc_init(void)
 	com_strNcpy(r->m005modepfx[0], "ov", MAX_005_MDPFX);
 	com_strNcpy(r->m005modepfx[1], "@+", MAX_005_MDPFX);
 
-	if (!imh_regall(r))
-		goto irc_init_fail;
-
 	size_t len = strlen(DEF_NICK);
 	if (!(r->nick = com_malloc((len > 9 ? len : 9) + 1)))
 		goto irc_init_fail;
@@ -105,6 +102,7 @@ irc_init(void)
 	r->serv_type = DEF_SERV_TYPE;
 	r->scto_us = DEF_SCTO_US;
 	r->hcto_us = DEF_HCTO_US;
+	r->dumb = false;
 
 	for (size_t i = 0; i < COUNTOF(r->logonconv); i++)
 		r->logonconv[i] = NULL;
@@ -179,6 +177,10 @@ irc_connect(irc hnd)
 	trk_deinit(hnd);
 	hnd->tracking_enab = false;
 
+	imh_unregall(hnd);
+	if (!imh_regall(hnd, hnd->dumb))
+		return false;
+
 	com_update_strprop(&hnd->lasterr, NULL);
 	com_update_strprop(&hnd->banmsg, NULL);
 	hnd->banned = false;
@@ -191,10 +193,15 @@ irc_connect(irc hnd)
 	if (!conn_connect(hnd->con, hnd->scto_us, hnd->hcto_us))
 		return false;
 
+	I("(%p) connection established", hnd);
+
+	if (hnd->dumb)
+		return true;
+
 	if (!send_logon(hnd))
 		goto irc_connect_fail;
 
-	I("(%p) connection established, IRC logon sequence sent", hnd);
+	I("(%p) IRC logon sequence sent", hnd);
 
 	com_strNcpy(hnd->mynick, hnd->nick, sizeof hnd->mynick);
 	tokarr msg;
