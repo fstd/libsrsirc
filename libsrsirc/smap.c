@@ -263,7 +263,8 @@ smap_dump(smap h, smap_op_fn valop)
 }
 
 void
-smap_dumpstat(smap h)
+smap_stat(smap h, size_t *nbuck, size_t *nbuckused, size_t *nitems,
+    double *loadfac, double *avglistlen, size_t *maxlistlen)
 {
 	size_t used = 0;
 	size_t usedlen = 0;
@@ -282,9 +283,33 @@ smap_dumpstat(smap h)
 		}
 	}
 
-	fprintf(stderr, "hashmap stat: bucksz: %zu, used: %zu (%f%%) "
-	    "avg listlen: %f, max listlen: %zu\n", h->bsz, used,
-	    ((double)used/h->bsz)*100.0, ((double)usedlen/used), maxlen);
+	*nbuck = h->bsz;
+	*nbuckused = used;
+	*nitems = h->count;
+	*loadfac = (double)h->count / h->bsz;
+	if (used)
+		*avglistlen = (double)usedlen / used;
+	else
+		*avglistlen = 0;
+	*maxlistlen = maxlen;
+}
+
+void
+smap_dumpstat(smap h, const char *dbgname)
+{
+	size_t nbuck;
+	size_t nbuckused;
+	size_t nitems;
+	double loadfac;
+	double avglistlen;
+	size_t maxlistlen;
+
+	smap_stat(h, &nbuck, &nbuckused, &nitems, &loadfac, &avglistlen, &maxlistlen);
+
+	A("hashmap '%s' stat: bucksz: %zu, buckused: %zu (%f%%), items: %zu, "
+	    "loadfac: %f, avg listlen: %f, max listlen: %zu",
+	    dbgname, nbuck, nbuckused, 100.0*nbuckused/nbuck, nitems,
+	    loadfac, avglistlen, maxlistlen);
 }
 
 

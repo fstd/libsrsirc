@@ -13,6 +13,6 @@ bool trk_init(irc hnd);
 void trk_deinit(irc hnd);
 
 /* for debugging */
-void trk_dump(irc hnd);
+void trk_dump(irc hnd, bool full);
 
 #endif /* LIBSRSIRC_IRC_TRACK_H */

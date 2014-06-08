@@ -389,7 +389,7 @@ main(int argc, char **argv)
 		if (g_dumpplx) {
 			irc_dump(g_irc);
 			if (irc_tracking_enab(g_irc))
-				trk_dump(g_irc);
+				trk_dump(g_irc, false);
 			g_dumpplx = false;
 		}
 
@@ -417,7 +417,10 @@ main(int argc, char **argv)
 				break;
 			} else if (strcmp(tok[3], "DUMP") == 0) {
 				irc_dump(g_irc);
-				trk_dump(g_irc);
+				trk_dump(g_irc, false);
+			} else if (strcmp(tok[3], "FULLDUMP") == 0) {
+				irc_dump(g_irc);
+				trk_dump(g_irc, true);
 			}
 		}
 	}

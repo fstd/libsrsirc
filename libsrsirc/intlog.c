@@ -120,14 +120,24 @@ ircdbg_log(int mod, int lvl, int errn, const char *file, int line, const char *f
 	if (!s_init)
 		ircdbg_init();
 
+	bool always = lvl == INT_MIN;
+
 	if (lvl > s_lvlarr[mod])
 		return;
 
-	char buf[4096];
-	char buf2[4096];
+	char resmsg[4096];
 
+	char payload[4096];
 	va_list vl;
 	va_start(vl, fmt);
+
+	vsnprintf(payload, sizeof payload, fmt, vl);
+	char *c = payload;
+	while (*c) {
+		if (*c == '\n' || *c == '\r')
+			*c = '$';
+		c++;
+	}
 
 	char errmsg[256];
 	errmsg[0] = '\0';
@@ -138,34 +148,32 @@ ircdbg_log(int mod, int lvl, int errn, const char *file, int line, const char *f
 	}
 
 	if (s_stderr) {
-		char timebuf[27];
-		time_t t = time(NULL);
-		if (!ctime_r(&t, timebuf))
-			strcpy(timebuf, "(ctime_r() failed)");
-		char *ptr = strchr(timebuf, '\n');
-		if (ptr)
-			*ptr = '\0';
+		if (always) {
+			fputs(payload, stderr);
+			fputs("\n", stderr);
+		} else {
+			char timebuf[27];
+			time_t t = time(NULL);
+			if (!ctime_r(&t, timebuf))
+				strcpy(timebuf, "(ctime_r() failed)");
+			char *ptr = strchr(timebuf, '\n');
+			if (ptr)
+				*ptr = '\0';
 
-		vsnprintf(buf2, sizeof buf2, fmt, vl);
+			snprintf(resmsg, sizeof resmsg, "%s%s: libsrsirc: %s: %s:%d:%s(): %s%s%s\n",
+			    s_fancy ? lvlcol(lvl) : "", timebuf, lvlnam(lvl), file, line,
+			    func, payload, errmsg, s_fancy ? COL_RST : "");
 
-		snprintf(buf, sizeof buf, "%s%s: libsrsirc: %s: %s:%d:%s(): %s%s%s\n",
-		    s_fancy ? lvlcol(lvl) : "", timebuf, lvlnam(lvl), file, line,
-		    func, buf2, errmsg, s_fancy ? COL_RST : "");
-
-		char *c = buf;
-		while (*c) {
-			if (*c == '\n' || *c == '\r')
-				*c = '$';
-			c++;
+			fputs(resmsg, stderr);
 		}
-		*(c-1) = '\n';
-		fputs(buf, stderr);
 	} else {
-		vsnprintf(buf2, sizeof buf2, fmt, vl);
-
-		snprintf(buf, sizeof buf, "%s:%d:%s(): %s%s",
-		    file, line, func, buf2, errmsg);
-		syslog(lvl, "%s", buf);
+		if (always)
+			syslog(LOG_NOTICE, "%s", payload);
+		else {
+			snprintf(resmsg, sizeof resmsg, "%s:%d:%s(): %s%s",
+			    file, line, func, payload, errmsg);
+			syslog(lvl, "%s", resmsg);
+		}
 	}
 
 	va_end(vl);

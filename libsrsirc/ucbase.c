@@ -486,23 +486,32 @@ ucb_clear(irc h)
 }
 
 void
-ucb_dump(irc h)
+ucb_dump(irc h, bool full)
 {
-	N("=== ucb dump (%zu chans, %zu users) ===",
-	    h->chans ? smap_count(h->chans) : 0,
-	    h->users ? smap_count(h->users) : 0);
+	smap_dumpstat(h->chans, "channels");
+	smap_dumpstat(h->users, "global users");
+
 	char *key;
 	void *e1, *e2;
+	if (smap_first(h->chans, NULL, &e1))
+		do {
+			chan c = e1;
+			smap_dumpstat(c->memb, c->name);
+		} while (smap_next(h->chans, NULL, &e1));
+
+	if (!full)
+		return;
+	
 	if (smap_first(h->users, &key, &e1))
 		do {
 			user u = e1;
 			u->dangling = true;
 		} while (smap_next(h->users, &key, &e1));
 
-	if (smap_first(h->chans, &key, &e1)) {
+	if (smap_first(h->chans, &key, &e1))
 		do {
 			chan c = e1;
-			N("channel '%s' (%zu membs) [topic: '%s' (by %s)"
+			A("channel '%s' (%zu membs) [topic: '%s' (by %s)"
 			    ", tsc: %"PRIu64", tst: %"PRIu64"]", c->name,
 			    smap_count(c->memb), c->topic, c->topicnick, 
 			    c->tscreate, c->tstopic);
@@ -511,7 +520,7 @@ ucb_dump(irc h)
 				if (!c->modes[i])
 					break;
 
-				N("  mode '%s'", c->modes[i]);
+				A("  mode '%s'", c->modes[i]);
 			}
 
 			char *k;
@@ -519,24 +528,17 @@ ucb_dump(irc h)
 				continue;
 			do {
 				memb m = e2;
-				I("    member ('%s') '%s!%s@%s' ['%s']", m->modepfx, m->u->nick, m->u->uname, m->u->host, m->u->fname);
+				A("    member ('%s') '%s!%s@%s' ['%s']", m->modepfx, m->u->nick, m->u->uname, m->u->host, m->u->fname);
 				m->u->dangling = false;
 			} while (smap_next(c->memb, &k, &e2));
-			smap_dumpstat(c->memb);
 		} while (smap_next(h->chans, &key, &e1));
-		smap_dumpstat(h->chans);
-	}
 
-	if (smap_first(h->users, &key, &e1)) {
+	if (smap_first(h->users, &key, &e1))
 		do {
 			user u = e1;
 			if (u->dangling)
-				N("dangling user '%s!%s@%s'", u->nick, u->uname, u->host);
+				A("dangling user '%s!%s@%s'", u->nick, u->uname, u->host);
 		} while (smap_next(h->users, &key, &e1));
-		smap_dumpstat(h->users);
-	}
-	N("=== end of dump ===");
-
 
 }
 

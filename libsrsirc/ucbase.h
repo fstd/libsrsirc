@@ -60,7 +60,7 @@ user add_user(irc h, const char *ident);
 bool drop_user(irc h, user u);
 void ucb_deinit(irc h);
 void ucb_clear(irc h);
-void ucb_dump(irc h);
+void ucb_dump(irc h, bool full);
 user get_user(irc h, const char *ident, bool complain);
 bool rename_user(irc h, const char *ident, const char *newnick, bool *allocerr);
 #endif /* LIBSRSIRC_UCBASE_H */

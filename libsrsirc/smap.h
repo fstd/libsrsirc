@@ -27,7 +27,9 @@ bool smap_next(smap m, char **key, void **val);
 void smap_del_iter(smap h);
 
 void smap_dump(smap m, smap_op_fn valop);
-void smap_dumpstat(smap m);
+void smap_stat(smap h, size_t *nbuck, size_t *nbuckused, size_t *nitems,
+    double *loadfac, double *avglistlen, size_t *maxlistlen);
+void smap_dumpstat(smap m, const char *dbgname);
 //void smap_test(void);
 
 #endif /* LIBSRSIRC_HASHMAP_H */

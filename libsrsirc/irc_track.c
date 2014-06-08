@@ -545,9 +545,9 @@ h_324(irc h, tokarr *msg, size_t nargs, bool logon)
 	
 
 void
-trk_dump(irc h)
+trk_dump(irc h, bool full)
 {
-	ucb_dump(h);
+	ucb_dump(h, full);
 }
 
 // JOIN #srsbsns redacted

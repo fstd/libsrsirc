@@ -6,6 +6,7 @@
 #define LIBSRSIRC_INTLOG_H 1
 
 #include <stdbool.h>
+#include <limits.h>
 #include <errno.h>
 
 #include <syslog.h>
@@ -87,6 +88,10 @@
 #define CE(F,A...) do {                                                      \
     ircdbg_log(LOG_MODULE,LOG_CRIT,errno,__FILE__,__LINE__,__func__,F,##A);  \
     exit(EXIT_FAILURE); } while (0)
+
+/* special: always printed, never decorated */
+#define A(F,A...)                                                            \
+    ircdbg_log(-1,INT_MIN,-1,__FILE__,__LINE__,__func__,F,##A)
 
 // ----- logger control interface -----
 
