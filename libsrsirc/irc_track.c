@@ -24,6 +24,7 @@
 #include <libsrsirc/irc_track.h>
 
 static uint8_t h_JOIN(irc h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_311(irc h, tokarr *msg, size_t nargs, bool logon);
 static uint8_t h_332(irc h, tokarr *msg, size_t nargs, bool logon);
 static uint8_t h_333(irc h, tokarr *msg, size_t nargs, bool logon);
 static uint8_t h_352(irc h, tokarr *msg, size_t nargs, bool logon);
@@ -44,6 +45,7 @@ trk_init(irc h)
 {
 	bool fail = false;
 	fail = fail || !msg_reghnd(h, "JOIN", h_JOIN, "track");
+	fail = fail || !msg_reghnd(h, "311", h_311, "track");
 	fail = fail || !msg_reghnd(h, "332", h_332, "track");
 	fail = fail || !msg_reghnd(h, "333", h_333, "track");
 	fail = fail || !msg_reghnd(h, "353", h_353, "track");
@@ -134,27 +136,33 @@ h_352(irc h, tokarr *msg, size_t nargs, bool logon)
 	if (!u)
 		return 0;
 
-	if (u->uname && ut_istrcmp(u->uname, (*msg)[4], h->casemap) != 0) {
-		W("username for '%s' changed from '%s' to '%s'!",
-		    u->nick, u->uname, (*msg)[4]);
-	}
-	com_update_strprop(&u->uname, (*msg)[4]);
+	if (!u->uname || ut_istrcmp(u->uname, (*msg)[4], h->casemap) != 0) {
+		if (u->uname)
+			W("username for '%s' changed from '%s' to '%s'!",
+			    u->nick, u->uname, (*msg)[4]);
 
-	if (u->host && ut_istrcmp(u->host, (*msg)[5], h->casemap) != 0) {
-		W("host for '%s' changed from '%s' to '%s'!",
-		    u->nick, u->host, (*msg)[5]);
+		com_update_strprop(&u->uname, (*msg)[4]);
 	}
-	com_update_strprop(&u->host, (*msg)[5]);
+
+	if (!u->host || ut_istrcmp(u->host, (*msg)[5], h->casemap) != 0) {
+		if (u->host)
+			W("host for '%s' changed from '%s' to '%s'!",
+			    u->nick, u->host, (*msg)[5]);
+
+		com_update_strprop(&u->host, (*msg)[5]);
+	}
 
 	const char *fname = strchr((*msg)[9], ' ');
 	if (!fname)
 		return PROTO_ERR;
 	
-	if (u->fname && ut_istrcmp(u->fname, fname+1, h->casemap) != 0) {
-		W("fullname for '%s' changed from '%s' to '%s'!",
-		    u->nick, u->fname, fname+1);
+	if (!u->fname || ut_istrcmp(u->fname, fname+1, h->casemap) != 0) {
+		if (u->fname)
+			W("fullname for '%s' changed from '%s' to '%s'!",
+			    u->nick, u->fname, fname+1);
+
+		com_update_strprop(&u->fname, fname+1);
 	}
-	com_update_strprop(&u->fname, fname+1);
 
 	return 0;
 }
@@ -506,10 +514,10 @@ h_NOTICE(irc h, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 h_324(irc h, tokarr *msg, size_t nargs, bool logon)
 {
-	uint8_t res = 0;
-
 	if (!(*msg)[0] || nargs < 5)
 		return PROTO_ERR;
+
+	uint8_t res = 0;
 
 	chan c = get_chan(h, (*msg)[3], true);
 	if (!c) {
@@ -539,7 +547,55 @@ h_324(irc h, tokarr *msg, size_t nargs, bool logon)
 	free(p);
 
 	return res;
-	return 0;
+}
+
+/* 302    RPL_USERHOST  
+ * ":*1<reply> *( " " <reply> )"
+ * reply = nickname [ "*" ] "=" ( "+" / "-" ) hostname
+ */
+//static uint8_t
+//h_302(irc h, tokarr *msg, size_t nargs, bool logon)
+//{
+//}
+
+/* 311    RPL_WHOISUSER
+ * "<nick> <user> <host> * :<real name>"
+ */
+static uint8_t
+h_311(irc h, tokarr *msg, size_t nargs, bool logon)
+{
+	if (!(*msg)[0] || nargs < 8)
+		return PROTO_ERR;
+
+	user u = get_user(h, (*msg)[3], false);
+	if (!u)
+		return 0;
+
+	if (!u->uname || ut_istrcmp(u->uname, (*msg)[4], h->casemap) != 0) {
+		if (u->uname)
+			W("username for '%s' changed from '%s' to '%s'!",
+			    u->nick, u->uname, (*msg)[4]);
+
+		com_update_strprop(&u->uname, (*msg)[4]);
+	}
+
+	if (!u->host || ut_istrcmp(u->host, (*msg)[5], h->casemap) != 0) {
+		if (u->host)
+			W("host for '%s' changed from '%s' to '%s'!",
+			    u->nick, u->host, (*msg)[5]);
+
+		com_update_strprop(&u->host, (*msg)[5]);
+	}
+
+	if (!u->fname || ut_istrcmp(u->fname, (*msg)[7], h->casemap) != 0) {
+		if (u->fname)
+			W("fullname for '%s' changed from '%s' to '%s'!",
+			    u->nick, u->fname, (*msg)[7]);
+
+		com_update_strprop(&u->fname, (*msg)[7]);
+	}
+
+	uint8_t res = 0;
 }
 
 	
