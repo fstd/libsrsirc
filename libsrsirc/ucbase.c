@@ -519,7 +519,7 @@ ucb_dump(irc h)
 				continue;
 			do {
 				memb m = e2;
-				I("    member '%s!%s@%s' ('%s')", m->u->nick, m->u->uname, m->u->host, m->modepfx);
+				I("    member ('%s') '%s!%s@%s' ['%s']", m->modepfx, m->u->nick, m->u->uname, m->u->host, m->u->fname);
 				m->u->dangling = false;
 			} while (smap_next(c->memb, &k, &e2));
 			smap_dumpstat(c->memb);
