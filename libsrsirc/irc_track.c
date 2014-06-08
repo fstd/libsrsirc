@@ -26,6 +26,7 @@
 static uint8_t h_JOIN(irc h, tokarr *msg, size_t nargs, bool logon);
 static uint8_t h_332(irc h, tokarr *msg, size_t nargs, bool logon);
 static uint8_t h_333(irc h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_352(irc h, tokarr *msg, size_t nargs, bool logon);
 static uint8_t h_353(irc h, tokarr *msg, size_t nargs, bool logon);
 static uint8_t h_366(irc h, tokarr *msg, size_t nargs, bool logon);
 static uint8_t h_PART(irc h, tokarr *msg, size_t nargs, bool logon);
@@ -46,6 +47,7 @@ trk_init(irc h)
 	fail = fail || !msg_reghnd(h, "332", h_332, "track");
 	fail = fail || !msg_reghnd(h, "333", h_333, "track");
 	fail = fail || !msg_reghnd(h, "353", h_353, "track");
+	fail = fail || !msg_reghnd(h, "352", h_352, "track");
 	fail = fail || !msg_reghnd(h, "366", h_366, "track");
 	fail = fail || !msg_reghnd(h, "PART", h_PART, "track");
 	fail = fail || !msg_reghnd(h, "QUIT", h_QUIT, "track");
@@ -115,6 +117,51 @@ h_JOIN(irc h, tokarr *msg, size_t nargs, bool logon)
 
 	return 0;
 }
+/* 352    RPL_WHOREPLY
+ *            "<channel> <user> <host> <server> <nick>
+ *            ( "H" / "G" > ["*"] [ ( "@" / "+" ) ]
+ *            :<hopcount> <real name>"
+ */
+
+/*:rajaniemi.freenode.net 352 nvmme CHAN UNAME HOST SRV NICK H :0 irc netcat*/
+static uint8_t
+h_352(irc h, tokarr *msg, size_t nargs, bool logon)
+{
+	if (!(*msg)[0] || nargs < 10)
+		return PROTO_ERR;
+
+	user u = get_user(h, (*msg)[7], true);
+	if (!u)
+		return 0;
+
+	if (u->uname && ut_istrcmp(u->uname, (*msg)[4], h->casemap) != 0) {
+		W("username for '%s' changed from '%s' to '%s'!",
+		    u->nick, u->uname, (*msg)[4]);
+	}
+	com_update_strprop(&u->uname, (*msg)[4]);
+
+	if (u->host && ut_istrcmp(u->host, (*msg)[5], h->casemap) != 0) {
+		W("host for '%s' changed from '%s' to '%s'!",
+		    u->nick, u->host, (*msg)[5]);
+	}
+	com_update_strprop(&u->host, (*msg)[5]);
+
+	const char *fname = strchr((*msg)[9], ' ');
+	if (!fname)
+		return PROTO_ERR;
+	
+	if (u->fname && ut_istrcmp(u->fname, fname+1, h->casemap) != 0) {
+		W("fullname for '%s' changed from '%s' to '%s'!",
+		    u->nick, u->fname, fname+1);
+	}
+	com_update_strprop(&u->fname, fname+1);
+
+	return 0;
+}
+
+/*:rajaniemi.freenode.net 315 nvmme #fstd :End of /WHO list.*/
+//static uint8_t
+//h_315(irc h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 h_332(irc h, tokarr *msg, size_t nargs, bool logon)
