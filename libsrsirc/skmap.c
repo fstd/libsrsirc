@@ -1,4 +1,4 @@
-/* smap.c -
+/* skmap.c -
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
@@ -6,7 +6,7 @@
 # include <config.h>
 #endif
 
-#define LOG_MODULE MOD_SMAP
+#define LOG_MODULE MOD_SKMAP
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -19,12 +19,12 @@
 #include "common.h"
 #include "bucklist.h"
 #include "cmap.h"
-#include "smap.h"
+#include "skmap.h"
 
 static size_t strhash_small(const char *s, const char *cmap);
 static size_t strhash_mid(const char *s, const char *cmap);
 
-struct smap {
+struct skmap {
 	bucklist_t *buck;
 	size_t bsz;
 	size_t count;
@@ -33,16 +33,16 @@ struct smap {
 	size_t bit;
 	size_t listiter;
 
-	smap_hash_fn hfn;
+	skmap_hash_fn hfn;
 
 	const char *cmap;
 };
 
 
-smap
-smap_init(size_t bsz, int cmap)
+skmap
+skmap_init(size_t bsz, int cmap)
 {
-	struct smap *h = com_malloc(sizeof *h);
+	struct skmap *h = com_malloc(sizeof *h);
 	if (!h)
 		return NULL;
 
@@ -54,14 +54,14 @@ smap_init(size_t bsz, int cmap)
 
 	h->buck = com_malloc(h->bsz * sizeof *h->buck);
 	if (!h->buck)
-		goto smap_init_fail;
+		goto skmap_init_fail;
 
 	for (size_t i = 0; i < h->bsz; i++)
 		h->buck[i] = NULL;
 
 	return h;
 
-smap_init_fail:
+skmap_init_fail:
 	if (h)
 		free(h->buck);
 	free(h);
@@ -70,7 +70,7 @@ smap_init_fail:
 }
 
 void
-smap_clear(smap h)
+skmap_clear(skmap h)
 {
 	char *k;
 	for (size_t i = 0; i < h->bsz; i++) {
@@ -90,19 +90,19 @@ smap_clear(smap h)
 }
 
 void
-smap_dispose(smap h)
+skmap_dispose(skmap h)
 {
 	if (!h)
 		return;
 
-	smap_clear(h);
+	skmap_clear(h);
 
 	free(h->buck);
 	free(h);
 }
 
 bool
-smap_put(smap h, const char *key, void *elem)
+skmap_put(skmap h, const char *key, void *elem)
 {
 	if (!key || !elem)
 		return false;
@@ -115,17 +115,17 @@ smap_put(smap h, const char *key, void *elem)
 	if (!kl) {
 		allocated = true;
 		if (!(kl = h->buck[ind] = bucklist_init(h->cmap)))
-			goto smap_put_fail;
+			goto skmap_put_fail;
 	}
 
 	void *e = bucklist_find(kl, key, NULL);
 	if (!e) {
 		kd = com_strdup(key);
 		if (!kd)
-			goto smap_put_fail;
+			goto skmap_put_fail;
 
 		if (!bucklist_insert(kl, 0, kd, elem))
-			goto smap_put_fail;
+			goto skmap_put_fail;
 
 		h->count++;
 	} else
@@ -133,7 +133,7 @@ smap_put(smap h, const char *key, void *elem)
 
 	return true;
 
-smap_put_fail:
+skmap_put_fail:
 	if (allocated) {
 		bucklist_dispose(kl);
 		h->buck[ind] = NULL;
@@ -145,7 +145,7 @@ smap_put_fail:
 }
 
 void*
-smap_get(smap h, const char *key)
+skmap_get(skmap h, const char *key)
 {
 	size_t ind = h->hfn(key, h->cmap) % h->bsz;
 
@@ -157,7 +157,7 @@ smap_get(smap h, const char *key)
 }
 
 void*
-smap_del(smap h, const char *key)
+skmap_del(skmap h, const char *key)
 {
 	size_t ind = h->hfn(key, h->cmap) % h->bsz;
 
@@ -177,13 +177,13 @@ smap_del(smap h, const char *key)
 }
 
 size_t
-smap_count(smap h)
+skmap_count(skmap h)
 {
 	return h->count;
 }
 
 bool
-smap_first(smap h, char **key, void **val)
+skmap_first(skmap h, char **key, void **val)
 {
 	h->bit = 0;
 	while (h->bit < h->bsz &&
@@ -203,7 +203,7 @@ smap_first(smap h, char **key, void **val)
 }
 
 bool
-smap_next(smap h, char **key, void **val)
+skmap_next(skmap h, char **key, void **val)
 {
 	if (!h->iterating)
 		return false;
@@ -229,14 +229,14 @@ smap_next(smap h, char **key, void **val)
 }
 
 void
-smap_del_iter(smap h)
+skmap_del_iter(skmap h)
 {
 	if (h->iterating)
 		bucklist_del_iter(h->buck[h->bit]);
 }
 
 void
-smap_dump(smap h, smap_op_fn valop)
+skmap_dump(skmap h, skmap_op_fn valop)
 {
 	#define M(X, A...) fprintf(stderr, X, ##A)
 	M("===hashmap dump (count: %zu)===\n", h->count);
@@ -263,7 +263,7 @@ smap_dump(smap h, smap_op_fn valop)
 }
 
 void
-smap_stat(smap h, size_t *nbuck, size_t *nbuckused, size_t *nitems,
+skmap_stat(skmap h, size_t *nbuck, size_t *nbuckused, size_t *nitems,
     double *loadfac, double *avglistlen, size_t *maxlistlen)
 {
 	size_t used = 0;
@@ -295,7 +295,7 @@ smap_stat(smap h, size_t *nbuck, size_t *nbuckused, size_t *nitems,
 }
 
 void
-smap_dumpstat(smap h, const char *dbgname)
+skmap_dumpstat(skmap h, const char *dbgname)
 {
 	size_t nbuck;
 	size_t nbuckused;
@@ -304,7 +304,7 @@ smap_dumpstat(smap h, const char *dbgname)
 	double avglistlen;
 	size_t maxlistlen;
 
-	smap_stat(h, &nbuck, &nbuckused, &nitems, &loadfac, &avglistlen, &maxlistlen);
+	skmap_stat(h, &nbuck, &nbuckused, &nitems, &loadfac, &avglistlen, &maxlistlen);
 
 	A("hashmap '%s' stat: bucksz: %zu, buckused: %zu (%f%%), items: %zu, "
 	    "loadfac: %f, avg listlen: %f, max listlen: %zu",
@@ -342,7 +342,7 @@ strhash_mid(const char *s, const char *cmap)
 	return (res[0] << 8) | res[1];
 }
 
-/*void smap_test(void) {
+/*void skmap_test(void) {
 
 	char *line = NULL;
 	size_t linesize = 0;

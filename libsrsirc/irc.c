@@ -19,7 +19,7 @@
 #include <libsrsirc/util.h>
 #include "conn.h"
 #include "msg.h"
-#include "smap.h"
+#include "skmap.h"
 #include "irc_msghnd.h"
 
 #include <intlog.h>
@@ -406,8 +406,8 @@ irc_dump(irc h)
 		ut_sndumpmsg(line, sizeof line, NULL, h->logonconv[i]),
 		N("logonconv[%zu]: '%s'", i, line);
 	}
-	//smap chans
-	//smap users
+	//skmap chans
+	//skmap users
 	//fp_con_read cb_con_read
 	//fp_mut_nick cb_mut_nick
 	//struct msghnd msghnds[64]

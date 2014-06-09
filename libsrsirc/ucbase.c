@@ -15,7 +15,7 @@
 
 #include <intlog.h>
 
-#include "smap.h"
+#include "skmap.h"
 #include "common.h"
 #include <libsrsirc/util.h>
 #include "ucbase.h"
@@ -25,11 +25,11 @@ static int compare_modepfx(irc h, char c1, char c2);
 bool
 ucb_init(irc h)
 {
-	if (!(h->chans = smap_init(256, h->casemap)))
+	if (!(h->chans = skmap_init(256, h->casemap)))
 		return false;
 
-	if (!(h->users = smap_init(4096, h->casemap)))
-		return smap_dispose(h->chans), false;
+	if (!(h->users = skmap_init(4096, h->casemap)))
+		return skmap_dispose(h->chans), false;
 	
 	return true;
 }
@@ -47,7 +47,7 @@ add_chan(irc h, const char *name)
 	c->desync = false;
 	c->modes = NULL;
 
-	if (!(c->memb = smap_init(256, h->casemap)))
+	if (!(c->memb = skmap_init(256, h->casemap)))
 		goto add_chan_fail;
 
 	c->modes_sz = 16; //grows
@@ -57,7 +57,7 @@ add_chan(irc h, const char *name)
 	for (size_t i = 0; i < c->modes_sz; i++)
 		c->modes[i] = NULL;
 	
-	if (!smap_put(h->chans, name, c))
+	if (!skmap_put(h->chans, name, c))
 		goto add_chan_fail;
 
 	D("added chan '%s'", c->name);
@@ -70,7 +70,7 @@ add_chan_fail:
 			free(c->modes[0]);
 
 		free(c->modes);
-		smap_dispose(c->memb);
+		skmap_dispose(c->memb);
 	}
 
 	free(c);
@@ -80,17 +80,17 @@ add_chan_fail:
 bool
 drop_chan(irc h, chan c)
 {
-	if (!smap_del(h->chans, c->name)) {
+	if (!skmap_del(h->chans, c->name)) {
 		W("channel '%s' not in channel map", c->name);
 		return false;
 	}
 
 	void *e;
-	if (smap_first(c->memb, NULL, &e)) {
+	if (skmap_first(c->memb, NULL, &e)) {
 		do {
 			memb m = e;
 			if (--m->u->nchans == 0) {
-				if (!smap_del(h->users, m->u->nick))
+				if (!skmap_del(h->users, m->u->nick))
 					W("user '%s' not in user map", m->u->nick);
 				D("implicitly dropped user '%s'", m->u->nick);
 				free(m->u->nick);
@@ -100,10 +100,10 @@ drop_chan(irc h, chan c)
 				free(m->u);
 			}
 			free(m);
-		} while (smap_next(c->memb, NULL, &e));
-		smap_clear(c->memb);
+		} while (skmap_next(c->memb, NULL, &e));
+		skmap_clear(c->memb);
 	}
-	smap_dispose(c->memb);
+	skmap_dispose(c->memb);
 
 	D("dropped channel '%s'", c->name);
 
@@ -119,13 +119,13 @@ drop_chan(irc h, chan c)
 size_t
 num_chans(irc h)
 {
-	return smap_count(h->chans);
+	return skmap_count(h->chans);
 }
 
 chan
 get_chan(irc h, const char *name, bool complain)
 {
-	chan c = smap_get(h->chans, name);
+	chan c = skmap_get(h->chans, name);
 	if (!c && complain)
 		W("no such channel '%s' in chanmap", name); 
 	return c;
@@ -134,7 +134,7 @@ get_chan(irc h, const char *name, bool complain)
 memb
 get_memb(irc h, chan c, const char *nick, bool complain)
 {
-	memb m = smap_get(c->memb, nick);
+	memb m = skmap_get(c->memb, nick);
 	if (!m && complain)
 		W("no such member '%s' in channel '%s'", nick, c->name); 
 	return m;
@@ -143,14 +143,14 @@ get_memb(irc h, chan c, const char *nick, bool complain)
 size_t
 num_memb(irc h, chan c)
 {
-	return smap_count(c->memb);
+	return skmap_count(c->memb);
 }
 
 bool
 add_memb(irc h, chan c, user u, const char *mpfxstr)
 {
 	memb m = alloc_memb(h, u, mpfxstr);
-	if (!m || !smap_put(c->memb, u->nick, m)) {
+	if (!m || !skmap_put(c->memb, u->nick, m)) {
 		free(m);
 		return false;
 	}
@@ -163,11 +163,11 @@ add_memb(irc h, chan c, user u, const char *mpfxstr)
 bool
 drop_memb(irc h, chan c, user u, bool purge, bool complain)
 {
-	memb m = smap_del(c->memb, u->nick);
+	memb m = skmap_del(c->memb, u->nick);
 	if (m) {
 		D("dropped '%s' from '%s'", m->u->nick, c->name);
 		if (--m->u->nchans == 0 && purge) {
-			if (!smap_del(h->users, m->u->nick))
+			if (!skmap_del(h->users, m->u->nick))
 				W("user '%s' not in user map", m->u->nick);
 			D("implicitly dropped user '%s'", m->u->nick);
 			free(m->u->nick);
@@ -187,13 +187,13 @@ void
 clear_memb(irc h, chan c)
 {
 	void *e;
-	if (!smap_first(c->memb, NULL, &e))
+	if (!skmap_first(c->memb, NULL, &e))
 		return;
 	
 	do {
 		memb m = e;
 		if (--m->u->nchans== 0) {
-			if (!smap_del(h->users, m->u->nick))
+			if (!skmap_del(h->users, m->u->nick))
 				W("user '%s' not in user map", m->u->nick);
 			D("implicitly dropped user '%s'", m->u->nick);
 			free(m->u->nick);
@@ -203,8 +203,8 @@ clear_memb(irc h, chan c)
 			free(m->u);
 		}
 		free(m);
-	} while (smap_next(c->memb, NULL, &e));
-	smap_clear(c->memb);
+	} while (skmap_next(c->memb, NULL, &e));
+	skmap_clear(c->memb);
 	D("cleared members of channel '%s'", c->name);
 }
 
@@ -403,7 +403,7 @@ add_user(irc h, const char *ident) //ident may be a nick, or nick!uname@host sty
 	if (!(u->nick = com_strdup(nick)))
 		goto add_user_fail;
 
-	if (!smap_put(h->users, nick, u))
+	if (!skmap_put(h->users, nick, u))
 		goto add_user_fail;
 
 	touch_user_int(u, ident);
@@ -426,16 +426,16 @@ add_user_fail:
 bool
 drop_user(irc h, user u)
 {
-	if (!smap_del(h->users, u->nick)) {
+	if (!skmap_del(h->users, u->nick)) {
 		W("no such user '%s' to drop", u->nick);
 		return false;
 	}
 
 	void *e;
-	if (smap_first(h->chans, NULL, &e))
+	if (skmap_first(h->chans, NULL, &e))
 		do {
 			drop_memb(h, e, u, false, false);
-		} while (smap_next(h->chans, NULL, &e));
+		} while (skmap_next(h->chans, NULL, &e));
 	else
 		W("dropping dangling user '%s'", u->nick);
 
@@ -454,8 +454,8 @@ void
 ucb_deinit(irc h)
 {
 	ucb_clear(h);
-	smap_dispose(h->chans);
-	smap_dispose(h->users);
+	skmap_dispose(h->chans);
+	skmap_dispose(h->users);
 	h->chans = h->users = NULL;
 }
 
@@ -464,25 +464,25 @@ ucb_clear(irc h)
 {
 	void *e;
 	if (h->chans) {
-		if (!smap_first(h->chans, NULL, &e))
+		if (!skmap_first(h->chans, NULL, &e))
 			return;
 		
 		do {
 			chan c = e;
 			clear_memb(h, c);
-			smap_dispose(c->memb);
+			skmap_dispose(c->memb);
 			free(c->topicnick);
 			free(c->topic);
 			for (size_t i = 0; i < c->modes_sz; i++)
 				free(c->modes[i]);
 			free(c->modes);
 			free(c);
-		} while (smap_next(h->chans, NULL, &e));
-		smap_clear(h->chans);
+		} while (skmap_next(h->chans, NULL, &e));
+		skmap_clear(h->chans);
 	}
 
 	if (h->users) {
-		if (!smap_first(h->users, NULL, &e))
+		if (!skmap_first(h->users, NULL, &e))
 			return;
 		
 		do {
@@ -492,40 +492,40 @@ ucb_clear(irc h)
 			free(u->host);
 			free(u->fname);
 			free(u);
-		} while (smap_next(h->users, NULL, &e));
-		smap_clear(h->users);
+		} while (skmap_next(h->users, NULL, &e));
+		skmap_clear(h->users);
 	}
 }
 
 void
 ucb_dump(irc h, bool full)
 {
-	smap_dumpstat(h->chans, "channels");
-	smap_dumpstat(h->users, "global users");
+	skmap_dumpstat(h->chans, "channels");
+	skmap_dumpstat(h->users, "global users");
 
 	char *key;
 	void *e1, *e2;
-	if (smap_first(h->chans, NULL, &e1))
+	if (skmap_first(h->chans, NULL, &e1))
 		do {
 			chan c = e1;
-			smap_dumpstat(c->memb, c->name);
-		} while (smap_next(h->chans, NULL, &e1));
+			skmap_dumpstat(c->memb, c->name);
+		} while (skmap_next(h->chans, NULL, &e1));
 
 	if (!full)
 		return;
 	
-	if (smap_first(h->users, &key, &e1))
+	if (skmap_first(h->users, &key, &e1))
 		do {
 			user u = e1;
 			u->dangling = true;
-		} while (smap_next(h->users, &key, &e1));
+		} while (skmap_next(h->users, &key, &e1));
 
-	if (smap_first(h->chans, &key, &e1))
+	if (skmap_first(h->chans, &key, &e1))
 		do {
 			chan c = e1;
 			A("channel '%s' (%zu membs) [topic: '%s' (by %s)"
 			    ", tsc: %"PRIu64", tst: %"PRIu64"]", c->name,
-			    smap_count(c->memb), c->topic, c->topicnick, 
+			    skmap_count(c->memb), c->topic, c->topicnick, 
 			    c->tscreate, c->tstopic);
 
 			for (size_t i = 0; i < c->modes_sz; i++) {
@@ -536,28 +536,28 @@ ucb_dump(irc h, bool full)
 			}
 
 			char *k;
-			if (!smap_first(c->memb, &k, &e2))
+			if (!skmap_first(c->memb, &k, &e2))
 				continue;
 			do {
 				memb m = e2;
 				A("    member ('%s') '%s!%s@%s' ['%s']", m->modepfx, m->u->nick, m->u->uname, m->u->host, m->u->fname);
 				m->u->dangling = false;
-			} while (smap_next(c->memb, &k, &e2));
-		} while (smap_next(h->chans, &key, &e1));
+			} while (skmap_next(c->memb, &k, &e2));
+		} while (skmap_next(h->chans, &key, &e1));
 
-	if (smap_first(h->users, &key, &e1))
+	if (skmap_first(h->users, &key, &e1))
 		do {
 			user u = e1;
 			if (u->dangling)
 				A("dangling user '%s!%s@%s'", u->nick, u->uname, u->host);
-		} while (smap_next(h->users, &key, &e1));
+		} while (skmap_next(h->users, &key, &e1));
 
 }
 
 user
 get_user(irc h, const char *ident, bool complain)
 {
-	user u = smap_get(h->users, ident);
+	user u = skmap_get(h->users, ident);
 	if (!u && complain)
 		W("no such user '%s'", ident);
 	return u;
@@ -566,7 +566,7 @@ get_user(irc h, const char *ident, bool complain)
 size_t
 num_users(irc h)
 {
-	return smap_count(h->users);
+	return skmap_count(h->users);
 }
 
 bool
@@ -595,30 +595,30 @@ rename_user(irc h, const char *ident, const char *newnick, bool *allocerr) //mh.
 		u->nick = nn;
 	}
 
-	if (!smap_put(h->users, newnick, u)) {
+	if (!skmap_put(h->users, newnick, u)) {
 		if (allocerr)
 			*allocerr = true;
 		return false;
 	}
 	
-	smap_del(h->users, ident);
+	skmap_del(h->users, ident);
 
 	void *e;
-	if (smap_first(h->chans, NULL, &e))
+	if (skmap_first(h->chans, NULL, &e))
 		do {
 			chan c = e;
-			memb m = smap_get(c->memb, ident);
+			memb m = skmap_get(c->memb, ident);
 			if (!m)
 				continue;
 
-			if (!smap_put(c->memb, newnick, m)) {
+			if (!skmap_put(c->memb, newnick, m)) {
 				if (allocerr)
 					*allocerr = true;
 				return false;
 			}
 
-			smap_del(c->memb, ident);
-		} while (smap_next(h->chans, NULL, &e));
+			skmap_del(c->memb, ident);
+		} while (skmap_next(h->chans, NULL, &e));
 
 	return true;
 }
@@ -627,7 +627,7 @@ chan
 first_chan(irc h)
 {
 	void *e;
-	if (!smap_first(h->chans, NULL, &e))
+	if (!skmap_first(h->chans, NULL, &e))
 		return NULL;
 	return e;
 }
@@ -636,7 +636,7 @@ chan
 next_chan(irc h)
 {
 	void *e;
-	if (!smap_next(h->chans, NULL, &e))
+	if (!skmap_next(h->chans, NULL, &e))
 		return NULL;
 	return e;
 }
@@ -645,7 +645,7 @@ user
 first_user(irc h)
 {
 	void *e;
-	if (!smap_next(h->users, NULL, &e))
+	if (!skmap_next(h->users, NULL, &e))
 		return NULL;
 	return e;
 }
@@ -654,7 +654,7 @@ user
 next_user(irc h)
 {
 	void *e;
-	if (!smap_next(h->users, NULL, &e))
+	if (!skmap_next(h->users, NULL, &e))
 		return NULL;
 	return e;
 }
@@ -663,7 +663,7 @@ memb
 first_memb(irc h, chan c)
 {
 	void *e;
-	if (!smap_next(c->memb, NULL, &e))
+	if (!skmap_next(c->memb, NULL, &e))
 		return NULL;
 	return e;
 }
@@ -672,7 +672,7 @@ memb
 next_memb(irc h, chan c)
 {
 	void *e;
-	if (!smap_next(c->memb, NULL, &e))
+	if (!skmap_next(c->memb, NULL, &e))
 		return NULL;
 	return e;
 }

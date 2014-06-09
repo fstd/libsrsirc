@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "smap.h"
+#include "skmap.h"
 
 /* receive buffer size */
 #define WORKBUF_SZ 4096
@@ -145,8 +145,8 @@ struct irc_s {
 	bool tracking; /* true if we want to track */
 	bool tracking_enab; /* tracking is enabled (after 005 CASEMAPPING) */
 	bool endofnames;
-	smap chans;
-	smap users;
+	skmap chans;
+	skmap users;
 
 
 	struct iconn_s *con;

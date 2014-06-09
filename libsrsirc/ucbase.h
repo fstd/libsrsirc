@@ -21,7 +21,7 @@ struct chan {
 	char *topicnick;
 	uint64_t tscreate;
 	uint64_t tstopic;
-	smap memb; //map lnick to struct member
+	skmap memb; //map lnick to struct member
 	bool desync;
 	char **modes; //one modechar per elem, i.e. "s" or "l 123"
 	size_t modes_sz;

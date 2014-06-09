@@ -18,7 +18,7 @@
 #define MOD_IIO 4
 #define MOD_PROXY 5
 #define MOD_IMSG 6
-#define MOD_SMAP 7
+#define MOD_SKMAP 7
 #define MOD_PLST 8
 #define MOD_TRACK 9
 #define MOD_UCBASE 10
