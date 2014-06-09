@@ -595,7 +595,7 @@ h_311(irc h, tokarr *msg, size_t nargs, bool logon)
 		com_update_strprop(&u->fname, (*msg)[7]);
 	}
 
-	uint8_t res = 0;
+	return 0;
 }
 
 	
