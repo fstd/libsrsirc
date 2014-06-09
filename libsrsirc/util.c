@@ -205,6 +205,25 @@ ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
 		*port = 0;
 }
 
+char*
+ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr)
+{
+	if ((*msg)[0])
+		snprintf(dest, destsz, ":%s %s", (*msg)[0], (*msg)[1]);
+	else
+		snprintf(dest, destsz, "%s", (*msg)[1]);
+
+	size_t i = 2;
+	while (i < COUNTOF(*msg) && (*msg)[i]) {
+		com_strNcat(dest, " ", destsz);
+		if ((i+1 == COUNTOF(*msg) || !(*msg)[i+1]) && coltr)
+			com_strNcat(dest, ":", destsz);
+		com_strNcat(dest, (*msg)[i], destsz);
+		i++;
+	}
+
+	return dest;
+}
 
 char*
 ut_sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)

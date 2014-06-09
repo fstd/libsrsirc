@@ -134,5 +134,6 @@ tokarr *ut_clonearr(tokarr *arr);
 /* ut_freearr - free a tokarr (which presumably was obtained by ut_clonearr) */
 void ut_freearr(tokarr *arr);
 
+char* ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr);
 
 #endif /* LIBSRSIRC_IRC_UTIL_H */
