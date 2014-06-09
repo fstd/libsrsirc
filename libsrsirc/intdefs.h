@@ -127,7 +127,8 @@ struct irc_s {
 
 	bool dumb;
 
-	struct msghnd msghnds[64]; //XXX enough?
+	struct msghnd *msghnds;
+	size_t msghnds_cnt;
 
 	/* tracking specific -- should probably split this up somehow */
 	bool tracking; /* true if we want to track */

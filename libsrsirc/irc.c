@@ -45,9 +45,7 @@ irc_init(void)
 	r->pass = r->nick = r->uname = r->fname = r->serv_dist
 	    = r->serv_info = r->lasterr = r->banmsg = NULL;
 
-	for (size_t i = 0; i < COUNTOF(r->msghnds); i++)
-		r->msghnds[i].cmd[0] = '\0';
-
+	r->msghnds = NULL;
 	r->chans = r->users = NULL;
 	r->m005chantypes = NULL;
 
@@ -87,6 +85,13 @@ irc_init(void)
 	    || (!(r->serv_info = com_strdup(DEF_SERV_INFO))))
 		goto irc_init_fail;
 
+	r->msghnds_cnt = 64;
+	if (!(r->msghnds = malloc(r->msghnds_cnt * sizeof *r->msghnds)))
+		goto irc_init_fail;
+
+	for (size_t i = 0; i < r->msghnds_cnt; i++)
+		r->msghnds[i].cmd[0] = '\0';
+
 	errno = preverrno;
 
 	r->con = con;
@@ -120,6 +125,7 @@ irc_init_fail:
 		free(r->fname);
 		free(r->serv_dist);
 		free(r->serv_info);
+		free(r->msghnds);
 		free(r->m005chantypes);
 		for (size_t i = 0; i < COUNTOF(r->m005chanmodes); i++)
 			free(r->m005chanmodes[i]);
@@ -152,6 +158,7 @@ irc_dispose(irc hnd)
 	free(hnd->fname);
 	free(hnd->serv_dist);
 	free(hnd->serv_info);
+	free(hnd->msghnds);
 
 	for (size_t i = 0; i < COUNTOF(hnd->logonconv); i++)
 		ut_freearr(hnd->logonconv[i]);

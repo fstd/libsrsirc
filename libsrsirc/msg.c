@@ -26,13 +26,24 @@ msg_reghnd(irc hnd, const char *cmd, hnd_fn hndfn, const char *module)
 {
 	size_t i = 0;
 	D("'%s' registering '%s'-handler", module, cmd);
-	for (;i < COUNTOF(hnd->msghnds); i++)
+	for (;i < hnd->msghnds_cnt; i++)
 		if (!hnd->msghnds[i].cmd[0])
 			break;
 
-	if (i == COUNTOF(hnd->msghnds)) {
-		E("can't register msg handler, array full");
-		return false;
+	if (i == hnd->msghnds_cnt) {
+		size_t ncnt = hnd->msghnds_cnt * 2;
+		struct msghnd *narr;
+		if (!(narr = malloc(ncnt * sizeof *narr)))
+			return false;
+
+		memcpy(narr, hnd->msghnds, hnd->msghnds_cnt * sizeof *narr);
+		for (size_t i = hnd->msghnds_cnt; i < ncnt; i++)
+			narr[i].cmd[0] = '\0';
+
+		free(hnd->msghnds);
+
+		hnd->msghnds = narr;
+		hnd->msghnds_cnt = ncnt;
 	}
 
 	hnd->msghnds[i].module = module;
@@ -45,7 +56,7 @@ void
 msg_unregall(irc hnd, const char *module)
 {
 	size_t i = 0;
-	for (;i < COUNTOF(hnd->msghnds); i++)
+	for (;i < hnd->msghnds_cnt; i++)
 		if (hnd->msghnds[i].cmd[0]
 		    && strcmp(hnd->msghnds[i].module, module) == 0)
 			hnd->msghnds[i].cmd[0] = '\0';
@@ -60,7 +71,7 @@ msg_handle(irc hnd, tokarr *msg, bool logon)
 	while (ac < COUNTOF(*msg) && (*msg)[ac])
 		ac++;
 
-	for (;i < COUNTOF(hnd->msghnds); i++) {
+	for (;i < hnd->msghnds_cnt; i++) {
 		if (!hnd->msghnds[i].cmd[0])
 			continue;
 
