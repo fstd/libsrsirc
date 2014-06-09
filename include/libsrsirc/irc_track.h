@@ -38,10 +38,12 @@ void trk_deinit(irc hnd);
 size_t irc_num_chans(irc h);
 size_t irc_all_chans(irc h, chanrep *chanarr, size_t chanarr_cnt);
 chanrep* irc_chan(irc h, chanrep *dest, const char *name);
+bool irc_tag_chan(irc h, const char *chname, void *tag, bool autofree);
 
 size_t irc_num_users(irc h);
 size_t irc_all_users(irc h, userrep *userarr, size_t userarr_cnt);
 userrep* irc_user(irc h, userrep *dest, const char *ident);
+bool irc_tag_user(irc h, const char *ident, void *tag, bool autofree);
 
 size_t irc_num_members(irc h, const char *chname);
 size_t irc_all_members(irc h, const char *chname, userrep *userarr, size_t userarr_cnt);

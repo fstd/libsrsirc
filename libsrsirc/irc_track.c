@@ -774,3 +774,25 @@ irc_member(irc h, userrep *dest, const char *chname, const char *ident)
 }
 
 
+bool
+irc_tag_chan(irc h, const char *chname, void *tag, bool autofree)
+{
+	chan c = get_chan(h, chname, false);
+	if (!c)
+		return false;
+
+	tag_chan(c, tag, autofree);
+	return true;
+}
+
+bool
+irc_tag_user(irc h, const char *ident, void *tag, bool autofree)
+{
+	user u = get_user(h, ident, false);
+	if (!u)
+		return false;
+
+	tag_user(u, tag, autofree);
+	return true;
+}
+

@@ -46,6 +46,8 @@ add_chan(irc h, const char *name)
 	c->tscreate = c->tstopic = 0;
 	c->desync = false;
 	c->modes = NULL;
+	c->tag = NULL;
+	c->freetag = false;
 
 	if (!(c->memb = skmap_init(256, h->casemap)))
 		goto add_chan_fail;
@@ -97,6 +99,8 @@ drop_chan(irc h, chan c)
 				free(m->u->uname);
 				free(m->u->host);
 				free(m->u->fname);
+				if (m->u->freetag)
+					free(m->u->tag);
 				free(m->u);
 			}
 			free(m);
@@ -112,6 +116,8 @@ drop_chan(irc h, chan c)
 	for (size_t i = 0; i < c->modes_sz; i++)
 		free(c->modes[i]);
 	free(c->modes);
+	if (c->freetag)
+		free(c->tag);
 	free(c);
 	return true;
 }
@@ -174,6 +180,8 @@ drop_memb(irc h, chan c, user u, bool purge, bool complain)
 			free(m->u->uname);
 			free(m->u->host);
 			free(m->u->fname);
+			if (m->u->freetag)
+				free(m->u->tag);
 			free(m->u);
 		}
 	} else if (complain)
@@ -200,6 +208,8 @@ clear_memb(irc h, chan c)
 			free(m->u->uname);
 			free(m->u->host);
 			free(m->u->fname);
+			if (m->u->freetag)
+				free(m->u->tag);
 			free(m->u);
 		}
 		free(m);
@@ -399,6 +409,8 @@ add_user(irc h, const char *ident) //ident may be a nick, or nick!uname@host sty
 
 	u->uname = u->host = u->fname = NULL;
 	u->nchans = 0;
+	u->tag = NULL;
+	u->freetag = false;
 
 	if (!(u->nick = com_strdup(nick)))
 		goto add_user_fail;
@@ -445,6 +457,8 @@ drop_user(irc h, user u)
 	free(u->uname);
 	free(u->host);
 	free(u->fname);
+	if (u->freetag)
+		free(u->tag);
 	free(u);
 
 	return true;
@@ -677,3 +691,21 @@ next_memb(irc h, chan c)
 	return e;
 }
 
+void
+tag_chan(chan c, void *tag, bool autofree)
+{
+	if (c->freetag)
+		free(c->tag);
+	c->tag = tag;
+	c->freetag = autofree;
+}
+
+
+void
+tag_user(user u, void *tag, bool autofree)
+{
+	if (u->freetag)
+		free(u->tag);
+	u->tag = tag;
+	u->freetag = autofree;
+}

@@ -25,6 +25,8 @@ struct chan {
 	bool desync;
 	char **modes; //one modechar per elem, i.e. "s" or "l 123"
 	size_t modes_sz;
+	void *tag;
+	bool freetag;
 };
 
 
@@ -40,6 +42,8 @@ struct user {
 	char *fname;
 	size_t nchans;
 	bool dangling; //debug
+	void *tag;
+	bool freetag;
 };
 
 bool ucb_init(irc h);
@@ -74,4 +78,6 @@ user first_user(irc h);
 user next_user(irc h);
 memb first_memb(irc h, chan c);
 memb next_memb(irc h, chan c);
+void tag_chan(chan c, void *tag, bool autofree);
+void tag_user(user u, void *tag, bool autofree);
 #endif /* LIBSRSIRC_UCBASE_H */
