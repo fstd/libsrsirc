@@ -114,7 +114,7 @@ dispatch_uhnd(irc hnd, tokarr *msg, size_t ac, bool pre)
 		if (strcmp((*msg)[1], harr[i].cmd) != 0)
 			continue;
 
-		D("dispatch a pre-'%s'", (*msg)[1]);
+		D("dispatch a %s-'%s'", pre?"pre":"post", (*msg)[1]);
 		if (!harr[i].hndfn(hnd, msg, ac, pre))
 			return false;
 	}
