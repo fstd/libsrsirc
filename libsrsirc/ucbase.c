@@ -116,6 +116,12 @@ drop_chan(irc h, chan c)
 	return true;
 }
 
+size_t
+num_chans(irc h)
+{
+	return smap_count(h->chans);
+}
+
 chan
 get_chan(irc h, const char *name, bool complain)
 {
@@ -132,6 +138,12 @@ get_memb(irc h, chan c, const char *nick, bool complain)
 	if (!m && complain)
 		W("no such member '%s' in channel '%s'", nick, c->name); 
 	return m;
+}
+
+size_t
+num_memb(irc h, chan c)
+{
+	return smap_count(c->memb);
 }
 
 bool
@@ -551,6 +563,12 @@ get_user(irc h, const char *ident, bool complain)
 	return u;
 }
 
+size_t
+num_users(irc h)
+{
+	return smap_count(h->users);
+}
+
 bool
 rename_user(irc h, const char *ident, const char *newnick, bool *allocerr) //mh.
 {
@@ -604,3 +622,58 @@ rename_user(irc h, const char *ident, const char *newnick, bool *allocerr) //mh.
 
 	return true;
 }
+
+chan
+first_chan(irc h)
+{
+	void *e;
+	if (!smap_first(h->chans, NULL, &e))
+		return NULL;
+	return e;
+}
+
+chan
+next_chan(irc h)
+{
+	void *e;
+	if (!smap_next(h->chans, NULL, &e))
+		return NULL;
+	return e;
+}
+
+user
+first_user(irc h)
+{
+	void *e;
+	if (!smap_next(h->users, NULL, &e))
+		return NULL;
+	return e;
+}
+
+user
+next_user(irc h)
+{
+	void *e;
+	if (!smap_next(h->users, NULL, &e))
+		return NULL;
+	return e;
+}
+
+memb
+first_memb(irc h, chan c)
+{
+	void *e;
+	if (!smap_next(c->memb, NULL, &e))
+		return NULL;
+	return e;
+}
+
+memb
+next_memb(irc h, chan c)
+{
+	void *e;
+	if (!smap_next(c->memb, NULL, &e))
+		return NULL;
+	return e;
+}
+

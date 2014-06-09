@@ -622,3 +622,155 @@ trk_dump(irc h, bool full)
 // MODE #srsbsns
 // :port80c.se.quakenet.org 324 mynick #srsbsns +sk *
 // :port80c.se.quakenet.org 329 mynick #srsbsns 1313083493
+
+static chanrep* mkchanrep(chanrep *dest, chan c);
+static userrep* mkuserrep(userrep *dest, user u, const char *modepfx);
+
+size_t
+irc_num_chans(irc h)
+{
+	return num_chans(h);
+}
+
+size_t
+irc_all_chans(irc h, chanrep *chanarr, size_t chanarr_cnt)
+{
+	if (!chanarr_cnt)
+		return 0;
+
+	size_t cnt = 0;
+
+	chan c = first_chan(h);
+	if (!c)
+		return 0;
+
+	do {
+		mkchanrep(&chanarr[cnt++], c);
+	} while (cnt < chanarr_cnt && (c = next_chan(h)));
+
+	return cnt;
+}
+
+static chanrep*
+mkchanrep(chanrep *dest, chan c)
+{
+	dest->name = c->name;
+	dest->topic = c->topic;
+	dest->topicnick = c->topicnick;
+	dest->tscreate = c->tscreate;
+	dest->tstopic = c->tstopic;
+	return dest;
+}
+
+chanrep*
+irc_chan(irc h, chanrep *dest, const char *name)
+{
+	chan c = get_chan(h, name, false);
+	if (!c)
+		return NULL;
+
+	return mkchanrep(dest, c);
+}
+
+
+size_t
+irc_num_users(irc h)
+{
+	return num_users(h);
+}
+
+size_t
+irc_all_users(irc h, userrep *userarr, size_t userarr_cnt)
+{
+	if (!userarr_cnt)
+		return 0;
+
+	size_t cnt = 0;
+
+	user u = first_user(h);
+	if (!u)
+		return 0;
+
+	do {
+		mkuserrep(&userarr[cnt++], u, NULL);
+	} while (cnt < userarr_cnt && (u = next_user(h)));
+
+	return cnt;
+}
+
+static userrep*
+mkuserrep(userrep *dest, user u, const char *modepfx)
+{
+	dest->modepfx = modepfx;
+	dest->nick = u->nick;
+	dest->uname = u->uname;
+	dest->host = u->host;
+	dest->fname = u->fname;
+	return dest;
+}
+
+userrep*
+irc_user(irc h, userrep *dest, const char *ident)
+{
+	user u = get_user(h, ident, false);
+	if (!u)
+		return NULL;
+
+	return mkuserrep(dest, u, NULL);
+}
+
+
+size_t
+irc_num_members(irc h, const char *chname)
+{
+	chan c = get_chan(h, chname, false);
+	if (!c)
+		return 0;
+
+	return num_memb(h, c);
+}
+
+size_t
+irc_all_members(irc h, const char *chname, userrep *userarr, size_t userarr_cnt)
+{
+	if (!userarr_cnt)
+		return 0;
+
+	chan c = get_chan(h, chname, false);
+	if (!c)
+		return 0;
+
+	size_t cnt = 0;
+
+	memb m = first_memb(h, c);
+	if (!m)
+		return 0;
+
+	do {
+		mkuserrep(&userarr[cnt++], m->u, m->modepfx);
+	} while (cnt < userarr_cnt && (m = next_memb(h, c)));
+
+	return cnt;
+}
+
+userrep*
+irc_member(irc h, userrep *dest, const char *chname, const char *ident)
+{
+	chan c = get_chan(h, chname, false);
+	if (!c)
+		return NULL;
+
+	memb m = get_memb(h, c, ident, false);
+	if (!m)
+		return NULL;
+
+	dest->modepfx = m->modepfx;
+	dest->nick = m->u->nick;
+	dest->uname = m->u->uname;
+	dest->host = m->u->host;
+	dest->fname = m->u->fname;
+
+	return dest;
+}
+
+
