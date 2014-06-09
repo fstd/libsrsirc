@@ -376,6 +376,8 @@ irc_dump(irc h)
 	N("tracking_enab: %d", h->tracking_enab);
 	N("endofnames: %d", h->endofnames);
 	for (size_t i = 0; i < COUNTOF(h->logonconv); i++) {
+		if (!h->logonconv[i])
+			continue;
 		char line[1024];
 		ut_sndumpmsg(line, sizeof line, NULL, h->logonconv[i]),
 		N("logonconv[%zu]: '%s'", i, line);
