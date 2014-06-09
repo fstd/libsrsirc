@@ -214,5 +214,6 @@ const char* irc_get_service_info(irc hnd);
 bool irc_tracking_enab(irc hnd); //tell if tracking is (actually) enabled
 bool irc_get_dumb(irc hnd);
 void irc_set_dumb(irc hnd, bool dumbmode);
+bool irc_can_read(irc hnd);
 
 #endif /* LIBSRSIRC_IRC_EXT_H */

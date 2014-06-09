@@ -268,6 +268,13 @@ irc_read(irc hnd, tokarr *tok, uint64_t to_us)
 	return 1;
 }
 
+/* this is ugly and insane */
+bool
+irc_can_read(irc hnd)
+{
+	return hnd->con->rctx.eptr - hnd->con->rctx.wptr >= 3;
+}
+
 bool
 irc_write(irc hnd, const char *line)
 {
