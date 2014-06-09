@@ -13,6 +13,8 @@
 #include "conn.h"
 #include <intlog.h>
 
+#include "msg.h"
+
 #include "common.h"
 
 
@@ -316,4 +318,10 @@ void
 irc_set_dumb(irc hnd, bool dumbmode)
 {
 	hnd->dumb = dumbmode;
+}
+
+bool
+irc_reg_msghnd(irc hnd, const char *cmd, uhnd_fn hndfn, bool pre)
+{
+	return msg_reguhnd(hnd, cmd, hndfn, pre);
 }

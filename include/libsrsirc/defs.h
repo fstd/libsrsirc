@@ -83,4 +83,5 @@ typedef bool (*fp_con_read)(tokarr *msg, void* tag);
  * desired nickname is unavailable. see irc_regcb_mutnick */
 typedef void (*fp_mut_nick)(char *nick, size_t nick_sz);
 
+typedef bool (*uhnd_fn)(irc hnd, tokarr *msg, size_t nargs, bool pre);
 #endif /* LIBSRSIRC_IRC_DEFS_H */

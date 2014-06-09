@@ -216,4 +216,6 @@ bool irc_get_dumb(irc hnd);
 void irc_set_dumb(irc hnd, bool dumbmode);
 bool irc_can_read(irc hnd);
 
+bool irc_reg_msghnd(irc hnd, const char *cmd, uhnd_fn hndfn, bool pre);
+
 #endif /* LIBSRSIRC_IRC_EXT_H */

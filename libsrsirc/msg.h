@@ -19,11 +19,13 @@
 # define PROTO_ERR     (CANT_PROCEED|(1<<3)) // illegal protocol message
 # define IO_ERR        (CANT_PROCEED|(1<<4)) // failure doing i/o (conn_write())
 # define ALLOC_ERR     (CANT_PROCEED|(1<<5)) // out of memory
-# define SHITCODEZ_ERR (CANT_PROCEED|(1<<6)) // condition which must be a bug
+# define USER_ERR      (CANT_PROCEED|(1<<6)) // user msg handler failed
 #define LOGON_COMPLETE (1<<7) // we now consider ourselves logged on
 
 bool msg_reghnd(irc hnd, const char *cmd, hnd_fn hndfn, const char *module);
 void msg_unregall(irc hnd, const char *module);
+
+bool msg_reguhnd(irc hnd, const char *cmd, uhnd_fn hndfn, bool pre);
 
 
 /* returns the bitwise OR of one or more of the above

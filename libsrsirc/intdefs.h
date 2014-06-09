@@ -65,6 +65,11 @@ struct msghnd {
 	const char *module;
 };
 
+/* protocol message handler function pointers */
+struct umsghnd {
+	char cmd[32];
+	uhnd_fn hndfn;
+};
 
 /* this is a relict of the former design */
 typedef struct iconn_s* iconn;
@@ -126,6 +131,12 @@ struct irc_s {
 	fp_mut_nick cb_mut_nick;
 
 	bool dumb;
+
+	struct umsghnd *uprehnds;
+	size_t uprehnds_cnt;
+
+	struct umsghnd *uposthnds;
+	size_t uposthnds_cnt;
 
 	struct msghnd *msghnds;
 	size_t msghnds_cnt;
