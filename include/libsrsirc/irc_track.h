@@ -13,6 +13,7 @@ struct chanrep {
 	const char *topicnick;
 	uint64_t tscreate;
 	uint64_t tstopic;
+	void *tag;
 };
 
 struct userrep {
@@ -21,6 +22,8 @@ struct userrep {
 	const char *uname;
 	const char *host;
 	const char *fname;
+	size_t nchans;
+	void *tag;
 };
 
 typedef struct chanrep chanrep;

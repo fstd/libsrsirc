@@ -659,6 +659,7 @@ mkchanrep(chanrep *dest, chan c)
 	dest->topicnick = c->topicnick;
 	dest->tscreate = c->tscreate;
 	dest->tstopic = c->tstopic;
+	dest->tag = c->tag;
 	return dest;
 }
 
@@ -706,6 +707,8 @@ mkuserrep(userrep *dest, user u, const char *modepfx)
 	dest->uname = u->uname;
 	dest->host = u->host;
 	dest->fname = u->fname;
+	dest->tag = u->tag;
+	dest->nchans = u->nchans;
 	return dest;
 }
 
