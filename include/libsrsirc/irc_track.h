@@ -29,11 +29,6 @@ struct userrep {
 typedef struct chanrep chanrep;
 typedef struct userrep userrep;
 
-/* enable tracking for the given irc object.  call between irc_init() and
- * irc_connect(), don't call multiple times for the same `hnd' */
-bool trk_init(irc hnd);
-void trk_deinit(irc hnd);
-
 /* the results of these functions (i.e. the strings pointed to by the various
  * members of the structs above is only valid until the next time irc_read
  * is called.  if you need persistence, copy the data. */

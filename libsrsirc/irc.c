@@ -25,7 +25,7 @@
 #include <intlog.h>
 
 #include <libsrsirc/irc.h>
-#include <libsrsirc/irc_track.h>
+#include "irc_track_int.h"
 
 static bool send_logon(irc hnd);
 
