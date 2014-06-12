@@ -121,6 +121,7 @@ irc_init(void)
 	r->scto_us = DEF_SCTO_US;
 	r->hcto_us = DEF_HCTO_US;
 	r->dumb = false;
+	r->tracking_enab = r->tracking = false;
 
 	for (size_t i = 0; i < COUNTOF(r->logonconv); i++)
 		r->logonconv[i] = NULL;
