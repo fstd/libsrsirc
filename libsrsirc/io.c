@@ -77,7 +77,9 @@ io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
 	ctx->wptr += linelen;
 
 	*delim = '\0';
-	D("read a line: '%s'", linestart);
+
+	I("read: '%s'", linestart);
+
 	return tokenize(linestart, tok) ? 1 : -1;
 }
 
@@ -87,6 +89,8 @@ io_write(sckhld sh, const char *line)
 {
 	size_t len = strlen(line);
 	int needbr = len < 2 || line[len-2] != '\r' || line[len-1] != '\n';
+
+	I("write: '%s%s'", line, needbr ? "\r\n" : "");
 
 	return write_str(sh, line) && (!needbr || write_str(sh, "\r\n"));
 }
