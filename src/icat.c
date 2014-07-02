@@ -77,6 +77,7 @@ static struct settings_s {
 	int verb;
 	char chanlist[MAX_CHANLIST];
 	char keylist[MAX_CHANLIST];
+	char *esc;
 } g_sett;
 
 static struct srvlist_s {
@@ -371,6 +372,12 @@ handle_stdin(char *line)
 	if (strlen(line) == 0)
 		return;
 
+	/* protocol escape */
+	if (g_sett.esc && strncmp(line, g_sett.esc, strlen(g_sett.esc)) == 0) {
+		iprintf("%s", line += strlen(g_sett.esc));
+		return;
+	}
+
 	char *dst = g_sett.chanlist;
 
 	if (g_sett.trgmode) {
@@ -448,7 +455,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 	char *a0 = (*argv)[0];
 
 	for (int ch; (ch = getopt(*argc, *argv,
-	    "vqchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNjiI")) != -1;) {
+	    "vqchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNjiIE:")) != -1;) {
 		switch (ch) {
 		      case 'n':
 			irc_set_nick(g_irc, optarg);
@@ -520,6 +527,9 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			} while ((tok = strtok(NULL, " ")));
 			free(str);
 			}
+		break;case 'E':
+			if (!(sett->esc = strdup(optarg)))
+				E("strdup failed");
 		break;case 'l':
 			sett->linedelay = strtou64(optarg, NULL, 10) * 1000u;
 			WVX("set linedelay to %"PRIu64" ms/line", sett->linedelay / 1000u);
@@ -592,6 +602,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	sett->conto_hard_us = DEF_CONTO_HARD_MS*1000u;
 	sett->ignore_pm = DEF_IGNORE_PM;
 	sett->ignore_cs = DEF_IGNORE_CHANSERV;
+	sett->esc = NULL;
 
 	process_args(argc, argv, sett);
 
@@ -784,6 +795,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	    "[def: "XSTR(DEF_LINEDELAY_MS)"]");
 	BH("\t-L <int>: Number of 'first free' lines to send unthrottled."
 	    "[def: "XSTR(DEF_FREELINES)"]");
+	BH("\t-E <str>: Escape prefix. Send lines prefixed w/ this as-is. [def: none]");
 	LH("");
 	LH("\t<pxspec> specifies a proxy and mostly works like hostspec:");
 	LH("\t\tpxspec   := pxtype:hostspec");
