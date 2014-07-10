@@ -136,4 +136,6 @@ void ut_freearr(tokarr *arr);
 
 char* ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr);
 
+bool ut_tokenize(char *buf, tokarr *tok);
+
 #endif /* LIBSRSIRC_IRC_UTIL_H */

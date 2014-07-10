@@ -24,6 +24,8 @@
 #include <libsrsirc/util.h>
 #include "intdefs.h"
 
+static char* next_tok(char *buf);
+
 void
 ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx)
 {
@@ -419,3 +421,64 @@ ut_freearr(tokarr *arr)
 		free(arr);
 	}
 }
+
+
+/* in-place tokenize an IRC protocol message pointed to by `buf'
+ * the array pointed to by `tok' is populated with pointers to the identified
+ * tokens; if there are less tokens than elements in the array, the remaining
+ * elements are set to NULL.  returns true on success, false on failure */
+bool
+ut_tokenize(char *buf, tokarr *tok)
+{
+	for (size_t i = 0; i < COUNTOF(*tok); ++i)
+		(*tok)[i] = NULL;
+
+	if (*buf == ':') { /* message has a prefix */
+		(*tok)[0] = buf + 1; /* disregard the colon */
+		if (!(buf = next_tok(buf))) {
+			E("protocol error (no more tokens after prefix)");
+			return false;
+		}
+	} else if (*buf == ' ') { /* this would lead to parsing issues */
+		E("protocol error (leading whitespace)");
+		return false;
+	} else if (!*buf) {
+		E("bug (empty line)"); //this shouldn't be possible anymore
+		return false;
+	}
+
+	(*tok)[1] = buf; /* command */
+
+	size_t argc = 2;
+	while (argc < COUNTOF(*tok) && (buf = next_tok(buf))) {
+		if (*buf == ':') { /* `trailing' arg */
+			(*tok)[argc++] = buf + 1; /* disregard the colon */
+			break;
+		}
+
+		(*tok)[argc++] = buf;
+	}
+
+	return true;
+}
+
+/* \0-terminate the (to-be)-token `buf' points to, then locate the next token,
+ * if any, and return pointer to it (or NULL) */
+static char*
+next_tok(char *buf)
+{
+	while (*buf && *buf != ' ') /* walk until end of (former) token */
+		buf++;
+
+	if (!*buf)
+		return NULL; /* there's no next token */
+
+	while (*buf == ' ') /* walk over token delimiter, zero it out */
+		*buf++ = '\0';
+
+	if (!*buf)
+		return NULL; /* trailing whitespace, but no next token */
+
+	return buf; /* return pointer to beginning of the next token */
+}
+
