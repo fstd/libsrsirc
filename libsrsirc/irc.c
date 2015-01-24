@@ -293,7 +293,7 @@ irc_read(irc hnd, tokarr *tok, uint64_t to_us)
 	return 1;
 }
 
-/* this is ugly and insane */
+/* this is ugly and insane and BTW: it won't work */
 bool
 irc_can_read(irc hnd)
 {
