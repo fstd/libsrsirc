@@ -1,5 +1,5 @@
 bin_PROGRAMS = icat iwat
-icat_SOURCES = icat.c
+icat_SOURCES = icat_core.c icat_init.c icat_misc.c icat_serv.c icat_user.c icat_debug.c
 icat_CPPFLAGS = -I$(top_srcdir)/include
 icat_LDADD = ../libsrsirc/libsrsirc.la
 iwat_SOURCES = iwat.c

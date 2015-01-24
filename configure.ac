@@ -4,7 +4,7 @@
 AC_PREREQ([2.69])
 AC_INIT([libsrsirc], [0.0.3], [van.fisted@googlemail.com])
 AC_CONFIG_MACRO_DIR([m4])
-AC_CONFIG_SRCDIR([src/icat.c])
+AC_CONFIG_SRCDIR([src/icat_core.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
