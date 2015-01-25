@@ -10,12 +10,6 @@
 #include <stdint.h>
 
 
-#ifdef __linux__
-# define INFO_SIG SIGUSR1
-#else
-# define INFO_SIG SIGINFO
-#endif
-
 #define MOD_INIT 0
 #define MOD_CORE 1
 #define MOD_SERV 2

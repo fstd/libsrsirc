@@ -365,7 +365,7 @@ sighnd(int s)
 	case SIGINT:
 		g_interrupted = true;
 		break;
-	case INFO_SIG:
+	case DUMPSIG:
 		g_inforequest = true;
 		break;
 	}
@@ -390,7 +390,8 @@ main(int argc, char **argv)
 		C("No targetmode and no chans given. this won't work.");
 
 	signal(SIGINT, sighnd);
-	signal(INFO_SIG, sighnd);
+	signal(SIGUSR1, SIG_IGN);
+	signal(DUMPSIG, sighnd);
 
 	dump_settings();
 
