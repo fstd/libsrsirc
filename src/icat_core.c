@@ -41,6 +41,19 @@
 static void handle_ircmsg(tokarr *tok);
 static void handle_usermsg(char *linebuf);
 
+
+void
+core_init(void)
+{
+	serv_init();
+}
+
+void
+core_destroy(void)
+{
+	serv_destroy();
+}
+
 int
 core_run(void)
 {
@@ -114,12 +127,12 @@ core_run(void)
 			usleep(100000);
 	}
 
-	serv_destroy();
 	if (g_interrupted)
 		N("Interrupted by user");
 
 	return 0;
 }
+
 
 static void
 handle_ircmsg(tokarr *tok)

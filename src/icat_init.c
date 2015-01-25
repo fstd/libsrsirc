@@ -376,7 +376,7 @@ main(int argc, char **argv)
 
 	dump_settings();
 
-	serv_init();
+	core_init();
 
 	I("Initialized, running core");
 

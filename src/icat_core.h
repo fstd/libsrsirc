@@ -5,6 +5,10 @@
 #ifndef LIBSRSIRC_ICAT_CORE_H
 #define LIBSRSIRC_ICAT_CORE_H 1
 
+
+void core_init(void);
+void core_destroy(void);
+
 int core_run(void);
 
 
