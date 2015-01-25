@@ -38,8 +38,13 @@
 #include "icat_user.h"
 
 
+static unsigned s_readcnt;
+static unsigned s_writecnt;
+
+
 static void handle_ircmsg(tokarr *tok);
 static void handle_usermsg(char *linebuf);
+static void dump_info(void);
 
 
 void
@@ -66,6 +71,12 @@ core_run(void)
 
 	while (!g_interrupted) {
 		idle = true;
+
+		if (g_inforequest) {
+			dump_info();
+			g_inforequest = false;
+		}
+
 		if (serv_canread()) {
 			int r = serv_read(&tok);
 			if (r <= 0)
@@ -139,6 +150,8 @@ handle_ircmsg(tokarr *tok)
 	if (!(*tok)[0])
 		return;
 
+	s_readcnt++;
+
 	ut_pfx2nick(nick, sizeof nick, (*tok)[0]);
 
 	if (g_sett.ignore_cs && !ut_istrcmp(nick, "ChanServ", serv_casemap()))
@@ -154,6 +167,8 @@ handle_ircmsg(tokarr *tok)
 static void
 handle_usermsg(char *lnbuf)
 {
+	s_writecnt++;
+
 	char *end = lnbuf + strlen(lnbuf) - 1;
 	while (end >= lnbuf && (*end == '\r' || *end == '\n'))
 		*end-- = '\0';
@@ -176,4 +191,11 @@ handle_usermsg(char *lnbuf)
 	}
 
 	serv_printf("%s %s :%s", g_sett.notices?"NOTICE":"PRIVMSG", dst, lnbuf);
+}
+
+static void
+dump_info(void)
+{
+	fprintf(stderr, "icat: %sline; read %uln wrote %uln\n",
+	    serv_online()?"on":"off", s_readcnt, s_writecnt);
 }

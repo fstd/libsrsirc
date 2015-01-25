@@ -6,6 +6,12 @@
 #define LIBSRSIRC_ICAT_COMMON_H 1
 
 
+#ifdef __LINUX__
+# define INFO_SIG SIGUSR1
+#else
+# define INFO_SIG SIGINFO
+#endif
+
 #define MOD_INIT 0
 #define MOD_CORE 1
 #define MOD_SERV 2
@@ -67,6 +73,7 @@ struct settings_s {
 
 extern struct settings_s g_sett;
 extern bool g_interrupted;
+extern bool g_inforequest;
 
 
 #endif /* LIBSRSIRC_ICAT_COMMON_H */

@@ -31,6 +31,7 @@
 
 struct settings_s g_sett;
 bool g_interrupted = false;
+bool g_inforequest = false;
 
 
 static void usage(FILE *str, const char *a0, int ec, bool sh);
@@ -355,7 +356,15 @@ cleanup(void)
 static void
 sighnd(int s)
 {
-	g_interrupted = true;
+	switch (s)
+	{
+	case SIGINT:
+		g_interrupted = true;
+		break;
+	case INFO_SIG:
+		g_inforequest = true;
+		break;
+	}
 }
 
 
@@ -377,6 +386,7 @@ main(int argc, char **argv)
 		C("No targetmode and no chans given. this won't work.");
 
 	signal(SIGINT, sighnd);
+	signal(INFO_SIG, sighnd);
 
 	dump_settings();
 
