@@ -54,7 +54,6 @@ struct settings_s {
 	uint64_t confailwait_us;
 	uint64_t heartbeat_us;
 	bool reconnect;
-	bool flush;
 	bool nojoin;
 	bool ignore_pm;
 	bool ignore_cs;

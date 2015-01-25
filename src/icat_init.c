@@ -45,7 +45,7 @@ process_args(int *argc, char ***argv)
 	char *a0 = (*argv)[0];
 
 	for (int ch; (ch = getopt(*argc, *argv,
-	    "vqchHn:u:f:F:p:P:tT:C:kw:l:L:Sb:W:rNjiIE:")) != -1;) {
+	    "vqchHn:u:f:F:p:P:tT:C:kw:l:L:b:W:rNjiIE:")) != -1;) {
 		switch (ch) {
 		      case 'n':
 			STRACPY(g_sett.nick, optarg);
@@ -123,8 +123,6 @@ process_args(int *argc, char ***argv)
 			g_sett.heartbeat_us = strtou64(optarg, NULL, 10) * 1000u;
 		break;case 'r':
 			g_sett.reconnect = true;
-		break;case 'S':
-			g_sett.flush = true;
 		break;case 'j':
 			g_sett.nojoin = true;
 		break;case 'I':
@@ -216,7 +214,6 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	BH("\t-t: Enable target-mode. See man page for more information");
 	LH("\t-k: Keep trying to connect, if first connect/logon fails");
 	BH("\t-r: Reconnect on disconnect, rather than terminating");
-	LH("\t-S: Explicitly flush stdout after every line of output");
 	LH("\t-N: Use NOTICE instead of PRIVMSG for messages");
 	LH("\t-j: Do not join channel given by -C");
 	LH("\t-i: Don't ignore non-channel messages");
@@ -302,7 +299,6 @@ set_defaults(void)
 	g_sett.confailwait_us = DEF_CONFAILWAIT_MS*1000u;
 	g_sett.heartbeat_us = DEF_HEARTBEAT_MS*1000u;
 	g_sett.reconnect = false;
-	g_sett.flush = false;
 	g_sett.nojoin = false;
 	g_sett.ignore_pm = DEF_IGNORE_PM;
 	g_sett.ignore_cs = DEF_IGNORE_CHANSERV;
@@ -333,7 +329,6 @@ dump_settings(void)
 	D("confailwait_us: %"PRIu64, g_sett.confailwait_us);
 	D("heartbeat_us: %"PRIu64, g_sett.heartbeat_us);
 	D("reconnect: %s", g_sett.reconnect?"yes":"no");
-	D("flush: %s", g_sett.flush?"yes":"no");
 	D("nojoin: %s", g_sett.nojoin?"yes":"no");
 	D("ignore_pm: %s", g_sett.ignore_pm?"yes":"no");
 	D("ignore_cs: %s", g_sett.ignore_cs?"yes":"no");
