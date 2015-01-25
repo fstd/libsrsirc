@@ -63,5 +63,7 @@ struct settings_s {
 };
 
 extern struct settings_s g_sett;
+extern bool g_interrupted;
+
 
 #endif /* SRC_ICAT_COMMON_H */

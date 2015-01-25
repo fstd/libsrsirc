@@ -9,6 +9,7 @@
 #include <string.h>
 #include <inttypes.h>
 
+#include <signal.h>
 #include <unistd.h>
 
 #include <libsrsirc/irc_ext.h>
@@ -24,11 +25,14 @@
 #include "icat_debug.h"
 
 struct settings_s g_sett;
+bool g_interrupted = false;
+
 
 static void process_args(int *argc, char ***argv);
 static void usage(FILE *str, const char *a0, int ec, bool sh);
 static void set_defaults(void);
 static void dump_settings(void);
+static void sighnd(int s);
 
 static void
 process_args(int *argc, char ***argv)
@@ -339,6 +343,13 @@ dump_settings(void)
 	}
 }
 
+static void
+sighnd(int s)
+{
+	g_interrupted = true;
+}
+
+
 int
 main(int argc, char **argv)
 {
@@ -355,6 +366,8 @@ main(int argc, char **argv)
 
 	if (!g_sett.trgmode && strlen(g_sett.chanlist) == 0)
 		C("no targetmode and no chans given. this won't work.");
+
+	signal(SIGINT, sighnd);
 
 	dump_settings();
 

@@ -50,7 +50,7 @@ core_run(void)
 	bool ignoreuser = false;
 	uint64_t nextop = 0;
 
-	for (;;) {
+	while (!g_interrupted) {
 		idle = true;
 		if (serv_canread()) {
 			int r = serv_read(&tok);
@@ -114,6 +114,9 @@ core_run(void)
 	}
 
 	serv_destroy();
+	if (g_interrupted)
+		N("Interrupted by user");
+
 	return 0;
 }
 
