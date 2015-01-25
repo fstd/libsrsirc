@@ -482,3 +482,18 @@ next_tok(char *buf)
 	return buf; /* return pointer to beginning of the next token */
 }
 
+const char *
+ut_casemap_nam(int cm)
+{
+	switch (cm)
+	{
+		case CMAP_RFC1459:
+			return "RFC1459";
+		case CMAP_STRICT_RFC1459:
+			return "STRICT_RFC1459";
+		case CMAP_ASCII:
+			return "ASCII";
+		default:
+			return "UNKNOWN";
+	}
+}

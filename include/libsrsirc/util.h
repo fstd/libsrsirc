@@ -138,4 +138,6 @@ char* ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr);
 
 bool ut_tokenize(char *buf, tokarr *tok);
 
+const char * ut_casemap_nam(int cm);
+
 #endif /* LIBSRSIRC_IRC_UTIL_H */
