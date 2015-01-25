@@ -39,7 +39,6 @@ static bool s_on;
 static struct outline_s *s_outQ;
 static uint64_t s_nexthb;
 static uint64_t s_quitat;
-static bool s_expectquit;
 static int s_casemap = CMAP_RFC1459;
 
 
@@ -103,6 +102,11 @@ serv_operate(void)
 {
 	if (!s_on) {
 		D("We're not online");
+
+		if (s_quitat) {
+			D("Not trying to connect since we're terminating");
+			return true;
+		}
 
 		if (!tryconnect(g_sett.srvlist)) {
 			E("Failed to reconnect/relogon");
@@ -169,7 +173,7 @@ serv_read(tokarr *t)
 
 	int r = irc_read(s_irc, t, 1000000u);
 	if (r == -1) {
-		if (s_expectquit && irc_eof(s_irc))
+		if (s_quitat && irc_eof(s_irc))
 			N("Connection closed");
 		else
 			E("Unexpected %s from server",
@@ -272,7 +276,6 @@ process_sendq(void)
 			I("QUIT seen, forcing d/c in %"PRIu64" seconds",
 			    g_sett.waitquit_us / 1000000u);
 			s_quitat = tstamp_us();
-			s_expectquit = true;
 		}
 
 		free(ptr->line);

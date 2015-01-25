@@ -110,13 +110,18 @@ core_run(void)
 		}
 
 		uint64_t tquit = serv_sentquit();
-		if (tquit && tquit + g_sett.waitquit_us < tstamp_us()) {
-			N("Waitquit exceeded, breaking connection");
-			break;
+		bool on = serv_online();
+
+		if (tquit) {
+			if (!on)
+				break;
+
+			if (tquit + g_sett.waitquit_us < tstamp_us()) {
+				N("Waitquit exceeded, breaking connection");
+				break;
+			}
 		}
 
-
-		bool on = serv_online();
 		if (!on && (!g_sett.reconnect || user_eof())) {
 			N("IRC offline, not going to reconnect%s.",
 			    g_sett.reconnect?" (because EOF on stdin)":"");
