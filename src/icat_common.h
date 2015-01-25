@@ -6,7 +6,11 @@
 #define LIBSRSIRC_ICAT_COMMON_H 1
 
 
-#ifdef __LINUX__
+#include <stdbool.h>
+#include <stdint.h>
+
+
+#ifdef __linux__
 # define INFO_SIG SIGUSR1
 #else
 # define INFO_SIG SIGINFO
