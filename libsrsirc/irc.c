@@ -293,6 +293,12 @@ irc_read(irc hnd, tokarr *tok, uint64_t to_us)
 	return 1;
 }
 
+bool
+irc_eof(irc hnd)
+{
+	return conn_eof(hnd->con);
+}
+
 /* this is ugly and insane and BTW: it won't work */
 bool
 irc_can_read(irc hnd)

@@ -18,6 +18,7 @@ bool conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us);
 int conn_read(iconn hnd, tokarr *tok, uint64_t to_us);
 bool conn_write(iconn hnd, const char *line);
 bool conn_online(iconn hnd);
+bool conn_eof(iconn hnd);
 
 const char *conn_get_host(iconn hnd);
 uint16_t conn_get_port(iconn hnd);

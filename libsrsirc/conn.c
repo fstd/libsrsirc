@@ -73,6 +73,7 @@ conn_init(void)
 	r->pport = 0;
 	r->ptype = -1;
 	r->state = OFF;
+	r->eof = false;
 	r->colon_trail = false;
 	r->ssl = false;
 	r->sh.shnd = NULL;
@@ -261,8 +262,9 @@ conn_read(iconn hnd, tokarr *tok, uint64_t to_us)
 		return 0; /* timeout */
 
 	if (n < 0) {
-		W("(%p) io_read failed", hnd);
+		W("(%p) io_read %s", hnd, n == -1 ? "failed":"EOF");
 		conn_reset(hnd);
+		hnd->eof = n == -2;
 		return -1;
 	}
 
@@ -287,6 +289,7 @@ conn_write(iconn hnd, const char *line)
 	if (!io_write(hnd->sh, line)) {
 		W("(%p) failed to write '%s'", hnd, line);
 		conn_reset(hnd);
+		hnd->eof = false;
 		return false;
 	}
 
@@ -299,6 +302,12 @@ bool
 conn_online(iconn hnd)
 {
 	return hnd->state == ON;
+}
+
+bool
+conn_eof(iconn hnd)
+{
+	return hnd->eof;
 }
 
 bool

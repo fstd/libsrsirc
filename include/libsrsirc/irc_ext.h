@@ -218,4 +218,6 @@ bool irc_can_read(irc hnd);
 
 bool irc_reg_msghnd(irc hnd, const char *cmd, uhnd_fn hndfn, bool pre);
 
+bool irc_eof(irc hnd);
+
 #endif /* LIBSRSIRC_IRC_EXT_H */

@@ -83,6 +83,7 @@ struct iconn_s {
 
 	sckhld sh;
 	int state;
+	bool eof;
 
 	struct readctx rctx;
 	bool colon_trail;

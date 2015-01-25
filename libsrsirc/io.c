@@ -134,7 +134,7 @@ read_more(sckhld sh, struct readctx *ctx, uint64_t to_us)
 	ssize_t n = read_wrap(sh, ctx->eptr, remain);
 	if (n <= 0) {
 		n == 0 ?  W("read: EOF") : WE("read failed");
-		return -1;
+		return n == 0 ? -2 : -1; // FIXME: magic numbers
 	}
 
 	ctx->eptr += n;
