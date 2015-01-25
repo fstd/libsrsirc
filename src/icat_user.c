@@ -1,20 +1,26 @@
+/* icat_user.c - User I/O (i.e. stdin/stdout) handling
+ * icat - IRC netcat on top of libsrsirc - (C) 2012-14, Timo Buhrmester
+ * See README for contact-, COPYING for license information. */
+
+#define LOG_MODULE MOD_USER
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
+
 
 #include "icat_user.h"
 
 #include <stdio.h>
 #include <string.h>
 
-#include <unistd.h>
 #include <sys/select.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #include "icat_common.h"
-
-#define LOG_MODULE MOD_USER
 #include "icat_debug.h"
+
 
 #define BUFSZ 4096
 

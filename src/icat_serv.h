@@ -1,5 +1,10 @@
-#ifndef SRC_ICAT_SERV_H
-#define SRC_ICAT_SERV_H 1
+/* icat_serv.h - Server I/O (i.e. IRC) handling
+ * icat - IRC netcat on top of libsrsirc - (C) 2012-14, Timo Buhrmester
+ * See README for contact-, COPYING for license information. */
+
+#ifndef LIBSRSIRC_ICAT_SERV_H
+#define LIBSRSIRC_ICAT_SERV_H 1
+
 
 #include <stdarg.h>
 #include <stdbool.h>
@@ -17,4 +22,5 @@ int serv_casemap(void);
 uint64_t serv_sentquit(void);
 void serv_destroy(void);
 
-#endif /* SRC_ICAT_SERV_H */
+
+#endif /* LIBSRSIRC_ICAT_SERV_H */

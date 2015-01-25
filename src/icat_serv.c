@@ -1,6 +1,13 @@
+/* icat_serv.c - Server I/O (i.e. IRC) handling
+ * icat - IRC netcat on top of libsrsirc - (C) 2012-14, Timo Buhrmester
+ * See README for contact-, COPYING for license information. */
+
+#define LOG_MODULE MOD_SERV
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
+
 
 #include "icat_serv.h"
 
@@ -16,11 +23,9 @@
 #include <libsrsirc/util.h>
 
 #include "icat_common.h"
+#include "icat_debug.h"
 #include "icat_misc.h"
 #include "icat_serv.h"
-
-#define LOG_MODULE MOD_SERV
-#include "icat_debug.h"
 
 
 static struct outline_s {

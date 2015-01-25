@@ -1,5 +1,10 @@
-#ifndef SRC_ICAT_COMMON_H
-#define SRC_ICAT_COMMON_H 1
+/* icat_common.h - Declarations used across icat
+ * icat - IRC netcat on top of libsrsirc - (C) 2012-14, Timo Buhrmester
+ * See README for contact-, COPYING for license information. */
+
+#ifndef LIBSRSIRC_ICAT_COMMON_H
+#define LIBSRSIRC_ICAT_COMMON_H 1
+
 
 #define MOD_INIT 0
 #define MOD_CORE 1
@@ -66,4 +71,4 @@ extern struct settings_s g_sett;
 extern bool g_interrupted;
 
 
-#endif /* SRC_ICAT_COMMON_H */
+#endif /* LIBSRSIRC_ICAT_COMMON_H */

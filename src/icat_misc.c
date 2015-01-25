@@ -1,23 +1,29 @@
+/* icat_misc.c - Miscellaneous routines used in icat
+ * icat - IRC netcat on top of libsrsirc - (C) 2012-14, Timo Buhrmester
+ * See README for contact-, COPYING for license information. */
+
+#define LOG_MODULE MOD_MISC
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
+
 #include "icat_misc.h"
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <ctype.h>
 #include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <inttypes.h>
 #include <sys/time.h>
 #include <unistd.h>
 
 #include "icat_common.h"
-
-#define LOG_MODULE MOD_MISC
 #include "icat_debug.h"
+
 
 static void tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 

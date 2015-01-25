@@ -1,14 +1,21 @@
+/* icat_init.c - Parse command line, initialize icat core
+ * icat - IRC netcat on top of libsrsirc - (C) 2012-14, Timo Buhrmester
+ * See README for contact-, COPYING for license information. */
+
+#define LOG_MODULE MOD_INIT
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
+
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
-#include <inttypes.h>
 
+#include <inttypes.h>
 #include <signal.h>
 #include <unistd.h>
 
@@ -16,13 +23,11 @@
 #include <libsrsirc/util.h>
 
 #include "icat_common.h"
+#include "icat_core.h"
+#include "icat_debug.h"
 #include "icat_misc.h"
 #include "icat_serv.h"
-#include "icat_user.h"
-#include "icat_core.h"
 
-#define LOG_MODULE MOD_INIT
-#include "icat_debug.h"
 
 struct settings_s g_sett;
 bool g_interrupted = false;

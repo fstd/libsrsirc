@@ -1,6 +1,6 @@
-/* log.c - (C) 2012-14, Timo Buhrmester
- * libsrslog - A srs lib
- * See README for contact-, COPYING for license information.  */
+/* icat_debug.c - Logging routines from libsrslog
+ * icat - IRC netcat on top of libsrsirc - (C) 2012-14, Timo Buhrmester
+ * See README for contact-, COPYING for license information. */
 
 #if HAVE_CONFIG_H
 # include <config.h>
@@ -8,14 +8,16 @@
 
 #include "icat_debug.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
+
 #include <ctype.h>
-#include <string.h>
+#include <errno.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
+
 
 #define DEF_LVL LOG_WARNING
 

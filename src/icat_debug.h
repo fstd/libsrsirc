@@ -1,9 +1,10 @@
-/* log.h - (C) 2012-14, Timo Buhrmester
- * libsrslog - A srs lib
- * See README for contact-, COPYING for license information.  */
+/* icat_debug.h - Logging interface from libsrslog
+ * icat - IRC netcat on top of libsrsirc - (C) 2012-14, Timo Buhrmester
+ * See README for contact-, COPYING for license information. */
 
-#ifndef LIBSRSLOG_LOG_H
-#define LIBSRSLOG_LOG_H 1
+#ifndef LIBSRSIRC_ICAT_DEBUG_H
+#define LIBSRSIRC_ICAT_DEBUG_H 1
+
 
 #include <stdbool.h>
 #include <limits.h>
@@ -108,4 +109,5 @@ void log_log(int mod, int lvl, int errn, const char *file, int line,
 #endif
     ;
 
-#endif /* LIBSRSLOG_LOG_H */
+
+#endif /* LIBSRSIRC_ICAT_DEBUG_H */

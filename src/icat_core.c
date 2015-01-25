@@ -1,40 +1,41 @@
-/* icat.c - IRC netcat, the example application of libsrsirc
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
+/* icat_core.c - icat core, mainly links together icat_serv and icat_user
+ * icat - IRC netcat on top of libsrsirc - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
+
+#define LOG_MODULE MOD_CORE
 
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
+
 #include "icat_core.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <limits.h>
-#include <string.h>
-#include <stdbool.h>
-#include <stdarg.h>
 #include <ctype.h>
 #include <errno.h>
-
+#include <limits.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
-#include <unistd.h>
+
+#include <err.h>
 #include <inttypes.h>
 #include <sys/time.h>
-#include <err.h>
+#include <unistd.h>
 
 #include <libsrsirc/defs.h>
 #include <libsrsirc/irc_ext.h>
 #include <libsrsirc/util.h>
 
 #include "icat_common.h"
+#include "icat_debug.h"
 #include "icat_misc.h"
 #include "icat_serv.h"
 #include "icat_user.h"
-
-#define LOG_MODULE MOD_CORE
-#include "icat_debug.h"
 
 
 static void handle_ircmsg(tokarr *tok);
