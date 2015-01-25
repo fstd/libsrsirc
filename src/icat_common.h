@@ -34,6 +34,7 @@
 #define DEF_IGNORE_PM true
 #define DEF_IGNORE_CHANSERV true
 #define DEF_VERB 1
+#define DEF_QMSG "IRC netcat - http://github.com/srsbsns/libsrsirc"
 
 
 struct srvlist_s {
@@ -71,6 +72,7 @@ struct settings_s {
 	char chanlist[MAX_CHANLIST];
 	char keylist[MAX_CHANLIST];
 	char *esc;
+	char qmsg[512];
 	struct srvlist_s *srvlist;
 };
 

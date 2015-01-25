@@ -83,6 +83,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	LH("\t-u <str>: Use <str> as (IRC) username/ident");
 	LH("\t-f <str>: Use <str> as (IRC) fullname");
 	LH("\t-F <int>: Specify USER flags. 0=None, 8=usermode +i");
+	LH("\t-Q <str>: Use <str> as quit message");
 	LH("\t-W <int>: Wait <int> ms between attempts to connect."
 	    "[def: "XSTR(DEF_CONFAILWAIT_MS)"]");
 	LH("\t-b <int>: Send heart beat PING every <int> ms."
@@ -127,7 +128,7 @@ process_args(int *argc, char ***argv)
 	char *a0 = (*argv)[0];
 
 	for (int ch; (ch = getopt(*argc, *argv,
-	    "vqchHn:u:f:F:p:P:tT:C:kw:l:L:b:W:rNjiIE:")) != -1;) {
+	    "vqchHn:u:f:F:Q:p:P:tT:C:kw:l:L:b:W:rNjiIE:")) != -1;) {
 		switch (ch) {
 		      case 'n':
 			STRACPY(g_sett.nick, optarg);
@@ -137,6 +138,8 @@ process_args(int *argc, char ***argv)
 			STRACPY(g_sett.fname, optarg);
 		break;case 'F':
 			g_sett.conflags = strtou8(optarg, NULL, 10);
+		break;case 'Q':
+			STRACPY(g_sett.qmsg, optarg);
 		break;case 'p':
 			STRACPY(g_sett.pass, optarg);
 		break;case 'P':
@@ -297,6 +300,7 @@ set_defaults(void)
 	g_sett.chanlist[0] = '\0';
 	g_sett.keylist[0] = '\0';
 	g_sett.esc = NULL;
+	STRACPY(g_sett.qmsg, DEF_QMSG);
 }
 
 static void

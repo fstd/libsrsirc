@@ -104,7 +104,7 @@ core_run(void)
 				idle = false;
 			} else if (user_eof()) {
 				N("EOF on the user end, queuing a QUIT");
-				serv_printf("QUIT\r\n");
+				serv_printf("QUIT :%s\r\n", g_sett.qmsg);
 				ignoreuser = true;
 			}
 		}
