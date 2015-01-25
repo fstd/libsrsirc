@@ -46,11 +46,9 @@ static size_t s_num_mods;
 
 static const char* lvlnam(int lvl);
 static const char* lvlcol(int lvl);
-
-
+static bool isdigitstr(const char *p);
+static int getenv_m(const char *nam, char *dest, size_t destsz);
 static void log_init(void);
-
-// ----- public interface implementation -----
 
 
 void
@@ -64,7 +62,6 @@ log_syslog(const char *ident, int facility)
 	s_stderr = false;
 }
 
-
 void
 log_stderr(void)
 {
@@ -74,7 +71,6 @@ log_stderr(void)
 	s_stderr = true;
 }
 
-
 void
 log_setfancy(bool fancy)
 {
@@ -83,13 +79,11 @@ log_setfancy(bool fancy)
 	s_fancy = fancy;
 }
 
-
 bool
 log_getfancy(void)
 {
 	return s_stderr && s_fancy;
 }
-
 
 void
 log_setlvl(int mod, int lvl)
@@ -100,13 +94,11 @@ log_setlvl(int mod, int lvl)
 		s_lvlarr[mod] = lvl;
 }
 
-
 int
 log_getlvl(int mod)
 {
 	return mod < 0 ? s_deflvl : s_lvlarr[mod];
 }
-
 
 void
 log_regmod(size_t modnumber, const char *modname)
@@ -245,9 +237,6 @@ log_log(int mod, int lvl, int errn, const char *file, int line,
 }
 
 
-// ---- local helpers ----
-
-
 static const char*
 lvlnam(int lvl)
 {
@@ -326,7 +315,8 @@ log_init(void)
 						break;
 
 				if (mod < s_num_mods)
-					s_lvlarr[mod] = (int)strtol(eq+1, NULL, 10);
+					s_lvlarr[mod] =
+					    (int)strtol(eq+1, NULL, 10);
 
 				*eq = '=';
 				continue;

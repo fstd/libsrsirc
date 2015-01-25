@@ -68,18 +68,15 @@ core_run(void)
 		idle = true;
 		if (serv_canread()) {
 			int r = serv_read(&tok);
-			if (r <= 0) {
-				E("serv_read: %d", r);
+			if (r <= 0)
 				continue;
-			}
 
 			ut_sndumpmsg(line, sizeof line, NULL, &tok);
 
-			if (strcmp(tok[1], "PRIVMSG") == 0) {
-				I("from server: '%s'", line);
+			I("From server: '%s'", line);
+
+			if (strcmp(tok[1], "PRIVMSG") == 0)
 				handle_ircmsg(&tok);
-			} else if (strcmp(tok[1], "372"))
-				D("from server: '%s'", line);
 
 			idle = false;
 		}
@@ -87,39 +84,40 @@ core_run(void)
 		if (!ignoreuser) {
 			if (user_canread()) {
 				size_t olen = user_readline(line, sizeof line);
-				I("from user: '%s'", line);
+				I("From user: '%s'", line);
 				if (olen >= sizeof line)
-					W("line was too long -- truncated!");
+					W("Line was too long -- truncated!");
 
 				handle_usermsg(line);
 
 				idle = false;
 			} else if (user_eof()) {
+				N("EOF on the user end, queuing a QUIT");
 				serv_printf("QUIT\r\n");
 				ignoreuser = true;
 			}
 		}
 
 		uint64_t tquit = serv_sentquit();
-		if (tquit && tquit + g_sett.waitquit_us < timestamp_us()) {
-			N("waitquit exceeded, breaking connection");
+		if (tquit && tquit + g_sett.waitquit_us < tstamp_us()) {
+			N("Waitquit exceeded, breaking connection");
 			break;
 		}
 
 
 		bool on = serv_online();
 		if (!on && (!g_sett.reconnect || user_eof())) {
-			N("irc offline, not going to reconnect%s.",
+			N("IRC offline, not going to reconnect%s.",
 			    g_sett.reconnect?" (because EOF on stdin)":"");
 			break;
 		}
 
-		if (nextop <= timestamp_us()) {
+		if (nextop <= tstamp_us()) {
 			if (!serv_operate()) {
 				E("serv_operate() failed");
 				if (!on) {
-					N("delaying next connection attempt");
-					nextop = timestamp_us() + g_sett.confailwait_us;
+					N("Delaying next connection attempt");
+					nextop = tstamp_us() + g_sett.cfwait_us;
 				}
 			}
 		}
@@ -154,28 +152,28 @@ handle_ircmsg(tokarr *tok)
 }
 
 static void
-handle_usermsg(char *linebuf)
+handle_usermsg(char *lnbuf)
 {
-	char *end = linebuf + strlen(linebuf) - 1;
-	while (end >= linebuf && (*end == '\r' || *end == '\n'))
+	char *end = lnbuf + strlen(lnbuf) - 1;
+	while (end >= lnbuf && (*end == '\r' || *end == '\n'))
 		*end-- = '\0';
 
-	if (strlen(linebuf) == 0)
+	if (strlen(lnbuf) == 0)
 		return;
 
 	/* protocol escape */
-	if (g_sett.esc && strncmp(linebuf, g_sett.esc, strlen(g_sett.esc)) == 0) {
-		serv_printf("%s", linebuf += strlen(g_sett.esc));
+	if (g_sett.esc && !strncmp(lnbuf, g_sett.esc, strlen(g_sett.esc))) {
+		serv_printf("%s", lnbuf += strlen(g_sett.esc));
 		return;
 	}
 
 	char *dst = g_sett.chanlist;
 
 	if (g_sett.trgmode) {
-		char *tok = strtok(linebuf, " ");
+		char *tok = strtok(lnbuf, " ");
 		dst = tok;
-		linebuf = tok + strlen(tok) + 1;
+		lnbuf = tok + strlen(tok) + 1;
 	}
 
-	serv_printf("%s %s :%s", g_sett.notices?"NOTICE":"PRIVMSG", dst, linebuf);
+	serv_printf("%s %s :%s", g_sett.notices?"NOTICE":"PRIVMSG", dst, lnbuf);
 }

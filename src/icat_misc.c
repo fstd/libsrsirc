@@ -27,29 +27,6 @@
 
 static void tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 
-uint8_t
-strtou8(const char *nptr, char **endptr, int base)
-{
-	return (uint8_t)strtoul(nptr, endptr, base);
-}
-
-uint64_t
-strtou64(const char *nptr, char **endptr, int base)
-{
-	return (uint64_t)strtoull(nptr, endptr, base);
-}
-
-void
-strNcpy(char *dest, const char *src, size_t destsz)
-{
-	if (!destsz)
-		return;
-
-	while (destsz-- && (*dest++ = *src++))
-		;
-
-	dest[-!destsz] = '\0';
-}
 
 void
 strNcat(char *dest, const char *src, size_t destsz)
@@ -66,17 +43,39 @@ strNcat(char *dest, const char *src, size_t destsz)
 	*ptr = '\0';
 }
 
-uint64_t
-timestamp_us(void)
+void
+strNcpy(char *dest, const char *src, size_t destsz)
 {
-	struct timeval t;
-	uint64_t ts = 0;
-	if (gettimeofday(&t, NULL) != 0)
-		CE("gettimeofday");
-	else
-		tconv(&t, &ts, true);
+	if (!destsz)
+		return;
 
-	return ts;
+	while (destsz-- && (*dest++ = *src++))
+		;
+
+	dest[-!destsz] = '\0';
+}
+
+uint8_t
+strtou8(const char *nptr, char **endptr, int base)
+{
+	return (uint8_t)strtoul(nptr, endptr, base);
+}
+
+uint64_t
+strtou64(const char *nptr, char **endptr, int base)
+{
+	return (uint64_t)strtoull(nptr, endptr, base);
+}
+
+bool
+ismychan(const char *chan)
+{
+	char chans[512];
+	char search[512];
+	snprintf(chans, sizeof chans, ",%s,", g_sett.chanlist);
+	snprintf(search, sizeof search, ",%s,", chan);
+
+	return strstr(chans, search);
 }
 
 bool
@@ -92,7 +91,7 @@ isdigitstr(const char *str)
 void
 sleep_us(uint64_t us)
 {
-	D("sleeping %"PRIu64" us", us);
+	D("Sleeping %"PRIu64" us", us);
 	uint64_t secs = us / 1000000u;
 	if (secs > INT_MAX)
 		secs = INT_MAX; //eh.. yeah.
@@ -104,16 +103,19 @@ sleep_us(uint64_t us)
 		usleep(u);
 }
 
-bool
-ismychan(const char *chan)
+uint64_t
+tstamp_us(void)
 {
-	char chans[512];
-	char search[512];
-	snprintf(chans, sizeof chans, ",%s,", g_sett.chanlist);
-	snprintf(search, sizeof search, ",%s,", chan);
+	struct timeval t;
+	uint64_t ts = 0;
+	if (gettimeofday(&t, NULL) != 0)
+		CE("gettimeofday");
+	else
+		tconv(&t, &ts, true);
 
-	return strstr(chans, search);
+	return ts;
 }
+
 
 static void
 tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts)

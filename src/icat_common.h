@@ -45,26 +45,25 @@ struct settings_s {
 	int pxtype;
 
 	bool trgmode;
-	uint64_t conto_soft_us;
-	uint64_t conto_hard_us;
+	uint64_t cto_soft_us;
+	uint64_t cto_hard_us;
 	uint64_t linedelay;
 	unsigned freelines;
 	uint64_t waitquit_us;
 	bool keeptrying;
-	uint64_t confailwait_us;
-	uint64_t heartbeat_us;
+	uint64_t cfwait_us;
+	uint64_t hbeat_us;
 	bool reconnect;
 	bool nojoin;
 	bool ignore_pm;
 	bool ignore_cs;
 	bool notices;
-	//int verb;
 	char chanlist[MAX_CHANLIST];
 	char keylist[MAX_CHANLIST];
 	char *esc;
 	struct srvlist_s *srvlist;
-
 };
+
 
 extern struct settings_s g_sett;
 extern bool g_interrupted;

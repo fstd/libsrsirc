@@ -24,14 +24,17 @@
 
 #define BUFSZ 4096
 
+
 static const size_t s_bufsz = BUFSZ;
 static char s_inbuf[BUFSZ+1];
 static char *s_bufhead = s_inbuf;
 static char *s_buftail = s_inbuf;
 static bool s_eof;
 
+
 static size_t buf_cnt(void);
 static size_t buf_rem(void);
+
 
 bool
 user_canread(void)
@@ -56,13 +59,13 @@ user_canread(void)
 
 	if (!buf_rem()) {
 		if (s_inbuf == s_bufhead) {
-			WE("line too long, truncating");
+			WE("Line too long, truncating");
 			s_buftail[0] = '\n';
 			s_buftail[1] = '\0';
 			return true;
 		} else {
 			size_t n = buf_cnt();
-			D("moving %zu bytes to the beginning (offset %zu)",
+			D("Moving %zu bytes to the beginning (offset %zu)",
 			    n, (size_t)(s_bufhead - s_inbuf));
 			memmove(s_inbuf, s_bufhead, n);
 			s_buftail -= n;
@@ -110,7 +113,7 @@ user_readline(char *dest, size_t destsz)
 
 	s_bufhead = end;
 
-	D("read line from buffer: '%s'", dest);
+	D("Read line from buffer: '%s'", dest);
 
 	return origlen;
 }
@@ -124,7 +127,7 @@ user_printf(const char *fmt, ...)
 	int r = vsnprintf(buf, sizeof buf, fmt, l);
 	va_end(l);
 
-	I("to user: %s", buf);
+	I("To user: %s", buf);
 	fputs(buf, stdout);
 
 	return r;
@@ -135,6 +138,7 @@ user_eof(void)
 {
 	return s_eof;
 }
+
 
 static size_t
 buf_cnt(void)

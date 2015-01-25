@@ -14,6 +14,7 @@
 
 #include <syslog.h>
 
+
 #ifndef LOG_MODULE
 # define LOG_MODULE -1
 #endif
@@ -27,11 +28,9 @@
 //C(), CE(): as above but critical severity; calls exit(EXIT_FAILURE)
 //A(): always print (and do not decorate w/ time or colors or anything
 
-// ----- logging interface -----
-
+/* logging interface */
 #define A(F,A...)                                                            \
     log_log(-1,INT_MIN,-1,__FILE__,__LINE__,__func__,F,##A)
-
 
 #define T(F,A...)                                                            \
     log_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,F,##A)
@@ -83,8 +82,8 @@
     log_log(LOG_MODULE,LOG_CRIT,errno,__FILE__,__LINE__,__func__,F,##A);     \
     exit(EXIT_FAILURE); } while (0)
 
-// ----- logger control interface -----
 
+/* logger control interface */
 void log_stderr(void);
 void log_syslog(const char *ident, int facility);
 
@@ -101,7 +100,7 @@ const char* log_modname(size_t modnum);
 
 void log_setprgnam(const char *prgnam);
 
-// ----- backend -----
+/* backend */
 void log_log(int mod, int lvl, int errn, const char *file, int line,
     const char *func, const char *fmt, ...)
 #ifdef __GNUC__
