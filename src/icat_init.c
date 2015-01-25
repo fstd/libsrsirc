@@ -37,6 +37,7 @@ static void process_args(int *argc, char ***argv);
 static void usage(FILE *str, const char *a0, int ec, bool sh);
 static void set_defaults(void);
 static void dump_settings(void);
+static void cleanup(void);
 static void sighnd(int s);
 
 static void
@@ -261,23 +262,6 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	exit(ec);
 }
 
-//void
-//cleanup(void)
-//{
-//	if (g_irc)
-//		irc_dispose(g_irc);
-//
-//	/* make valgrind happy */
-//	struct srvlist_s *n = g_srvlist;
-//	while (n) {
-//		struct srvlist_s *next = n->next;
-//		free(n->host);
-//		free(n);
-//		n = next;
-//	}
-//
-//}
-
 static void
 set_defaults(void)
 {
@@ -335,12 +319,31 @@ dump_settings(void)
 	D("notices: %s", g_sett.notices?"yes":"no");
 	D("chanlist: '%s'", g_sett.chanlist);
 	D("keylist: '%s'", g_sett.keylist);
-	D("*esc: '%s'", g_sett.esc);
+	D("esc: '%s'", g_sett.esc);
+
 	struct srvlist_s *s = g_sett.srvlist;
 	while (s) {
-		D("server '%s:%"PRIu16" (%sssl)", s->host, s->port, s->ssl?"":"no ");
+		D("Server '%s:%"PRIu16" (%sssl)",
+		    s->host, s->port, s->ssl?"":"no ");
 		s = s->next;
 	}
+}
+
+static void
+cleanup(void)
+{
+	I("Cleaning up");
+	core_destroy();
+
+	/* make valgrind happy */
+	struct srvlist_s *n = g_sett.srvlist;
+	while (n) {
+		struct srvlist_s *next = n->next;
+		free(n->host);
+		free(n);
+		n = next;
+	}
+	I("Cleanup done");
 }
 
 static void
@@ -373,8 +376,8 @@ main(int argc, char **argv)
 
 	core_init();
 
-	I("Initialized, running core");
+	if (atexit(cleanup) == -1)
+		EE("atexit");
 
-//	atexit(cleanup);
 	exit(core_run());
 }
