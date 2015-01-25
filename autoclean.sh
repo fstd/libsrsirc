@@ -12,4 +12,5 @@ rm -f include/Makefile.in
 rm -f include/libsrsirc/Makefile.in
 rm -f libsrsirc/Makefile.in
 rm -f logger/Makefile.in
+rm -f platform/Makefile.in
 rm -f src/Makefile.in

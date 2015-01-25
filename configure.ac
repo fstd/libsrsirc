@@ -76,6 +76,7 @@ AC_FUNC_STRERROR_R
 AC_CHECK_FUNCS([atexit getaddrinfo getenv getline gettimeofday memmove memset select socket strcasecmp strchr strdup strncasecmp strrchr strstr strtol strtoul strtoull])
 
 AC_CONFIG_FILES([Makefile
+		 platform/Makefile
 		 include/Makefile
 		 include/libsrsirc/Makefile
 		 logger/Makefile

@@ -22,13 +22,18 @@
 #define MOD_PLST 8
 #define MOD_TRACK 9
 #define MOD_UCBASE 10
-#define MOD_ICATINIT 11
-#define MOD_ICATCORE 12
-#define MOD_ICATSERV 13
-#define MOD_ICATUSER 14
-#define MOD_ICATMISC 15
-#define MOD_UNKNOWN 16
-#define NUM_MODS 17 /* when adding modules, don't forget intlog.c's `modnames' */
+#define MOD_BASEIO 11
+#define MOD_BASENET 12
+#define MOD_BASETIME 13
+#define MOD_BASESTR 14
+#define MOD_BASEMISC 15
+#define MOD_ICATINIT 16
+#define MOD_ICATCORE 17
+#define MOD_ICATSERV 18
+#define MOD_ICATUSER 19
+#define MOD_ICATMISC 20
+#define MOD_UNKNOWN 21
+#define NUM_MODS 22 /* when adding modules, don't forget intlog.c's `modnames' */
 
 /* our two higher-than-debug custom loglevels */
 #define LOG_TRACE (LOG_VIVI+1)
