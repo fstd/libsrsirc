@@ -2,7 +2,7 @@
  * icat - IRC netcat on top of libsrsirc - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
-#define LOG_MODULE MOD_INIT
+#define LOG_MODULE MOD_ICATINIT
 
 #if HAVE_CONFIG_H
 # include <config.h>
@@ -22,11 +22,15 @@
 #include <libsrsirc/irc_ext.h>
 #include <libsrsirc/util.h>
 
+#include <logger/intlog.h>
+
 #include "icat_common.h"
 #include "icat_core.h"
-#include "icat_debug.h"
 #include "icat_misc.h"
 #include "icat_serv.h"
+
+
+#define DEF_LOGLVL LOG_ERR
 
 
 struct settings_s g_sett;
@@ -40,6 +44,8 @@ static void set_defaults(void);
 static void dump_settings(void);
 static void cleanup(void);
 static void sighnd(int s);
+static void init_logger(void);
+static void update_logger(int verb, int fancy);
 int main(int argc, char **argv);
 
 
@@ -220,12 +226,11 @@ process_args(int *argc, char ***argv)
 		break;case 'N':
 			g_sett.notices = true;
 		break;case 'c':
-			log_setfancy(true);
+			update_logger(0, 1);
 		break;case 'v':
-			log_setlvl(-1, log_getlvl(-1) + 1);
+			update_logger(1, -1);
 		break;case 'q':
-			if (log_getlvl(-1) > 0)
-				log_setlvl(-1, log_getlvl(-1) - 1);
+			update_logger(-1, -1);
 		break;case 'H':
 			usage(stdout, a0, EXIT_SUCCESS, false);
 		break;case 'h':
@@ -371,18 +376,41 @@ sighnd(int s)
 	}
 }
 
+static void
+init_logger(void)
+{
+	ircdbg_init();
+	ircdbg_setlvl(MOD_ICATINIT, DEF_LOGLVL);
+	ircdbg_setlvl(MOD_ICATCORE, DEF_LOGLVL);
+	ircdbg_setlvl(MOD_ICATSERV, DEF_LOGLVL);
+	ircdbg_setlvl(MOD_ICATUSER, DEF_LOGLVL);
+	ircdbg_setlvl(MOD_ICATMISC, DEF_LOGLVL);
+}
+
+static void
+update_logger(int verb, int fancy)
+{
+	int v = ircdbg_getlvl(MOD_ICATINIT) + verb;
+	if (v < 0)
+		v = 0;
+	
+	if (fancy == -1)
+		fancy = ircdbg_getfancy();
+
+	ircdbg_setfancy(fancy);
+
+	ircdbg_setlvl(MOD_ICATINIT, v);
+	ircdbg_setlvl(MOD_ICATCORE, v);
+	ircdbg_setlvl(MOD_ICATSERV, v);
+	ircdbg_setlvl(MOD_ICATUSER, v);
+	ircdbg_setlvl(MOD_ICATMISC, v);
+
+}
 
 int
 main(int argc, char **argv)
 {
-	char *p = strrchr(argv[0], '/');
-	log_setprgnam(p ? p + 1 : argv[0]);
-	log_regmod(MOD_INIT, "INIT");
-	log_regmod(MOD_CORE, "CORE");
-	log_regmod(MOD_SERV, "SERV");
-	log_regmod(MOD_USER, "USER");
-	log_regmod(MOD_MISC, "MISC");
-
+	init_logger();
 	set_defaults();
 	process_args(&argc, &argv);
 

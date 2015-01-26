@@ -22,7 +22,7 @@
 #include "skmap.h"
 #include "irc_msghnd.h"
 
-#include <intlog.h>
+#include <logger/intlog.h>
 
 #include <libsrsirc/irc.h>
 #include "irc_track_int.h"

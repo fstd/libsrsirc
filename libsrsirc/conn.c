@@ -36,7 +36,7 @@
 #include "common.h"
 #include <libsrsirc/util.h>
 #include "io.h"
-#include <intlog.h>
+#include <logger/intlog.h>
 
 #include "px.h"
 

@@ -78,6 +78,7 @@ AC_CHECK_FUNCS([atexit getaddrinfo getenv getline gettimeofday memmove memset se
 AC_CONFIG_FILES([Makefile
 		 include/Makefile
 		 include/libsrsirc/Makefile
+		 logger/Makefile
 		 libsrsirc/Makefile
                  src/Makefile])
 AC_OUTPUT

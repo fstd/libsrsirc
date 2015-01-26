@@ -33,17 +33,22 @@
 #define COUNTOF(ARR) (sizeof (ARR) / sizeof (ARR)[0])
 
 const char *modnames[NUM_MODS] = {
-	[MOD_IRC] = "irc",
-	[MOD_COMMON] = "common",
-	[MOD_IRC_UTIL] = "util",
-	[MOD_ICONN] = "conn",
-	[MOD_IIO] = "io",
-	[MOD_PROXY] = "px",
-	[MOD_IMSG] = "msg",
-	[MOD_SKMAP] = "skmap",
-	[MOD_PLST] = "plst",
-	[MOD_TRACK] = "track",
-	[MOD_UCBASE] = "ucbase",
+	[MOD_IRC] = "libsrsirc/irc",
+	[MOD_COMMON] = "libsrsirc/common",
+	[MOD_IRC_UTIL] = "libsrsirc/util",
+	[MOD_ICONN] = "libsrsirc/conn",
+	[MOD_IIO] = "libsrsirc/io",
+	[MOD_PROXY] = "libsrsirc/px",
+	[MOD_IMSG] = "libsrsirc/msg",
+	[MOD_SKMAP] = "libsrsirc/skmap",
+	[MOD_PLST] = "libsrsirc/plst",
+	[MOD_TRACK] = "libsrsirc/track",
+	[MOD_UCBASE] = "libsrsirc/ucbase",
+	[MOD_ICATINIT] = "icat/init",
+	[MOD_ICATCORE] = "icat/core",
+	[MOD_ICATSERV] = "icat/serv",
+	[MOD_ICATUSER] = "icat/user",
+	[MOD_ICATMISC] = "icat/misc",
 	[MOD_UNKNOWN] = "(??" "?)"
 };
 
@@ -56,9 +61,9 @@ static int s_lvlarr[NUM_MODS];
 
 static const char* lvlnam(int lvl);
 static const char* lvlcol(int lvl);
+static int getenv_m(const char *nam, char *dest, size_t destsz);
+static bool isdigitstr(const char *p);
 
-
-static void ircdbg_init(void);
 
 // ----- public interface implementation -----
 
@@ -160,9 +165,11 @@ ircdbg_log(int mod, int lvl, int errn, const char *file, int line, const char *f
 			if (ptr)
 				*ptr = '\0';
 
-			snprintf(resmsg, sizeof resmsg, "%s%s: libsrsirc: %s: %s:%d:%s(): %s%s%s\n",
-			    s_fancy ? lvlcol(lvl) : "", timebuf, lvlnam(lvl), file, line,
-			    func, payload, errmsg, s_fancy ? COL_RST : "");
+			snprintf(resmsg, sizeof resmsg, "%s%s: %s: "
+			    "%s: %s:%d:%s(): %s%s%s\n",
+			    s_fancy ? lvlcol(lvl) : "", timebuf, modnames[mod],
+			    lvlnam(lvl), file, line, func, payload, errmsg,
+			    s_fancy ? COL_RST : "");
 
 			fputs(resmsg, stderr);
 		}
@@ -170,8 +177,8 @@ ircdbg_log(int mod, int lvl, int errn, const char *file, int line, const char *f
 		if (always)
 			syslog(LOG_NOTICE, "%s", payload);
 		else {
-			snprintf(resmsg, sizeof resmsg, "%s:%d:%s(): %s%s",
-			    file, line, func, payload, errmsg);
+			snprintf(resmsg, sizeof resmsg, "%s: %s:%d:%s(): %s%s",
+			    modnames[mod], file, line, func, payload, errmsg);
 			syslog(lvl, "%s", resmsg);
 		}
 	}
@@ -179,57 +186,7 @@ ircdbg_log(int mod, int lvl, int errn, const char *file, int line, const char *f
 	va_end(vl);
 }
 
-
-// ---- local helpers ----
-
-
-static const char*
-lvlnam(int lvl)
-{
-	return lvl == LOG_DEBUG ? "DBG" :
-	       lvl == LOG_TRACE ? "TRC" :
-	       lvl == LOG_VIVI ? "VIV" :
-	       lvl == LOG_INFO ? "INF" :
-	       lvl == LOG_NOTICE ? "NOT" :
-	       lvl == LOG_WARNING ? "WRN" :
-	       lvl == LOG_CRIT ? "CRT" :
-	       lvl == LOG_ERR ? "ERR" : "???";
-}
-
-static const char*
-lvlcol(int lvl)
-{
-	return lvl == LOG_DEBUG ? COL_GRAY :
-	       lvl == LOG_TRACE ? COL_LBLUE :
-	       lvl == LOG_VIVI ? COL_GRAYINV :
-	       lvl == LOG_INFO ? COL_WHITE :
-	       lvl == LOG_NOTICE ? COL_GREEN :
-	       lvl == LOG_WARNING ? COL_YELLOW :
-	       lvl == LOG_CRIT ? COL_REDINV :
-	       lvl == LOG_ERR ? COL_RED : COL_WHITEINV;
-}
-
-static bool
-isdigitstr(const char *p)
-{
-	while (*p)
-		if (!isdigit((unsigned char)*p++))
-			return false;
-	return true;
-}
-
-static int
-getenv_m(const char *nam, char *dest, size_t destsz)
-{
-	const char *v = getenv(nam);
-	if (!v)
-		return -1;
-
-	snprintf(dest, destsz, "%s", v);
-	return 0;
-}
-
-static void
+void
 ircdbg_init(void)
 {
 	int deflvl = DEF_LVL;
@@ -281,4 +238,54 @@ ircdbg_init(void)
 		ircdbg_setfancy(false);
 
 	s_init = true;
+}
+
+
+// ---- local helpers ----
+
+
+static const char*
+lvlnam(int lvl)
+{
+	return lvl == LOG_DEBUG ? "DBG" :
+	       lvl == LOG_TRACE ? "TRC" :
+	       lvl == LOG_VIVI ? "VIV" :
+	       lvl == LOG_INFO ? "INF" :
+	       lvl == LOG_NOTICE ? "NOT" :
+	       lvl == LOG_WARNING ? "WRN" :
+	       lvl == LOG_CRIT ? "CRT" :
+	       lvl == LOG_ERR ? "ERR" : "???";
+}
+
+static const char*
+lvlcol(int lvl)
+{
+	return lvl == LOG_DEBUG ? COL_GRAY :
+	       lvl == LOG_TRACE ? COL_LBLUE :
+	       lvl == LOG_VIVI ? COL_GRAYINV :
+	       lvl == LOG_INFO ? COL_WHITE :
+	       lvl == LOG_NOTICE ? COL_GREEN :
+	       lvl == LOG_WARNING ? COL_YELLOW :
+	       lvl == LOG_CRIT ? COL_REDINV :
+	       lvl == LOG_ERR ? COL_RED : COL_WHITEINV;
+}
+
+static bool
+isdigitstr(const char *p)
+{
+	while (*p)
+		if (!isdigit((unsigned char)*p++))
+			return false;
+	return true;
+}
+
+static int
+getenv_m(const char *nam, char *dest, size_t destsz)
+{
+	const char *v = getenv(nam);
+	if (!v)
+		return -1;
+
+	snprintf(dest, destsz, "%s", v);
+	return 0;
 }

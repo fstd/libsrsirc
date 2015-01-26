@@ -17,7 +17,7 @@
 #include <libsrsirc/defs.h>
 #include "conn.h"
 #include <libsrsirc/util.h>
-#include <intlog.h>
+#include <logger/intlog.h>
 
 #include "msg.h"
 

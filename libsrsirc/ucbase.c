@@ -13,7 +13,7 @@
 
 #include <inttypes.h>
 
-#include <intlog.h>
+#include <logger/intlog.h>
 
 #include "skmap.h"
 #include "common.h"

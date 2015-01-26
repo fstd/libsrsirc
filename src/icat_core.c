@@ -2,7 +2,7 @@
  * icat - IRC netcat on top of libsrsirc - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
-#define LOG_MODULE MOD_CORE
+#define LOG_MODULE MOD_ICATCORE
 
 #if HAVE_CONFIG_H
 # include <config.h>
@@ -31,8 +31,9 @@
 #include <libsrsirc/irc_ext.h>
 #include <libsrsirc/util.h>
 
+#include <logger/intlog.h>
+
 #include "icat_common.h"
-#include "icat_debug.h"
 #include "icat_misc.h"
 #include "icat_serv.h"
 #include "icat_user.h"

@@ -25,7 +25,7 @@
 #include <inttypes.h>
 
 /* local */
-#include "intlog.h"
+#include <logger/intlog.h>
 
 #include <libsrsirc/defs.h>
 

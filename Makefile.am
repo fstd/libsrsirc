@@ -1,2 +1,2 @@
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = include libsrsirc src
+SUBDIRS = logger include libsrsirc src

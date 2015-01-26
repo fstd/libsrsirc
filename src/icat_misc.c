@@ -2,7 +2,7 @@
  * icat - IRC netcat on top of libsrsirc - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
-#define LOG_MODULE MOD_MISC
+#define LOG_MODULE MOD_ICATMISC
 
 #if HAVE_CONFIG_H
 # include <config.h>
@@ -21,8 +21,9 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#include <logger/intlog.h>
+
 #include "icat_common.h"
-#include "icat_debug.h"
 
 
 static void tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);

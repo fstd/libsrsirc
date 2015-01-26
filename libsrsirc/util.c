@@ -19,7 +19,7 @@
 #include "px.h"
 #include "common.h"
 
-#include <intlog.h>
+#include <logger/intlog.h>
 
 #include <libsrsirc/util.h>
 #include "intdefs.h"

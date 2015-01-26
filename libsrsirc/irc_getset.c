@@ -11,7 +11,7 @@
 #include <stdbool.h>
 
 #include "conn.h"
-#include <intlog.h>
+#include <logger/intlog.h>
 
 #include "msg.h"
 

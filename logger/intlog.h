@@ -22,8 +22,13 @@
 #define MOD_PLST 8
 #define MOD_TRACK 9
 #define MOD_UCBASE 10
-#define MOD_UNKNOWN 11
-#define NUM_MODS 12 /* when adding modules, don't forget intlog.c's `modnames' */
+#define MOD_ICATINIT 11
+#define MOD_ICATCORE 12
+#define MOD_ICATSERV 13
+#define MOD_ICATUSER 14
+#define MOD_ICATMISC 15
+#define MOD_UNKNOWN 16
+#define NUM_MODS 17 /* when adding modules, don't forget intlog.c's `modnames' */
 
 /* our two higher-than-debug custom loglevels */
 #define LOG_TRACE (LOG_VIVI+1)
@@ -112,5 +117,7 @@ void ircdbg_log(int mod, int lvl, int errn, const char *file, int line,
     __attribute__ ((format (printf, 7, 8)))
 #endif
     ;
+
+void ircdbg_init(void);
 
 #endif /* LIBSRSIRC_INTLOG_H */

@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "intlog.h"
+#include <logger/intlog.h>
 #include "cmap.h"
 #include "common.h"
 

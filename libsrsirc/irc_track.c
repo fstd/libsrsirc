@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <intlog.h>
+#include <logger/intlog.h>
 
 #include <libsrsirc/util.h>
 #include <libsrsirc/irc_ext.h>

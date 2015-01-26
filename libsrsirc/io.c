@@ -28,7 +28,7 @@
 
 /* locals */
 #include "common.h"
-#include <intlog.h>
+#include <logger/intlog.h>
 
 #include <libsrsirc/util.h>
 #include "io.h"

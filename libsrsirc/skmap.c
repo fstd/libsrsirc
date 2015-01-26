@@ -14,7 +14,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "intlog.h"
+#include <logger/intlog.h>
 
 #include "common.h"
 #include "bucklist.h"
