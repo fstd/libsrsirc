@@ -6,6 +6,8 @@
 # include <config.h>
 #endif
 
+#include "intlog.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -15,7 +17,6 @@
 #include <stdarg.h>
 #include <time.h>
 
-#include "intlog.h"
 
 #define DEF_LVL LOG_CRIT
 

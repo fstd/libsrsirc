@@ -2,11 +2,15 @@
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
+#define LOG_MODULE MOD_ICONN
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#define LOG_MODULE MOD_ICONN
+
+#include "conn.h"
+
 
 /* C */
 #include <stdio.h>
@@ -40,7 +44,6 @@
 
 #include "px.h"
 
-#include "conn.h"
 
 #define INV -1
 #define OFF 0

@@ -2,11 +2,15 @@
  * libsrsirc - a lightweight serious IRC lib - (C) 2014, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
+#define LOG_MODULE MOD_TRACK
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#define LOG_MODULE MOD_TRACK
+
+#include <libsrsirc/irc_track.h>
+
 
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +25,6 @@
 #include "msg.h"
 #include "ucbase.h"
 
-#include <libsrsirc/irc_track.h>
 #include "irc_track_int.h"
 
 static uint8_t h_JOIN(irc h, tokarr *msg, size_t nargs, bool logon);

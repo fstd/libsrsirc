@@ -2,11 +2,15 @@
  * libsrsirc - a lightweight serious IRC lib - (C) 2014, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
+#define LOG_MODULE MOD_IRC
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#define LOG_MODULE MOD_IRC
+
+#include "irc_msghnd.h"
+
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -20,7 +24,6 @@
 #include <logger/intlog.h>
 #include "msg.h"
 
-#include "irc_msghnd.h"
 
 static uint8_t
 handle_001(irc hnd, tokarr *msg, size_t nargs, bool logon)

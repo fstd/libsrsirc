@@ -1,3 +1,15 @@
+/* cmap.c - (C) 2015, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-15, Timo Buhrmester
+ * See README for contact-, COPYING for license information. */
+
+#if HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+
+#include "cmap.h"
+
+
 static const char s_lower_ascii[256] = {
 	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
 	0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,

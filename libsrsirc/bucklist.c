@@ -2,11 +2,14 @@
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
+#define LOG_MODULE MOD_PLST
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#define LOG_MODULE MOD_PLST
+
+#include "bucklist.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -17,7 +20,6 @@
 #include "cmap.h"
 #include "common.h"
 
-#include "bucklist.h"
 
 struct pl_node {
 	char *key;

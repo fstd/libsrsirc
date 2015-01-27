@@ -2,11 +2,14 @@
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
+#define LOG_MODULE MOD_IRC
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#define LOG_MODULE MOD_IRC
+
+#include <libsrsirc/irc.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,7 +27,6 @@
 
 #include <logger/intlog.h>
 
-#include <libsrsirc/irc.h>
 #include "irc_track_int.h"
 
 static bool send_logon(irc hnd);

@@ -2,11 +2,15 @@
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
+#define LOG_MODULE MOD_IIO
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#define LOG_MODULE MOD_IIO
+
+#include "io.h"
+
 
 /* C */
 #include <stdio.h>
@@ -31,7 +35,6 @@
 #include <logger/intlog.h>
 
 #include <libsrsirc/util.h>
-#include "io.h"
 
 #define ISDELIM(C) ((C) == '\n' || (C) == '\r')
 

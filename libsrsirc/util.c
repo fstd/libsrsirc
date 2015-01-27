@@ -2,11 +2,14 @@
  * libsrsirc - a lightweight serious IRC lib - (C) 2012, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
+#define LOG_MODULE MOD_IRC_UTIL
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#define LOG_MODULE MOD_IRC_UTIL
+
+#include <libsrsirc/util.h>
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -21,7 +24,6 @@
 
 #include <logger/intlog.h>
 
-#include <libsrsirc/util.h>
 #include "intdefs.h"
 
 static char* next_tok(char *buf);

@@ -9,6 +9,7 @@
 
 
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef struct bucklist *bucklist_t;
 typedef bool (*bucklist_find_fn)(const void *e);

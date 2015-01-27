@@ -1,11 +1,14 @@
 /* px.c - Proxy subroutines implementation (socks4/socks5/http)
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
+
+#define LOG_MODULE MOD_PROXY
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#define LOG_MODULE MOD_PROXY
+
+#include "px.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -21,7 +24,6 @@
 #include "common.h"
 #include <logger/intlog.h>
 
-#include "px.h"
 
 #define HOST_IPV4 0
 #define HOST_IPV6 1

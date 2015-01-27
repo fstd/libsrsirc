@@ -2,11 +2,15 @@
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
+#define LOG_MODULE MOD_COMMON
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#define LOG_MODULE MOD_COMMON
+
+#include "common.h"
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +33,6 @@
 
 #include <libsrsirc/defs.h>
 
-#include "common.h"
 
 static size_t com_resolve(const char *host, uint16_t port,
     struct addrinfo **result);

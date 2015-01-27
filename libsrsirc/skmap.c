@@ -2,11 +2,14 @@
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
+#define LOG_MODULE MOD_SKMAP
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#define LOG_MODULE MOD_SKMAP
+
+#include "skmap.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -19,7 +22,6 @@
 #include "common.h"
 #include "bucklist.h"
 #include "cmap.h"
-#include "skmap.h"
 
 static size_t strhash_small(const char *s, const char *cmap);
 static size_t strhash_mid(const char *s, const char *cmap);

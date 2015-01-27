@@ -2,11 +2,15 @@
  * libsrsirc - a lightweight serious IRC lib - (C) 2014, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
+#define LOG_MODULE MOD_UCBASE
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#define LOG_MODULE MOD_UCBASE
+
+#include "ucbase.h"
+
 
 #include <stdlib.h>
 #include <string.h>
@@ -18,7 +22,6 @@
 #include "skmap.h"
 #include "common.h"
 #include <libsrsirc/util.h>
-#include "ucbase.h"
 
 static int compare_modepfx(irc h, char c1, char c2);
 

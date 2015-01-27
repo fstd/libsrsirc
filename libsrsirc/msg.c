@@ -2,11 +2,15 @@
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
+#define LOG_MODULE MOD_IMSG
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#define LOG_MODULE MOD_IMSG
+
+#include "msg.h"
+
 
 /* C */
 #include <stdlib.h>
@@ -19,7 +23,6 @@
 #include <libsrsirc/util.h>
 #include <logger/intlog.h>
 
-#include "msg.h"
 
 bool
 msg_reghnd(irc hnd, const char *cmd, hnd_fn hndfn, const char *module)
