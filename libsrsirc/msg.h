@@ -5,6 +5,7 @@
 #ifndef LIBSRSIRC_IMSG_H
 #define LIBSRSIRC_IMSG_H 1
 
+
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -31,5 +32,6 @@ bool msg_reguhnd(irc hnd, const char *cmd, uhnd_fn hndfn, bool pre);
 /* returns the bitwise OR of one or more of the above
  * bitmasks, or 0 for nothing special */
 uint8_t msg_handle(irc hndfn, tokarr *msg, bool logon);
+
 
 #endif /* LIBSRSIRC_IMSG_H */

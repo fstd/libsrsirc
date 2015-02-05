@@ -12,11 +12,12 @@
 #include "bucklist.h"
 
 #include <stddef.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <logger/intlog.h>
+
 #include "cmap.h"
 #include "common.h"
 
@@ -253,7 +254,7 @@ bucklist_del_iter(bucklist_t l)
 		l->head = next;
 	else
 		l->previter->next = next;
-	
+
 	free(l->iter);
 	l->iter = l->previter;
 }

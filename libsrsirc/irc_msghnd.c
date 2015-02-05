@@ -91,7 +91,7 @@ handle_PING(irc hnd, tokarr *msg, size_t nargs, bool logon)
 {
 	if (nargs < 3)
 		return PROTO_ERR;
-	
+
 	if (!logon)
 		return 0;
 

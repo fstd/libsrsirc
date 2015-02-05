@@ -5,11 +5,13 @@
 #ifndef LIBSRSIRC_ICONN_H
 #define LIBSRSIRC_ICONN_H 1
 
+
 #include <stdbool.h>
 #include <stddef.h>
 
 #include <libsrsirc/defs.h>
 #include "intdefs.h"
+
 
 iconn conn_init(void);
 void conn_reset(iconn hnd);
@@ -33,5 +35,6 @@ bool conn_get_ssl(iconn hnd);
 /* TODO: replace these by something less insane */
 bool conn_colon_trail(iconn hnd);
 int conn_sockfd(iconn hnd);
+
 
 #endif /* LIBSRSIRC_ICONN_H */

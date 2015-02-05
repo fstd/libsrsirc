@@ -5,7 +5,9 @@
 #ifndef LIBSRSIRC_IRC_TRACK_INT_H
 #define LIBSRSIRC_IRC_TRACK_INT_H 1
 
+
 bool trk_init(irc hnd);
 void trk_deinit(irc hnd);
+
 
 #endif /* LIBSRSIRC_IRC_TRACK_INT_H */

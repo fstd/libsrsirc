@@ -78,7 +78,7 @@ b_strncasecmp(const char *a, const char *b, size_t n)
 
 	if (!ua)
 		return -1;
-	
+
 	if (!ub)
 		return 1;
 

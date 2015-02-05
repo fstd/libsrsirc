@@ -5,13 +5,16 @@
 #ifndef LIBSRSIRC_IRC_MSGHND_H
 #define LIBSRSIRC_IRC_MSGHND_H 1
 
+
 #include <stdbool.h>
 #include <stddef.h>
 
 #include <libsrsirc/defs.h>
 #include "intdefs.h"
 
+
 bool imh_regall(irc hnd, bool dumb);
 void imh_unregall(irc hnd);
+
 
 #endif /* LIBSRSIRC_IRC_MSGHND_H */

@@ -357,7 +357,7 @@ strhash_mid(const char *s, const uint8_t *cmap)
 		size_t shs = strhash_small(line, g_cmap[0]);
 		size_t shm = strhash_mid(line, g_cmap[0]);
 		size_t shm4 = strhash_mid(line, g_cmap[0]) % 8192;
-		
+
 		printf("'%s' %zu %zu %zu\n", line, shs, shm, shm4);
 	}
 

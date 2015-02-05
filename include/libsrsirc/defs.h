@@ -81,4 +81,6 @@ typedef bool (*fp_con_read)(tokarr *msg, void* tag);
 typedef void (*fp_mut_nick)(char *nick, size_t nick_sz);
 
 typedef bool (*uhnd_fn)(irc hnd, tokarr *msg, size_t nargs, bool pre);
+
+
 #endif /* LIBSRSIRC_IRC_DEFS_H */

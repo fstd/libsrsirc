@@ -403,7 +403,7 @@ update_logger(int verb, int fancy)
 	int v = ircdbg_getlvl(MOD_ICATINIT) + verb;
 	if (v < 0)
 		v = 0;
-	
+
 	if (fancy == -1)
 		fancy = ircdbg_getfancy();
 

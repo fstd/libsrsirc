@@ -73,7 +73,7 @@ b_syslog(int prio, const char *fmt, ...)
 #if HAVE_SYSLOG_H
 	va_list l;
 	va_start(l, fmt);
-// this is a bitch to get a prototype in scope without having 
+// this is a bitch to get a prototype in scope without having
 // to define _BSD_SOURCE or _GNU_SOURCE, in glibc
 //# if HAVE_VSYSLOG
 //	vsyslog(prio, fmt, l);

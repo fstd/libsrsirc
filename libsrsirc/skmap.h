@@ -36,4 +36,5 @@ void skmap_stat(skmap h, size_t *nbuck, size_t *nbuckused, size_t *nitems,
 void skmap_dumpstat(skmap m, const char *dbgname);
 //void skmap_test(void);
 
+
 #endif /* LIBSRSIRC_HASHMAP_H */

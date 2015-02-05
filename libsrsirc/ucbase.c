@@ -22,9 +22,12 @@
 
 #include "skmap.h"
 #include "common.h"
+
 #include <libsrsirc/util.h>
 
+
 static int compare_modepfx(irc h, char c1, char c2);
+
 
 bool
 ucb_init(irc h)
@@ -34,7 +37,7 @@ ucb_init(irc h)
 
 	if (!(h->users = skmap_init(4096, h->casemap)))
 		return skmap_dispose(h->chans), false;
-	
+
 	return true;
 }
 
@@ -59,10 +62,10 @@ add_chan(irc h, const char *name)
 	c->modes_sz = 16; //grows
 	if (!(c->modes = com_malloc(c->modes_sz * sizeof *c->modes)))
 		goto add_chan_fail;
-	
+
 	for (size_t i = 0; i < c->modes_sz; i++)
 		c->modes[i] = NULL;
-	
+
 	if (!skmap_put(h->chans, name, c))
 		goto add_chan_fail;
 
@@ -137,7 +140,7 @@ get_chan(irc h, const char *name, bool complain)
 {
 	chan c = skmap_get(h->chans, name);
 	if (!c && complain)
-		W("no such channel '%s' in chanmap", name); 
+		W("no such channel '%s' in chanmap", name);
 	return c;
 }
 
@@ -146,7 +149,7 @@ get_memb(irc h, chan c, const char *nick, bool complain)
 {
 	memb m = skmap_get(c->memb, nick);
 	if (!m && complain)
-		W("no such member '%s' in channel '%s'", nick, c->name); 
+		W("no such member '%s' in channel '%s'", nick, c->name);
 	return m;
 }
 
@@ -201,7 +204,7 @@ clear_memb(irc h, chan c)
 	void *e;
 	if (!skmap_first(c->memb, NULL, &e))
 		return;
-	
+
 	do {
 		memb m = e;
 		if (--m->u->nchans== 0) {
@@ -253,7 +256,7 @@ update_modepfx(irc h, chan c, const char *nick, char mpfxsym, bool enab)
 		    enab, p, c->name, m->u->nick, m->modepfx, mpfxsym);
 		return false;
 	}
-	
+
 	if (!enab) {
 		*p++ = '\0';
 		while (*p) {
@@ -281,7 +284,7 @@ update_modepfx(irc h, chan c, const char *nick, char mpfxsym, bool enab)
 	return true;
 }
 
-/* returns positive if c1 is stronger than c2.  be sure only to call 
+/* returns positive if c1 is stronger than c2.  be sure only to call
  * for valid arguments (modepfx symbols like '@') */
 static int
 compare_modepfx(irc h, char c1, char c2)
@@ -291,8 +294,8 @@ compare_modepfx(irc h, char c1, char c2)
 
 	ptrdiff_t o1 = p1 - h->m005modepfx[1];
 	ptrdiff_t o2 = p2 - h->m005modepfx[1];
-	
-	return o1 < o2 ? 1 : o1 > o2 ? -1 : 0; 
+
+	return o1 < o2 ? 1 : o1 > o2 ? -1 : 0;
 }
 
 void
@@ -309,7 +312,7 @@ add_chanmode(irc h, chan c, const char *modestr)
 	for (; ind < c->modes_sz; ind++)
 		if (!c->modes[ind])
 			break;
-	
+
 	if (ind == c->modes_sz) {
 		size_t nsz = c->modes_sz * 2;
 		char **nmodes = com_malloc(nsz * sizeof *nmodes);
@@ -363,7 +366,7 @@ drop_chanmode(irc h, chan c, const char *modestr)
 	for (last = c->modes_sz - 1; last > 0; last--)
 		if (c->modes[last])
 			break;
-	
+
 	free(c->modes[i]);
 	if (last == i)
 		c->modes[i] = NULL;
@@ -484,7 +487,7 @@ ucb_clear(irc h)
 	if (h->chans) {
 		if (!skmap_first(h->chans, NULL, &e))
 			return;
-		
+
 		do {
 			chan c = e;
 			clear_memb(h, c);
@@ -502,7 +505,7 @@ ucb_clear(irc h)
 	if (h->users) {
 		if (!skmap_first(h->users, NULL, &e))
 			return;
-		
+
 		do {
 			user u = e;
 			free(u->nick);
@@ -531,7 +534,7 @@ ucb_dump(irc h, bool full)
 
 	if (!full)
 		return;
-	
+
 	if (skmap_first(h->users, &key, &e1))
 		do {
 			user u = e1;
@@ -543,7 +546,7 @@ ucb_dump(irc h, bool full)
 			chan c = e1;
 			A("channel '%s' (%zu membs) [topic: '%s' (by %s)"
 			    ", tsc: %"PRIu64", tst: %"PRIu64"]", c->name,
-			    skmap_count(c->memb), c->topic, c->topicnick, 
+			    skmap_count(c->memb), c->topic, c->topicnick,
 			    c->tscreate, c->tstopic);
 
 			for (size_t i = 0; i < c->modes_sz; i++) {
@@ -618,7 +621,7 @@ rename_user(irc h, const char *ident, const char *newnick, bool *allocerr) //mh.
 			*allocerr = true;
 		return false;
 	}
-	
+
 	skmap_del(h->users, ident);
 
 	void *e;

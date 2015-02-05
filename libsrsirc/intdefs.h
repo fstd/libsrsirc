@@ -148,5 +148,5 @@ struct irc_s {
 	struct iconn_s *con;
 };
 
-#endif /* LIBSRSIRC_IRC_DEFS_H */
 
+#endif /* LIBSRSIRC_IRC_DEFS_H */

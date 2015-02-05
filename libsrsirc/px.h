@@ -5,8 +5,10 @@
 #ifndef LIBSRSIRC_PROXY_H
 #define LIBSRSIRC_PROXY_H 1
 
-#include <stdint.h>
+
 #include <stdbool.h>
+#include <stdint.h>
+
 
 bool px_logon_http(int sck, const char *host, uint16_t port,
     uint64_t to_us);

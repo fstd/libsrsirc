@@ -252,7 +252,7 @@ b_read(int sck, void *buf, size_t sz, bool *tryagain)
 #if HAVE_READ
 	ssize_t r = read(sck, buf, sz);
 	if (r == -1) {
-		bool wb = 
+		bool wb =
 # if HAVE_EWOULDBLOCK
 		    errno == EWOULDBLOCK ||
 # endif

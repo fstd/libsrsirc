@@ -53,5 +53,3 @@ com_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts)
 	}
 }
 #endif
-
-

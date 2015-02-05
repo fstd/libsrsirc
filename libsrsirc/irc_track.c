@@ -26,7 +26,6 @@
 #include "common.h"
 #include "msg.h"
 #include "ucbase.h"
-
 #include "irc_track_int.h"
 
 static uint8_t h_JOIN(irc h, tokarr *msg, size_t nargs, bool logon);
@@ -161,7 +160,7 @@ h_352(irc h, tokarr *msg, size_t nargs, bool logon)
 	const char *fname = strchr((*msg)[9], ' ');
 	if (!fname)
 		return PROTO_ERR;
-	
+
 	if (!u->fname || ut_istrcmp(u->fname, fname+1, h->casemap) != 0) {
 		if (u->fname)
 			W("fullname for '%s' changed from '%s' to '%s'!",
@@ -209,7 +208,7 @@ h_333(irc h, tokarr *msg, size_t nargs, bool logon)
 	free(c->topicnick);
 	if (!(c->topicnick = b_strdup((*msg)[4])))
 		return ALLOC_ERR;
-	
+
 	c->tstopic = (uint64_t)strtoull((*msg)[5], NULL, 10);
 
 	return 0;
@@ -435,10 +434,10 @@ h_MODE_chanmode(irc h, tokarr *msg, size_t nargs, bool logon)
 				drop_chanmode(h, c, p[i] + 1);
 		}
 	}
-	
+
 	for (size_t i = 0; i < num; i++)
 		free(p[i]);
-		
+
 	free(p);
 
 	return res;
@@ -546,16 +545,16 @@ h_324(irc h, tokarr *msg, size_t nargs, bool logon)
 		} else
 			drop_chanmode(h, c, p[i] + 1);
 	}
-	
+
 	for (size_t i = 0; i < num; i++)
 		free(p[i]);
-		
+
 	free(p);
 
 	return res;
 }
 
-/* 302    RPL_USERHOST  
+/* 302    RPL_USERHOST
  * ":*1<reply> *( " " <reply> )"
  * reply = nickname [ "*" ] "=" ( "+" / "-" ) hostname
  */
@@ -604,7 +603,7 @@ h_311(irc h, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-	
+
 
 void
 trk_dump(irc h, bool full)
@@ -804,4 +803,3 @@ irc_tag_user(irc h, const char *ident, void *tag, bool autofree)
 	tag_user(u, tag, autofree);
 	return true;
 }
-

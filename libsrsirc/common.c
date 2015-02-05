@@ -121,7 +121,7 @@ tryhost(struct addrlist *ai, char *peeraddr, size_t peeraddr_sz,
 		return sck;
 	else if (r == -1)
 		goto tryhost_fail;
-	
+
 	r = b_select(sck, false, to_us);
 
 	if (r == 1) {
@@ -142,6 +142,7 @@ tryhost_fail:
 		b_close(sck);
 	return -1;
 }
+
 
 bool
 com_update_strprop(char **field, const char *val)
@@ -203,4 +204,3 @@ guess_hosttype(const char *host)
 	}
 	return dc == 3 ? HOSTTYPE_IPV4 : HOSTTYPE_DNS;
 }
-

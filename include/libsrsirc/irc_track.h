@@ -5,7 +5,9 @@
 #ifndef LIBSRSIRC_IRC_TRACK_H
 #define LIBSRSIRC_IRC_TRACK_H 1
 
+
 #include <libsrsirc/defs.h>
+
 
 struct chanrep {
 	const char *name;
@@ -29,10 +31,10 @@ struct userrep {
 typedef struct chanrep chanrep;
 typedef struct userrep userrep;
 
+
 /* the results of these functions (i.e. the strings pointed to by the various
  * members of the structs above is only valid until the next time irc_read
  * is called.  if you need persistence, copy the data. */
-
 size_t irc_num_chans(irc h);
 size_t irc_all_chans(irc h, chanrep *chanarr, size_t chanarr_cnt);
 chanrep* irc_chan(irc h, chanrep *dest, const char *name);
@@ -49,5 +51,6 @@ userrep* irc_member(irc h, userrep *dest, const char *chname, const char *ident)
 
 /* for debugging */
 void trk_dump(irc hnd, bool full);
+
 
 #endif /* LIBSRSIRC_IRC_TRACK_H */

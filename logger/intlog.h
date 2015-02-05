@@ -128,4 +128,5 @@ void ircdbg_log(int mod, int lvl, int errn, const char *file, int line,
 
 void ircdbg_init(void);
 
+
 #endif /* LIBSRSIRC_INTLOG_H */

@@ -5,11 +5,14 @@
 #ifndef LIBSRSIRC_IRC_EXT_H
 #define LIBSRSIRC_IRC_EXT_H 1
 
+
 #include <stdbool.h>
 #include <stddef.h>
 
-#include <libsrsirc/irc.h>
 #include <libsrsirc/defs.h>
+#include <libsrsirc/irc.h>
+
+
 /* Overview:
  *
  * const char *irc_myhost(irc hnd);
@@ -219,5 +222,6 @@ bool irc_can_read(irc hnd);
 bool irc_reg_msghnd(irc hnd, const char *cmd, uhnd_fn hndfn, bool pre);
 
 bool irc_eof(irc hnd);
+
 
 #endif /* LIBSRSIRC_IRC_EXT_H */

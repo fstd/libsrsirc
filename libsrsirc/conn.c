@@ -390,5 +390,3 @@ conn_sockfd(iconn hnd)
 
 	return hnd->sh.sck;
 }
-
-

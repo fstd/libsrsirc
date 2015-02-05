@@ -431,4 +431,3 @@ irc_dump(irc h)
 	//struct iconn_s *con
 	N("--- end of dump ---");
 }
-

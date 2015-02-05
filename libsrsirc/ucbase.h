@@ -5,11 +5,13 @@
 #ifndef LIBSRSIRC_UCBASE_H
 #define LIBSRSIRC_UCBASE_H 1
 
+
 #include <stdbool.h>
 #include <stddef.h>
 
 #include <libsrsirc/defs.h>
 #include "intdefs.h"
+
 
 typedef struct chan *chan;
 typedef struct member *memb;
@@ -28,7 +30,6 @@ struct chan {
 	void *tag;
 	bool freetag;
 };
-
 
 struct member {
 	user u;
@@ -70,7 +71,7 @@ void ucb_dump(irc h, bool full);
 user get_user(irc h, const char *ident, bool complain);
 size_t num_users(irc h);
 bool rename_user(irc h, const char *ident, const char *newnick, bool *allocerr);
-/* these might be dangerous to use, be sure to complete the iteration 
+/* these might be dangerous to use, be sure to complete the iteration
  * before any other state might change */
 chan first_chan(irc h);
 chan next_chan(irc h);
@@ -80,4 +81,6 @@ memb first_memb(irc h, chan c);
 memb next_memb(irc h, chan c);
 void tag_chan(chan c, void *tag, bool autofree);
 void tag_user(user u, void *tag, bool autofree);
+
+
 #endif /* LIBSRSIRC_UCBASE_H */

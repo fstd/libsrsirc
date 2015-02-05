@@ -3,6 +3,7 @@
  * See README for contact-, COPYING for license information. */
 
 #define LOG_MODULE MOD_PROXY
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -369,4 +370,3 @@ px_typestr(int typenum)
 	       (typenum == IRCPX_SOCKS4) ? "SOCKS4" :
 	       (typenum == IRCPX_SOCKS5) ? "SOCKS5" : "unknown";
 }
-

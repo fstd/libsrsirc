@@ -5,10 +5,12 @@
 #ifndef LIBSRSIRC_IRC_H
 #define LIBSRSIRC_IRC_H 1
 
+
 #include <stdbool.h>
 #include <stddef.h>
 
 #include <libsrsirc/defs.h>
+
 
 /* Overview:
  *
@@ -134,4 +136,6 @@ bool irc_set_nick(irc hnd, const char *nick);
 
 /* for debugging */
 void irc_dump(irc h);
+
+
 #endif /* LIBSRSIRC_IRC_H */

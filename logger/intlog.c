@@ -33,6 +33,7 @@
 
 #define COUNTOF(ARR) (sizeof (ARR) / sizeof (ARR)[0])
 
+
 const char *modnames[NUM_MODS] = {
 	[MOD_IRC] = "libsrsirc/irc",
 	[MOD_COMMON] = "libsrsirc/common",
