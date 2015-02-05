@@ -11,13 +11,15 @@
 
 #include "icat_serv.h"
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <inttypes.h>
-#include <sys/select.h>
-#include <sys/time.h>
+#include <platform/base_net.h>
+#include <platform/base_string.h>
+#include <platform/base_misc.h>
+#include <platform/base_time.h>
 
 #include <libsrsirc/irc_ext.h>
 #include <libsrsirc/util.h>
@@ -122,7 +124,7 @@ serv_operate(void)
 		return false;
 	}
 
-	if (do_heartbeat() == -1) {
+	if (!do_heartbeat()) {
 		E("do_heartbeat() failed");
 		return false;
 	}
@@ -139,21 +141,10 @@ serv_canread(void)
 	if (irc_can_read(s_irc))
 		return true;
 
-	int isck = irc_sockfd(s_irc);
+	int r = b_select(irc_sockfd(s_irc), true, 1);
 
-	fd_set fds;
-	FD_ZERO(&fds);
-	FD_SET(isck, &fds);
-
-	struct timeval tout = {0, 0};
-
-	V("Select()ing IRC socket");
-	int r = select(isck+1, &fds, NULL, NULL, &tout);
-
-	if (r == -1) {
-		EE("select failed");
+	if (r == -1)
 		return false;
-	}
 
 	V("Is %sreadable", r?"":"not ");
 
@@ -208,7 +199,7 @@ serv_printf(const char *fmt, ...)
 	}
 
 	ptr->next = NULL;
-	if (!(ptr->line = strdup(buf)))
+	if (!(ptr->line = b_strdup(buf)))
 		CE("strdup failed");
 
 	D("Queued line '%s'", buf);
@@ -265,7 +256,7 @@ process_sendq(void)
 	if (!s_outQ)
 		return 0;
 
-	if (g_sett.freelines > 0 || nextsend <= tstamp_us()) {
+	if (g_sett.freelines > 0 || nextsend <= b_tstamp_us()) {
 		D("SendQ time");
 		struct outline_s *ptr = s_outQ;
 		if (!to_srv(ptr->line)) {
@@ -273,17 +264,17 @@ process_sendq(void)
 			return -1;
 		}
 		s_outQ = s_outQ->next;
-		if (strncasecmp(ptr->line, "QUIT", 4) == 0) {
+		if (b_strncasecmp(ptr->line, "QUIT", 4) == 0) {
 			I("QUIT seen, forcing d/c in %"PRIu64" seconds",
 			    g_sett.waitquit_us / 1000000u);
-			s_quitat = tstamp_us();
+			s_quitat = b_tstamp_us();
 		}
 
 		free(ptr->line);
 		free(ptr);
 		if (g_sett.freelines)
 			g_sett.freelines--;
-		nextsend = tstamp_us() + g_sett.linedelay;
+		nextsend = b_tstamp_us() + g_sett.linedelay;
 
 		return 1;
 	}
@@ -294,11 +285,11 @@ process_sendq(void)
 static bool
 do_heartbeat(void)
 {
-	if (g_sett.hbeat_us && s_nexthb <= tstamp_us()) {
+	if (g_sett.hbeat_us && s_nexthb <= b_tstamp_us()) {
 		D("Heartbeat time");
 		char buf[512];
 		snprintf(buf, sizeof buf, "PING %s\r\n", irc_myhost(s_irc));
-		s_nexthb = tstamp_us() + g_sett.hbeat_us;
+		s_nexthb = b_tstamp_us() + g_sett.hbeat_us;
 		if (!to_srv(buf))
 			return s_on = false;
 	}
@@ -325,12 +316,8 @@ tryconnect(struct srvlist_s *s)
 		irc_set_server(s_irc, s->host, s->port);
 
 		if (s->ssl) {
-#ifdef WITH_SSL
 			if (!irc_set_ssl(s_irc, true))
 				C("Failed to enable SSL");
-#else
-			C("We haven't been compiled with SSL support...");
-#endif
 			D("SSL selected");
 		} else
 			irc_set_ssl(s_irc, false);
@@ -342,7 +329,7 @@ tryconnect(struct srvlist_s *s)
 			I("Logged on, %sjoining channel(s)",
 			    g_sett.nojoin?"NOT ":"");
 
-			s_nexthb = tstamp_us() + g_sett.hbeat_us;
+			s_nexthb = b_tstamp_us() + g_sett.hbeat_us;
 
 			if (!g_sett.nojoin) {
 				char jmsg[512];
@@ -366,15 +353,15 @@ tryconnect(struct srvlist_s *s)
 static bool
 first_connect(void)
 {
-	for (;;) {
+	while (!g_interrupted) {
 		if (!tryconnect(g_sett.srvlist)) {
 			E("Failed to connect/logon (%s)",
 			    g_sett.keeptrying ?"retrying":"giving up");
 
 			if (g_sett.keeptrying) {
-				N("Sleeping fpr %"PRIu64" seconds",
+				N("Sleeping for %"PRIu64" seconds",
 				    g_sett.cfwait_us / 1000000u);
-				sleep_us(g_sett.cfwait_us);
+				b_usleep(g_sett.cfwait_us);
 				continue;
 			}
 
@@ -383,7 +370,10 @@ first_connect(void)
 		break;
 	}
 
-	return true;
+	if (g_interrupted)
+		N("interrupted by user");
+
+	return !g_interrupted;
 }
 
 static bool

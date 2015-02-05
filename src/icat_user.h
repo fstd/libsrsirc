@@ -10,8 +10,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include <sys/types.h>
-
 
 bool user_canread(void);
 size_t user_readline(char *dest, size_t destsz);

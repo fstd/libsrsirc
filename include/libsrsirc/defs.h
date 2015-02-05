@@ -5,15 +5,11 @@
 #ifndef LIBSRSIRC_IRC_DEFS_H
 #define LIBSRSIRC_IRC_DEFS_H 1
 
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
-#ifdef WITH_SSL
-/* ssl */
-# include <openssl/ssl.h>
-# include <openssl/err.h>
-#endif
 
 /* max number of tokens as per RFC1459/2812 */
 #define MAX_IRCARGS ((size_t)17)

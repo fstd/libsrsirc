@@ -13,6 +13,7 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -22,10 +23,8 @@
 #include <string.h>
 #include <time.h>
 
-#include <err.h>
-#include <inttypes.h>
-#include <sys/time.h>
-#include <unistd.h>
+#include <platform/base_time.h>
+#include <platform/base_misc.h>
 
 #include <libsrsirc/defs.h>
 #include <libsrsirc/irc_ext.h>
@@ -117,7 +116,7 @@ core_run(void)
 			if (!on)
 				break;
 
-			if (tquit + g_sett.waitquit_us < tstamp_us()) {
+			if (tquit + g_sett.waitquit_us < b_tstamp_us()) {
 				N("Waitquit exceeded, breaking connection");
 				break;
 			}
@@ -129,17 +128,17 @@ core_run(void)
 			break;
 		}
 
-		if (nextop <= tstamp_us()) {
+		if (nextop <= b_tstamp_us()) {
 			if (!serv_operate()) {
 				E("serv_operate() failed");
 				if (!on) {
 					N("Delaying next connection attempt");
-					nextop = tstamp_us() + g_sett.cfwait_us;
+					nextop = b_tstamp_us() + g_sett.cfwait_us;
 				}
 			}
 		}
 		if (idle)
-			usleep(100000);
+			b_usleep(100000L);
 	}
 
 	if (g_interrupted)

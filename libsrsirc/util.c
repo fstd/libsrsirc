@@ -11,20 +11,21 @@
 
 #include <libsrsirc/util.h>
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
-#include <strings.h>
 #include <limits.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "px.h"
-#include "common.h"
+#include <platform/base_string.h>
 
 #include <logger/intlog.h>
 
+#include "common.h"
 #include "intdefs.h"
+#include "px.h"
+
 
 static char* next_tok(char *buf);
 
@@ -232,7 +233,7 @@ ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr)
 char*
 ut_sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
 {
-	snprintf(dest, dest_sz, "(%p) '%s' '%s'", tag, (*msg)[0], (*msg)[1]);
+	snprintf(dest, dest_sz, "(%p) '%s' '%s'", (void*)tag, (*msg)[0], (*msg)[1]);
 	for (size_t i = 2; i < COUNTOF(*msg); i++) {
 		if (!(*msg)[i])
 			break;
@@ -267,7 +268,7 @@ ut_parse_MODE(irc h, tokarr *msg, size_t *num, bool is324)
 	while (ac < COUNTOF(*msg) && (*msg)[ac])
 		ac++;
 
-	char *modes = com_strdup((*msg)[3 + is324]);
+	char *modes = b_strdup((*msg)[3 + is324]);
 	if (!modes)
 		return NULL;
 
@@ -400,7 +401,7 @@ tokarr *ut_clonearr(tokarr *arr)
 
 	for (size_t i = 0; i < COUNTOF(*arr); i++) {
 		if ((*arr)[i]) {
-			if (!((*res)[i] = com_strdup((*arr)[i])))
+			if (!((*res)[i] = b_strdup((*arr)[i])))
 				goto clonearr_fail;
 		} else
 			(*res)[i] = NULL;

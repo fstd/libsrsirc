@@ -11,23 +11,25 @@
 
 #include <libsrsirc/irc.h>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <strings.h>
-
 #include <inttypes.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "common.h"
-#include <libsrsirc/util.h>
-#include "conn.h"
-#include "msg.h"
-#include "skmap.h"
-#include "irc_msghnd.h"
+#include <platform/base_string.h>
+#include <platform/base_time.h>
 
 #include <logger/intlog.h>
 
+#include "common.h"
+#include "conn.h"
+#include "irc_msghnd.h"
 #include "irc_track_int.h"
+#include "msg.h"
+#include "skmap.h"
+
+#include <libsrsirc/util.h>
+
 
 static bool send_logon(irc hnd);
 
@@ -82,10 +84,10 @@ irc_init(void)
 		goto irc_init_fail;
 	strcpy(r->nick, DEF_NICK);
 
-	if ((!(r->uname = com_strdup(DEF_UNAME)))
-	    || (!(r->fname = com_strdup(DEF_FNAME)))
-	    || (!(r->serv_dist = com_strdup(DEF_SERV_DIST)))
-	    || (!(r->serv_info = com_strdup(DEF_SERV_INFO))))
+	if ((!(r->uname = b_strdup(DEF_UNAME)))
+	    || (!(r->fname = b_strdup(DEF_FNAME)))
+	    || (!(r->serv_dist = b_strdup(DEF_SERV_DIST)))
+	    || (!(r->serv_info = b_strdup(DEF_SERV_INFO))))
 		goto irc_init_fail;
 
 	r->msghnds_cnt = 64;
@@ -129,7 +131,7 @@ irc_init(void)
 		r->logonconv[i] = NULL;
 
 
-	D("(%p) irc_bas initialized (backend: %p)", r, r->con);
+	D("(%p) irc_bas initialized (backend: %p)", (void*)r, (void*)r->con);
 	return r;
 
 irc_init_fail:
@@ -191,7 +193,7 @@ irc_dispose(irc hnd)
 	for (size_t i = 0; i < COUNTOF(hnd->m005modepfx); i++)
 		free(hnd->m005modepfx[i]);
 
-	D("(%p) disposed", hnd);
+	D("(%p) disposed", (void*)hnd);
 	free(hnd);
 }
 
@@ -199,7 +201,7 @@ bool
 irc_connect(irc hnd)
 {
 	uint64_t tsend = hnd->hcto_us ?
-	    com_timestamp_us() + hnd->hcto_us : 0;
+	    b_tstamp_us() + hnd->hcto_us : 0;
 
 	trk_deinit(hnd);
 	hnd->tracking_enab = false;
@@ -220,7 +222,7 @@ irc_connect(irc hnd)
 	if (!conn_connect(hnd->con, hnd->scto_us, hnd->hcto_us))
 		return false;
 
-	I("(%p) connection established", hnd);
+	I("(%p) connection established", (void*)hnd);
 
 	if (hnd->dumb)
 		return true;
@@ -228,7 +230,7 @@ irc_connect(irc hnd)
 	if (!send_logon(hnd))
 		goto irc_connect_fail;
 
-	I("(%p) IRC logon sequence sent", hnd);
+	I("(%p) IRC logon sequence sent", (void*)hnd);
 
 	com_strNcpy(hnd->mynick, hnd->nick, sizeof hnd->mynick);
 	tokarr msg;
@@ -238,7 +240,7 @@ irc_connect(irc hnd)
 	int r;
 	do {
 		if (com_check_timeout(tsend, &trem)) {
-			W("(%p) timeout waiting for 004", hnd);
+			W("(%p) timeout waiting for 004", (void*)hnd);
 			goto irc_connect_fail;
 		}
 
@@ -250,7 +252,7 @@ irc_connect(irc hnd)
 
 		if (hnd->cb_con_read &&
 		    !hnd->cb_con_read(&msg, hnd->tag_con_read)) {
-			W("(%p) further logon prohibited by conread", hnd);
+			W("(%p) further logon prohibited by conread", (void*)hnd);
 			goto irc_connect_fail;
 		}
 
@@ -272,7 +274,7 @@ irc_connect(irc hnd)
 
 	} while (!success);
 
-	N("(%p) logged on to IRC", hnd);
+	N("(%p) logged on to IRC", (void*)hnd);
 	return true;
 
 irc_connect_fail:
@@ -328,16 +330,19 @@ send_logon(irc hnd)
 	char aBuf[256];
 	char *pBuf = aBuf;
 	aBuf[0] = '\0';
-	ssize_t rem = sizeof aBuf;
+	size_t rem = sizeof aBuf;
 	int r;
 
 	if (hnd->pass && strlen(hnd->pass) > 0) {
 		r = snprintf(pBuf, rem, "PASS :%s\r\n", hnd->pass);
+		if (r > (int)rem)
+			r = rem;
+
 		rem -= r;
 		pBuf += r;
 	}
 
-	if (rem <= 0)
+	if (!rem)
 		return false;
 
 	if (hnd->service) {
@@ -349,10 +354,13 @@ send_logon(irc hnd)
 		    hnd->nick, hnd->uname, hnd->conflags, hnd->fname);
 	}
 
+	if (r > (int)rem) {
+		r = rem;
+		return false;
+	}
+
 	rem -= r;
 	pBuf += r;
-	if (rem < 0)
-		return false;
 
 	return irc_write(hnd, aBuf);
 }
@@ -373,7 +381,7 @@ irc_regcb_mutnick(irc hnd, fp_mut_nick cb)
 void
 irc_dump(irc h)
 {
-	N("--- irc object %p dump---", h);
+	N("--- irc object %p dump---", (void*)h);
 	N("mynick: '%s'", h->mynick);
 	N("myhost: '%s'", h->myhost);
 	N("service: %d", h->service);
@@ -404,7 +412,7 @@ irc_dump(irc h)
 	N("m005modepfx[0]: '%s'", h->m005modepfx[0]);
 	N("m005modepfx[1]: '%s'", h->m005modepfx[1]);
 	N("m005chantypes: '%s'", h->m005chantypes);
-	N("tag_con_read: %p", h->tag_con_read);
+	N("tag_con_read: %p", (void*)h->tag_con_read);
 	N("tracking: %d", h->tracking);
 	N("tracking_enab: %d", h->tracking_enab);
 	N("endofnames: %d", h->endofnames);

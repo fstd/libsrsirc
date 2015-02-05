@@ -31,13 +31,13 @@ struct bucklist {
 	struct pl_node *head;
 	struct pl_node *iter;
 	struct pl_node *previter; //for delete while iteration
-	const char *cmap;
+	const uint8_t *cmap;
 };
 
-static bool pfxeq(const char *n1, const char *n2, const char *cmap);
+static bool pfxeq(const char *n1, const char *n2, const uint8_t *cmap);
 
 bucklist_t
-bucklist_init(const char *cmap)
+bucklist_init(const uint8_t *cmap)
 {
 	struct bucklist *l = com_malloc(sizeof *l);
 	if (!l)
@@ -94,7 +94,7 @@ bucklist_clear(bucklist_t l)
 }
 
 bool
-bucklist_insert(bucklist_t l, ssize_t i, char *key, void *val)
+bucklist_insert(bucklist_t l, size_t i, char *key, void *val)
 {
 	struct pl_node *n = l->head;
 	struct pl_node *prev = NULL;
@@ -261,7 +261,7 @@ bucklist_del_iter(bucklist_t l)
 void
 bucklist_dump(bucklist_t l, bucklist_op_fn op)
 {
-	#define M(X, A...) fprintf(stderr, X, ##A)
+	#define M(...) fprintf(stderr, __VA_ARGS__)
 	if (!l)
 		return;
 
@@ -281,7 +281,7 @@ bucklist_dump(bucklist_t l, bucklist_op_fn op)
 
 
 bool
-pfxeq(const char *n1, const char *n2, const char *cmap)
+pfxeq(const char *n1, const char *n2, const uint8_t *cmap)
 {
 	unsigned char c1, c2;
 	while ((c1 = cmap[(unsigned char)*n1]) & /* avoid short circuit */

@@ -5,11 +5,14 @@
 #ifndef LIBSRSIRC_INTLOG_H
 #define LIBSRSIRC_INTLOG_H 1
 
-#include <stdbool.h>
-#include <limits.h>
-#include <errno.h>
 
-#include <syslog.h>
+#include <errno.h>
+#include <limits.h>
+#include <stdbool.h>
+#include <stdlib.h>
+
+#include <platform/base_log.h>
+
 
 #define MOD_IRC 0
 #define MOD_COMMON 1
@@ -49,64 +52,64 @@
 
 // ----- logging interface -----
 
-#define T(F,A...)                                                            \
-    ircdbg_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,F,##A)
+#define T(...)                                                            \
+    ircdbg_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
 
-#define TE(F,A...)                                                           \
-    ircdbg_log(LOG_MODULE,LOG_TRACE,errno,__FILE__,__LINE__,__func__,F,##A)
+#define TE(...)                                                           \
+    ircdbg_log(LOG_MODULE,LOG_TRACE,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
 
-#define V(F,A...)                                                            \
-    ircdbg_log(LOG_MODULE,LOG_VIVI,-1,__FILE__,__LINE__,__func__,F,##A)
+#define V(...)                                                            \
+    ircdbg_log(LOG_MODULE,LOG_VIVI,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
 
-#define VE(F,A...)                                                           \
-    ircdbg_log(LOG_MODULE,LOG_VIVI,errno,__FILE__,__LINE__,__func__,F,##A)
+#define VE(...)                                                           \
+    ircdbg_log(LOG_MODULE,LOG_VIVI,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
 
-#define D(F,A...)                                                            \
-    ircdbg_log(LOG_MODULE,LOG_DEBUG,-1,__FILE__,__LINE__,__func__,F,##A)
+#define D( ...)                                                            \
+    ircdbg_log(LOG_MODULE,LOG_DEBUG,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
 
-#define DE(F,A...)                                                           \
-    ircdbg_log(LOG_MODULE,LOG_DEBUG,errno,__FILE__,__LINE__,__func__,F,##A)
+#define DE(...)                                                           \
+    ircdbg_log(LOG_MODULE,LOG_DEBUG,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
 
-#define I(F,A...)                                                            \
-    ircdbg_log(LOG_MODULE,LOG_INFO,-1,__FILE__,__LINE__,__func__,F,##A)
+#define I(...)                                                            \
+    ircdbg_log(LOG_MODULE,LOG_INFO,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
 
-#define IE(F,A...)                                                           \
-    ircdbg_log(LOG_MODULE,LOG_INFO,errno,__FILE__,__LINE__,__func__,F,##A)
+#define IE(...)                                                           \
+    ircdbg_log(LOG_MODULE,LOG_INFO,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
 
-#define N(F,A...)                                                            \
-    ircdbg_log(LOG_MODULE,LOG_NOTICE,-1,__FILE__,__LINE__,__func__,F,##A)
+#define N(...)                                                            \
+    ircdbg_log(LOG_MODULE,LOG_NOTICE,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
 
-#define NE(F,A...)                                                           \
-    ircdbg_log(LOG_MODULE,LOG_NOTICE,errno,__FILE__,__LINE__,__func__,F,##A)
+#define NE(...)                                                           \
+    ircdbg_log(LOG_MODULE,LOG_NOTICE,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
 
-#define W(F,A...)                                                            \
-    ircdbg_log(LOG_MODULE,LOG_WARNING,-1,__FILE__,__LINE__,__func__,F,##A)
+#define W(...)                                                            \
+    ircdbg_log(LOG_MODULE,LOG_WARNING,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
 
-#define WE(F,A...)                                                           \
-    ircdbg_log(LOG_MODULE,LOG_WARNING,errno,__FILE__,__LINE__,__func__,F,##A)
+#define WE(...)                                                           \
+    ircdbg_log(LOG_MODULE,LOG_WARNING,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
 
-#define E(F,A...)                                                            \
-    ircdbg_log(LOG_MODULE,LOG_ERR,-1,__FILE__,__LINE__,__func__,F,##A)
+#define E(...)                                                            \
+    ircdbg_log(LOG_MODULE,LOG_ERR,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
 
-#define EE(F,A...)                                                           \
-    ircdbg_log(LOG_MODULE,LOG_ERR,errno,__FILE__,__LINE__,__func__,F,##A)
+#define EE(...)                                                           \
+    ircdbg_log(LOG_MODULE,LOG_ERR,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
 
-#define C(F,A...) do {                                                       \
-    ircdbg_log(LOG_MODULE,LOG_CRIT,-1,__FILE__,__LINE__,__func__,F,##A);     \
+#define C(...) do {                                                       \
+    ircdbg_log(LOG_MODULE,LOG_CRIT,-1,__FILE__,__LINE__,__func__,__VA_ARGS__);     \
     exit(EXIT_FAILURE); } while (0)
 
-#define CE(F,A...) do {                                                      \
-    ircdbg_log(LOG_MODULE,LOG_CRIT,errno,__FILE__,__LINE__,__func__,F,##A);  \
+#define CE(...) do {                                                      \
+    ircdbg_log(LOG_MODULE,LOG_CRIT,errno,__FILE__,__LINE__,__func__,__VA_ARGS__);  \
     exit(EXIT_FAILURE); } while (0)
 
 /* special: always printed, never decorated */
-#define A(F,A...)                                                            \
-    ircdbg_log(-1,INT_MIN,-1,__FILE__,__LINE__,__func__,F,##A)
+#define A(...)                                                            \
+    ircdbg_log(-1,INT_MIN,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
 
 // ----- logger control interface -----
 
 void ircdbg_stderr(void);
-void ircdbg_syslog(const char *ident, int facility);
+void ircdbg_syslog(const char *ident);
 
 void ircdbg_setlvl(int mod, int lvl);
 int ircdbg_getlvl(int mod);

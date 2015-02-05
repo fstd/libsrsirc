@@ -12,17 +12,21 @@
 #include "irc_msghnd.h"
 
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include "common.h"
-#include <libsrsirc/defs.h>
-#include "conn.h"
-#include <libsrsirc/util.h>
-#include "irc_track_int.h"
+#include <platform/base_string.h>
+
 #include <logger/intlog.h>
+
+#include "common.h"
+#include "conn.h"
+#include "irc_track_int.h"
 #include "msg.h"
+
+#include <libsrsirc/defs.h>
+#include <libsrsirc/util.h>
 
 
 static uint8_t
@@ -118,7 +122,7 @@ handle_XXX(irc hnd, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_464(irc hnd, tokarr *msg, size_t nargs, bool logon)
 {
-	W("(%p) wrong server password", hnd);
+	W("(%p) wrong server password", (void*)hnd);
 	return AUTH_ERR;
 }
 
@@ -142,7 +146,7 @@ handle_383(irc hnd, tokarr *msg, size_t nargs, bool logon)
 	com_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
 	hnd->ver[0] = '\0';
 	hnd->service = true;
-	D("(%p) got beloved 383", hnd);
+	D("(%p) got beloved 383", (void*)hnd);
 
 	return LOGON_COMPLETE;
 }
@@ -151,17 +155,17 @@ static uint8_t
 handle_484(irc hnd, tokarr *msg, size_t nargs, bool logon)
 {
 	hnd->restricted = true;
-	I("(%p) we're 'restricted'", hnd);
+	I("(%p) we're 'restricted'", (void*)hnd);
 	return 0;
 }
 
 static uint8_t
 handle_465(irc hnd, tokarr *msg, size_t nargs, bool logon)
 {
-	W("(%p) we're banned", hnd);
+	W("(%p) we're banned", (void*)hnd);
 	hnd->banned = true;
 	free(hnd->banmsg);
-	hnd->banmsg = com_strdup((*msg)[3] ? (*msg)[3] : "");
+	hnd->banmsg = b_strdup((*msg)[3] ? (*msg)[3] : "");
 
 	return 0; /* well if we are, the server will sure disconnect ua s*/
 }
@@ -169,7 +173,7 @@ handle_465(irc hnd, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_466(irc hnd, tokarr *msg, size_t nargs, bool logon)
 {
-	W("(%p) we will be banned", hnd);
+	W("(%p) we will be banned", (void*)hnd);
 
 	return 0; /* so what, bitch? */
 }
@@ -178,7 +182,7 @@ static uint8_t
 handle_ERROR(irc hnd, tokarr *msg, size_t nargs, bool logon)
 {
 	free(hnd->lasterr);
-	hnd->lasterr = com_strdup((*msg)[2] ? (*msg)[2] : "");
+	hnd->lasterr = b_strdup((*msg)[2] ? (*msg)[2] : "");
 	W("sever said ERROR: '%s'", (*msg)[2]);
 	return 0; /* not strictly a case for CANT_PROCEED */
 }
@@ -206,12 +210,12 @@ handle_NICK(irc hnd, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_005_CASEMAPPING(irc hnd, const char *val)
 {
-	if (strcasecmp(val, "ascii") == 0)
+	if (b_strcasecmp(val, "ascii") == 0)
 		hnd->casemap = CMAP_ASCII;
-	else if (strcasecmp(val, "strict-rfc1459") == 0)
+	else if (b_strcasecmp(val, "strict-rfc1459") == 0)
 		hnd->casemap = CMAP_STRICT_RFC1459;
 	else {
-		if (strcasecmp(val, "rfc1459") != 0)
+		if (b_strcasecmp(val, "rfc1459") != 0)
 			W("unknown 005 casemapping: '%s'", val);
 		hnd->casemap = CMAP_RFC1459;
 	}
@@ -282,14 +286,14 @@ handle_005(irc hnd, tokarr *msg, size_t nargs, bool logon)
 	bool have_casemap = false;
 
 	for (size_t z = 3; z < nargs; ++z) {
-		if (strncasecmp((*msg)[z], "CASEMAPPING=", 12) == 0) {
+		if (b_strncasecmp((*msg)[z], "CASEMAPPING=", 12) == 0) {
 			ret |= handle_005_CASEMAPPING(hnd, (*msg)[z] + 12);
 			have_casemap = true;
-		} else if (strncasecmp((*msg)[z], "PREFIX=", 7) == 0)
+		} else if (b_strncasecmp((*msg)[z], "PREFIX=", 7) == 0)
 			ret |= handle_005_PREFIX(hnd, (*msg)[z] + 7);
-		else if (strncasecmp((*msg)[z], "CHANMODES=", 10) == 0)
+		else if (b_strncasecmp((*msg)[z], "CHANMODES=", 10) == 0)
 			ret |= handle_005_CHANMODES(hnd, (*msg)[z] + 10);
-		else if (strncasecmp((*msg)[z], "CHANTYPES=", 10) == 0)
+		else if (b_strncasecmp((*msg)[z], "CHANTYPES=", 10) == 0)
 			ret |= handle_005_CHANTYPES(hnd, (*msg)[z] + 10);
 
 		if (ret & CANT_PROCEED)

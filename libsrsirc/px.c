@@ -10,19 +10,22 @@
 
 #include "px.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <ctype.h>
-
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <unistd.h>
 #include <inttypes.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <platform/base_misc.h>
+#include <platform/base_net.h>
+#include <platform/base_string.h>
+#include <platform/base_time.h>
+
+#include <logger/intlog.h>
+
+#include "common.h"
 
 #include <libsrsirc/defs.h>
-#include "common.h"
-#include <logger/intlog.h>
 
 
 #define HOST_IPV4 0
@@ -30,24 +33,24 @@
 #define HOST_DNS 2
 
 
-static int guess_hosttype(const char *host);
 #define DBGSPEC "(%d,%s,%"PRIu16")"
+
 
 bool
 px_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 {
-	uint64_t tsend = to_us ? com_timestamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? b_tstamp_us() + to_us : 0;
 	char buf[256];
 	snprintf(buf, sizeof buf, "CONNECT %s:%d HTTP/1.0\r\nHost: %s:%d"
 	    "\r\n\r\n", host, port, host, port);
 
 	errno = 0;
-	ssize_t n = write(sck, buf, strlen(buf));
+	long n = b_write(sck, buf, strlen(buf));
 	if (n <= -1) {
 		WE(DBGSPEC" write() failed", sck, host, port);
 		return false;
 	} else if ((size_t)n < strlen(buf)) {
-		W(DBGSPEC" didn't send everything (%zd/%zu)",
+		W(DBGSPEC" didn't send everything (%ld/%zu)",
 		    sck, host, port, n, strlen(buf));
 		return false;
 	}
@@ -60,14 +63,15 @@ px_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 	while (c < sizeof buf && (c < 4 || buf[c-4] != '\r' ||
 	    buf[c-3] != '\n' || buf[c-2] != '\r' || buf[c-1] != '\n')) {
 		errno = 0;
-		n = read(sck, &buf[c], 1);
+		bool tryagain = false;
+		n = b_read(sck, &buf[c], 1, &tryagain);
 		if (n <= 0) {
 			if (n == 0)
 				W(DBGSPEC" unexpected EOF",
 				    sck, host, port);
-			else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			else if (tryagain) {
 				if (!com_check_timeout(tsend, NULL)) {
-					usleep(10000);
+					b_usleep(10000);
 					continue;
 				}
 				W(DBGSPEC" timeout hit",
@@ -79,45 +83,32 @@ px_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 		}
 		c++;
 	}
-	char *ctx; //context ptr for strtok_r
-	char *tok = strtok_r(buf, " ", &ctx);
-	if (!tok) {
-		W(DBGSPEC" parse error 1 (buf: '%s')",
-		    sck, host, port, buf);
-		return false;
-	}
 
-	tok = strtok_r(NULL, " ", &ctx);
-	if (!tok) {
-		W(DBGSPEC" parse error 2 (buf: '%s')",
-		    sck, host, port, buf);
+	char *sp = strchr(buf, ' ');
+	if (!sp) {
+		W(DBGSPEC" parse error 1 (buf: '%s')", sck, host, port, buf);
 		return false;
 	}
 
 	D(DBGSPEC" http response: '%.3s' (should be '200')",
-	    sck, host, port, tok);
-	return strncmp(tok, "200", 3) == 0;
+	    sck, host, port, sp+1);
+	return strncmp(sp+1, "200", 3) == 0;
 }
 
 /* SOCKS4 doesntsupport ipv6 */
 bool
 px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 {
-	uint64_t tsend = to_us ? com_timestamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? b_tstamp_us() + to_us : 0;
 	unsigned char logon[14];
-	uint16_t nport = htons(port);
+	uint16_t nport = b_htons(port);
 
 	/*FIXME this doesntwork if host is not an ipv4 addr but dns*/
-	uint32_t ip = inet_addr(host);
+	uint32_t ip = b_inet_addr(host);
 	char name[6];
 	for (size_t i = 0; i < sizeof name - 1; i++)
 		name[i] = rand() % 26 + 'a';
 	name[sizeof name - 1] = '\0';
-
-	if (ip == INADDR_NONE || !port) {
-		W(DBGSPEC" srsly what?", sck, host, port);
-		return false;
-	}
 
 	size_t c = 0;
 	logon[c++] = 4;
@@ -130,12 +121,12 @@ px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 	c += strlen(name) + 1;
 
 	errno = 0;
-	ssize_t n = write(sck, logon, c);
+	long n = b_write(sck, logon, c);
 	if (n <= -1) {
 		WE(DBGSPEC" write() failed", sck, host, port);
 		return false;
 	} else if ((size_t)n < c) {
-		W(DBGSPEC" didn't send everything (%zd/%zu)",
+		W(DBGSPEC" didn't send everything (%ld/%zu)",
 		    sck, host, port, n, c);
 		return false;
 	}
@@ -146,21 +137,19 @@ px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 	c = 0;
 	while (c < 8) {
 		errno = 0;
-		n = read(sck, &resp+c, 8-c);
+		bool tryagain = false;
+		n = b_read(sck, &resp+c, 8-c, &tryagain);
 		if (n <= 0) {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			if (tryagain) {
 				if (!com_check_timeout(tsend, NULL)) {
-					usleep(10000);
+					b_usleep(10000);
 					continue;
 				}
-				W(DBGSPEC" timeout hit",
-				    sck, host, port);
+				W(DBGSPEC" timeout hit", sck, host, port);
 			} else if (n == 0) {
-				W(DBGSPEC" unexpected EOF",
-				    sck, host, port);
+				W(DBGSPEC" unexpected EOF", sck, host, port);
 			} else
-				WE(DBGSPEC" read failed",
-				    sck, host, port);
+				WE(DBGSPEC" read failed", sck, host, port);
 			return false;
 		}
 		c += n;
@@ -173,7 +162,9 @@ px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 bool
 px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 {
-	uint64_t tsend = to_us ? com_timestamp_us() + to_us : 0;
+	E("proxu support currently commented out, it's horrible. plx fix.");
+	return false;
+	uint64_t tsend = to_us ? b_tstamp_us() + to_us : 0;
 	unsigned char logon[14];
 
 	if (!port) {
@@ -181,7 +172,7 @@ px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 		return false;
 	}
 
-	uint16_t nport = htons(port);
+	uint16_t nport = b_htons(port);
 	size_t c = 0;
 	logon[c++] = 5;
 
@@ -189,12 +180,12 @@ px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	logon[c++] = 0;
 
 	errno = 0;
-	ssize_t n = write(sck, logon, c);
+	long n = b_write(sck, logon, c);
 	if (n <= -1) {
 		WE(DBGSPEC" write() failed", sck, host, port);
 		return false;
 	} else if ((size_t)n < c) {
-		W(DBGSPEC" didn't send everything (%zd/%zu)",
+		W(DBGSPEC" didn't send everything (%ld/%zu)",
 		    sck, host, port, n, c);
 		return false;
 	}
@@ -205,11 +196,12 @@ px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	c = 0;
 	while (c < 2) {
 		errno = 0;
-		n = read(sck, &resp+c, 2-c);
+		bool tryagain = false;
+		n = b_read(sck, &resp+c, 2-c, &tryagain);
 		if (n <= 0) {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			if (tryagain) {
 				if (!com_check_timeout(tsend, NULL)) {
-					usleep(10000);
+					b_usleep(10000);
 					continue;
 				}
 				W(DBGSPEC" timeout 1 hit",
@@ -238,60 +230,40 @@ px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	D(DBGSPEC" socks5 let us in", sck, host, port);
 
 	c = 0;
-	char connect[128];
-	connect[c++] = 5;
-	connect[c++] = 1;
-	connect[c++] = 0;
+	unsigned char conbuf[128];
+	conbuf[c++] = 5;
+	conbuf[c++] = 1;
+	conbuf[c++] = 0;
 	int type = guess_hosttype(host);
-	struct in_addr ia4;
-	struct in6_addr ia6;
 	switch (type) {
 	case HOST_IPV4:
-		connect[c++] = 1;
-		n = inet_pton(AF_INET, host, &ia4);
-		if (n == -1) {
-			WE(DBGSPEC" inet_pton failed",
-			    sck, host, port);
+		conbuf[c++] = 1;
+		if (!b_inet4_addr(&conbuf[c], 4, host))
 			return false;
-		}
-		if (n == 0) {
-			W(DBGSPEC" illegal ipv4 addr: '%s'",
-			    sck, host, port, host);
-			return false;
-		}
-		memcpy(connect+c, &ia4.s_addr, 4); c +=4;
+		c += 16;
 		break;
 	case HOST_IPV6:
-		connect[c++] = 4;
-		n = inet_pton(AF_INET6, host, &ia6);
-		if (n == -1) {
-			WE(DBGSPEC" inet_pton failed",
-			    sck, host, port);
+		conbuf[c++] = 4;
+		if (!b_inet6_addr(&conbuf[c], 16, host))
 			return false;
-		}
-		if (n == 0) {
-			W(DBGSPEC" illegal ipv6 addr: '%s'",
-			    sck, host, port, host);
-			return false;
-		}
-		memcpy(connect+c, &ia6.s6_addr, 16); c +=16;
+		c += 16;
 		break;
 	case HOST_DNS:
-		connect[c++] = 3;
-		connect[c++] = (uint8_t)strlen(host);
-		memcpy(connect+c, host, strlen(host));
+		conbuf[c++] = 3;
+		conbuf[c++] = (uint8_t)strlen(host);
+		memcpy(conbuf+c, host, strlen(host));
 		c += strlen(host);
 	}
-	memcpy(connect+c, &nport, 2); c += 2;
+	memcpy(conbuf+c, &nport, 2); c += 2;
 
 	errno = 0;
-	n = write(sck, connect, c);
+	n = b_write(sck, conbuf, c);
 	if (n <= -1) {
 		WE(DBGSPEC" write() failed",
 		    sck, host, port);
 		return false;
 	} else if ((size_t)n < c) {
-		W(DBGSPEC" didn't send everything (%zd/%zu)",
+		W(DBGSPEC" didn't send everything (%ld/%zu)",
 		    sck, host, port, n, c);
 		return false;
 	}
@@ -302,11 +274,12 @@ px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	c = 0;
 	while (c < l) {
 		errno = 0;
-		n = read(sck, resp + c, l - c);
+		bool tryagain = false;
+		n = b_read(sck, resp + c, l - c, &tryagain);
 		if (n <= 0) {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			if (tryagain) {
 				if (!com_check_timeout(tsend, NULL)) {
-					usleep(10000);
+					b_usleep(10000);
 					continue;
 				}
 				W(DBGSPEC" timeout 2 hit",
@@ -351,11 +324,12 @@ px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	while (c < l) {
 		errno = 0;
 		/* read the very first byte seperately */
-		n = read(sck, resp + c, c ? l - c : 1);
+		bool tryagain = false;
+		n = b_read(sck, resp + c, c ? l - c : 1, &tryagain);
 		if (n <= 0) {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			if (tryagain) {
 				if (!com_check_timeout(tsend, NULL)) {
-					usleep(10000);
+					b_usleep(10000);
 					continue;
 				}
 				W(DBGSPEC" timeout 2 hit",
@@ -383,9 +357,9 @@ px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 int
 px_typenum(const char *typestr)
 {
-	return (strcasecmp(typestr, "socks4") == 0) ? IRCPX_SOCKS4 :
-	       (strcasecmp(typestr, "socks5") == 0) ? IRCPX_SOCKS5 :
-	       (strcasecmp(typestr, "http") == 0) ? IRCPX_HTTP : -1;
+	return (b_strcasecmp(typestr, "socks4") == 0) ? IRCPX_SOCKS4 :
+	       (b_strcasecmp(typestr, "socks5") == 0) ? IRCPX_SOCKS5 :
+	       (b_strcasecmp(typestr, "http") == 0) ? IRCPX_HTTP : -1;
 }
 
 const char*
@@ -394,22 +368,5 @@ px_typestr(int typenum)
 	return (typenum == IRCPX_HTTP) ? "HTTP" :
 	       (typenum == IRCPX_SOCKS4) ? "SOCKS4" :
 	       (typenum == IRCPX_SOCKS5) ? "SOCKS5" : "unknown";
-}
-
-/*dumb heuristic to tell apart domain name/ip4/ip6 addr XXX FIXME */
-static int
-guess_hosttype(const char *host)
-{
-	if (strchr(host, '['))
-		return HOST_IPV6;
-	int dc = 0;
-	while (*host) {
-		if (*host == '.')
-			dc++;
-		else if (!isdigit((unsigned char)*host))
-			return HOST_DNS;
-		host++;
-	}
-	return dc == 3 ? HOST_IPV4 : HOST_DNS;
 }
 

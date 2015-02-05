@@ -12,16 +12,17 @@
 #include "msg.h"
 
 
-/* C */
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include "common.h"
-#include <libsrsirc/defs.h>
-#include "conn.h"
-#include <libsrsirc/util.h>
 #include <logger/intlog.h>
+
+#include "common.h"
+#include "conn.h"
+
+#include <libsrsirc/defs.h>
+#include <libsrsirc/util.h>
 
 
 bool

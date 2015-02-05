@@ -5,14 +5,18 @@
 #ifndef LIBSRSIRC_HASHMAP_H
 #define LIBSRSIRC_HASHMAP_H 1
 
-#include <stddef.h>
-#include <stdbool.h>
 
-typedef size_t (*skmap_hash_fn)(const char *elem, const char *cmap);
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+
+typedef size_t (*skmap_hash_fn)(const char *elem, const uint8_t *cmap);
 typedef void (*skmap_op_fn)(const char *elem);
 typedef void* (*skmap_keydup_fn)(const char *key);
 typedef bool (*skmap_eq_fn)(const void *elem1, const void *elem2);
 typedef struct skmap *skmap;
+
 
 skmap skmap_init(size_t bucketsz, int cmap);
 void skmap_clear(skmap m);

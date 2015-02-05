@@ -14,9 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <sys/select.h>
-#include <sys/time.h>
-#include <unistd.h>
+#include <platform/base_io.h>
 
 #include <logger/intlog.h>
 
@@ -46,12 +44,7 @@ user_canread(void)
 			return true;
 	}
 
-	fd_set fds;
-	FD_ZERO(&fds);
-	FD_SET(0, &fds);
-
-	struct timeval tout = {0, 0};
-	int r = select(1, &fds, NULL, NULL, &tout);
+	int r = b_stdin_canread();
 
 	if (r < 0)
 		EE("select");
@@ -77,7 +70,7 @@ user_canread(void)
 	if (s_eof)
 		return false;
 
-	ssize_t n = read(0, s_buftail, buf_rem());
+	long n = b_stdin_read(s_buftail, buf_rem());
 
 	if (n < 0) {
 		EE("read");

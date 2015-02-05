@@ -12,10 +12,11 @@
 #include "ucbase.h"
 
 
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <inttypes.h>
+#include <platform/base_string.h>
 
 #include <logger/intlog.h>
 
@@ -327,7 +328,7 @@ add_chanmode(irc h, chan c, const char *modestr)
 		c->modes_sz = nsz;
 	}
 
-	return (c->modes[ind] = com_strdup(modestr));
+	return (c->modes[ind] = b_strdup(modestr));
 }
 
 bool
@@ -380,13 +381,13 @@ touch_user_int(user u, const char *ident)
 	if (!u->uname && strchr(ident, '!')) {
 		char unam[MAX_UNAME_LEN];
 		ut_pfx2uname(unam, sizeof unam, ident);
-		u->uname = com_strdup(unam); //pointless to check
+		u->uname = b_strdup(unam); //pointless to check
 	}
 
 	if (!u->host && strchr(ident, '@')) {
 		char host[MAX_HOST_LEN];
 		ut_pfx2host(host, sizeof host, ident);
-		u->host = com_strdup(host); //pointless to check
+		u->host = b_strdup(host); //pointless to check
 	}
 }
 
@@ -415,7 +416,7 @@ add_user(irc h, const char *ident) //ident may be a nick, or nick!uname@host sty
 	u->tag = NULL;
 	u->freetag = false;
 
-	if (!(u->nick = com_strdup(nick)))
+	if (!(u->nick = b_strdup(nick)))
 		goto add_user_fail;
 
 	if (!skmap_put(h->users, nick, u))
@@ -606,7 +607,7 @@ rename_user(irc h, const char *ident, const char *newnick, bool *allocerr) //mh.
 		com_strNcpy(u->nick, newnick, strlen(u->nick) + 1);
 		return true;
 	} else {
-		if (!(nn = com_strdup(newnick)))
+		if (!(nn = b_strdup(newnick)))
 			return false; //oh shit.
 		free(u->nick);
 		u->nick = nn;

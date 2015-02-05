@@ -5,26 +5,27 @@
 #ifndef LIBSRSIRC_PTRLIST_H
 #define LIBSRSIRC_PTRLIST_H 1
 
-/* simple and stupid single linked list with void* data elements */
-
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
+
+/* simple and stupid single linked list with void* data elements */
 typedef struct bucklist *bucklist_t;
 typedef bool (*bucklist_find_fn)(const void *e);
 typedef void (*bucklist_op_fn)(const void *e);
 typedef bool (*bucklist_eq_fn)(const void *e1, const void *e2);
 
 /* alloc/dispose/count/clear */
-bucklist_t bucklist_init(const char *cmap);
+bucklist_t bucklist_init(const uint8_t *cmap);
 void bucklist_dispose(bucklist_t l);
 size_t bucklist_count(bucklist_t l);
 bool bucklist_isempty(bucklist_t l);
 void bucklist_clear(bucklist_t l);
 
 /* insert/replace/get by index */
-bool bucklist_insert(bucklist_t l, ssize_t i, char *key, void *val);
+bool bucklist_insert(bucklist_t l, size_t i, char *key, void *val);
 bool bucklist_get(bucklist_t l, size_t i, char **key, void **val);
 
 /* linear search */

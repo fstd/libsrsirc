@@ -12,19 +12,18 @@
 #include "skmap.h"
 
 #include <stddef.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
+
+#include <platform/base_string.h>
 
 #include <logger/intlog.h>
 
-#include "common.h"
 #include "bucklist.h"
 #include "cmap.h"
+#include "common.h"
 
-static size_t strhash_small(const char *s, const char *cmap);
-static size_t strhash_mid(const char *s, const char *cmap);
 
 struct skmap {
 	bucklist_t *buck;
@@ -37,8 +36,12 @@ struct skmap {
 
 	skmap_hash_fn hfn;
 
-	const char *cmap;
+	const uint8_t *cmap;
 };
+
+
+static size_t strhash_small(const char *s, const uint8_t *cmap);
+static size_t strhash_mid(const char *s, const uint8_t *cmap);
 
 
 skmap
@@ -122,7 +125,7 @@ skmap_put(skmap h, const char *key, void *elem)
 
 	void *e = bucklist_find(kl, key, NULL);
 	if (!e) {
-		kd = com_strdup(key);
+		kd = b_strdup(key);
 		if (!kd)
 			goto skmap_put_fail;
 
@@ -240,7 +243,7 @@ skmap_del_iter(skmap h)
 void
 skmap_dump(skmap h, skmap_op_fn valop)
 {
-	#define M(X, A...) fprintf(stderr, X, ##A)
+	#define M(...) fprintf(stderr, __VA_ARGS__)
 	M("===hashmap dump (count: %zu)===\n", h->count);
 	if (!h)
 		M("nullpointer...\n");
@@ -316,29 +319,27 @@ skmap_dumpstat(skmap h, const char *dbgname)
 
 
 static size_t
-strhash_small(const char *s, const char *cmap)
+strhash_small(const char *s, const uint8_t *cmap)
 {
 	uint8_t res = 0xaa;
 	uint8_t cur;
 	unsigned shift = 0;
-	char *str = (char*)s;
 
-	while ((cur = cmap[(unsigned char)*str++]))
+	while ((cur = cmap[(uint8_t)*s++]))
 		res ^= (cur << (++shift % 3));
 
 	return res;
 }
 
 static size_t
-strhash_mid(const char *s, const char *cmap)
+strhash_mid(const char *s, const uint8_t *cmap)
 {
 	uint8_t res[2] = { 0xaa, 0xaa };
 	uint8_t cur;
 	unsigned shift = 0;
 	bool first = true;
-	char *str = (char*)s;
 
-	while ((cur = cmap[(unsigned char)*str++]))
+	while ((cur = cmap[(uint8_t)*s++]))
 		res[first = !first] ^= cur << (++shift % 3);
 
 	return (res[0] << 8) | res[1];

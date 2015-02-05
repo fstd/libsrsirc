@@ -6,16 +6,16 @@
 # include <config.h>
 #endif
 
+
 #include "intlog.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
 #include <ctype.h>
-#include <string.h>
+#include <errno.h>
 #include <limits.h>
 #include <stdarg.h>
-#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 
 #define DEF_LVL LOG_CRIT
@@ -65,6 +65,11 @@ static bool s_fancy;
 static bool s_init;
 static int s_lvlarr[NUM_MODS];
 
+static int s_w_modnam = 0;
+static int s_w_file = 0;
+static int s_w_line = 0;
+static int s_w_func = 0;
+
 static const char* lvlnam(int lvl);
 static const char* lvlcol(int lvl);
 static int getenv_m(const char *nam, char *dest, size_t destsz);
@@ -75,11 +80,18 @@ static bool isdigitstr(const char *p);
 
 
 void
-ircdbg_syslog(const char *ident, int facility)
+ircdbg_syslog(const char *ident)
 {
 	if (s_open)
-		closelog();
-	openlog(ident, LOG_PID, facility);
+		b_closelog();
+
+	/* currently redundant */
+	s_open = false;
+	s_stderr = true;
+
+	if (!b_openlog(ident))
+		return;
+
 	s_open = true;
 	s_fancy = false;
 	s_stderr = false;
@@ -90,7 +102,7 @@ void
 ircdbg_stderr(void)
 {
 	if (s_open)
-		closelog();
+		b_closelog();
 
 	s_stderr = true;
 }
@@ -155,7 +167,7 @@ ircdbg_log(int mod, int lvl, int errn, const char *file, int line, const char *f
 	if (errn >= 0) {
 		errmsg[0] = ':';
 		errmsg[1] = ' ';
-		strerror_r(errn, errmsg + 2, sizeof errmsg - 2);
+		b_strerror(errn, errmsg + 2, sizeof errmsg - 2);
 	}
 
 	if (s_stderr) {
@@ -165,27 +177,27 @@ ircdbg_log(int mod, int lvl, int errn, const char *file, int line, const char *f
 		} else {
 			char timebuf[27];
 			time_t t = time(NULL);
-			if (!ctime_r(&t, timebuf))
-				strcpy(timebuf, "(ctime_r() failed)");
+			if (!b_ctime(&t, timebuf))
+				strcpy(timebuf, "(b_ctime() failed)");
 			char *ptr = strchr(timebuf, '\n');
 			if (ptr)
 				*ptr = '\0';
 
-			snprintf(resmsg, sizeof resmsg, "%s%s: %s: "
-			    "%s: %s:%d:%s(): %s%s%s\n",
-			    s_fancy ? lvlcol(lvl) : "", timebuf, modnames[mod],
-			    lvlnam(lvl), file, line, func, payload, errmsg,
+			snprintf(resmsg, sizeof resmsg, "%s%s: %*s: "
+			    "%s: %*s:%*d:%*s(): %s%s%s\n",
+			    s_fancy ? lvlcol(lvl) : "", timebuf, s_w_modnam, modnames[mod],
+			    lvlnam(lvl), s_w_file, file, s_w_line, line, s_w_func, func, payload, errmsg,
 			    s_fancy ? COL_RST : "");
 
 			fputs(resmsg, stderr);
 		}
 	} else {
 		if (always)
-			syslog(LOG_NOTICE, "%s", payload);
+			b_syslog(LOG_NOTICE, "%s", payload);
 		else {
 			snprintf(resmsg, sizeof resmsg, "%s: %s:%d:%s(): %s%s",
 			    modnames[mod], file, line, func, payload, errmsg);
-			syslog(lvl, "%s", resmsg);
+			b_syslog(lvl, "%s", resmsg);
 		}
 	}
 
@@ -219,6 +231,26 @@ ircdbg_init(void)
 				*eq = '=';
 				continue;
 			}
+			eq = strchr(tok, ':');
+			if (eq) {
+				if (tok[0] == ':' || !isdigitstr(eq+1))
+					continue;
+
+				*eq = '\0';
+				int v = (int)strtol(eq+1, NULL, 10);
+				if (strcmp(tok, "modnam") == 0) {
+					s_w_modnam = v;
+				} else if (strcmp(tok, "file") == 0) {
+					s_w_file = v;
+				} else if (strcmp(tok, "line") == 0) {
+					s_w_line = v;
+				} else if (strcmp(tok, "func") == 0) {
+					s_w_func = v;
+				}
+
+				*eq = ':';
+				continue;
+			}
 			if (isdigitstr(tok)) {
 				/* special case: a stray number
 				 * means set default loglevel */
@@ -233,7 +265,7 @@ ircdbg_init(void)
 
 	const char *vv = getenv("LIBSRSIRC_DEBUG_TARGET");
 	if (vv && strcmp(vv, "syslog") == 0)
-		ircdbg_syslog("libsrsirc", LOG_USER);
+		ircdbg_syslog("libsrsirc");
 	else
 		ircdbg_stderr();
 

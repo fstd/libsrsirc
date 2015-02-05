@@ -12,35 +12,24 @@
 #include "common.h"
 
 
+#include <ctype.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <fcntl.h>
-#include <errno.h>
 
-/* POSIX */
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <inttypes.h>
+#include <platform/base_net.h>
+#include <platform/base_string.h>
+#include <platform/base_time.h>
 
-/* local */
 #include <logger/intlog.h>
 
 #include <libsrsirc/defs.h>
 
 
-static size_t com_resolve(const char *host, uint16_t port,
-    struct addrinfo **result);
-static int tryhost(struct addrinfo *ai, char *peeraddr, size_t peeraddr_sz,
+static int tryhost(struct addrlist *ai, char *peeraddr, size_t peeraddr_sz,
     uint16_t *peerport, uint64_t to_us);
-static void addr_from_sockaddr(struct addrinfo *ai, char *addr, size_t addr_sz,
-    uint16_t *port);
-static bool connect_with_timeout(int sck, struct addrinfo *ai, uint64_t to_us);
 
 void
 com_strNcat(char *dest, const char *src, size_t destsz)
@@ -67,29 +56,6 @@ com_strCchr(const char *dst, char c)
 	return r;
 }
 
-uint64_t
-com_timestamp_us(void)
-{
-	struct timeval t;
-	uint64_t ts = 0;
-	if (gettimeofday(&t, NULL) != 0)
-		EE("gettimeofday");
-	else
-		com_tconv(&t, &ts, true);
-
-	return ts;
-}
-
-void
-com_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts)
-{
-	if (tv_to_ts)
-		*ts = (uint64_t)tv->tv_sec * 1000000 + tv->tv_usec;
-	else {
-		tv->tv_sec = *ts / 1000000;
-		tv->tv_usec = *ts % 1000000;
-	}
-}
 
 char*
 com_strNcpy(char *dst, const char *src, size_t dst_sz)
@@ -105,18 +71,18 @@ int
 com_consocket(const char *host, uint16_t port, char *peeraddr,
     size_t peeraddr_sz, uint16_t *peerport, uint64_t softto, uint64_t hardto)
 {
-	uint64_t hardtsend = hardto ? com_timestamp_us() + hardto : 0;
+	uint64_t hardtsend = hardto ? b_tstamp_us() + hardto : 0;
 
-	struct addrinfo *ai_list;
-	size_t count = com_resolve(host, port, &ai_list);
-	if (!count)
+	struct addrlist *alist;
+	int count = b_mkaddrlist(host, port, &alist);
+	if (count <= 0)
 		return -1;
 
 	if (softto && hardto && softto * count < hardto)
 		softto = hardto / count;
 
 	int sck = -1;
-	for (struct addrinfo *ai = ai_list; ai; ai = ai->ai_next) {
+	for (struct addrlist *ai = alist; ai; ai = ai->next) {
 		uint64_t trem = 0;
 
 		if (com_check_timeout(hardtsend, &trem)) {
@@ -133,165 +99,55 @@ com_consocket(const char *host, uint16_t port, char *peeraddr,
 			break;
 	}
 
-	freeaddrinfo(ai_list);
+	b_freeaddrlist(alist);
 
 	return sck;
 }
 
-static size_t
-com_resolve(const char *host, uint16_t port, struct addrinfo **result)
-{
-	struct addrinfo *ai_list = NULL;
-	struct addrinfo hints;
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = 0;
-	hints.ai_flags = AI_NUMERICSERV;
-	char portstr[6];
-	snprintf(portstr, sizeof portstr, "%"PRIu16"", port);
-
-	D("calling getaddrinfo on '%s:%s' (AF_UNSPEC, STREAM)", host, portstr);
-
-	int r = getaddrinfo(host, portstr, &hints, &ai_list);
-
-	if (r != 0) {
-		W("getaddrinfo() failed: %s", gai_strerror(r));
-		return 0;
-	}
-
-	size_t count = 0;
-	for (struct addrinfo *ai = ai_list; ai; ai = ai->ai_next)
-		count++;
-
-	if (!count) {
-		W("getaddrinfo result address list empty");
-		return 0;
-	}
-
-	*result = ai_list;
-
-	return count;
-}
-
-
 static int
-tryhost(struct addrinfo *ai, char *peeraddr, size_t peeraddr_sz,
+tryhost(struct addrlist *ai, char *peeraddr, size_t peeraddr_sz,
     uint16_t *peerport, uint64_t to_us)
 {
-	D("creating socket (fam=%d, styp=%d, prot=%d)",
-	    ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+	int sck = b_socket(ai->ipv6);
 
-	int sck = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-	if (sck < 0) {
-		WE("cannot create socket");
+	if (sck == -1)
 		return -1;
-	}
 
-	if (connect_with_timeout(sck, ai, to_us)) {
+	if (!b_blocking(sck, false))
+		W("failed to set socket non-blocking, timeout will not work");
+
+	int r = b_connect(-1, ai);
+	if (r == 1)
+		return sck;
+	else if (r == -1)
+		goto tryhost_fail;
+	
+	r = b_select(sck, false, to_us);
+
+	if (r == 1) {
+		if (!b_blocking(sck, true))
+			W("failed to clear socket non-blocking mode");
+
 		if (peeraddr && peeraddr_sz)
-			addr_from_sockaddr(ai, peeraddr, peeraddr_sz, peerport);
+			b_strNcpy(peeraddr, ai->addrstr, peeraddr_sz);
+		if (peerport)
+			*peerport = ai->port;
 
 		return sck;
 	}
 
-	close(sck);
+	/* fall-thru */
+tryhost_fail:
+	if (sck != -1)
+		b_close(sck);
 	return -1;
-}
-
-static void
-addr_from_sockaddr(struct addrinfo *ai, char *addr, size_t addr_sz,
-    uint16_t *port)
-{
-
-	if (ai->ai_family == AF_INET) {
-		struct sockaddr_in *sin = (struct sockaddr_in*)ai->ai_addr;
-
-		if (addr && addr_sz)
-			inet_ntop(AF_INET, &sin->sin_addr, addr, addr_sz);
-		if (port)
-			*port = ntohs(sin->sin_port);
-	} else if (ai->ai_family == AF_INET6) {
-		struct sockaddr_in6 *sin = (struct sockaddr_in6*)ai->ai_addr;
-
-
-		if (addr && addr_sz)
-			inet_ntop(AF_INET6, &sin->sin6_addr, addr, addr_sz);
-		if (port)
-			*port = ntohs(sin->sin6_port);
-	} else {
-		if (addr && addr_sz)
-			com_strNcpy(addr, "(non-IPv4/IPv6)", addr_sz);
-		if (port)
-			*port = 0;
-	}
-}
-
-static bool
-connect_with_timeout(int sck, struct addrinfo *ai, uint64_t to_us)
-{
-	uint64_t tsend = to_us ? com_timestamp_us() + to_us : 0;
-
-	if (fcntl(sck, F_SETFL, O_NONBLOCK) == -1) {
-		WE("failed to enable nonblocking mode");
-		return false;
-	}
-
-	int r = connect(sck, ai->ai_addr, ai->ai_addrlen);
-	if (r == -1 && (errno != EINPROGRESS)) {
-		WE("connect() failed");
-		return false;
-	}
-
-	struct timeval tout;
-
-	for (;;) {
-		fd_set fds;
-		FD_ZERO(&fds);
-		FD_SET(sck, &fds);
-		uint64_t trem = 0;
-
-		if (com_check_timeout(tsend, &trem)) {
-			W("timeout reached while in 3WHS");
-			return false;
-		}
-
-		if (tsend)
-			com_tconv(&tout, &trem, false);
-
-		r = select(sck+1, NULL, &fds, NULL, tsend ? &tout : NULL);
-		if (r < 0) {
-			WE("select() failed");
-			return false;
-		}
-		if (r == 1)
-			break;
-	}
-
-	int opt = 1;
-	socklen_t optlen = sizeof opt;
-	if (getsockopt(sck, SOL_SOCKET, SO_ERROR, &opt, &optlen) != 0) {
-		W("getsockopt failed");
-		return false;
-	}
-
-	if (opt == 0) {
-		I("socket connected!");
-		return true;
-	}
-
-	char berr[128];
-	strerror_r(opt, berr, sizeof berr);
-	W("could not connect socket (%d: %s)", opt, berr);
-
-	return false;
 }
 
 bool
 com_update_strprop(char **field, const char *val)
 {
 	char *n = NULL;
-	if (val && !(n = com_strdup(val)))
+	if (val && !(n = b_strdup(val)))
 		return false;
 
 	free(*field);
@@ -309,7 +165,7 @@ com_check_timeout(uint64_t tsend, uint64_t *trem)
 		return false;
 	}
 
-	uint64_t now = com_timestamp_us();
+	uint64_t now = b_tstamp_us();
 	if (now >= tsend) {
 		if (trem)
 			*trem = 0;
@@ -327,15 +183,24 @@ com_malloc(size_t sz)
 {
 	void *r = malloc(sz);
 	if (!r)
-		EE("malloc");
+		EE("malloc"); /* NOTE: This does NOT call exit() or anything */
 	return r;
 }
 
-char*
-com_strdup(const char *s)
+/*dumb heuristic to tell apart domain name/ip4/ip6 addr XXX FIXME */
+enum hosttypes
+guess_hosttype(const char *host)
 {
-	char *r = strdup(s);
-	if (!r)
-		EE("strdup");
-	return r;
+	if (strchr(host, '['))
+		return HOSTTYPE_IPV6;
+	int dc = 0;
+	while (*host) {
+		if (*host == '.')
+			dc++;
+		else if (!isdigit((unsigned char)*host))
+			return HOSTTYPE_DNS;
+		host++;
+	}
+	return dc == 3 ? HOSTTYPE_IPV4 : HOSTTYPE_DNS;
 }
+

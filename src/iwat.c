@@ -6,21 +6,23 @@
 # include <config.h>
 #endif
 
+
+#include <ctype.h>
+#include <inttypes.h>
+#include <limits.h>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <limits.h>
 #include <string.h>
-#include <stdbool.h>
-#include <stdarg.h>
-#include <ctype.h>
 
-#include <signal.h>
+#include <platform/base_string.h>
+#include <platform/base_misc.h>
+#include <platform/base_time.h>
 
-#include <unistd.h>
-#include <inttypes.h>
-#include <sys/time.h>
-#include <err.h>
+#include <logger/intlog.h>
 
 #include <libsrsirc/irc_ext.h>
 #include <libsrsirc/irc_track.h>
@@ -32,22 +34,6 @@
 #define DEF_HEARTBEAT_MS 300000
 #define DEF_VERB 1
 
-#define W_(FNC, THR, FMT, A...) do {                              \
-    if (g_sett.verb < THR) break;                                 \
-    FNC("%s:%d:%s() - " FMT, __FILE__, __LINE__, __func__, ##A);  \
-    } while (0)
-
-#define W(FMT, A...) W_(warn, 1, FMT, ##A)
-#define WV(FMT, A...) W_(warn, 2, FMT, ##A)
-
-#define WX(FMT, A...) W_(warnx, 1, FMT, ##A)
-#define WVX(FMT, A...) W_(warnx, 2, FMT, ##A)
-
-#define E(FMT, A...) do { W_(warn, 0, FMT, ##A); \
-    exit(EXIT_FAILURE);} while (0)
-
-#define EX(FMT, A...) do { W_(warnx, 0, FMT, ##A); \
-    exit(EXIT_FAILURE);} while (0)
 
 static struct settings_s {
 	uint64_t scto_us;
@@ -75,11 +61,9 @@ static bool tryconnect(void);
 static void process_args(int *argc, char ***argv, struct settings_s *sett);
 static void init(int *argc, char ***argv, struct settings_s *sett);
 static bool conread(tokarr *msg, void *tag);
-static uint64_t timestamp_us(void);
-static void tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 static void usage(FILE *str, const char *a0, int ec);
 void cleanup(void);
-int main(int argc, char **argv);;
+int main(int argc, char **argv);
 
 
 static int
@@ -100,11 +84,11 @@ tryconnect(void)
 
 	while (s) {
 		irc_set_server(g_irc, s->host, s->port);
-		WVX("trying '%s:%"PRIu16"'",
+		D("trying '%s:%"PRIu16"'",
 		    irc_get_host(g_irc), irc_get_port(g_irc));
 
 		if (!irc_set_ssl(g_irc, s->ssl) && s->ssl)
-			EX("failed to enable SSL");
+			C("failed to enable SSL");
 
 		if (irc_connect(g_irc))
 			return true;
@@ -120,32 +104,32 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 {
 	char *a0 = (*argv)[0];
 
-	for (int ch; (ch = getopt(*argc, *argv, "n:u:f:p:P:T:W:rb:qvh")) != -1;) {
+	for (int ch; (ch = b_getopt(*argc, *argv, "n:u:f:p:P:T:W:rb:qvh")) != -1;) {
 		switch (ch) {
 		      case 'n':
-			irc_set_nick(g_irc, optarg);
+			irc_set_nick(g_irc, b_optarg());
 		break;case 'u':
-			irc_set_uname(g_irc, optarg);
+			irc_set_uname(g_irc, b_optarg());
 		break;case 'f':
-			irc_set_fname(g_irc, optarg);
+			irc_set_fname(g_irc, b_optarg());
 		break;case 'p':
-			irc_set_pass(g_irc, optarg);
+			irc_set_pass(g_irc, b_optarg());
 		break;case 'P':
 			{
 			char host[256];
 			uint16_t port;
 			int ptype;
 			if (!ut_parse_pxspec(&ptype, host, sizeof host, &port,
-			    optarg))
-				EX("failed to parse pxspec '%s'", optarg);
+			    b_optarg()))
+				C("failed to parse pxspec '%s'", b_optarg());
 
 			irc_set_px(g_irc, host, port, ptype);
 			}
 		break;case 'T':
 			{
-			char *arg = strdup(optarg);
+			char *arg = b_strdup(b_optarg());
 			if (!arg)
-				E("strdup failed");
+				CE("strdup failed");
 
 			char *p = strchr(arg, ':');
 			if (!p)
@@ -156,15 +140,15 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 				sett->scto_us = strtoull(p+1, NULL, 10) * 1000u;
 			}
 
-			WVX("connect timeout %"PRIu64"ms (s), %"PRIu64"ms (h)",
+			D("connect timeout %"PRIu64"ms (s), %"PRIu64"ms (h)",
 			    sett->scto_us / 1000u, sett->hcto_us / 1000u);
 
 			free(arg);
 			}
 		break;case 'W':
-			sett->cfwait_s = (int)strtol(optarg, NULL, 10);
+			sett->cfwait_s = (int)strtol(b_optarg(), NULL, 10);
 		break;case 'b':
-			sett->heartbeat_us = strtoull(optarg, NULL, 10) * 1000u;
+			sett->heartbeat_us = strtoull(b_optarg(), NULL, 10) * 1000u;
 		break;case 'r':
 			sett->recon = true;
 		break;case 'q':
@@ -177,18 +161,18 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			usage(stderr, a0, EXIT_FAILURE);
 		}
 	}
-	*argc -= optind;
-	*argv += optind;
+	*argc -= b_optind();
+	*argv += b_optind();
 }
 
 static void
 init(int *argc, char ***argv, struct settings_s *sett)
 {
 	if (setvbuf(stdin, NULL, _IOLBF, 0) != 0)
-		W("setvbuf stdin");
+		WE("setvbuf stdin");
 
 	if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
-		W("setvbuf stdout");
+		WE("setvbuf stdout");
 
 	g_irc = irc_init();
 
@@ -209,7 +193,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	process_args(argc, argv, sett);
 
 	if (!*argc)
-		EX("no server given");
+		C("no server given");
 
 	for (int i = 0; i < *argc; i++) {
 		char host[256];
@@ -221,9 +205,9 @@ init(int *argc, char ***argv, struct settings_s *sett)
 
 		struct srvlist_s *node = malloc(sizeof *node);
 		if (!node)
-			E("malloc failed");
+			CE("malloc failed");
 
-		node->host = strdup(host);
+		node->host = b_strdup(host);
 		node->port = port;
 		node->ssl = ssl;
 		node->next = NULL;
@@ -240,7 +224,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 
 	irc_set_connect_timeout(g_irc, g_sett.scto_us, g_sett.hcto_us);
 
-	WVX("initialized");
+	D("initialized");
 }
 
 
@@ -250,7 +234,7 @@ conread(tokarr *msg, void *tag)
 {
 	char buf[1024];
 	ut_sndumpmsg(buf, sizeof buf, tag, msg);
-	WVX("%s", buf);
+	D("%s", buf);
 	return true;
 }
 
@@ -322,30 +306,6 @@ cleanup(void)
 
 }
 
-static uint64_t
-timestamp_us(void)
-{
-	struct timeval t;
-	uint64_t ts = 0;
-	if (gettimeofday(&t, NULL) != 0)
-		E("gettimeofday");
-	else
-		tconv(&t, &ts, true);
-
-	return ts;
-}
-
-static void
-tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts)
-{
-	if (tv_to_ts)
-		*ts = (uint64_t)tv->tv_sec * 1000000u + tv->tv_usec;
-	else {
-		tv->tv_sec = *ts / 1000000u;
-		tv->tv_usec = *ts % 1000000u;
-	}
-}
-
 void
 infohnd(int s)
 {
@@ -357,25 +317,29 @@ main(int argc, char **argv)
 {
 	init(&argc, &argv, &g_sett);
 	atexit(cleanup);
-	signal(DUMPSIG, infohnd);
+#if HAVE_SIGINFO
+	signal(SIGINFO, infohnd);
+#elif HAVE_SIGUSR1
+	signal(SIGUSR1, infohnd);
+#endif
 	bool failure = true;
 
 	for (;;) {
 		if (!irc_online(g_irc)) {
-			WVX("connecting...");
+			D("connecting...");
 
 			if (tryconnect()) {
-				g_nexthb = timestamp_us() + g_sett.heartbeat_us;
+				g_nexthb = b_tstamp_us() + g_sett.heartbeat_us;
 				continue;
 			}
 
-			WX("failed to connect/logon (%s)",
+			W("failed to connect/logon (%s)",
 			    g_sett.recon ? "retrying" : "giving up");
 
 			if (!g_sett.recon)
 				break;
 
-			sleep(g_sett.cfwait_s);
+			b_usleep(1000000ul * g_sett.cfwait_s);
 			continue;
 		}
 
@@ -394,10 +358,10 @@ main(int argc, char **argv)
 		}
 
 		if (r > 0)
-			g_nexthb = timestamp_us() + g_sett.heartbeat_us;
-		else if (g_sett.heartbeat_us && g_nexthb <= timestamp_us()) {
+			g_nexthb = b_tstamp_us() + g_sett.heartbeat_us;
+		else if (g_sett.heartbeat_us && g_nexthb <= b_tstamp_us()) {
 			iprintf("PING %s\r\n", irc_myhost(g_irc));
-			g_nexthb = timestamp_us() + g_sett.heartbeat_us;
+			g_nexthb = b_tstamp_us() + g_sett.heartbeat_us;
 		}
 
 		if (r == 0)

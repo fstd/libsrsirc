@@ -5,8 +5,11 @@
 #ifndef LIBSRSIRC_IRC_INTDEFS_H
 #define LIBSRSIRC_IRC_INTDEFS_H 1
 
+
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <platform/base_net.h>
 
 #include "skmap.h"
 
@@ -34,14 +37,6 @@
 #define MAX_CHAN_LEN 256
 #define MAX_MODEPFX 8
 
-
-#ifdef WITH_SSL
-typedef SSL *SSLTYPE;
-typedef SSL_CTX *SSLCTXTYPE;
-#else
-typedef void *SSLTYPE;
-typedef void *SSLCTXTYPE;
-#endif
 
 /* this allows us to handle both plaintext and ssl connections the same way */
 typedef struct sckhld {

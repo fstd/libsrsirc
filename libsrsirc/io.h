@@ -5,13 +5,9 @@
 #ifndef LIBSRSIRC_IIO_H
 #define LIBSRSIRC_IIO_H 1
 
+
 #include <stdbool.h>
 #include <stddef.h>
-
-#ifdef WITH_SSL
-/* ssl */
-# include <openssl/ssl.h>
-#endif
 
 #include <libsrsirc/defs.h>
 #include "intdefs.h"

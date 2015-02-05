@@ -48,10 +48,10 @@ AC_DEFINE([_WITH_GETLINE], [1], [FreeBSD needs this to be defined])
 fi
 
 if test "$(uname)" = "Linux"; then
-AC_DEFINE([DUMPSIG], [SIGUSR1], [SIGUSR1 on Linux, SIGINFO on the BSDs])
+AC_DEFINE([_POSIX_C_SOURCE], [200809L], [getaddrinfo and friends, mainly])
 :
 else
-AC_DEFINE([DUMPSIG], [SIGINFO], [SIGUSR1 on Linux, SIGINFO on the BSDs])
+#AC_DEFINE([DUMPSIG], [SIGINFO], [SIGUSR1 on Linux, SIGINFO on the BSDs])
 :
 fi
 

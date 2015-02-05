@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <platform/base_string.h>
+
 #include <logger/intlog.h>
 
 #include <libsrsirc/util.h>
@@ -187,7 +189,7 @@ h_332(irc h, tokarr *msg, size_t nargs, bool logon)
 		return 0;
 	}
 	free(c->topic);
-	if (!(c->topic = com_strdup((*msg)[4])))
+	if (!(c->topic = b_strdup((*msg)[4])))
 		return ALLOC_ERR;
 
 	return 0;
@@ -205,7 +207,7 @@ h_333(irc h, tokarr *msg, size_t nargs, bool logon)
 		return 0;
 	}
 	free(c->topicnick);
-	if (!(c->topicnick = com_strdup((*msg)[4])))
+	if (!(c->topicnick = b_strdup((*msg)[4])))
 		return ALLOC_ERR;
 	
 	c->tstopic = (uint64_t)strtoull((*msg)[5], NULL, 10);
@@ -391,7 +393,7 @@ h_TOPIC(irc h, tokarr *msg, size_t nargs, bool logon)
 	free(c->topic);
 	free(c->topicnick);
 	c->topicnick = NULL;
-	if (!(c->topic = com_strdup((*msg)[3])) || !(c->topicnick = com_strdup(nick)))
+	if (!(c->topic = b_strdup((*msg)[3])) || !(c->topicnick = b_strdup(nick)))
 		return ALLOC_ERR;
 
 	return 0;

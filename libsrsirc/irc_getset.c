@@ -11,12 +11,11 @@
 
 #include <stdbool.h>
 
-#include "conn.h"
 #include <logger/intlog.h>
 
-#include "msg.h"
-
 #include "common.h"
+#include "conn.h"
+#include "msg.h"
 
 
 /* Determiners - read-only access to information we keep track of */

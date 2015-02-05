@@ -9,18 +9,19 @@
 #endif
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
-
 #include <inttypes.h>
 #include <signal.h>
-#include <unistd.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <libsrsirc/irc_ext.h>
 #include <libsrsirc/util.h>
+
+#include <platform/base_string.h>
+#include <platform/base_misc.h>
 
 #include <logger/intlog.h>
 
@@ -133,30 +134,30 @@ process_args(int *argc, char ***argv)
 {
 	char *a0 = (*argv)[0];
 
-	for (int ch; (ch = getopt(*argc, *argv,
+	for (int ch; (ch = b_getopt(*argc, *argv,
 	    "vqchHn:u:f:F:Q:p:P:tT:C:kw:l:L:b:W:rNjiIE:")) != -1;) {
 		switch (ch) {
 		      case 'n':
-			STRACPY(g_sett.nick, optarg);
+			STRACPY(g_sett.nick, b_optarg());
 		break;case 'u':
-			STRACPY(g_sett.uname, optarg);
+			STRACPY(g_sett.uname, b_optarg());
 		break;case 'f':
-			STRACPY(g_sett.fname, optarg);
+			STRACPY(g_sett.fname, b_optarg());
 		break;case 'F':
-			g_sett.conflags = strtou8(optarg, NULL, 10);
+			g_sett.conflags = strtou8(b_optarg(), NULL, 10);
 		break;case 'Q':
-			STRACPY(g_sett.qmsg, optarg);
+			STRACPY(g_sett.qmsg, b_optarg());
 		break;case 'p':
-			STRACPY(g_sett.pass, optarg);
+			STRACPY(g_sett.pass, b_optarg());
 		break;case 'P':
 			if (!ut_parse_pxspec(&g_sett.pxtype, g_sett.pxhost,
-			    sizeof g_sett.pxhost, &g_sett.pxport, optarg))
-				C("Failed to parse pxspec '%s'", optarg);
+			    sizeof g_sett.pxhost, &g_sett.pxport, b_optarg()))
+				C("Failed to parse pxspec '%s'", b_optarg());
 		break;case 't':
 			g_sett.trgmode = true;
 		break;case 'T':
 			{
-			char *arg = strdup(optarg);
+			char *arg = b_strdup(b_optarg());
 			if (!arg)
 				CE("strdup failed");
 
@@ -176,7 +177,7 @@ process_args(int *argc, char ***argv)
 			}
 		break;case 'C':
 			{
-			char *str = strdup(optarg);
+			char *str = b_strdup(b_optarg());
 			if (!str)
 				CE("strdup failed");
 			char *tok = strtok(str, " ");
@@ -201,20 +202,20 @@ process_args(int *argc, char ***argv)
 			free(str);
 			}
 		break;case 'E':
-			if (!(g_sett.esc = strdup(optarg)))
+			if (!(g_sett.esc = b_strdup(b_optarg())))
 				CE("strdup failed");
 		break;case 'l':
-			g_sett.linedelay = strtou64(optarg, NULL, 10) * 1000u;
+			g_sett.linedelay = strtou64(b_optarg(), NULL, 10) * 1000u;
 		break;case 'L':
-			g_sett.freelines = (unsigned)strtoul(optarg, NULL, 10);
+			g_sett.freelines = (unsigned)strtoul(b_optarg(), NULL, 10);
 		break;case 'w':
-			g_sett.waitquit_us = strtou64(optarg, NULL, 10) * 1000u;
+			g_sett.waitquit_us = strtou64(b_optarg(), NULL, 10) * 1000u;
 		break;case 'k':
 			g_sett.keeptrying = true;
 		break;case 'W':
-			g_sett.cfwait_us = strtou64(optarg, NULL, 10) * 1000u;
+			g_sett.cfwait_us = strtou64(b_optarg(), NULL, 10) * 1000u;
 		break;case 'b':
-			g_sett.hbeat_us = strtou64(optarg, NULL, 10) * 1000u;
+			g_sett.hbeat_us = strtou64(b_optarg(), NULL, 10) * 1000u;
 		break;case 'r':
 			g_sett.reconnect = true;
 		break;case 'j':
@@ -239,8 +240,8 @@ process_args(int *argc, char ***argv)
 			usage(stderr, a0, EXIT_FAILURE, true);
 		}
 	}
-	*argc -= optind;
-	*argv += optind;
+	*argc -= b_optind();
+	*argv += b_optind();
 
 	if (!*argc)
 		C("No server given");
@@ -261,7 +262,8 @@ process_args(int *argc, char ***argv)
 		if (!node)
 			CE("malloc failed");
 
-		node->host = strdup(host);
+		if (!(node->host = b_strdup(host)))
+			CE("strdup failed");
 		node->port = port;
 		node->ssl = ssl;
 		node->next = NULL;
@@ -367,12 +369,20 @@ sighnd(int s)
 {
 	switch (s)
 	{
+#if HAVE_SIGINT
 	case SIGINT:
 		g_interrupted = true;
 		break;
-	case DUMPSIG:
+#endif
+#if HAVE_SIGINFO
+	case SIGINFO:
 		g_inforequest = true;
 		break;
+#elif HAVE_SIGUSR1
+	case SIGUSR1:
+		g_inforequest = true;
+		break;
+#endif
 	}
 }
 
@@ -417,11 +427,19 @@ main(int argc, char **argv)
 	if (!g_sett.trgmode && strlen(g_sett.chanlist) == 0)
 		C("No targetmode and no chans given. this won't work.");
 
-	signal(SIGINT, sighnd);
-	signal(SIGUSR1, SIG_IGN);
-	signal(DUMPSIG, sighnd);
+	if (setvbuf(stdin, NULL, _IOLBF, 0) != 0)
+		WE("setvbuf stdin");
+
+	if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
+		WE("setvbuf stdout");
 
 	dump_settings();
+
+#if HAVE_SIGINFO
+	signal(SIGINFO, sighnd);
+#elif HAVE_SIGUSR1
+	signal(SIGUSR1, sighnd);
+#endif
 
 	core_init();
 

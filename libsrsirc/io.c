@@ -12,46 +12,38 @@
 #include "io.h"
 
 
-/* C */
+#include <ctype.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include <errno.h>
-#include <assert.h>
 
-/* POSIX */
-#include <unistd.h>
-#include <sys/socket.h>
-#include <inttypes.h>
+#include <platform/base_net.h>
+#include <platform/base_time.h>
 
-#ifdef WITH_SSL
-/* ssl */
-# include <openssl/err.h>
-#endif
-
-/* locals */
-#include "common.h"
 #include <logger/intlog.h>
+
+#include "common.h"
 
 #include <libsrsirc/util.h>
 
+
 #define ISDELIM(C) ((C) == '\n' || (C) == '\r')
+
 
 /* local helpers */
 static char* find_delim(struct readctx *ctx);
 static int read_more(sckhld sh, struct readctx *ctx, uint64_t to_us);
-static int wait_for_readable(int sck, uint64_t to_us);
 static bool write_str(sckhld sh, const char *buf);
-static ssize_t read_wrap(sckhld sh, void *buf, size_t sz);
-static ssize_t send_wrap(sckhld sh, const void *buf, size_t len, int flags);
+static long read_wrap(sckhld sh, void *buf, size_t sz);
+static long send_wrap(sckhld sh, const void *buf, size_t len);
 
 
 /* Documented in io.h */
 int
 io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
 {
-	uint64_t tsend = to_us ? com_timestamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? b_tstamp_us() + to_us : 0;
 
 	while (ctx->wptr < ctx->eptr && ISDELIM(*ctx->wptr))
 		ctx->wptr++; /* skip leading line delimiters */
@@ -130,11 +122,11 @@ read_more(sckhld sh, struct readctx *ctx, uint64_t to_us)
 		remain = sizeof ctx->workbuf - (ctx->eptr - ctx->workbuf);
 	}
 
-	int r = wait_for_readable(sh.sck, to_us);
+	int r = b_select(sh.sck, true, to_us);
 	if (r != 1)
 		return r;
 
-	ssize_t n = read_wrap(sh, ctx->eptr, remain);
+	long n = read_wrap(sh, ctx->eptr, remain);
 	if (n <= 0) {
 		n == 0 ?  W("read: EOF") : WE("read failed");
 		return n == 0 ? -2 : -1; // FIXME: magic numbers
@@ -144,36 +136,6 @@ read_more(sckhld sh, struct readctx *ctx, uint64_t to_us)
 	return 1;
 }
 
-/* wait up to `to_us' microseconds for `sck' to become readable
- * returns 1 if the socket is readable; 0 on timeout; -1 on failure */
-static int
-wait_for_readable(int sck, uint64_t to_us)
-{
-	uint64_t tsend = to_us ? com_timestamp_us() + to_us : 0;
-
-	for (;;) {
-		struct timeval tout;
-		uint64_t trem = 0;
-		if (com_check_timeout(tsend, &trem))
-			return 0;
-
-		if (tsend)
-			com_tconv(&tout, &trem, false);
-
-		fd_set fds;
-		FD_ZERO(&fds);
-		FD_SET(sck, &fds);
-		int r = select(sck+1, &fds, NULL, NULL, tsend ? &tout : NULL);
-
-		if (r < 0) {
-			int e = errno;
-			WE("select");
-			return e == EINTR ? 0 : -1;
-		} else if (r == 1 && FD_ISSET(sck, &fds)) {
-			return 1;
-		}
-	}
-}
 
 /* write a string to a socket, ensure that everything is sent, well, buffered.
  * returns true on success, false on failure */
@@ -183,7 +145,7 @@ write_str(sckhld sh, const char *buf)
 	size_t cnt = 0;
 	size_t len = strlen(buf);
 	while (cnt < len) {
-		ssize_t n = send_wrap(sh, buf + cnt, len - cnt, MSG_NOSIGNAL);
+		long n = send_wrap(sh, buf + cnt, len - cnt);
 		if (n < 0)
 			return false;
 		cnt += n;
@@ -193,23 +155,19 @@ write_str(sckhld sh, const char *buf)
 
 /* wrap around either read() or SSL_read(), depending on whether
  * or not SSL is compiled-in and enabled (or not) */
-static ssize_t
+static long
 read_wrap(sckhld sh, void *buf, size_t sz)
 {
-#ifdef WITH_SSL
 	if (sh.shnd)
-		return (ssize_t)SSL_read(sh.shnd, buf, sz);
-#endif
-	return read(sh.sck, buf, sz);
+		return b_read_ssl(sh.shnd, buf, sz, NULL);
+	return b_read(sh.sck, buf, sz, NULL);
 }
 
 /* likewise for send()/SSL_write() */
-static ssize_t
-send_wrap(sckhld sh, const void *buf, size_t len, int flags)
+static long
+send_wrap(sckhld sh, const void *buf, size_t len)
 {
-#ifdef WITH_SSL
 	if (sh.shnd)
-		return (ssize_t)SSL_write(sh.shnd, buf, len);
-#endif
-	return send(sh.sck, buf, len, flags);
+		return b_write_ssl(sh.shnd, buf, len);
+	return b_write(sh.sck, buf, len);
 }

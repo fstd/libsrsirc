@@ -6,4 +6,11 @@
 #define LIBSRSIRC_BASE_IO_H 1
 
 
+#include <stddef.h>
+
+
+long b_stdin_read(void *buf, size_t nbytes);
+int b_stdin_canread(void);
+
+
 #endif /* LIBSRSIRC_BASE_IO_H */

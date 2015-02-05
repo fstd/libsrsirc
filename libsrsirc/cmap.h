@@ -5,6 +5,8 @@
 #ifndef LIBSRSIRC_CMAP_H
 #define LIBSRSIRC_CMAP_H 1
 
-extern const char *g_cmap[];
+
+extern const uint8_t *g_cmap[];
+
 
 #endif /* LIBSRSIRC_CMAP_H */
