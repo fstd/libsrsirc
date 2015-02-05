@@ -15,7 +15,6 @@ config.log
 config.status
 configure
 libtool
-m4/
 src/icat
 stamp-h1
 autoscan.log

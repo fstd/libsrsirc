@@ -20,7 +20,7 @@ AC_PROG_MAKE_SET
 
 AC_HEADER_STDC
 
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdbool.h stddef.h stdlib.h string.h strings.h sys/socket.h sys/time.h sys/types.h syslog.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdbool.h stddef.h stdlib.h string.h strings.h sys/select.h sys/socket.h sys/time.h sys/types.h syslog.h unistd.h])
 AC_ARG_WITH(ssl,
 [  --with-ssl            Build with SSL support],
 	if test x$withval = xno; then
@@ -58,6 +58,10 @@ fi
 AC_HEADER_STDBOOL
 
 AC_CHECK_TYPES([ptrdiff_t])
+AC_CHECK_TYPES([struct sockaddr_storage], [], [], [#include <sys/socket.h>])
+AC_CHECK_TYPES([struct sockaddr_in], [], [], [#include <netinet/in.h>])
+AC_CHECK_TYPES([struct sockaddr_in6], [], [], [#include <netinet/in.h>])
+AC_CHECK_TYPES([socklen_t], [], [], [#include <sys/socket.h>])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_INT64_T
@@ -73,7 +77,72 @@ AC_TYPE_UINT64_T
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_STRERROR_R
-AC_CHECK_FUNCS([atexit getaddrinfo getenv getline gettimeofday memmove memset select socket strcasecmp strchr strdup strncasecmp strrchr strstr strtol strtoul strtoull])
+AC_CHECK_FUNCS([atexit fileno getaddrinfo getopt getsockopt gettimeofday htons inet_addr inet_pton memmove memset nanosleep read select send setsockopt socket strcasecmp strchr strncasecmp strspn strstr strtol strtoul strtoull])
+
+
+AX_HAVE_CTIME_R(
+  [AX_CONFIG_FEATURE_ENABLE(ctime_r)],
+  [AX_CONFIG_FEATURE_DISABLE(ctime_r)])
+AX_CONFIG_FEATURE(
+  [ctime_r], [This platform has ctime_r(3)],
+  [HAVE_CTIME_R], [This platform has ctime_r(3).])
+
+AX_HAVE_EAGAIN(
+  [AX_CONFIG_FEATURE_ENABLE(EAGAIN)],
+  [AX_CONFIG_FEATURE_DISABLE(EAGAIN)])
+AX_CONFIG_FEATURE(
+  [EAGAIN], [This platform has EAGAIN],
+  [HAVE_EAGAIN], [This platform has EAGAIN.])
+
+AX_HAVE_EWOULDBLOCK(
+  [AX_CONFIG_FEATURE_ENABLE(EWOULDBLOCK)],
+  [AX_CONFIG_FEATURE_DISABLE(EWOULDBLOCK)])
+AX_CONFIG_FEATURE(
+  [EWOULDBLOCK], [This platform has EWOULDBLOCK],
+  [HAVE_EWOULDBLOCK], [This platform has EWOULDBLOCK.])
+
+AX_HAVE_SIGINT(
+  [AX_CONFIG_FEATURE_ENABLE(SIGINT)],
+  [AX_CONFIG_FEATURE_DISABLE(SIGINT)])
+AX_CONFIG_FEATURE(
+  [SIGINT], [This platform has SIGINT],
+  [HAVE_SIGINT], [This platform has SIGINT.])
+
+AX_HAVE_SIGUSR1(
+  [AX_CONFIG_FEATURE_ENABLE(SIGUSR1)],
+  [AX_CONFIG_FEATURE_DISABLE(SIGUSR1)])
+AX_CONFIG_FEATURE(
+  [SIGUSR1], [This platform has SIGUSR1],
+  [HAVE_SIGUSR1], [This platform has SIGUSR1.])
+
+AX_HAVE_SIGINFO(
+  [AX_CONFIG_FEATURE_ENABLE(SIGINFO)],
+  [AX_CONFIG_FEATURE_DISABLE(SIGINFO)])
+AX_CONFIG_FEATURE(
+  [SIGINFO], [This platform has SIGINFO],
+  [HAVE_SIGINFO], [This platform has SIGINFO.])
+
+AX_HAVE_MSG_NOSIGNAL(
+  [AX_CONFIG_FEATURE_ENABLE(MSG_NOSIGNAL)],
+  [AX_CONFIG_FEATURE_DISABLE(MSG_NOSIGNAL)])
+AX_CONFIG_FEATURE(
+  [MSG_NOSIGNAL], [This platform has MSG_NOSIGNAL],
+  [HAVE_MSG_NOSIGNAL], [This platform has MSG_NOSIGNAL.])
+
+AX_HAVE_SO_NOSIGPIPE(
+  [AX_CONFIG_FEATURE_ENABLE(SO_NOSIGPIPE)],
+  [AX_CONFIG_FEATURE_DISABLE(SO_NOSIGPIPE)])
+AX_CONFIG_FEATURE(
+  [SO_NOSIGPIPE], [This platform has SO_NOSIGPIPE],
+  [HAVE_SO_NOSIGPIPE], [This platform has SO_NOSIGPIPE.])
+
+
+#AX_HAVE_VSYSLOG(
+#  [AX_CONFIG_FEATURE_ENABLE(vsyslog)],
+#  [AX_CONFIG_FEATURE_DISABLE(vsyslog)])
+#AX_CONFIG_FEATURE(
+#  [vsyslog], [This platform has vsyslog(3)],
+#  [HAVE_VSYSLOG], [This platform has vsyslog(3).])
 
 AC_CONFIG_FILES([Makefile
 		 platform/Makefile
