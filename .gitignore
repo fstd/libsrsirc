@@ -20,3 +20,4 @@ stamp-h1
 autoscan.log
 config.h.in~
 configure.scan
+m4/l*
