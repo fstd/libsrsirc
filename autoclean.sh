@@ -14,3 +14,5 @@ rm -f libsrsirc/Makefile.in
 rm -f logger/Makefile.in
 rm -f platform/Makefile.in
 rm -f src/Makefile.in
+rm -f unittests/Makefile.in
+rm -f unittests/run_*.c

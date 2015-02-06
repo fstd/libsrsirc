@@ -1,0 +1,30 @@
+Adding new unit tests:
+======================
+1. unit tests for libsrsirc module 'foo' go inside 'unittests/test_foo.c'.
+   If that file exists already, proceed with step 4.
+
+2. Otherwise, create it.  See test_ptrlist.c for how the top lines should look
+   (in particular, the unit test file should #include "unittests_common.h".
+
+3. Edit unittests/Makefile.am, add 'test_foo' to the top line (words are separated by space).
+   Then add three new lines similar to those starting with 'test_ptrlist_'. Obviously adjust
+   'ptrlist' to your module name, keep everything else.
+   NOTE THE 'run_' prefix in the _SOURCES line! Don't forget it!
+
+4. Now inside unittests/test_foo.c, each unit test is made up by one function
+   like this:
+const char* /*UNITTEST*/
+test_whatever(void)
+{
+	/* test someting */
+	return "error message on failure";
+	// return NULL; if the test succeeded
+/* ... */
+}
+    The format of the first two lines MUST be kept, don't add whitespace or
+    anything, simply do not mess with it :).  Return NULL if a test went good.
+    Multiple such functions per file are okay.
+
+5. That's kind of it.  You will need to ./configure again and may, after
+   building, run the tests with 'make test'
+

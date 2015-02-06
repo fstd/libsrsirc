@@ -150,7 +150,8 @@ AC_CONFIG_FILES([Makefile
 		 include/libsrsirc/Makefile
 		 logger/Makefile
 		 libsrsirc/Makefile
-                 src/Makefile])
+		 src/Makefile
+                 unittests/Makefile])
 AC_OUTPUT
 
 echo \
@@ -163,3 +164,4 @@ echo \
  Libraries: '${LIBS}'
 
 --------------------------------------------------"
+scripts/gentests.sh
