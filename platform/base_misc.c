@@ -22,14 +22,14 @@
 void
 b_usleep(uint64_t us)
 {
-	D("Sleeping %"PRIu64" us", us);
+	V("Sleeping %"PRIu64" us", us);
 	uint64_t secs = us / 1000000u;
 	if (secs > INT_MAX)
 		secs = INT_MAX; //eh.. yeah.
 
 #if HAVE_NANOSLEEP
 	struct timespec tv = {(time_t)secs, (long)(us % 1000000u)*1000};
-	if (tv.tv_nsec)
+	if (tv.tv_sec || tv.tv_nsec)
 		nanosleep(&tv, NULL);
 #else
 	E("we need something like nanosleep() (or usleep()-ish)")

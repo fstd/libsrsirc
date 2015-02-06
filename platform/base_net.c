@@ -20,6 +20,10 @@
 # include <arpa/inet.h>
 #endif
 
+#if HAVE_FCNTL_H
+# include <fcntl.h>
+#endif
+
 #if HAVE_NETDB_H
 # include <netdb.h>
 #endif
@@ -51,10 +55,14 @@
 #include "base_time.h"
 
 
+#if ! HAVE_SOCKLEN_T
+# define socklen_t unsigned int
+#endif
+
 static bool s_sslinit;
 
 
-static bool sockaddr_from_addr(struct sockaddr *dst, const struct addrlist *ai);
+static bool sockaddr_from_addr(struct sockaddr *dst, size_t *dstlen, const struct addrlist *ai);
 #if HAVE_GETADDRINFO
 static void addrstr_from_sockaddr(char *addr, size_t addr_sz, uint16_t *port, const struct addrinfo *ai);
 #endif
@@ -64,36 +72,30 @@ static void sslinit(void);
 int
 b_socket(bool ipv6)
 {
-	D("creating socket");
 	int sck = -1;
 #if HAVE_SOCKET
-	sck = socket(ipv6 ? AF_INET6 : AF_INET, SOCK_STREAM, 0);
+	sck = socket(ipv6 ? PF_INET6 : PF_INET, SOCK_STREAM, 0);
 	if (sck < 0)
-		WE("cannot create socket");
+		EE("Could not create IPv%d socket", ipv6?6:4);
 	else {
+		D("Created IPv%d socket (fd: %d)", ipv6?6:4, sck);
 # if ! HAVE_MSG_NOSIGNAL
 #  if HAVE_SETSOCKOPT && HAVE_SO_NOSIGPIPE
 		int opt = 1;
 
-#   if HAVE_SOCKLEN_T
-		unsigned int
-#   else
-		socklen_t
-#   endif
-		    optlen = sizeof opt;
+		socklen_t optlen = (socklen_t)sizeof opt;
 
 		if (setsockopt(sck, SOL_SOCKET, SO_NOSIGPIPE, &opt, &optlen) != 0) {
-			WE("setsockopt failed, we'll SIGPIPE on write error");
+			EE("setsockopt(%d, SOL_SOCKET, SO_NOSIGPIPE)");
 		}
 #  else
-		WE("no MSG_NOSIGNAL/SO_NOSIGPIPE, we'll SIGPIPE on write error");
+		W("No MSG_NOSIGNAL/SO_NOSIGPIPE, we'll SIGPIPE on write error");
 #  endif
 # endif
 	}
 #else
 	E("We need something like socket()");
 #endif
-
 
 	return sck;
 }
@@ -103,18 +105,28 @@ int
 b_connect(int sck, const struct addrlist *srv)
 {
 #if HAVE_STRUCT_SOCKADDR_STORAGE
-	struct sockaddr_storage sa;
-	if (!sockaddr_from_addr((struct sockaddr *)&sa, srv))
+	struct sockaddr_storage sa = {.ss_len = 0};
+	size_t addrlen = 0;
+	if (!sockaddr_from_addr((struct sockaddr *)&sa, &addrlen, srv)) {
+		E("Could not make sockaddr from '%s:%"PRIu16"'",
+		    srv->addrstr, srv->port);
 		return -1;
+	}
 
 # if HAVE_CONNECT
-	int r = connect(sck, (struct sockaddr *)&sa, ((struct sockaddr)sa).sa_len);
-	if (r == -1 && errno == EINPROGRESS)
-		return 0;
-	else if (r == 0)
-		return 1;
+	D("connect()ing sck %d to '%s:%"PRIu16"'...",
+	    sck, srv->addrstr, srv->port);
 
-	WE("connect() failed");
+	int r = connect(sck, (struct sockaddr *)&sa, addrlen);
+	if (r == -1 && errno == EINPROGRESS) {
+		D("Connection in progress");
+		return 0;
+	} else if (r == 0) {
+		D("Connected!");
+		return 1;
+	}
+
+	EE("connect() sck %d to '%s:%"PRIu16"'", sck, srv->addrstr, srv->port);
 # else
 	E("We need something like connect()");
 # endif
@@ -122,6 +134,7 @@ b_connect(int sck, const struct addrlist *srv)
 #else
 	E("We need something like struct sockaddr_storage");
 #endif
+
 	return -1;
 }
 
@@ -129,8 +142,9 @@ b_connect(int sck, const struct addrlist *srv)
 int
 b_close(int sck)
 {
-#if HAVE_CLOSe
-	close(sck);
+#if HAVE_CLOSE
+	D("Closing sck %d", sck);
+	return close(sck);
 #else
 	E("We need something like close()");
 	return -1;
@@ -163,17 +177,23 @@ b_select(int sck, bool rdbl, uint64_t to_us)
 			tout.tv_usec = trem % 1000000;
 		}
 
+		V("select()ing fd %d for %sability (to: %"PRIu64"us)",
+		    sck, rdbl?"read":"writ", trem);
 		int r = select(sck+1, rdbl ? &fds : NULL, rdbl ? NULL : &fds, NULL,
 		    tsend ? &tout : NULL);
 
 		if (r < 0) {
 			int e = errno;
-			WE("select");
+			EE("select() fd %d for %c", sck, rdbl?'r':'w');
 			return e == EINTR ? 0 : -1;
 		}
 
-		if (r == 1)
+		if (r == 1) {
+			V("Selected!");
 			return 1;
+		}
+
+		V("Nothing selected");
 	}
 #else
 	E("We need something like select() or poll()");
@@ -188,7 +208,7 @@ b_blocking(int sck, bool blocking)
 #if HAVE_FCNTL
 	int flg = fcntl(sck, F_GETFL);
 	if (flg == -1) {
-		WE("failed to get file descriptor flags");
+		EE("fcntl(): failed to get file descriptor flags");
 		return false;
 	}
 
@@ -197,8 +217,9 @@ b_blocking(int sck, bool blocking)
 	else
 		flg |= O_NONBLOCK;
 
+	D("Setting sck %d to %sblocking mode", sck, blocking?"":"non-");
 	if (fcntl(sck, F_SETFL, flg) == -1) {
-		WE("failed to %s nonblocking mode", blocking?"clear":"set");
+		EE("fcntl(): failed to %s blocking mode", blocking?"set":"clear");
 		return false;
 	}
 #else
@@ -215,15 +236,10 @@ b_sock_ok(int sck)
 #if HAVE_GETSOCKOPT
 	int opt = 0;
 
-# if HAVE_SOCKLEN_T
-	unsigned int
-# else
-	socklen_t
-# endif
-	    optlen = sizeof opt;
+	socklen_t optlen = (socklen_t)sizeof opt;
 
 	if (getsockopt(sck, SOL_SOCKET, SO_ERROR, &opt, &optlen) != 0) {
-		WE("getsockopt failed");
+		EE("getsockopt failed");
 		return false;
 	}
 
@@ -250,6 +266,7 @@ long
 b_read(int sck, void *buf, size_t sz, bool *tryagain)
 {
 #if HAVE_READ
+	V("read()ing from sck %d (bufsz: %zu)", sck, sz);
 	ssize_t r = read(sck, buf, sz);
 	if (r == -1) {
 		bool wb =
@@ -261,8 +278,15 @@ b_read(int sck, void *buf, size_t sz, bool *tryagain)
 # endif
 		    false;
 
-		if (tryagain)
+		if (tryagain) {
 			*tryagain = wb;
+		}
+
+		if (wb)
+			V("read() would block...");
+		else
+			EE("read() from sck %d (bufsz: %zu)", sck, sz);
+
 	} else if (r > LONG_MAX) {
 		W("read too long, capping return value");
 		r = LONG_MAX;
@@ -284,9 +308,16 @@ b_write(int sck, const void *buf, size_t len)
 # if HAVE_MSG_NOSIGNAL
 	flags = MSG_NOSIGNAL;
 # endif
+	V("send()ing %zu bytes over sck %d", len, sck);
 	ssize_t r = send(sck, buf, len, flags);
+	if (r == -1)
+		EE("send() (sck %d, len %zu)", sck, len);
+	else
+		V("sent %zu bytes over sck %d", (size_t)r, sck);
+
 	if (r > LONG_MAX) {
-		W("write too long, capping return value");
+		W("write too long, capping return value from %zu to %ld",
+		    (size_t)r, LONG_MAX);
 		r = LONG_MAX;
 	}
 
@@ -302,12 +333,14 @@ long
 b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, bool *tryagain)
 {
 #ifdef WITH_SSL
+	V("SSL_read()ing (bufsz: %zu)", sz);
 	int r = SSL_read(ssl, buf, sz);
 	if (r < 0) {
 		int errc = SSL_get_error(ssl, r);
-		E("SSL_read returned %d, error code %d", r, errc);
+		E("SSL_read() returned %d, error code %d", r, errc);
 		r = -1;
-	}
+	} else
+		V("SSL_read(): %d", r);
 
 	return r;
 #else
@@ -321,9 +354,19 @@ long
 b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
 {
 #ifdef WITH_SSL
-	return SSL_write(ssl, buf, len);
+	V("send()ing %zu bytes over sck %d", len, sck);
+	int r = SSL_write(ssl, buf, len);
+	
+	if (r < 0)
+		int errc = SSL_get_error(ssl, r);
+		E("SSL_write() returned %d, error code %d", r, errc);
+		r = -1;
+	} else
+		V("SSL_write(): %d", r);
+	
+	return r;
 #else
-	C("SSL read attempted, but we haven't been compiled with SSL support");
+	C("SSL write attempted, but we haven't been compiled with SSL support");
 	/* not reached */
 #endif
 }
@@ -342,17 +385,16 @@ b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res)
 	};
 
 	char portstr[6];
-	snprintf(portstr, sizeof portstr, "%"PRIu16"", port);
+	snprintf(portstr, sizeof portstr, "%"PRIu16, port);
 
 	D("calling getaddrinfo on '%s:%s' (AF_UNSPEC, STREAM)", host, portstr);
 
 	int r = getaddrinfo(host, portstr, &hints, &ai_list);
 
 	if (r != 0) {
-		W("getaddrinfo() failed: %s", gai_strerror(r));
+		E("getaddrinfo() failed: %s", gai_strerror(r));
 		return -1;
 	}
-
 	int count = 0;
 	for (struct addrinfo *ai = ai_list; ai; ai = ai->ai_next) {
 		count++;
@@ -360,6 +402,8 @@ b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res)
 
 	if (!count)
 		W("getaddrinfo result address list empty");
+	else
+		D("got %d results, creating addrlist", count);
 
 	struct addrlist *head = NULL, *node = NULL, *tmp;
 	for (struct addrinfo *ai = ai_list; ai; ai = ai->ai_next) {
@@ -373,10 +417,12 @@ b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res)
 			head = node;
 
 		STRACPY(node->reqname, host);
-		STRACPY(node->canonname, ai->ai_canonname);
 		node->ipv6 = ai->ai_family == AF_INET6;
 		addrstr_from_sockaddr(node->addrstr, sizeof node->addrstr,
 		    &node->port, ai);
+
+		D("addrlist node: '%s': '%s:%"PRIu16"'",
+		    node->reqname, node->addrstr, node->port);
 	}
 
 	freeaddrinfo(ai_list);
@@ -396,13 +442,15 @@ b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res)
 		struct addrlist *node = malloc(sizeof *node);
 		node->next = NULL;
 		STRACPY(node->reqname, host);
-		STRACPY(node->canonname, host);
 		STRACPY(node->addrstr, host);
 		node->port = port;
 		node->family = ip4addr ? AF_INET : AF_INET6;
 		node->socktype = SOCK_STREAM;
 		node->protocol = 0;
 		*res = node;
+
+		W("fake \"resolved\" '%s:%"PRIu16"' - getaddrinfo() anyone?",
+		    node->addrstr, node->port);
 
 		return 1;
 	}
@@ -433,7 +481,7 @@ b_mksslctx(void)
 #ifdef WITH_SSL
 	ctx = SSL_CTX_new(SSLv23_client_method());
 	if (!ctx)
-		W("SSL_CTX_new failed");
+		E("SSL_CTX_new failed");
 #else
 	E("no ssl support compiled in");
 #endif
@@ -572,29 +620,35 @@ b_inet6_addr(unsigned char *dest, size_t destsz, const char *ip6str)
 
 
 static bool
-sockaddr_from_addr(struct sockaddr *dst, const struct addrlist *ai)
+sockaddr_from_addr(struct sockaddr *dst, size_t *dstlen, const struct addrlist *ai)
 {
-#if HAVE_INET_PTON
-	int r;
-	if (ai->ipv6) {
-		struct sockaddr_in6 *p = (struct sockaddr_in6 *)dst;
-		r = inet_pton(AF_INET6, ai->addrstr, p);
-		p->sin6_port = ai->port;
-	} else {
-		struct sockaddr_in *p = (struct sockaddr_in *)dst;
-		r = inet_pton(AF_INET, ai->addrstr, p);
-		p->sin_port = ai->port;
+#if HAVE_GETADDRINFO
+	struct addrinfo *ai_list = NULL;
+	struct addrinfo hints = {
+		.ai_family = ai->ipv6 ? AF_INET6 : AF_INET,
+		.ai_socktype = SOCK_STREAM,
+		.ai_protocol = 0,
+		.ai_flags = AI_NUMERICSERV|AI_NUMERICHOST
+	};
+	char portstr[6];
+	snprintf(portstr, sizeof portstr, "%"PRIu16, ai->port);
+
+	int r = getaddrinfo(ai->addrstr, portstr, &hints, &ai_list);
+	if (r != 0) {
+		E("getaddrinfo('%s', '%s', ...): %s",
+		    ai->addrstr, portstr, gai_strerror(r));
+		return false;
 	}
 
-	if (r == 0)
-		W("inet_pton said invalid address '%s'", ai->addrstr);
-	else if (r < 0)
-		EE("inet_pton");
+	memcpy(dst, ai_list->ai_addr, ai_list->ai_addrlen);
+	*dstlen = ai_list->ai_addrlen;
 
-	return r > 0;
+	freeaddrinfo(ai_list);
+
+	return true;
 #else
-	E("We need something like inet_pton()");
-	return -1;
+	E("We need something like getaddrinfo()");
+	return false;
 #endif
 }
 
@@ -608,14 +662,16 @@ addrstr_from_sockaddr(char *addr, size_t addr_sz, uint16_t *port,
 		struct sockaddr_in *sin = (struct sockaddr_in*)ai->ai_addr;
 
 		if (addr && addr_sz)
-			inet_ntop(AF_INET, &sin->sin_addr, addr, addr_sz);
+			if (!inet_ntop(AF_INET, &sin->sin_addr, addr, addr_sz))
+				EE("inet_ntop");
 		if (port)
 			*port = ntohs(sin->sin_port);
 	} else if (ai->ai_family == AF_INET6) {
 		struct sockaddr_in6 *sin = (struct sockaddr_in6*)ai->ai_addr;
 
 		if (addr && addr_sz)
-			inet_ntop(AF_INET6, &sin->sin6_addr, addr, addr_sz);
+			if (!inet_ntop(AF_INET6, &sin->sin6_addr, addr, addr_sz))
+				EE("inet_ntop");
 		if (port)
 			*port = ntohs(sin->sin6_port);
 	} else {
@@ -636,6 +692,7 @@ sslinit(void)
 	SSL_load_error_strings();
 	SSL_library_init();
 	s_sslinit = true;
+	D("SSL initialized");
 #else
 	E("no ssl support compiled in");
 #endif

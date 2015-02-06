@@ -170,6 +170,13 @@ conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 			return false;
 		}
 
+		if (!b_blocking(sh.sck, false)) {
+			WE("(%p) failed to set nonblocking mode", (void*)hnd);
+			b_close(sh.sck);
+			hnd->sh.sck = -1;
+			return false;
+		}
+
 		bool ok = false;
 		D("(%p) logging on to proxy", (void*)hnd);
 		if (hnd->ptype == IRCPX_HTTP)
@@ -189,15 +196,15 @@ conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 			return false;
 		}
 		D("(%p) sent proxy logon sequence", (void*)hnd);
-	}
 
-	D("(%p) setting to blocking mode", (void*)hnd);
+		D("(%p) setting to blocking mode", (void*)hnd);
 
-	if (!b_blocking(sh.sck, true)) {
-		WE("(%p) failed to clear nonblocking mode", (void*)hnd);
-		b_close(sh.sck);
-		hnd->sh.sck = -1;
-		return false;
+		if (!b_blocking(sh.sck, true)) {
+			WE("(%p) failed to clear nonblocking mode", (void*)hnd);
+			b_close(sh.sck);
+			hnd->sh.sck = -1;
+			return false;
+		}
 	}
 
 	if (hnd->ssl && !(hnd->sh.shnd = b_sslize(sh.sck, hnd->sctx))) {

@@ -14,7 +14,6 @@
 struct addrlist {
 	char addrstr[64];
 	char reqname[256];
-	char canonname[256];
 	uint16_t port;
 	bool ipv6;
 

@@ -116,7 +116,7 @@ tryhost(struct addrlist *ai, char *peeraddr, size_t peeraddr_sz,
 	if (!b_blocking(sck, false))
 		W("failed to set socket non-blocking, timeout will not work");
 
-	int r = b_connect(-1, ai);
+	int r = b_connect(sck, ai);
 	if (r == 1)
 		return sck;
 	else if (r == -1)
