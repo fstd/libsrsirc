@@ -100,7 +100,8 @@ int
 b_connect(int sck, const struct addrlist *srv)
 { T("trace");
 #if HAVE_STRUCT_SOCKADDR_STORAGE
-	struct sockaddr_storage sa = {.ss_len = 0};
+	struct sockaddr_storage sa;
+	memset(&sa, 0, sizeof sa); // :S XXX
 	size_t addrlen = 0;
 	if (!sockaddr_from_addr((struct sockaddr *)&sa, &addrlen, srv)) {
 		E("Could not make sockaddr from '%s:%"PRIu16"'",
