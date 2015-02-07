@@ -393,7 +393,8 @@ ut_mut_nick(char *nick, size_t nick_sz)
 	}
 }
 
-tokarr *ut_clonearr(tokarr *arr)
+tokarr *
+ut_clonearr(tokarr *arr)
 { T("trace");
 	tokarr *res = com_malloc(sizeof *res);
 	if (!res)
