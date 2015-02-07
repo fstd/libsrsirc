@@ -37,11 +37,15 @@ b_stdin_read(void *buf, size_t nbytes)
 #endif
 
 #if HAVE_READ
+	D("reading from stdin");
 	ssize_t r = read(fd, buf, nbytes);
 	if (r > LONG_MAX) {
 		W("read too long, capping return value");
 		r = LONG_MAX;
+	} else if (r < 0) {
+		EE("read stdin");
 	}
+	
 	return (long)r;
 #else
 	E("We need something like read()");
@@ -65,6 +69,8 @@ b_stdin_canread(void)
 #if HAVE_SELECT
 	struct timeval tout = {0, 0};
 
+	V("select()ing stdin");
+	
 	fd_set fds;
 	FD_ZERO(&fds);
 	FD_SET(fd, &fds);
@@ -72,9 +78,11 @@ b_stdin_canread(void)
 
 	if (r < 0) {
 		int e = errno;
-		WE("select");
+		EE("select");
 		return e == EINTR ? 0 : -1;
 	}
+
+	V("select: %d", r);
 #else
 	E("We need something like select() or poll()");
 #endif

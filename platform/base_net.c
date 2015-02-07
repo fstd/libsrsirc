@@ -104,13 +104,13 @@ b_connect(int sck, const struct addrlist *srv)
 	memset(&sa, 0, sizeof sa); // :S XXX
 	size_t addrlen = 0;
 	if (!sockaddr_from_addr((struct sockaddr *)&sa, &addrlen, srv)) {
-		E("Could not make sockaddr from '%s:%"PRIu16"'",
+		E("Could not make sockaddr from '%s' port %"PRIu16"'",
 		    srv->addrstr, srv->port);
 		return -1;
 	}
 
 # if HAVE_CONNECT
-	D("connect()ing sck %d to '%s:%"PRIu16"'...",
+	D("connect()ing sck %d to '%s' port %"PRIu16"'...",
 	    sck, srv->addrstr, srv->port);
 
 	int r = connect(sck, (struct sockaddr *)&sa, addrlen);
@@ -122,7 +122,7 @@ b_connect(int sck, const struct addrlist *srv)
 		return 1;
 	}
 
-	EE("connect() sck %d to '%s:%"PRIu16"'", sck, srv->addrstr, srv->port);
+	EE("connect() sck %d to '%s' port %"PRIu16"'", sck, srv->addrstr, srv->port);
 # else
 	E("We need something like connect()");
 # endif
@@ -175,6 +175,7 @@ b_select(int sck, bool rdbl, uint64_t to_us)
 
 		V("select()ing fd %d for %sability (to: %"PRIu64"us)",
 		    sck, rdbl?"read":"writ", trem);
+
 		int r = select(sck+1, rdbl ? &fds : NULL, rdbl ? NULL : &fds, NULL,
 		    tsend ? &tout : NULL);
 
