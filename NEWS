@@ -2,4 +2,5 @@
 2013/07/04 - 0.0.1 release
 2014/04/17 - 0.0.2 release
 2014/05/29 - 0.0.3 release -- utterly broke the interface but well, this is 0.0.x, we're not supposed to have a stable interface (yet)
-2015/01/25 - 0.0.4 release -- major rework or icat
+2015/01/25 - 0.0.4 release -- major rework of icat
+2015/02/07 - 0.0.5 release -- separated platform-dependent and platform-independent stuff
