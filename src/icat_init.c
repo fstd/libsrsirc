@@ -435,6 +435,10 @@ main(int argc, char **argv)
 
 	dump_settings();
 
+#if HAVE_SIGPIPE
+	signal(SIGPIPE, SIG_IGN);
+#endif
+
 #if HAVE_SIGINFO
 	signal(SIGINFO, sighnd);
 #elif HAVE_SIGUSR1
