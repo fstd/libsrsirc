@@ -334,7 +334,10 @@ b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, bool *tryagain)
 	int r = SSL_read(ssl, buf, sz);
 	if (r < 0) {
 		int errc = SSL_get_error(ssl, r);
-		E("SSL_read() returned %d, error code %d", r, errc);
+		if (errc == SSL_ERROR_SYSCALL)
+			EE("SSL_read() failed");
+		else
+			E("SSL_read() returned %d, error code %d", r, errc);
 		r = -1;
 	} else
 		V("SSL_read(): %d (ssl hnd %p)", r, (void *)ssl);
@@ -356,7 +359,10 @@ b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
 	
 	if (r < 0) {
 		int errc = SSL_get_error(ssl, r);
-		E("SSL_write() returned %d, error code %d", r, errc);
+		if (errc == SSL_ERROR_SYSCALL)
+			EE("SSL_write() failed");
+		else
+			E("SSL_write() returned %d, error code %d", r, errc);
 		r = -1;
 	} else
 		V("SSL_write(): %d (ssl hnd %p)", r, (void *)ssl);
@@ -505,12 +511,16 @@ b_sslize(int sck, SSLCTXTYPE ctx)
 	bool fail = !(shnd = SSL_new(ctx));
 	fail = fail || !SSL_set_fd(shnd, sck);
 	if (!fail) {
+		D("calling SSL_connect()");
 		int r = SSL_connect(shnd);
-		D("ssl_connect: %d", r);
 		if (r != 1) {
 			int rr = SSL_get_error(shnd, r);
-			D("rr: %d", rr);
-		}
+			if (rr == SSL_ERROR_SYSCALL)
+				EE("SSL_connect() failed");
+			else
+				E("SSL_connect() failed, error code %d", rr);
+		} else
+			D("SSL_connect: %d", r);
 		fail = fail || (r != 1);
 	}
 
