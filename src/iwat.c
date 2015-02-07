@@ -68,7 +68,7 @@ int main(int argc, char **argv);
 
 static int
 iprintf(const char *fmt, ...)
-{
+{ T("trace");
 	char buf[1024];
 	va_list l;
 	va_start(l, fmt);
@@ -79,7 +79,7 @@ iprintf(const char *fmt, ...)
 
 static bool
 tryconnect(void)
-{
+{ T("trace");
 	struct srvlist_s *s = g_srvlist;
 
 	while (s) {
@@ -101,7 +101,7 @@ tryconnect(void)
 
 static void
 process_args(int *argc, char ***argv, struct settings_s *sett)
-{
+{ T("trace");
 	char *a0 = (*argv)[0];
 
 	for (int ch; (ch = b_getopt(*argc, *argv, "n:u:f:p:P:T:W:rb:qvh")) != -1;) {
@@ -167,7 +167,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 
 static void
 init(int *argc, char ***argv, struct settings_s *sett)
-{
+{ T("trace");
 	if (setvbuf(stdin, NULL, _IOLBF, 0) != 0)
 		WE("setvbuf stdin");
 
@@ -231,7 +231,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 
 static bool
 conread(tokarr *msg, void *tag)
-{
+{ T("trace");
 	char buf[1024];
 	ut_sndumpmsg(buf, sizeof buf, tag, msg);
 	D("%s", buf);
@@ -241,7 +241,7 @@ conread(tokarr *msg, void *tag)
 
 static void
 usage(FILE *str, const char *a0, int ec)
-{
+{ T("trace");
 	#define XSTR(s) STR(s)
 	#define STR(s) #s
 	#define LH(STR) fputs(STR "\n", str)
@@ -291,7 +291,7 @@ usage(FILE *str, const char *a0, int ec)
 
 void
 cleanup(void)
-{
+{ T("trace");
 	if (g_irc)
 		irc_dispose(g_irc);
 
@@ -308,13 +308,13 @@ cleanup(void)
 
 void
 infohnd(int s)
-{
+{ T("trace");
 	g_dumpplx = true;
 }
 
 int
 main(int argc, char **argv)
-{
+{ T("trace");
 	init(&argc, &argv, &g_sett);
 	atexit(cleanup);
 #if HAVE_SIGINFO

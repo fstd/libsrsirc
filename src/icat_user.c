@@ -37,7 +37,7 @@ static size_t buf_rem(void);
 
 bool
 user_canread(void)
-{
+{ T("trace");
 	if (buf_cnt()) {
 		*s_buftail = '\0';
 		if (strchr(s_bufhead, '\n'))
@@ -91,7 +91,7 @@ user_canread(void)
 
 size_t
 user_readline(char *dest, size_t destsz)
-{
+{ T("trace");
 	if (!user_canread())
 		return 0;
 
@@ -114,7 +114,7 @@ user_readline(char *dest, size_t destsz)
 
 int
 user_printf(const char *fmt, ...)
-{
+{ T("trace");
 	char buf[1024];
 	va_list l;
 	va_start(l, fmt);
@@ -129,20 +129,20 @@ user_printf(const char *fmt, ...)
 
 bool
 user_eof(void)
-{
+{ T("trace");
 	return s_eof;
 }
 
 
 static size_t
 buf_cnt(void)
-{
+{ T("trace");
 	return (size_t)(s_buftail - s_bufhead);
 }
 
 static size_t
 buf_rem(void)
-{
+{ T("trace");
 	size_t unusable = (size_t)(s_bufhead - s_inbuf);
 	return s_bufsz - buf_cnt() - unusable;
 }

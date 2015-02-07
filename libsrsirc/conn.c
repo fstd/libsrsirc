@@ -40,7 +40,7 @@
 
 iconn
 conn_init(void)
-{
+{ T("trace");
 	iconn r = NULL;
 	int preverrno = errno;
 	errno = 0;
@@ -83,7 +83,7 @@ conn_init_fail:
 
 void
 conn_reset(iconn hnd)
-{
+{ T("trace");
 	D("(%p) resetting", (void*)hnd);
 
 	if (hnd->ssl && hnd->sh.shnd) {
@@ -104,7 +104,7 @@ conn_reset(iconn hnd)
 
 void
 conn_dispose(iconn hnd)
-{
+{ T("trace");
 	conn_reset(hnd);
 
 	conn_set_ssl(hnd, false); //dispose ssl context if existing
@@ -119,7 +119,7 @@ conn_dispose(iconn hnd)
 
 bool
 conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
-{
+{ T("trace");
 	if (!hnd || hnd->state != OFF)
 		return false;
 
@@ -224,7 +224,7 @@ conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 
 int
 conn_read(iconn hnd, tokarr *tok, uint64_t to_us)
-{
+{ T("trace");
 	if (!hnd || hnd->state != ON)
 		return -1;
 
@@ -252,7 +252,7 @@ conn_read(iconn hnd, tokarr *tok, uint64_t to_us)
 
 bool
 conn_write(iconn hnd, const char *line)
-{
+{ T("trace");
 	if (!hnd || hnd->state != ON || !line)
 		return false;
 
@@ -271,19 +271,19 @@ conn_write(iconn hnd, const char *line)
 
 bool
 conn_online(iconn hnd)
-{
+{ T("trace");
 	return hnd->state == ON;
 }
 
 bool
 conn_eof(iconn hnd)
-{
+{ T("trace");
 	return hnd->eof;
 }
 
 bool
 conn_colon_trail(iconn hnd)
-{
+{ T("trace");
 	if (!hnd || hnd->state != ON)
 		return false;
 
@@ -292,7 +292,7 @@ conn_colon_trail(iconn hnd)
 
 bool
 conn_set_px(iconn hnd, const char *host, uint16_t port, int ptype)
-{
+{ T("trace");
 	char *n = NULL;
 	switch (ptype) {
 	case IRCPX_HTTP:
@@ -320,7 +320,7 @@ conn_set_px(iconn hnd, const char *host, uint16_t port, int ptype)
 
 bool
 conn_set_server(iconn hnd, const char *host, uint16_t port)
-{
+{ T("trace");
 	char *n;
 	if (!(n = b_strdup(host?host:DEF_HOST)))
 		return false;
@@ -334,7 +334,7 @@ conn_set_server(iconn hnd, const char *host, uint16_t port)
 
 bool
 conn_set_ssl(iconn hnd, bool on)
-{
+{ T("trace");
 	if (on && !hnd->sctx) {
 		if (!(hnd->sctx = b_mksslctx())) {
 			E("could not create ssl context, ssl not enabled!");
@@ -355,43 +355,43 @@ conn_set_ssl(iconn hnd, bool on)
 
 const char*
 conn_get_px_host(iconn hnd)
-{
+{ T("trace");
 	return hnd->phost;
 }
 
 uint16_t
 conn_get_px_port(iconn hnd)
-{
+{ T("trace");
 	return hnd->pport;
 }
 
 int
 conn_get_px_type(iconn hnd)
-{
+{ T("trace");
 	return hnd->ptype;
 }
 
 const char*
 conn_get_host(iconn hnd)
-{
+{ T("trace");
 	return hnd->host;
 }
 
 uint16_t
 conn_get_port(iconn hnd)
-{
+{ T("trace");
 	return hnd->port;
 }
 
 bool
 conn_get_ssl(iconn hnd)
-{
+{ T("trace");
 	return hnd->ssl;
 }
 
 int
 conn_sockfd(iconn hnd)
-{
+{ T("trace");
 	if (!hnd || hnd->state != ON)
 		return -1;
 

@@ -57,7 +57,7 @@ static bool conread(tokarr *msg, void *tag);
 
 void
 serv_init(void)
-{
+{ T("trace");
 	D("Initializing");
 
 	if (!(s_irc = irc_init()))
@@ -85,7 +85,7 @@ serv_init(void)
 
 void
 serv_destroy(void)
-{
+{ T("trace");
 	I("Destroying");
 	if (s_irc) {
 		D("Disposing of the irc object");
@@ -102,7 +102,7 @@ serv_destroy(void)
 
 bool
 serv_operate(void)
-{
+{ T("trace");
 	if (!s_on) {
 		D("We're not online");
 
@@ -134,7 +134,7 @@ serv_operate(void)
 
 bool
 serv_canread(void)
-{
+{ T("trace");
 	if (!s_on)
 		return false;
 
@@ -156,7 +156,7 @@ serv_canread(void)
 
 int
 serv_read(tokarr *t)
-{
+{ T("trace");
 	if (!s_on)
 		return -1;
 
@@ -178,7 +178,7 @@ serv_read(tokarr *t)
 
 int
 serv_printf(const char *fmt, ...)
-{
+{ T("trace");
 	char buf[1024];
 	va_list l;
 	va_start(l, fmt);
@@ -208,26 +208,26 @@ serv_printf(const char *fmt, ...)
 
 bool
 serv_online(void)
-{
+{ T("trace");
 	return s_on;
 }
 
 int
 serv_casemap(void)
-{
+{ T("trace");
 	return s_casemap;
 }
 
 uint64_t
 serv_sentquit(void)
-{
+{ T("trace");
 	return s_quitat;
 }
 
 
 static bool
 handle_PING(irc irc, tokarr *tok, size_t nargs, bool pre)
-{
+{ T("trace");
 	char buf[1024];
 	snprintf(buf, sizeof buf, "PONG :%s\r\n", (*tok)[2]);
 	if (!to_srv(buf))
@@ -239,7 +239,7 @@ handle_PING(irc irc, tokarr *tok, size_t nargs, bool pre)
 
 static bool
 handle_005(irc irc, tokarr *tok, size_t nargs, bool pre)
-{
+{ T("trace");
 	int cm = irc_casemap(s_irc);
 	if (cm != s_casemap) {
 		D("Casemapping changed from %s to %s",
@@ -251,7 +251,7 @@ handle_005(irc irc, tokarr *tok, size_t nargs, bool pre)
 
 static int
 process_sendq(void)
-{
+{ T("trace");
 	static uint64_t nextsend = 0;
 	if (!s_outQ)
 		return 0;
@@ -284,7 +284,7 @@ process_sendq(void)
 
 static bool
 do_heartbeat(void)
-{
+{ T("trace");
 	if (g_sett.hbeat_us && s_nexthb <= b_tstamp_us()) {
 		D("Heartbeat time");
 		char buf[512];
@@ -299,7 +299,7 @@ do_heartbeat(void)
 
 static bool
 to_srv(const char *line)
-{
+{ T("trace");
 	bool ret;
 	I("To server: '%s'", line);
 	if (!(ret = irc_write(s_irc, line)))
@@ -310,7 +310,7 @@ to_srv(const char *line)
 
 static bool
 tryconnect(struct srvlist_s *s)
-{
+{ T("trace");
 	I("Trying to get a connection going...");
 	while (s) {
 		irc_set_server(s_irc, s->host, s->port);
@@ -352,7 +352,7 @@ tryconnect(struct srvlist_s *s)
 
 static bool
 first_connect(void)
-{
+{ T("trace");
 	while (!g_interrupted) {
 		if (!tryconnect(g_sett.srvlist)) {
 			E("Failed to connect/logon (%s)",
@@ -378,7 +378,7 @@ first_connect(void)
 
 static bool
 conread(tokarr *msg, void *tag)
-{
+{ T("trace");
 	char buf[1024];
 	ut_sndumpmsg(buf, sizeof buf, tag, msg);
 	I("CR: %s", buf);

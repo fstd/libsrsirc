@@ -21,7 +21,7 @@
 
 void
 b_usleep(uint64_t us)
-{
+{ T("trace");
 	V("Sleeping %"PRIu64" us", us);
 	uint64_t secs = us / 1000000u;
 	if (secs > INT_MAX)
@@ -38,7 +38,7 @@ b_usleep(uint64_t us)
 
 int
 b_getopt(int argc, char * const argv[], const char *optstring)
-{
+{ T("trace");
 #if HAVE_GETOPT
 	return getopt(argc, argv, optstring);
 #else
@@ -48,7 +48,7 @@ b_getopt(int argc, char * const argv[], const char *optstring)
 
 const char *
 b_optarg(void)
-{
+{ T("trace");
 #if HAVE_GETOPT
 	return optarg;
 #else
@@ -58,7 +58,7 @@ b_optarg(void)
 
 int
 b_optind(void)
-{
+{ T("trace");
 #if HAVE_GETOPT
 	return optind;
 #else

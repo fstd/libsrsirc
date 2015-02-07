@@ -22,7 +22,7 @@
 
 void
 b_strNcat(char *dest, const char *src, size_t destsz)
-{
+{ T("trace");
 	size_t len = strlen(dest);
 	if (len + 1 >= destsz)
 		return;
@@ -37,7 +37,7 @@ b_strNcat(char *dest, const char *src, size_t destsz)
 
 void
 b_strNcpy(char *dest, const char *src, size_t destsz)
-{
+{ T("trace");
 	if (!destsz)
 		return;
 
@@ -49,7 +49,7 @@ b_strNcpy(char *dest, const char *src, size_t destsz)
 
 int
 b_strcasecmp(const char *a, const char *b)
-{
+{ T("trace");
 #if HAVE_STRCASECMP
 	return strcasecmp(a, b);
 #else
@@ -59,7 +59,7 @@ b_strcasecmp(const char *a, const char *b)
 
 int
 b_strncasecmp(const char *a, const char *b, size_t n)
-{
+{ T("trace");
 #if HAVE_STRNCASECMP
 	return strncasecmp(a, b, n);
 #else
@@ -88,7 +88,7 @@ b_strncasecmp(const char *a, const char *b, size_t n)
 
 char*
 b_strdup(const char *s)
-{
+{ T("trace");
 	char *r = NULL;
 	r = malloc(strlen(s)+1);
 	if (!r)

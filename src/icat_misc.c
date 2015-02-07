@@ -29,19 +29,19 @@
 
 uint8_t
 strtou8(const char *nptr, char **endptr, int base)
-{
+{ T("trace");
 	return (uint8_t)strtoul(nptr, endptr, base);
 }
 
 uint64_t
 strtou64(const char *nptr, char **endptr, int base)
-{
+{ T("trace");
 	return (uint64_t)strtoull(nptr, endptr, base);
 }
 
 bool
 ismychan(const char *chan)
-{
+{ T("trace");
 	char chans[512];
 	char search[512];
 	snprintf(chans, sizeof chans, ",%s,", g_sett.chanlist);
@@ -52,7 +52,7 @@ ismychan(const char *chan)
 
 bool
 isdigitstr(const char *str)
-{
+{ T("trace");
 	while (*str)
 		if (!isdigit((unsigned char)*str++))
 			return false;

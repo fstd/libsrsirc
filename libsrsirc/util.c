@@ -31,7 +31,7 @@ static char* next_tok(char *buf);
 
 void
 ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx)
-{
+{ T("trace");
 	if (!dest_sz)
 		return;
 
@@ -48,7 +48,7 @@ ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx)
 
 void
 ut_pfx2uname(char *dest, size_t dest_sz, const char *pfx)
-{
+{ T("trace");
 	if (!dest_sz)
 		return;
 
@@ -67,7 +67,7 @@ ut_pfx2uname(char *dest, size_t dest_sz, const char *pfx)
 
 void
 ut_pfx2host(char *dest, size_t dest_sz, const char *pfx)
-{
+{ T("trace");
 	if (!dest_sz)
 		return;
 
@@ -82,7 +82,7 @@ ut_pfx2host(char *dest, size_t dest_sz, const char *pfx)
 
 int
 ut_istrcmp(const char *n1, const char *n2, int casemap)
-{
+{ T("trace");
 	size_t l1 = strlen(n1);
 	size_t l2 = strlen(n2);
 
@@ -91,7 +91,7 @@ ut_istrcmp(const char *n1, const char *n2, int casemap)
 
 int
 ut_istrncmp(const char *n1, const char *n2, size_t len, int casemap)
-{
+{ T("trace");
 	if (len == 0)
 		return 0;
 
@@ -114,7 +114,7 @@ ut_istrncmp(const char *n1, const char *n2, size_t len, int casemap)
 }
 char
 ut_tolower(char c, int casemap)
-{
+{ T("trace");
 	int rangeinc;
 	switch (casemap) {
 	case CMAP_RFC1459:
@@ -135,7 +135,7 @@ ut_tolower(char c, int casemap)
 
 void
 ut_strtolower(char *dest, size_t destsz, const char *str, int casemap)
-{
+{ T("trace");
 	size_t c = 0;
 	char *ptr = dest;
 	while (c < destsz) {
@@ -152,7 +152,7 @@ ut_strtolower(char *dest, size_t destsz, const char *str, int casemap)
 bool
 ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz, uint16_t *port,
     const char *pxspec)
-{
+{ T("trace");
 	char linebuf[128];
 	com_strNcpy(linebuf, pxspec, sizeof linebuf);
 
@@ -180,7 +180,7 @@ ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz, uint16_t *port,
 void
 ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
     bool *ssl, const char *hostspec)
-{
+{ T("trace");
 	if (ssl)
 		*ssl = false;
 
@@ -212,7 +212,7 @@ ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
 
 char*
 ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr)
-{
+{ T("trace");
 	if ((*msg)[0])
 		snprintf(dest, destsz, ":%s %s", (*msg)[0], (*msg)[1]);
 	else
@@ -232,7 +232,7 @@ ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr)
 
 char*
 ut_sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
-{
+{ T("trace");
 	snprintf(dest, dest_sz, "(%p) '%s' '%s'", (void*)tag, (*msg)[0], (*msg)[1]);
 	for (size_t i = 2; i < COUNTOF(*msg); i++) {
 		if (!(*msg)[i])
@@ -247,7 +247,7 @@ ut_sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
 
 void
 ut_dumpmsg(void *tag, tokarr *msg)
-{
+{ T("trace");
 	char buf[1024];
 	ut_sndumpmsg(buf, sizeof buf, tag, msg);
 	fprintf(stderr, "%s\n", buf);
@@ -256,14 +256,14 @@ ut_dumpmsg(void *tag, tokarr *msg)
 
 bool
 ut_conread(tokarr *msg, void *tag)
-{
+{ T("trace");
 	ut_dumpmsg(tag, msg);
 	return true;
 }
 
 char**
 ut_parse_MODE(irc h, tokarr *msg, size_t *num, bool is324)
-{
+{ T("trace");
 	size_t ac = 2;
 	while (ac < COUNTOF(*msg) && (*msg)[ac])
 		ac++;
@@ -366,7 +366,7 @@ ut_parse_005_cmodes_fail:
 
 int
 ut_classify_chanmode(irc h, char c)
-{
+{ T("trace");
 	for (int z = 0; z < 4; ++z) {
 		if (h->m005chanmodes[z] && strchr(h->m005chanmodes[z], c))
 			/*XXX this locks the chantype class constants */
@@ -377,7 +377,7 @@ ut_classify_chanmode(irc h, char c)
 
 void
 ut_mut_nick(char *nick, size_t nick_sz)
-{
+{ T("trace");
 	size_t len = strlen(nick);
 	if (len < 9) {
 		nick[len++] = '_';
@@ -394,7 +394,7 @@ ut_mut_nick(char *nick, size_t nick_sz)
 }
 
 tokarr *ut_clonearr(tokarr *arr)
-{
+{ T("trace");
 	tokarr *res = com_malloc(sizeof *res);
 	if (!res)
 		return NULL;
@@ -417,7 +417,7 @@ clonearr_fail:
 
 void
 ut_freearr(tokarr *arr)
-{
+{ T("trace");
 	if (arr) {
 		for (size_t i = 0; i < COUNTOF(*arr); i++)
 			free((*arr)[i]);
@@ -432,7 +432,7 @@ ut_freearr(tokarr *arr)
  * elements are set to NULL.  returns true on success, false on failure */
 bool
 ut_tokenize(char *buf, tokarr *tok)
-{
+{ T("trace");
 	for (size_t i = 0; i < COUNTOF(*tok); ++i)
 		(*tok)[i] = NULL;
 
@@ -469,7 +469,7 @@ ut_tokenize(char *buf, tokarr *tok)
  * if any, and return pointer to it (or NULL) */
 static char*
 next_tok(char *buf)
-{
+{ T("trace");
 	while (*buf && *buf != ' ') /* walk until end of (former) token */
 		buf++;
 
@@ -487,7 +487,7 @@ next_tok(char *buf)
 
 const char *
 ut_casemap_nam(int cm)
-{
+{ T("trace");
 	switch (cm)
 	{
 		case CMAP_RFC1459:

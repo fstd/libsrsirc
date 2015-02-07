@@ -71,7 +71,7 @@ static void sslinit(void);
 
 int
 b_socket(bool ipv6)
-{
+{ T("trace");
 	int sck = -1;
 #if HAVE_SOCKET
 	sck = socket(ipv6 ? PF_INET6 : PF_INET, SOCK_STREAM, 0);
@@ -103,7 +103,7 @@ b_socket(bool ipv6)
 
 int
 b_connect(int sck, const struct addrlist *srv)
-{
+{ T("trace");
 #if HAVE_STRUCT_SOCKADDR_STORAGE
 	struct sockaddr_storage sa = {.ss_len = 0};
 	size_t addrlen = 0;
@@ -141,7 +141,7 @@ b_connect(int sck, const struct addrlist *srv)
 
 int
 b_close(int sck)
-{
+{ T("trace");
 #if HAVE_CLOSE
 	D("Closing sck %d", sck);
 	return close(sck);
@@ -154,7 +154,7 @@ b_close(int sck)
 
 int
 b_select(int sck, bool rdbl, uint64_t to_us)
-{
+{ T("trace");
 	uint64_t tsend = to_us ? b_tstamp_us() + to_us : 0;
 
 #if HAVE_SELECT
@@ -204,7 +204,7 @@ b_select(int sck, bool rdbl, uint64_t to_us)
 
 bool
 b_blocking(int sck, bool blocking)
-{
+{ T("trace");
 #if HAVE_FCNTL
 	int flg = fcntl(sck, F_GETFL);
 	if (flg == -1) {
@@ -232,7 +232,7 @@ b_blocking(int sck, bool blocking)
 
 bool
 b_sock_ok(int sck)
-{
+{ T("trace");
 #if HAVE_GETSOCKOPT
 	int opt = 0;
 
@@ -264,7 +264,7 @@ b_sock_ok(int sck)
 
 long
 b_read(int sck, void *buf, size_t sz, bool *tryagain)
-{
+{ T("trace");
 #if HAVE_READ
 	V("read()ing from sck %d (bufsz: %zu)", sck, sz);
 	ssize_t r = read(sck, buf, sz);
@@ -302,7 +302,7 @@ b_read(int sck, void *buf, size_t sz, bool *tryagain)
 
 long
 b_write(int sck, const void *buf, size_t len)
-{
+{ T("trace");
 #if HAVE_SEND
 	int flags = 0;
 # if HAVE_MSG_NOSIGNAL
@@ -331,7 +331,7 @@ b_write(int sck, const void *buf, size_t len)
 
 long
 b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, bool *tryagain)
-{
+{ T("trace");
 #ifdef WITH_SSL
 	V("SSL_read()ing (bufsz: %zu)", sz);
 	int r = SSL_read(ssl, buf, sz);
@@ -352,7 +352,7 @@ b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, bool *tryagain)
 
 long
 b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
-{
+{ T("trace");
 #ifdef WITH_SSL
 	V("send()ing %zu bytes over sck %d", len, sck);
 	int r = SSL_write(ssl, buf, len);
@@ -374,7 +374,7 @@ b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
 
 int
 b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res)
-{
+{ T("trace");
 #if HAVE_GETADDRINFO
 	struct addrinfo *ai_list = NULL;
 	struct addrinfo hints = {
@@ -462,7 +462,7 @@ b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res)
 
 void
 b_freeaddrlist(struct addrlist *al)
-{
+{ T("trace");
 	while (al) {
 		struct addrlist *tmp = al->next;
 		free(al);
@@ -473,7 +473,7 @@ b_freeaddrlist(struct addrlist *al)
 
 SSLCTXTYPE
 b_mksslctx(void)
-{
+{ T("trace");
 	if (!s_sslinit)
 		sslinit();
 
@@ -491,7 +491,7 @@ b_mksslctx(void)
 
 void
 b_freesslctx(SSLCTXTYPE ctx)
-{
+{ T("trace");
 #ifdef WITH_SSL
 	SSL_CTX_free(ctx);
 #else
@@ -502,7 +502,7 @@ b_freesslctx(SSLCTXTYPE ctx)
 
 SSLTYPE
 b_sslize(int sck, SSLCTXTYPE ctx)
-{
+{ T("trace");
 	SSLTYPE shnd = NULL;
 #ifdef WITH_SSL
 	bool fail = !(shnd = SSL_new(hnd->sctx));
@@ -535,7 +535,7 @@ b_sslize(int sck, SSLCTXTYPE ctx)
 
 void
 b_sslfin(SSLTYPE shnd)
-{
+{ T("trace");
 #ifdef WITH_SSL
 	SSL_shutdown(shnd);
 	SSL_free(shnd);
@@ -548,7 +548,7 @@ b_sslfin(SSLTYPE shnd)
 
 uint16_t
 b_htons(uint16_t h)
-{
+{ T("trace");
 #if HAVE_HTONS
 	return htons(h);
 #else
@@ -560,7 +560,7 @@ b_htons(uint16_t h)
 
 uint32_t
 b_inet_addr(const char *ip4str)
-{
+{ T("trace");
 #if HAVE_INET_ADDR
 	return inet_addr(ip4str);
 #else
@@ -572,7 +572,7 @@ b_inet_addr(const char *ip4str)
 
 bool
 b_inet4_addr(unsigned char *dest, size_t destsz, const char *ip4str)
-{
+{ T("trace");
 #if HAVE_INET_PTON
 	struct in_addr ia4;
 	int n = inet_pton(AF_INET, ip4str, &ia4);
@@ -597,7 +597,7 @@ b_inet4_addr(unsigned char *dest, size_t destsz, const char *ip4str)
 
 bool
 b_inet6_addr(unsigned char *dest, size_t destsz, const char *ip6str)
-{
+{ T("trace");
 #if HAVE_INET_PTON
 	struct in6_addr ia6;
 	int n = inet_pton(AF_INET6, ip6str, &ia6);
@@ -621,7 +621,7 @@ b_inet6_addr(unsigned char *dest, size_t destsz, const char *ip6str)
 
 static bool
 sockaddr_from_addr(struct sockaddr *dst, size_t *dstlen, const struct addrlist *ai)
-{
+{ T("trace");
 #if HAVE_GETADDRINFO
 	struct addrinfo *ai_list = NULL;
 	struct addrinfo hints = {
@@ -657,7 +657,7 @@ sockaddr_from_addr(struct sockaddr *dst, size_t *dstlen, const struct addrlist *
 static void
 addrstr_from_sockaddr(char *addr, size_t addr_sz, uint16_t *port,
     const struct addrinfo *ai)
-{
+{ T("trace");
 	if (ai->ai_family == AF_INET) {
 		struct sockaddr_in *sin = (struct sockaddr_in*)ai->ai_addr;
 
@@ -686,7 +686,7 @@ addrstr_from_sockaddr(char *addr, size_t addr_sz, uint16_t *port,
 
 static void
 sslinit(void)
-{
+{ T("trace");
 #ifdef WITH_SSL
 	/* XXX not reentrant FIXME */
 	SSL_load_error_strings();

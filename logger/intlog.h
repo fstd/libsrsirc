@@ -52,11 +52,15 @@
 
 // ----- logging interface -----
 
-#define T(...)                                                            \
+#if NOTRACE
+# define T(...) do{}while(0)
+# define TE(...) do{}while(0)
+#else
+# define T(...)                                                            \
     ircdbg_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
-
-#define TE(...)                                                           \
+# define TE(...)                                                           \
     ircdbg_log(LOG_MODULE,LOG_TRACE,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
+#endif
 
 #define V(...)                                                            \
     ircdbg_log(LOG_MODULE,LOG_VIVI,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)

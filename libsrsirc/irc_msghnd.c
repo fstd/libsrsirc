@@ -31,7 +31,7 @@
 
 static uint8_t
 handle_001(irc hnd, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (nargs < 3)
 		return PROTO_ERR;
 
@@ -54,7 +54,7 @@ handle_001(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 handle_002(irc hnd, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	ut_freearr(hnd->logonconv[1]);
 	hnd->logonconv[1] = ut_clonearr(msg);
 
@@ -63,7 +63,7 @@ handle_002(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 handle_003(irc hnd, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	ut_freearr(hnd->logonconv[2]);
 	hnd->logonconv[2] = ut_clonearr(msg);
 
@@ -72,7 +72,7 @@ handle_003(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 handle_004(irc hnd, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (nargs < 7)
 		return PROTO_ERR;
 
@@ -88,7 +88,7 @@ handle_004(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 handle_PING(irc hnd, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (nargs < 3)
 		return PROTO_ERR;
 
@@ -102,7 +102,7 @@ handle_PING(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 handle_XXX(irc hnd, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (!logon)
 		return 0;
 
@@ -121,14 +121,14 @@ handle_XXX(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 handle_464(irc hnd, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	W("(%p) wrong server password", (void*)hnd);
 	return AUTH_ERR;
 }
 
 static uint8_t
 handle_383(irc hnd, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (nargs < 3)
 		return PROTO_ERR;
 
@@ -153,7 +153,7 @@ handle_383(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 handle_484(irc hnd, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	hnd->restricted = true;
 	I("(%p) we're 'restricted'", (void*)hnd);
 	return 0;
@@ -161,7 +161,7 @@ handle_484(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 handle_465(irc hnd, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	W("(%p) we're banned", (void*)hnd);
 	hnd->banned = true;
 	free(hnd->banmsg);
@@ -172,7 +172,7 @@ handle_465(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 handle_466(irc hnd, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	W("(%p) we will be banned", (void*)hnd);
 
 	return 0; /* so what, bitch? */
@@ -180,7 +180,7 @@ handle_466(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 handle_ERROR(irc hnd, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	free(hnd->lasterr);
 	hnd->lasterr = b_strdup((*msg)[2] ? (*msg)[2] : "");
 	W("sever said ERROR: '%s'", (*msg)[2]);
@@ -189,7 +189,7 @@ handle_ERROR(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 handle_NICK(irc hnd, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (nargs < 3)
 		return PROTO_ERR;
 
@@ -209,7 +209,7 @@ handle_NICK(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 handle_005_CASEMAPPING(irc hnd, const char *val)
-{
+{ T("trace");
 	if (b_strcasecmp(val, "ascii") == 0)
 		hnd->casemap = CMAP_ASCII;
 	else if (b_strcasecmp(val, "strict-rfc1459") == 0)
@@ -226,7 +226,7 @@ handle_005_CASEMAPPING(irc hnd, const char *val)
 /* XXX not robust enough */
 static uint8_t
 handle_005_PREFIX(irc hnd, const char *val)
-{
+{ T("trace");
 	char str[32];
 	if (!val[0])
 		return PROTO_ERR;
@@ -250,7 +250,7 @@ handle_005_PREFIX(irc hnd, const char *val)
 
 static uint8_t
 handle_005_CHANMODES(irc hnd, const char *val)
-{
+{ T("trace");
 	for (int z = 0; z < 4; ++z)
 		hnd->m005chanmodes[z][0] = '\0';
 
@@ -274,14 +274,14 @@ handle_005_CHANMODES(irc hnd, const char *val)
 
 static uint8_t
 handle_005_CHANTYPES(irc hnd, const char *val)
-{
+{ T("trace");
 	com_strNcpy(hnd->m005chantypes, val, MAX_005_CHTYP);
 	return 0;
 }
 
 static uint8_t
 handle_005(irc hnd, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	uint8_t ret = 0;
 	bool have_casemap = false;
 
@@ -315,7 +315,7 @@ handle_005(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 bool
 imh_regall(irc hnd, bool dumb)
-{
+{ T("trace");
 	bool fail = false;
 	if (!dumb) {
 		fail = fail || !msg_reghnd(hnd, "PING", handle_PING, "irc");
@@ -343,6 +343,6 @@ imh_regall(irc hnd, bool dumb)
 
 void
 imh_unregall(irc hnd)
-{
+{ T("trace");
 	msg_unregall(hnd, "irc");
 }

@@ -42,7 +42,7 @@ static long send_wrap(sckhld sh, const void *buf, size_t len);
 /* Documented in io.h */
 int
 io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
-{
+{ T("trace");
 	uint64_t tsend = to_us ? b_tstamp_us() + to_us : 0;
 
 	while (ctx->wptr < ctx->eptr && ISDELIM(*ctx->wptr))
@@ -80,7 +80,7 @@ io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
 /* Documented in io.h */
 bool
 io_write(sckhld sh, const char *line)
-{
+{ T("trace");
 	size_t len = strlen(line);
 	int needbr = len < 2 || line[len-2] != '\r' || line[len-1] != '\n';
 
@@ -94,7 +94,7 @@ io_write(sckhld sh, const char *line)
 /* return pointer to first line delim in our receive buffer, or NULL if none */
 static char*
 find_delim(struct readctx *ctx)
-{
+{ T("trace");
 	for (char *ptr = ctx->wptr; ptr < ctx->eptr; ptr++)
 		if (ISDELIM(*ptr))
 			return ptr;
@@ -105,7 +105,7 @@ find_delim(struct readctx *ctx)
  * returns 1 if something was read; 0 on timeout; -1 on failure */
 static int
 read_more(sckhld sh, struct readctx *ctx, uint64_t to_us)
-{
+{ T("trace");
 	size_t remain = sizeof ctx->workbuf - (ctx->eptr - ctx->workbuf);
 	if (!remain) { /* no more space left in receive buffer */
 		if (ctx->wptr == ctx->workbuf) { /* completely full */
@@ -141,7 +141,7 @@ read_more(sckhld sh, struct readctx *ctx, uint64_t to_us)
  * returns true on success, false on failure */
 static bool
 write_str(sckhld sh, const char *buf)
-{
+{ T("trace");
 	size_t cnt = 0;
 	size_t len = strlen(buf);
 	while (cnt < len) {
@@ -157,7 +157,7 @@ write_str(sckhld sh, const char *buf)
  * or not SSL is compiled-in and enabled (or not) */
 static long
 read_wrap(sckhld sh, void *buf, size_t sz)
-{
+{ T("trace");
 	if (sh.shnd)
 		return b_read_ssl(sh.shnd, buf, sz, NULL);
 	return b_read(sh.sck, buf, sz, NULL);
@@ -166,7 +166,7 @@ read_wrap(sckhld sh, void *buf, size_t sz)
 /* likewise for send()/SSL_write() */
 static long
 send_wrap(sckhld sh, const void *buf, size_t len)
-{
+{ T("trace");
 	if (sh.shnd)
 		return b_write_ssl(sh.shnd, buf, len);
 	return b_write(sh.sck, buf, len);

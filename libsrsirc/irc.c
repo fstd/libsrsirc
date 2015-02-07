@@ -35,7 +35,7 @@ static bool send_logon(irc hnd);
 
 irc
 irc_init(void)
-{
+{ T("trace");
 	iconn con;
 	irc r = NULL;
 	int preverrno = errno;
@@ -161,13 +161,13 @@ irc_init_fail:
 
 void
 irc_reset(irc hnd)
-{
+{ T("trace");
 	conn_reset(hnd->con);
 }
 
 void
 irc_dispose(irc hnd)
-{
+{ T("trace");
 	trk_deinit(hnd);
 	conn_dispose(hnd->con);
 	free(hnd->lasterr);
@@ -199,7 +199,7 @@ irc_dispose(irc hnd)
 
 bool
 irc_connect(irc hnd)
-{
+{ T("trace");
 	uint64_t tsend = hnd->hcto_us ?
 	    b_tstamp_us() + hnd->hcto_us : 0;
 
@@ -284,7 +284,7 @@ irc_connect_fail:
 
 int
 irc_read(irc hnd, tokarr *tok, uint64_t to_us)
-{
+{ T("trace");
 	int r = conn_read(hnd->con, tok, to_us);
 	if (r == 0)
 		return 0;
@@ -299,20 +299,20 @@ irc_read(irc hnd, tokarr *tok, uint64_t to_us)
 
 bool
 irc_eof(irc hnd)
-{
+{ T("trace");
 	return conn_eof(hnd->con);
 }
 
 /* this is ugly and insane and BTW: it won't work */
 bool
 irc_can_read(irc hnd)
-{
+{ T("trace");
 	return hnd->con->rctx.eptr - hnd->con->rctx.wptr >= 3;
 }
 
 bool
 irc_write(irc hnd, const char *line)
-{
+{ T("trace");
 	bool r = conn_write(hnd->con, line);
 
 	if (!r)
@@ -324,7 +324,7 @@ irc_write(irc hnd, const char *line)
 
 static bool
 send_logon(irc hnd)
-{
+{ T("trace");
 	if (!conn_online(hnd->con))
 		return false;
 	char aBuf[256];
@@ -367,20 +367,20 @@ send_logon(irc hnd)
 
 void
 irc_regcb_conread(irc hnd, fp_con_read cb, void *tag)
-{
+{ T("trace");
 	hnd->cb_con_read = cb;
 	hnd->tag_con_read = tag;
 }
 
 void
 irc_regcb_mutnick(irc hnd, fp_mut_nick cb)
-{
+{ T("trace");
 	hnd->cb_mut_nick = cb;
 }
 
 void
 irc_dump(irc h)
-{
+{ T("trace");
 	N("--- irc object %p dump---", (void*)h);
 	N("mynick: '%s'", h->mynick);
 	N("myhost: '%s'", h->myhost);

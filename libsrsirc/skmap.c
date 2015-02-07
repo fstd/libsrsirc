@@ -46,7 +46,7 @@ static size_t strhash_mid(const char *s, const uint8_t *cmap);
 
 skmap
 skmap_init(size_t bsz, int cmap)
-{
+{ T("trace");
 	struct skmap *h = com_malloc(sizeof *h);
 	if (!h)
 		return NULL;
@@ -76,7 +76,7 @@ skmap_init_fail:
 
 void
 skmap_clear(skmap h)
-{
+{ T("trace");
 	char *k;
 	for (size_t i = 0; i < h->bsz; i++) {
 		if (!h->buck[i])
@@ -96,7 +96,7 @@ skmap_clear(skmap h)
 
 void
 skmap_dispose(skmap h)
-{
+{ T("trace");
 	if (!h)
 		return;
 
@@ -108,7 +108,7 @@ skmap_dispose(skmap h)
 
 bool
 skmap_put(skmap h, const char *key, void *elem)
-{
+{ T("trace");
 	if (!key || !elem)
 		return false;
 
@@ -151,7 +151,7 @@ skmap_put_fail:
 
 void*
 skmap_get(skmap h, const char *key)
-{
+{ T("trace");
 	size_t ind = h->hfn(key, h->cmap) % h->bsz;
 
 	bucklist_t kl = h->buck[ind];
@@ -163,7 +163,7 @@ skmap_get(skmap h, const char *key)
 
 void*
 skmap_del(skmap h, const char *key)
-{
+{ T("trace");
 	size_t ind = h->hfn(key, h->cmap) % h->bsz;
 
 	bucklist_t kl = h->buck[ind];
@@ -183,13 +183,13 @@ skmap_del(skmap h, const char *key)
 
 size_t
 skmap_count(skmap h)
-{
+{ T("trace");
 	return h->count;
 }
 
 bool
 skmap_first(skmap h, char **key, void **val)
-{
+{ T("trace");
 	h->bit = 0;
 	while (h->bit < h->bsz &&
 	    (!h->buck[h->bit] || bucklist_isempty(h->buck[h->bit])))
@@ -209,7 +209,7 @@ skmap_first(skmap h, char **key, void **val)
 
 bool
 skmap_next(skmap h, char **key, void **val)
-{
+{ T("trace");
 	if (!h->iterating)
 		return false;
 
@@ -235,14 +235,14 @@ skmap_next(skmap h, char **key, void **val)
 
 void
 skmap_del_iter(skmap h)
-{
+{ T("trace");
 	if (h->iterating)
 		bucklist_del_iter(h->buck[h->bit]);
 }
 
 void
 skmap_dump(skmap h, skmap_op_fn valop)
-{
+{ T("trace");
 	#define M(...) fprintf(stderr, __VA_ARGS__)
 	M("===hashmap dump (count: %zu)===\n", h->count);
 	if (!h)
@@ -270,7 +270,7 @@ skmap_dump(skmap h, skmap_op_fn valop)
 void
 skmap_stat(skmap h, size_t *nbuck, size_t *nbuckused, size_t *nitems,
     double *loadfac, double *avglistlen, size_t *maxlistlen)
-{
+{ T("trace");
 	size_t used = 0;
 	size_t usedlen = 0;
 	size_t empty = 0;
@@ -301,7 +301,7 @@ skmap_stat(skmap h, size_t *nbuck, size_t *nbuckused, size_t *nitems,
 
 void
 skmap_dumpstat(skmap h, const char *dbgname)
-{
+{ T("trace");
 	size_t nbuck;
 	size_t nbuckused;
 	size_t nitems;
@@ -320,7 +320,7 @@ skmap_dumpstat(skmap h, const char *dbgname)
 
 static size_t
 strhash_small(const char *s, const uint8_t *cmap)
-{
+{ T("trace");
 	uint8_t res = 0xaa;
 	uint8_t cur;
 	unsigned shift = 0;
@@ -333,7 +333,7 @@ strhash_small(const char *s, const uint8_t *cmap)
 
 static size_t
 strhash_mid(const char *s, const uint8_t *cmap)
-{
+{ T("trace");
 	uint8_t res[2] = { 0xaa, 0xaa };
 	uint8_t cur;
 	unsigned shift = 0;

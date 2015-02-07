@@ -52,7 +52,7 @@ int main(int argc, char **argv);
 
 static void
 usage(FILE *str, const char *a0, int ec, bool sh)
-{
+{ T("trace");
 	#define XSTR(s) STR(s)
 	#define STR(s) #s
 	#define SH(STR) if (sh) fputs(STR "\n", str)
@@ -131,7 +131,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 
 static void
 process_args(int *argc, char ***argv)
-{
+{ T("trace");
 	char *a0 = (*argv)[0];
 
 	for (int ch; (ch = b_getopt(*argc, *argv,
@@ -281,7 +281,7 @@ process_args(int *argc, char ***argv)
 
 static void
 set_defaults(void)
-{
+{ T("trace");
 	STRACPY(g_sett.nick, "icat");
 	STRACPY(g_sett.uname, "icat");
 	STRACPY(g_sett.fname, "IRC netcat");
@@ -312,7 +312,7 @@ set_defaults(void)
 
 static void
 dump_settings(void)
-{
+{ T("trace");
 	D("nick: '%s'", g_sett.nick);
 	D("uname: '%s'", g_sett.uname);
 	D("fname: '%s'", g_sett.fname);
@@ -349,7 +349,7 @@ dump_settings(void)
 
 static void
 cleanup(void)
-{
+{ T("trace");
 	I("Cleaning up");
 	core_destroy();
 
@@ -366,7 +366,7 @@ cleanup(void)
 
 static void
 sighnd(int s)
-{
+{ T("trace");
 	switch (s)
 	{
 #if HAVE_SIGINT
@@ -388,7 +388,7 @@ sighnd(int s)
 
 static void
 init_logger(void)
-{
+{ T("trace");
 	ircdbg_init();
 	ircdbg_setlvl(MOD_ICATINIT, DEF_LOGLVL);
 	ircdbg_setlvl(MOD_ICATCORE, DEF_LOGLVL);
@@ -399,7 +399,7 @@ init_logger(void)
 
 static void
 update_logger(int verb, int fancy)
-{
+{ T("trace");
 	int v = ircdbg_getlvl(MOD_ICATINIT) + verb;
 	if (v < 0)
 		v = 0;
@@ -419,7 +419,7 @@ update_logger(int verb, int fancy)
 
 int
 main(int argc, char **argv)
-{
+{ T("trace");
 	init_logger();
 	set_defaults();
 	process_args(&argc, &argv);

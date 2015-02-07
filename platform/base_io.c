@@ -28,7 +28,7 @@
 
 long
 b_stdin_read(void *buf, size_t nbytes)
-{
+{ T("trace");
 #if HAVE_FILENO
 	int fd = fileno(stdin);
 #else
@@ -52,7 +52,7 @@ b_stdin_read(void *buf, size_t nbytes)
 
 int
 b_stdin_canread(void)
-{
+{ T("trace");
 #if HAVE_FILENO
 	int fd = fileno(stdin);
 #else

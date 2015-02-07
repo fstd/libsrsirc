@@ -136,6 +136,14 @@ AX_CONFIG_FEATURE(
   [SO_NOSIGPIPE], [This platform has SO_NOSIGPIPE],
   [HAVE_SO_NOSIGPIPE], [This platform has SO_NOSIGPIPE.])
 
+case "$CFLAGS" in
+*-O@<:@234@:>@*)
+AC_DEFINE([NOTRACE], [1], [Exclude function tracing when optimizing])
+: ;;
+*)
+AC_DEFINE([NOTRACE], [0], [Exclude function tracing when optimizing])
+: ;;
+esac
 
 #AX_HAVE_VSYSLOG(
 #  [AX_CONFIG_FEATURE_ENABLE(vsyslog)],

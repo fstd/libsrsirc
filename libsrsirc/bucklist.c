@@ -39,7 +39,7 @@ static bool pfxeq(const char *n1, const char *n2, const uint8_t *cmap);
 
 bucklist_t
 bucklist_init(const uint8_t *cmap)
-{
+{ T("trace");
 	struct bucklist *l = com_malloc(sizeof *l);
 	if (!l)
 		return NULL;
@@ -52,14 +52,14 @@ bucklist_init(const uint8_t *cmap)
 
 void
 bucklist_dispose(bucklist_t l)
-{
+{ T("trace");
 	bucklist_clear(l);
 	free(l);
 }
 
 size_t
 bucklist_count(bucklist_t l)
-{
+{ T("trace");
 	if (!l || !l->head)
 		return 0;
 
@@ -74,13 +74,13 @@ bucklist_count(bucklist_t l)
 
 bool
 bucklist_isempty(bucklist_t l)
-{
+{ T("trace");
 	return !l->head;
 }
 
 void
 bucklist_clear(bucklist_t l)
-{
+{ T("trace");
 	if (!l)
 		return;
 
@@ -96,7 +96,7 @@ bucklist_clear(bucklist_t l)
 
 bool
 bucklist_insert(bucklist_t l, size_t i, char *key, void *val)
-{
+{ T("trace");
 	struct pl_node *n = l->head;
 	struct pl_node *prev = NULL;
 
@@ -136,7 +136,7 @@ bucklist_insert(bucklist_t l, size_t i, char *key, void *val)
 /* key or val == NULL means don't touch */
 bool
 bucklist_replace(bucklist_t l, const char *key, void *val)
-{
+{ T("trace");
 	if (!val)
 		return false;
 
@@ -154,7 +154,7 @@ bucklist_replace(bucklist_t l, const char *key, void *val)
 
 void*
 bucklist_remove(bucklist_t l, const char *key, char **origkey)
-{
+{ T("trace");
 	struct pl_node *n = l->head;
 	struct pl_node *prev = NULL;
 	while (n) {
@@ -180,7 +180,7 @@ bucklist_remove(bucklist_t l, const char *key, char **origkey)
 
 bool
 bucklist_get(bucklist_t l, size_t i, char **key, void **val)
-{
+{ T("trace");
 	if (!l->head)
 		return false;
 
@@ -202,7 +202,7 @@ bucklist_get(bucklist_t l, size_t i, char **key, void **val)
 
 void*
 bucklist_find(bucklist_t l, const char *key, char **origkey)
-{
+{ T("trace");
 	struct pl_node *n = l->head;
 	while (n) {
 		if (pfxeq(n->key, key, l->cmap)) {
@@ -218,7 +218,7 @@ bucklist_find(bucklist_t l, const char *key, char **origkey)
 
 bool
 bucklist_first(bucklist_t l, char **key, void **val)
-{
+{ T("trace");
 	if (!l->head)
 		return false;
 
@@ -233,7 +233,7 @@ bucklist_first(bucklist_t l, char **key, void **val)
 
 bool
 bucklist_next(bucklist_t l, char **key, void **val)
-{
+{ T("trace");
 	if (!l->iter || !l->iter->next)
 		return false;
 
@@ -248,7 +248,7 @@ bucklist_next(bucklist_t l, char **key, void **val)
 
 void
 bucklist_del_iter(bucklist_t l)
-{
+{ T("trace");
 	struct pl_node *next = l->iter->next;
 	if (!l->previter)
 		l->head = next;
@@ -261,7 +261,7 @@ bucklist_del_iter(bucklist_t l)
 
 void
 bucklist_dump(bucklist_t l, bucklist_op_fn op)
-{
+{ T("trace");
 	#define M(...) fprintf(stderr, __VA_ARGS__)
 	if (!l)
 		return;
@@ -283,7 +283,7 @@ bucklist_dump(bucklist_t l, bucklist_op_fn op)
 
 bool
 pfxeq(const char *n1, const char *n2, const uint8_t *cmap)
-{
+{ T("trace");
 	unsigned char c1, c2;
 	while ((c1 = cmap[(unsigned char)*n1]) & /* avoid short circuit */
 	    (c2 = cmap[(unsigned char)*n2])) {

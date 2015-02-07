@@ -33,7 +33,7 @@ static int tryhost(struct addrlist *ai, char *peeraddr, size_t peeraddr_sz,
 
 void
 com_strNcat(char *dest, const char *src, size_t destsz)
-{
+{ T("trace");
 	size_t len = strlen(dest);
 	if (len + 1 >= destsz)
 		return;
@@ -48,7 +48,7 @@ com_strNcat(char *dest, const char *src, size_t destsz)
 
 size_t
 com_strCchr(const char *dst, char c)
-{
+{ T("trace");
 	size_t r = 0;
 	while (*dst)
 		if (*dst++ == c)
@@ -59,7 +59,7 @@ com_strCchr(const char *dst, char c)
 
 char*
 com_strNcpy(char *dst, const char *src, size_t dst_sz)
-{
+{ T("trace");
 	dst[dst_sz-1] = '\0';
 	while (--dst_sz)
 		if (!(*dst++ = *src++))
@@ -70,7 +70,7 @@ com_strNcpy(char *dst, const char *src, size_t dst_sz)
 int
 com_consocket(const char *host, uint16_t port, char *peeraddr,
     size_t peeraddr_sz, uint16_t *peerport, uint64_t softto, uint64_t hardto)
-{
+{ T("trace");
 	uint64_t hardtsend = hardto ? b_tstamp_us() + hardto : 0;
 
 	struct addrlist *alist;
@@ -107,7 +107,7 @@ com_consocket(const char *host, uint16_t port, char *peeraddr,
 static int
 tryhost(struct addrlist *ai, char *peeraddr, size_t peeraddr_sz,
     uint16_t *peerport, uint64_t to_us)
-{
+{ T("trace");
 	int sck = b_socket(ai->ipv6);
 
 	if (sck == -1)
@@ -146,7 +146,7 @@ tryhost_fail:
 
 bool
 com_update_strprop(char **field, const char *val)
-{
+{ T("trace");
 	char *n = NULL;
 	if (val && !(n = b_strdup(val)))
 		return false;
@@ -159,7 +159,7 @@ com_update_strprop(char **field, const char *val)
 
 bool
 com_check_timeout(uint64_t tsend, uint64_t *trem)
-{
+{ T("trace");
 	if (!tsend) {
 		if (trem)
 			*trem = 0;
@@ -181,7 +181,7 @@ com_check_timeout(uint64_t tsend, uint64_t *trem)
 
 void*
 com_malloc(size_t sz)
-{
+{ T("trace");
 	void *r = malloc(sz);
 	if (!r)
 		EE("malloc"); /* NOTE: This does NOT call exit() or anything */
@@ -191,7 +191,7 @@ com_malloc(size_t sz)
 /*dumb heuristic to tell apart domain name/ip4/ip6 addr XXX FIXME */
 enum hosttypes
 guess_hosttype(const char *host)
-{
+{ T("trace");
 	if (strchr(host, '['))
 		return HOSTTYPE_IPV6;
 	int dc = 0;

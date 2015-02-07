@@ -39,7 +39,7 @@
 
 bool
 px_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
-{
+{ T("trace");
 	uint64_t tsend = to_us ? b_tstamp_us() + to_us : 0;
 	char buf[256];
 	snprintf(buf, sizeof buf, "CONNECT %s:%d HTTP/1.0\r\nHost: %s:%d"
@@ -99,7 +99,7 @@ px_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 /* SOCKS4 doesntsupport ipv6 */
 bool
 px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
-{
+{ T("trace");
 	uint64_t tsend = to_us ? b_tstamp_us() + to_us : 0;
 	unsigned char logon[14];
 	uint16_t nport = b_htons(port);
@@ -162,7 +162,7 @@ px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 
 bool
 px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
-{
+{ T("trace");
 	E("proxu support currently commented out, it's horrible. plx fix.");
 	return false;
 	uint64_t tsend = to_us ? b_tstamp_us() + to_us : 0;
@@ -357,7 +357,7 @@ px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 
 int
 px_typenum(const char *typestr)
-{
+{ T("trace");
 	return (b_strcasecmp(typestr, "socks4") == 0) ? IRCPX_SOCKS4 :
 	       (b_strcasecmp(typestr, "socks5") == 0) ? IRCPX_SOCKS5 :
 	       (b_strcasecmp(typestr, "http") == 0) ? IRCPX_HTTP : -1;
@@ -365,7 +365,7 @@ px_typenum(const char *typestr)
 
 const char*
 px_typestr(int typenum)
-{
+{ T("trace");
 	return (typenum == IRCPX_HTTP) ? "HTTP" :
 	       (typenum == IRCPX_SOCKS4) ? "SOCKS4" :
 	       (typenum == IRCPX_SOCKS5) ? "SOCKS5" : "unknown";

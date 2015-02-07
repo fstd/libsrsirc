@@ -49,19 +49,19 @@ static void dump_info(void);
 
 void
 core_init(void)
-{
+{ T("trace");
 	serv_init();
 }
 
 void
 core_destroy(void)
-{
+{ T("trace");
 	serv_destroy();
 }
 
 int
 core_run(void)
-{
+{ T("trace");
 	tokarr tok;
 	char line[1024];
 	bool idle;
@@ -150,7 +150,7 @@ core_run(void)
 
 static void
 handle_ircmsg(tokarr *tok)
-{
+{ T("trace");
 	char nick[32];
 	if (!(*tok)[0])
 		return;
@@ -171,7 +171,7 @@ handle_ircmsg(tokarr *tok)
 
 static void
 handle_usermsg(char *lnbuf)
-{
+{ T("trace");
 	s_writecnt++;
 
 	char *end = lnbuf + strlen(lnbuf) - 1;
@@ -200,7 +200,7 @@ handle_usermsg(char *lnbuf)
 
 static void
 dump_info(void)
-{
+{ T("trace");
 	fprintf(stderr, "icat: %sline; read %uln wrote %uln\n",
 	    serv_online()?"on":"off", s_readcnt, s_writecnt);
 }

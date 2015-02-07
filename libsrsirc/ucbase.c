@@ -31,7 +31,7 @@ static int compare_modepfx(irc h, char c1, char c2);
 
 bool
 ucb_init(irc h)
-{
+{ T("trace");
 	if (!(h->chans = skmap_init(256, h->casemap)))
 		return false;
 
@@ -43,7 +43,7 @@ ucb_init(irc h)
 
 chan
 add_chan(irc h, const char *name)
-{
+{ T("trace");
 	chan c = com_malloc(sizeof *c);
 	if (!c)
 		goto add_chan_fail;
@@ -88,7 +88,7 @@ add_chan_fail:
 
 bool
 drop_chan(irc h, chan c)
-{
+{ T("trace");
 	if (!skmap_del(h->chans, c->name)) {
 		W("channel '%s' not in channel map", c->name);
 		return false;
@@ -131,13 +131,13 @@ drop_chan(irc h, chan c)
 
 size_t
 num_chans(irc h)
-{
+{ T("trace");
 	return skmap_count(h->chans);
 }
 
 chan
 get_chan(irc h, const char *name, bool complain)
-{
+{ T("trace");
 	chan c = skmap_get(h->chans, name);
 	if (!c && complain)
 		W("no such channel '%s' in chanmap", name);
@@ -146,7 +146,7 @@ get_chan(irc h, const char *name, bool complain)
 
 memb
 get_memb(irc h, chan c, const char *nick, bool complain)
-{
+{ T("trace");
 	memb m = skmap_get(c->memb, nick);
 	if (!m && complain)
 		W("no such member '%s' in channel '%s'", nick, c->name);
@@ -155,13 +155,13 @@ get_memb(irc h, chan c, const char *nick, bool complain)
 
 size_t
 num_memb(irc h, chan c)
-{
+{ T("trace");
 	return skmap_count(c->memb);
 }
 
 bool
 add_memb(irc h, chan c, user u, const char *mpfxstr)
-{
+{ T("trace");
 	memb m = alloc_memb(h, u, mpfxstr);
 	if (!m || !skmap_put(c->memb, u->nick, m)) {
 		free(m);
@@ -175,7 +175,7 @@ add_memb(irc h, chan c, user u, const char *mpfxstr)
 
 bool
 drop_memb(irc h, chan c, user u, bool purge, bool complain)
-{
+{ T("trace");
 	memb m = skmap_del(c->memb, u->nick);
 	if (m) {
 		D("dropped '%s' from '%s'", m->u->nick, c->name);
@@ -200,7 +200,7 @@ drop_memb(irc h, chan c, user u, bool purge, bool complain)
 
 void
 clear_memb(irc h, chan c)
-{
+{ T("trace");
 	void *e;
 	if (!skmap_first(c->memb, NULL, &e))
 		return;
@@ -227,7 +227,7 @@ clear_memb(irc h, chan c)
 
 memb
 alloc_memb(irc h, user u, const char *mpfxstr)
-{
+{ T("trace");
 	memb m = com_malloc(sizeof *m);
 	if (!m)
 		goto alloc_memb_fail;
@@ -244,7 +244,7 @@ alloc_memb_fail:
 
 bool
 update_modepfx(irc h, chan c, const char *nick, char mpfxsym, bool enab)
-{
+{ T("trace");
 	memb m = get_memb(h, c, nick, true);
 	if (!m)
 		return false;
@@ -288,7 +288,7 @@ update_modepfx(irc h, chan c, const char *nick, char mpfxsym, bool enab)
  * for valid arguments (modepfx symbols like '@') */
 static int
 compare_modepfx(irc h, char c1, char c2)
-{
+{ T("trace");
 	const char *p1 = strchr(h->m005modepfx[1], c1);
 	const char *p2 = strchr(h->m005modepfx[1], c2);
 
@@ -300,14 +300,14 @@ compare_modepfx(irc h, char c1, char c2)
 
 void
 clear_chanmodes(irc h, chan c)
-{
+{ T("trace");
 	for (size_t i = 0; i < c->modes_sz; i++)
 		free(c->modes[i]), c->modes[i] = NULL;
 }
 
 bool
 add_chanmode(irc h, chan c, const char *modestr)
-{
+{ T("trace");
 	size_t ind = 0;
 	for (; ind < c->modes_sz; ind++)
 		if (!c->modes[ind])
@@ -336,7 +336,7 @@ add_chanmode(irc h, chan c, const char *modestr)
 
 bool
 drop_chanmode(irc h, chan c, const char *modestr)
-{
+{ T("trace");
 	size_t i;
 	int cls = ut_classify_chanmode(h, modestr[0]);
 	switch (cls) {
@@ -380,7 +380,7 @@ drop_chanmode(irc h, chan c, const char *modestr)
 
 void
 touch_user_int(user u, const char *ident)
-{
+{ T("trace");
 	if (!u->uname && strchr(ident, '!')) {
 		char unam[MAX_UNAME_LEN];
 		ut_pfx2uname(unam, sizeof unam, ident);
@@ -396,7 +396,7 @@ touch_user_int(user u, const char *ident)
 
 user
 touch_user(irc h, const char *ident, bool complain)
-{
+{ T("trace");
 	user u = get_user(h, ident, complain);
 	if (u)
 		touch_user_int(u, ident);
@@ -406,7 +406,7 @@ touch_user(irc h, const char *ident, bool complain)
 
 user
 add_user(irc h, const char *ident) //ident may be a nick, or nick!uname@host style
-{
+{ T("trace");
 	char nick[MAX_NICK_LEN];
 	ut_pfx2nick(nick, sizeof nick, ident);
 
@@ -444,7 +444,7 @@ add_user_fail:
 
 bool
 drop_user(irc h, user u)
-{
+{ T("trace");
 	if (!skmap_del(h->users, u->nick)) {
 		W("no such user '%s' to drop", u->nick);
 		return false;
@@ -473,7 +473,7 @@ drop_user(irc h, user u)
 
 void
 ucb_deinit(irc h)
-{
+{ T("trace");
 	ucb_clear(h);
 	skmap_dispose(h->chans);
 	skmap_dispose(h->users);
@@ -482,7 +482,7 @@ ucb_deinit(irc h)
 
 void
 ucb_clear(irc h)
-{
+{ T("trace");
 	void *e;
 	if (h->chans) {
 		if (!skmap_first(h->chans, NULL, &e))
@@ -520,7 +520,7 @@ ucb_clear(irc h)
 
 void
 ucb_dump(irc h, bool full)
-{
+{ T("trace");
 	skmap_dumpstat(h->chans, "channels");
 	skmap_dumpstat(h->users, "global users");
 
@@ -577,7 +577,7 @@ ucb_dump(irc h, bool full)
 
 user
 get_user(irc h, const char *ident, bool complain)
-{
+{ T("trace");
 	user u = skmap_get(h->users, ident);
 	if (!u && complain)
 		W("no such user '%s'", ident);
@@ -586,13 +586,13 @@ get_user(irc h, const char *ident, bool complain)
 
 size_t
 num_users(irc h)
-{
+{ T("trace");
 	return skmap_count(h->users);
 }
 
 bool
 rename_user(irc h, const char *ident, const char *newnick, bool *allocerr) //mh.
-{
+{ T("trace");
 	char nick[MAX_NICK_LEN];
 	ut_pfx2nick(nick, sizeof nick, ident);
 
@@ -646,7 +646,7 @@ rename_user(irc h, const char *ident, const char *newnick, bool *allocerr) //mh.
 
 chan
 first_chan(irc h)
-{
+{ T("trace");
 	void *e;
 	if (!skmap_first(h->chans, NULL, &e))
 		return NULL;
@@ -655,7 +655,7 @@ first_chan(irc h)
 
 chan
 next_chan(irc h)
-{
+{ T("trace");
 	void *e;
 	if (!skmap_next(h->chans, NULL, &e))
 		return NULL;
@@ -664,7 +664,7 @@ next_chan(irc h)
 
 user
 first_user(irc h)
-{
+{ T("trace");
 	void *e;
 	if (!skmap_next(h->users, NULL, &e))
 		return NULL;
@@ -673,7 +673,7 @@ first_user(irc h)
 
 user
 next_user(irc h)
-{
+{ T("trace");
 	void *e;
 	if (!skmap_next(h->users, NULL, &e))
 		return NULL;
@@ -682,7 +682,7 @@ next_user(irc h)
 
 memb
 first_memb(irc h, chan c)
-{
+{ T("trace");
 	void *e;
 	if (!skmap_next(c->memb, NULL, &e))
 		return NULL;
@@ -691,7 +691,7 @@ first_memb(irc h, chan c)
 
 memb
 next_memb(irc h, chan c)
-{
+{ T("trace");
 	void *e;
 	if (!skmap_next(c->memb, NULL, &e))
 		return NULL;
@@ -700,7 +700,7 @@ next_memb(irc h, chan c)
 
 void
 tag_chan(chan c, void *tag, bool autofree)
-{
+{ T("trace");
 	if (c->freetag)
 		free(c->tag);
 	c->tag = tag;
@@ -710,7 +710,7 @@ tag_chan(chan c, void *tag, bool autofree)
 
 void
 tag_user(user u, void *tag, bool autofree)
-{
+{ T("trace");
 	if (u->freetag)
 		free(u->tag);
 	u->tag = tag;

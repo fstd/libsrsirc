@@ -47,7 +47,7 @@ static uint8_t h_TOPIC(irc h, tokarr *msg, size_t nargs, bool logon);
 
 bool
 trk_init(irc h)
-{
+{ T("trace");
 	bool fail = false;
 	fail = fail || !msg_reghnd(h, "JOIN", h_JOIN, "track");
 	fail = fail || !msg_reghnd(h, "311", h_311, "track");
@@ -77,7 +77,7 @@ trk_init(irc h)
 
 void
 trk_deinit(irc h)
-{
+{ T("trace");
 	ucb_deinit(h);
 	msg_unregall(h, "track");
 }
@@ -85,7 +85,7 @@ trk_deinit(irc h)
 
 static uint8_t
 h_JOIN(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (!(*msg)[0] || nargs < 3)
 		return PROTO_ERR;
 
@@ -133,7 +133,7 @@ h_JOIN(irc h, tokarr *msg, size_t nargs, bool logon)
 /*:rajaniemi.freenode.net 352 nvmme CHAN UNAME HOST SRV NICK H :0 irc netcat*/
 static uint8_t
 h_352(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (!(*msg)[0] || nargs < 10)
 		return PROTO_ERR;
 
@@ -178,7 +178,7 @@ h_352(irc h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 h_332(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (!(*msg)[0] || nargs < 5)
 		return PROTO_ERR;
 
@@ -196,7 +196,7 @@ h_332(irc h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 h_333(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (!(*msg)[0] || nargs < 6)
 		return PROTO_ERR;
 
@@ -216,7 +216,7 @@ h_333(irc h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 h_353(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (!(*msg)[0] || nargs < 6)
 		return PROTO_ERR;
 
@@ -273,7 +273,7 @@ h_353(irc h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 h_366(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 
@@ -291,7 +291,7 @@ h_366(irc h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 h_PART(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (!(*msg)[0] || nargs < 3)
 		return PROTO_ERR;
 
@@ -318,7 +318,7 @@ h_PART(irc h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 h_QUIT(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (!(*msg)[0])
 		return PROTO_ERR;
 
@@ -333,7 +333,7 @@ h_QUIT(irc h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 h_KICK(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 
@@ -357,7 +357,7 @@ h_KICK(irc h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 h_NICK(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	uint8_t res = 0;
 
 	if (!(*msg)[0] || nargs < 3)
@@ -376,7 +376,7 @@ h_NICK(irc h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 h_TOPIC(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 
@@ -400,7 +400,7 @@ h_TOPIC(irc h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 h_MODE_chanmode(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	uint8_t res = 0;
 
 	if (!(*msg)[0] || nargs < 4)
@@ -445,7 +445,7 @@ h_MODE_chanmode(irc h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 h_MODE_usermode(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (nargs < 4)
 		return PROTO_ERR;
 
@@ -481,7 +481,7 @@ h_MODE_usermode(irc h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 h_MODE(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 
@@ -493,7 +493,7 @@ h_MODE(irc h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 h_PRIVMSG(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 
@@ -505,7 +505,7 @@ h_PRIVMSG(irc h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 h_NOTICE(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 
@@ -518,7 +518,7 @@ h_NOTICE(irc h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
 h_324(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (!(*msg)[0] || nargs < 5)
 		return PROTO_ERR;
 
@@ -568,7 +568,7 @@ h_324(irc h, tokarr *msg, size_t nargs, bool logon)
  */
 static uint8_t
 h_311(irc h, tokarr *msg, size_t nargs, bool logon)
-{
+{ T("trace");
 	if (!(*msg)[0] || nargs < 8)
 		return PROTO_ERR;
 
@@ -607,7 +607,7 @@ h_311(irc h, tokarr *msg, size_t nargs, bool logon)
 
 void
 trk_dump(irc h, bool full)
-{
+{ T("trace");
 	ucb_dump(h, full);
 }
 
@@ -633,13 +633,13 @@ static userrep* mkuserrep(userrep *dest, user u, const char *modepfx);
 
 size_t
 irc_num_chans(irc h)
-{
+{ T("trace");
 	return num_chans(h);
 }
 
 size_t
 irc_all_chans(irc h, chanrep *chanarr, size_t chanarr_cnt)
-{
+{ T("trace");
 	if (!chanarr_cnt)
 		return 0;
 
@@ -658,7 +658,7 @@ irc_all_chans(irc h, chanrep *chanarr, size_t chanarr_cnt)
 
 static chanrep*
 mkchanrep(chanrep *dest, chan c)
-{
+{ T("trace");
 	dest->name = c->name;
 	dest->topic = c->topic;
 	dest->topicnick = c->topicnick;
@@ -670,7 +670,7 @@ mkchanrep(chanrep *dest, chan c)
 
 chanrep*
 irc_chan(irc h, chanrep *dest, const char *name)
-{
+{ T("trace");
 	chan c = get_chan(h, name, false);
 	if (!c)
 		return NULL;
@@ -681,13 +681,13 @@ irc_chan(irc h, chanrep *dest, const char *name)
 
 size_t
 irc_num_users(irc h)
-{
+{ T("trace");
 	return num_users(h);
 }
 
 size_t
 irc_all_users(irc h, userrep *userarr, size_t userarr_cnt)
-{
+{ T("trace");
 	if (!userarr_cnt)
 		return 0;
 
@@ -706,7 +706,7 @@ irc_all_users(irc h, userrep *userarr, size_t userarr_cnt)
 
 static userrep*
 mkuserrep(userrep *dest, user u, const char *modepfx)
-{
+{ T("trace");
 	dest->modepfx = modepfx;
 	dest->nick = u->nick;
 	dest->uname = u->uname;
@@ -719,7 +719,7 @@ mkuserrep(userrep *dest, user u, const char *modepfx)
 
 userrep*
 irc_user(irc h, userrep *dest, const char *ident)
-{
+{ T("trace");
 	user u = get_user(h, ident, false);
 	if (!u)
 		return NULL;
@@ -730,7 +730,7 @@ irc_user(irc h, userrep *dest, const char *ident)
 
 size_t
 irc_num_members(irc h, const char *chname)
-{
+{ T("trace");
 	chan c = get_chan(h, chname, false);
 	if (!c)
 		return 0;
@@ -740,7 +740,7 @@ irc_num_members(irc h, const char *chname)
 
 size_t
 irc_all_members(irc h, const char *chname, userrep *userarr, size_t userarr_cnt)
-{
+{ T("trace");
 	if (!userarr_cnt)
 		return 0;
 
@@ -763,7 +763,7 @@ irc_all_members(irc h, const char *chname, userrep *userarr, size_t userarr_cnt)
 
 userrep*
 irc_member(irc h, userrep *dest, const char *chname, const char *ident)
-{
+{ T("trace");
 	chan c = get_chan(h, chname, false);
 	if (!c)
 		return NULL;
@@ -784,7 +784,7 @@ irc_member(irc h, userrep *dest, const char *chname, const char *ident)
 
 bool
 irc_tag_chan(irc h, const char *chname, void *tag, bool autofree)
-{
+{ T("trace");
 	chan c = get_chan(h, chname, false);
 	if (!c)
 		return false;
@@ -795,7 +795,7 @@ irc_tag_chan(irc h, const char *chname, void *tag, bool autofree)
 
 bool
 irc_tag_user(irc h, const char *ident, void *tag, bool autofree)
-{
+{ T("trace");
 	user u = get_user(h, ident, false);
 	if (!u)
 		return false;
