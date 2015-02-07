@@ -10,6 +10,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef WITH_SSL
+# include <openssl/err.h>
+# include <openssl/ssl.h>
+#endif
+
 
 struct addrlist {
 	char addrstr[64];

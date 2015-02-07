@@ -44,11 +44,6 @@
 # include <unistd.h>
 #endif
 
-#ifdef WITH_SSL
-# include <openssl/err.h>
-# include <openssl/ssl.h>
-#endif
-
 #include <logger/intlog.h>
 
 #include "base_string.h"
@@ -333,14 +328,14 @@ long
 b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, bool *tryagain)
 { T("trace");
 #ifdef WITH_SSL
-	V("SSL_read()ing (bufsz: %zu)", sz);
+	V("SSL_read()ing from ssl hnd %p (bufsz: %zu)", (void *)ssl, sz);
 	int r = SSL_read(ssl, buf, sz);
 	if (r < 0) {
 		int errc = SSL_get_error(ssl, r);
 		E("SSL_read() returned %d, error code %d", r, errc);
 		r = -1;
 	} else
-		V("SSL_read(): %d", r);
+		V("SSL_read(): %d (ssl hnd %p)", r, (void *)ssl);
 
 	return r;
 #else
@@ -354,15 +349,15 @@ long
 b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
 { T("trace");
 #ifdef WITH_SSL
-	V("send()ing %zu bytes over sck %d", len, sck);
+	V("send()ing %zu bytes over ssl hnd %p", len, (void *)ssl);
 	int r = SSL_write(ssl, buf, len);
 	
-	if (r < 0)
+	if (r < 0) {
 		int errc = SSL_get_error(ssl, r);
 		E("SSL_write() returned %d, error code %d", r, errc);
 		r = -1;
 	} else
-		V("SSL_write(): %d", r);
+		V("SSL_write(): %d (ssl hnd %p)", r, (void *)ssl);
 	
 	return r;
 #else
@@ -505,7 +500,7 @@ b_sslize(int sck, SSLCTXTYPE ctx)
 { T("trace");
 	SSLTYPE shnd = NULL;
 #ifdef WITH_SSL
-	bool fail = !(shnd = SSL_new(hnd->sctx));
+	bool fail = !(shnd = SSL_new(ctx));
 	fail = fail || !SSL_set_fd(shnd, sck);
 	if (!fail) {
 		int r = SSL_connect(shnd);
