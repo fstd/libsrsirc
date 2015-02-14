@@ -80,8 +80,8 @@ b_socket(bool ipv6)
 
 		socklen_t optlen = (socklen_t)sizeof opt;
 
-		if (setsockopt(sck, SOL_SOCKET, SO_NOSIGPIPE, &opt, &optlen) != 0) {
-			EE("setsockopt(%d, SOL_SOCKET, SO_NOSIGPIPE)");
+		if (setsockopt(sck, SOL_SOCKET, SO_NOSIGPIPE, &opt, optlen) != 0) {
+			EE("setsockopt(%d, SOL_SOCKET, SO_NOSIGPIPE)", sck);
 		}
 #  else
 		W("No MSG_NOSIGNAL/SO_NOSIGPIPE, we'll SIGPIPE on write error");
