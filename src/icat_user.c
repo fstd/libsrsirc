@@ -59,10 +59,10 @@ user_canread(void)
 			return true;
 		} else {
 			size_t n = buf_cnt();
-			D("Moving %zu bytes to the beginning (offset %zu)",
-			    n, (size_t)(s_bufhead - s_inbuf));
+			size_t off = (size_t)(s_bufhead - s_inbuf);
+			D("Moving %zu bytes to front (off %zu)", n, off);
 			memmove(s_inbuf, s_bufhead, n);
-			s_buftail -= s_bufhead - s_inbuf;
+			s_buftail -= off;
 			s_bufhead = s_inbuf;
 		}
 	}
