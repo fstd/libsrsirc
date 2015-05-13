@@ -62,7 +62,7 @@ user_canread(void)
 			D("Moving %zu bytes to the beginning (offset %zu)",
 			    n, (size_t)(s_bufhead - s_inbuf));
 			memmove(s_inbuf, s_bufhead, n);
-			s_buftail -= n;
+			s_buftail -= s_bufhead - s_inbuf;
 			s_bufhead = s_inbuf;
 		}
 	}
