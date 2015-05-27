@@ -61,11 +61,10 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	BH("=============================");
 	BH("== icat "PACKAGE_VERSION" - IRC netcat ==");
 	BH("=============================");
-	fprintf(str, "usage: %s [-vchtkSnufFspPTCwlL] <hostspec> "
+	fprintf(str, "usage: %s [-vqchHVtkrNjiInufFQWbpPTCwlLE] <hostspec> "
 	    "[<hostspec> ...]\n", a0);
 	BH("");
-	BH("\t<hostspec> specifies an IRC server to connect against");
-	BH("\t           multiple hostspecs may be given.");
+	BH("\t<hostspec> specifies one or more IRC server to connect to (see -H)");
 	LH("\t\thostspec := srvaddr[:port]['/ssl']");
 	LH("\t\tsrvaddr  := ip4addr|ip6addr|dnsname");
 	LH("\t\tport     := int(0..65535)");
@@ -78,6 +77,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	BH("\t-c: Use ANSI color sequences on stderr");
 	LH("\t-h: Display brief usage statement and terminate");
 	BH("\t-H: Display longer usage statement and terminate");
+	BH("\t-V: Print version number to stdout and exit");
 	BH("\t-t: Enable target-mode. See man page for more information");
 	LH("\t-k: Keep trying to connect, if first connect/logon fails");
 	BH("\t-r: Reconnect on disconnect, rather than terminating");
@@ -106,7 +106,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	    "[def: "XSTR(DEF_WAITQUIT_MS)"]");
 	BH("\t-l <int>: Wait <int> ms between sending messages to IRC."
 	    "[def: "XSTR(DEF_LINEDELAY_MS)"]");
-	BH("\t-L <int>: Number of 'first free' lines to send unthrottled."
+	LH("\t-L <int>: Number of 'first free' lines to send unthrottled."
 	    "[def: "XSTR(DEF_FREELINES)"]");
 	BH("\t-E <str>: Escape prefix. Send lines prefixed w/ this as-is.");
 	LH("");
@@ -135,7 +135,7 @@ process_args(int *argc, char ***argv)
 	char *a0 = (*argv)[0];
 
 	for (int ch; (ch = b_getopt(*argc, *argv,
-	    "vqchHn:u:f:F:Q:p:P:tT:C:kw:l:L:b:W:rNjiIE:")) != -1;) {
+	    "vqchHn:u:f:F:Q:p:P:tT:C:kw:l:L:b:W:rNjiIE:V")) != -1;) {
 		switch (ch) {
 		      case 'n':
 			STRACPY(g_sett.nick, b_optarg());
@@ -232,6 +232,9 @@ process_args(int *argc, char ***argv)
 			update_logger(1, -1);
 		break;case 'q':
 			update_logger(-1, -1);
+		break;case 'V':
+			puts(PACKAGE_VERSION);
+			exit(0);
 		break;case 'H':
 			usage(stdout, a0, EXIT_SUCCESS, false);
 		break;case 'h':
