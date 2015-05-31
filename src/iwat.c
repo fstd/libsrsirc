@@ -318,9 +318,9 @@ main(int argc, char **argv)
 	init(&argc, &argv, &g_sett);
 	atexit(cleanup);
 #if HAVE_SIGINFO
-	signal(SIGINFO, infohnd);
+	b_regsig(SIGINFO, infohnd);
 #elif HAVE_SIGUSR1
-	signal(SIGUSR1, infohnd);
+	b_regsig(SIGUSR1, infohnd);
 #endif
 	bool failure = true;
 

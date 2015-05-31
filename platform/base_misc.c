@@ -12,6 +12,7 @@
 #include "base_misc.h"
 
 #include <inttypes.h>
+#include <signal.h>
 
 #if HAVE_UNISTD_H
 # include <unistd.h>
@@ -63,5 +64,22 @@ b_optind(void)
 	return optind;
 #else
 	E("we need something like getopt()'s optind");
+#endif
+}
+
+void
+b_regsig(int sig, void (*sigfn)(int))
+{
+#if HAVE_SIGACTION
+	struct sigaction act;
+	act.sa_handler = sigfn;
+	act.sa_flags = 0;
+	if (sigemptyset(&act.sa_mask) != 0) {
+		WE("sigemptyset");
+	} else if (sigaction(sig, &act, NULL) != 0) {
+		WE("sigaction");
+	}
+#else
+	E("we need something like sigaction()");
 #endif
 }

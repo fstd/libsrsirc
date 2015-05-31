@@ -439,13 +439,13 @@ main(int argc, char **argv)
 	dump_settings();
 
 #if HAVE_SIGPIPE
-	signal(SIGPIPE, SIG_IGN);
+	b_regsig(SIGPIPE, SIG_IGN);
 #endif
 
 #if HAVE_SIGINFO
-	signal(SIGINFO, sighnd);
+	b_regsig(SIGINFO, sighnd);
 #elif HAVE_SIGUSR1
-	signal(SIGUSR1, sighnd);
+	b_regsig(SIGUSR1, sighnd);
 #endif
 
 	core_init();

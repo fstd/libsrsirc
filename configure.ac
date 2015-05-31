@@ -77,7 +77,7 @@ AC_TYPE_UINT64_T
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_STRERROR_R
-AC_CHECK_FUNCS([atexit close connect fcntl fileno getaddrinfo getopt getsockopt gettimeofday htons inet_addr inet_pton memmove memset nanosleep read select send setsockopt socket strcasecmp strchr strncasecmp strspn strstr strtol strtoul strtoull])
+AC_CHECK_FUNCS([atexit close connect fcntl fileno getaddrinfo getopt getsockopt gettimeofday htons inet_addr inet_pton memmove memset nanosleep read select send setsockopt sigaction socket strcasecmp strchr strncasecmp strspn strstr strtol strtoul strtoull])
 
 
 AX_HAVE_CTIME_R(
