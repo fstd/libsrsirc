@@ -1,5 +1,5 @@
 /* io.h - i/o processing, protocol tokenization
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #ifndef LIBSRSIRC_IIO_H

@@ -1,5 +1,5 @@
-/* skmap.h -
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
+/* skmap.h - hashmap with string keys, interface
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #ifndef LIBSRSIRC_HASHMAP_H

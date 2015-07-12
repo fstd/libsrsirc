@@ -1,5 +1,5 @@
-/* ucbase.c -
- * libsrsirc - a lightweight serious IRC lib - (C) 2014, Timo Buhrmester
+/* ucbase.c - user and channel base
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #define LOG_MODULE MOD_UCBASE

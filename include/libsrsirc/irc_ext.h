@@ -1,5 +1,5 @@
 /* irc_ext.h - less commonly used part of the main interface
- * libsrsirc - a lightweight serious IRC lib - (C) 2014, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #ifndef LIBSRSIRC_IRC_EXT_H

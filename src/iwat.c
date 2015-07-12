@@ -1,5 +1,5 @@
 /* iwat.c - IRC netwat, the example appliwation of libsrsirc
- * libsrsirc - a lightweight serious IRC lib - (C) 2014, Timo Buhrmester
+ * iwat - IRC netwat on top of libsrsirc - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #if HAVE_CONFIG_H
@@ -282,7 +282,7 @@ usage(FILE *str, const char *a0, int ec)
 	LH("\t\tpxspec   := pxtype:hostspec");
 	LH("\t\tpxtype   := 'HTTP' | 'SOCKS4' | 'SOCKS5'");
 	LH("");
-	LH("(C) 2012-14, Timo Buhrmester (contact: #fstd @ irc.freenode.org)");
+	LH("(C) 2012-15, Timo Buhrmester (contact: #fstd @ irc.freenode.org)");
 	#undef LH
 	#undef STR
 	#undef XSTR

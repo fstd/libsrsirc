@@ -356,7 +356,7 @@ b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
 #ifdef WITH_SSL
 	V("send()ing %zu bytes over ssl hnd %p", len, (void *)ssl);
 	int r = SSL_write(ssl, buf, len);
-	
+
 	if (r < 0) {
 		int errc = SSL_get_error(ssl, r);
 		if (errc == SSL_ERROR_SYSCALL)
@@ -366,7 +366,7 @@ b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
 		r = -1;
 	} else
 		V("SSL_write(): %d (ssl hnd %p)", r, (void *)ssl);
-	
+
 	return r;
 #else
 	C("SSL write attempted, but we haven't been compiled with SSL support");

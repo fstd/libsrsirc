@@ -1,5 +1,5 @@
 /* icat_core.c - icat core, mainly links together icat_serv and icat_user
- * icat - IRC netcat on top of libsrsirc - (C) 2012-14, Timo Buhrmester
+ * icat - IRC netcat on top of libsrsirc - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #define LOG_MODULE MOD_ICATCORE

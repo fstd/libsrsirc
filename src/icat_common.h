@@ -1,5 +1,5 @@
 /* icat_common.h - Declarations used across icat
- * icat - IRC netcat on top of libsrsirc - (C) 2012-14, Timo Buhrmester
+ * icat - IRC netcat on top of libsrsirc - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #ifndef LIBSRSIRC_ICAT_COMMON_H

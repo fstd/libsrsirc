@@ -1,6 +1,6 @@
 /* test_bucklist.c -
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
-  * See README for contact-, COPYING for license information. */
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-15, Timo Buhrmester
+ * See README for contact-, COPYING for license information. */
 
 #include "unittests_common.h"
 
@@ -47,7 +47,7 @@ test_basic(void)
 
 	if (bucklist_count(l) != 0)
 		return "newly allocated list not empty";
-	
+
 	bucklist_dispose(l);
 
 	return NULL;

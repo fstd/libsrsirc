@@ -8,7 +8,7 @@ trap 'rm -f "$tmp"' EXIT
 
 cd unittests
 for f in test_*.c; do
-	
+
 	echo "#include \"$f\"" >"$tmp"
 	echo 'int main(void) {' >>"$tmp"
 	echo 'const char *errmsg;' >>"$tmp"
@@ -31,8 +31,8 @@ for f in test_*.c; do
 			exit 1
 		fi
 
-		
-		
+
+
 		cat <<EOF | sed -e "s/UTNAME/${tname}.${fname}/g" -e "s/UTFUNC/$fname/g" >>"$tmp"
 printf("Running UTNAME...");
 fflush(stdout);
@@ -44,7 +44,7 @@ if (errmsg) {
 	printf("Ok\n");
 EOF
 	done
-	
+
 	echo 'return ret;' >>"$tmp"
 	echo '}' >>"$tmp"
 

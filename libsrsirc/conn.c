@@ -1,5 +1,5 @@
 /* conn.c - irc connection handling
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-14, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #define LOG_MODULE MOD_ICONN

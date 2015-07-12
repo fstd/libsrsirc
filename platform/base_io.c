@@ -45,7 +45,7 @@ b_stdin_read(void *buf, size_t nbytes)
 	} else if (r < 0) {
 		EE("read stdin");
 	}
-	
+
 	return (long)r;
 #else
 	E("We need something like read()");
@@ -70,7 +70,7 @@ b_stdin_canread(void)
 	struct timeval tout = {0, 0};
 
 	V("select()ing stdin");
-	
+
 	fd_set fds;
 	FD_ZERO(&fds);
 	FD_SET(fd, &fds);
