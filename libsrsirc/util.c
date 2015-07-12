@@ -346,7 +346,7 @@ ut_parse_MODE(irc h, tokarr *msg, size_t *num, bool is324)
 		ptr++;
 	}
 	D("done parsing, result:");
-	for (size_t i = 0; i < nummodes; i++) {
+	for (i = 0; i < nummodes; i++) {
 		D("modearr[%zu]: '%s'", i, modearr[i]);
 	}
 
@@ -356,7 +356,7 @@ ut_parse_MODE(irc h, tokarr *msg, size_t *num, bool is324)
 
 ut_parse_005_cmodes_fail:
 	if (modearr)
-		for (size_t i = 0; i < nummodes; i++)
+		for (i = 0; i < nummodes; i++)
 			free(modearr[i]);
 
 	free(modearr);

@@ -238,15 +238,15 @@ ircdbg_init(void)
 					continue;
 
 				*eq = '\0';
-				int v = (int)strtol(eq+1, NULL, 10);
+				int val = (int)strtol(eq+1, NULL, 10);
 				if (strcmp(tok, "modnam") == 0) {
-					s_w_modnam = v;
+					s_w_modnam = val;
 				} else if (strcmp(tok, "file") == 0) {
-					s_w_file = v;
+					s_w_file = val;
 				} else if (strcmp(tok, "line") == 0) {
-					s_w_line = v;
+					s_w_line = val;
 				} else if (strcmp(tok, "func") == 0) {
-					s_w_func = v;
+					s_w_func = val;
 				}
 
 				*eq = ':';

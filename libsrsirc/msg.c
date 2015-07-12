@@ -41,8 +41,8 @@ msg_reghnd(irc hnd, const char *cmd, hnd_fn hndfn, const char *module)
 			return false;
 
 		memcpy(narr, hnd->msghnds, hnd->msghnds_cnt * sizeof *narr);
-		for (size_t i = hnd->msghnds_cnt; i < ncnt; i++)
-			narr[i].cmd[0] = '\0';
+		for (size_t j = hnd->msghnds_cnt; j < ncnt; j++)
+			narr[j].cmd[0] = '\0';
 
 		free(hnd->msghnds);
 
@@ -74,8 +74,8 @@ msg_reguhnd(irc hnd, const char *cmd, uhnd_fn hndfn, bool pre)
 			return false;
 
 		memcpy(narr, harr, hcnt * sizeof *narr);
-		for (size_t i = hcnt; i < ncnt; i++)
-			narr[i].cmd[0] = '\0';
+		for (size_t j = hcnt; j < ncnt; j++)
+			narr[j].cmd[0] = '\0';
 
 		free(harr);
 
