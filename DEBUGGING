@@ -1,0 +1,69 @@
+Debugging libsrsirc
+===================
+
+The preferred way is obviously to use a debugger, however, this isn't
+always feasible.  libsrsirc therefore supports compiled-in debugging messages,
+which are controlled by the LIBSRSIRC_DEBUG environment variable. Additionally
+per-loglevel colors can be enabled by setting the LIBSRSIRC_DEBUG_FANCY
+variable to 1.
+
+Cheat sheet (assumes a POSIXish system)
+=======================================
+
+# Set maximum loglevel for all modules to LOG_DEBUG, and add fancy colors
+export LIBSRSIRC_DEBUG=7 ; export LIBSRSIRC_DEBUG_FANCY=1
+# Then run the libsrsirc-using program; the debugging output will go to stderr.
+
+# No more noise than warnings for the IO subsystem, trace icat core, rest is limited to LOG_INFO
+# (this is just an arbitray example to demonstrate the syntax. all three
+# following lines are equivalent):
+export LIBSRSIRC_DEBUG='6 libsrsirc/io=4 icat/core=9'
+export LIBSRSIRC_DEBUG='libsrsirc/io=4 6 icat/core=9'
+export LIBSRSIRC_DEBUG='libsrsirc/io=4 icat/core=9 6'
+
+
+More specifically
+=================
+
+LIBSRSIRC_DEBUG should be set to contain a string that is comprised of
+'module=<number>' tokens and an optional stray <number>, separated by
+spaces
+
+The supported loglevels and the numeric values they're most likely to have(*) are:
+
+9: Trace    - Function call trace. Extremely noisy; traces everything short of the logger itself
+8: Vivi     - Debug messages which will produce a LOT of output during normal operation
+7: Debug    - Debug messages which will produce quite some output, but not flood stderr along the 'good' code paths
+6: Info     - Debug messages about significant (but normal) events which might be interesting to developers
+5: Notice   - Information about significant (but normal) events which might be interesting to normal users
+4: Warn     - Information about suboptimal conditions which should however not significantly affect functionality
+3: Error    - Non-critical (but usually functionality-breaking) error conditions
+2: Critical - Fatal errors, exit() is called after spitting out the diagnostic message
+
+(The loglevels Critical through Debug are defined in terms of syslog's
+loglevels. Therefore their real numeric value may vary between platforms,
+however, on POSIX systems the given numbers are very likely to be accurate.
+Loglevels below 2 (syslog's LOG_ALERT and LOG_EMERG) are not used.)
+
+Possible module names are:
+	libsrsirc/irc
+	libsrsirc/common
+	libsrsirc/util
+	libsrsirc/conn
+	libsrsirc/io
+	libsrsirc/px
+	libsrsirc/msg
+	libsrsirc/skmap
+	libsrsirc/plst
+	libsrsirc/track
+	libsrsirc/ucbase
+	libsrsirc/base-io
+	libsrsirc/base-net
+	libsrsirc/base-time
+	libsrsirc/base-str
+	libsrsirc/base-misc
+	icat/init
+	icat/core
+	icat/serv
+	icat/user
+	icat/misc
