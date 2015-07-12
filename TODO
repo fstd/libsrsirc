@@ -1,3 +1,5 @@
+do libsrsirc's and icat's debug mechanisms collide/overlap?
+
 theres a bug (might be a security loophole) in ircio_read() in irc_io.c
   this should be fuzz-tested
 
