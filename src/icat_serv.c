@@ -70,6 +70,8 @@ serv_init(void)
 	irc_set_connect_timeout(s_irc, g_sett.cto_soft_us, g_sett.cto_hard_us);
 	if (g_sett.pxtype != -1)
 		irc_set_px(s_irc, g_sett.pxhost, g_sett.pxport, g_sett.pxtype);
+	if (g_sett.pass[0])
+		irc_set_pass(s_irc, g_sett.pass);
 
 	irc_regcb_conread(s_irc, conread, 0);
 	irc_reg_msghnd(s_irc, "PING", handle_PING, true);
