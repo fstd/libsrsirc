@@ -128,12 +128,16 @@ tryhost(struct addrlist *ai, char *peeraddr, size_t peeraddr_sz,
 		if (!b_blocking(sck, true))
 			W("failed to clear socket non-blocking mode");
 
-		if (peeraddr && peeraddr_sz)
-			b_strNcpy(peeraddr, ai->addrstr, peeraddr_sz);
-		if (peerport)
-			*peerport = ai->port;
+		if (b_sock_ok(sck)) {
+			if (peeraddr && peeraddr_sz)
+				b_strNcpy(peeraddr, ai->addrstr, peeraddr_sz);
+			if (peerport)
+				*peerport = ai->port;
 
-		return sck;
+			return sck;
+		} else
+			W("could not connect socket");
+
 	}
 
 	/* fall-thru */
