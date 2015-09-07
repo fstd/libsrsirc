@@ -256,7 +256,7 @@ process_args(int *argc, char ***argv)
 		ut_parse_hostspec(host, sizeof host, &port, &ssl, (*argv)[i]);
 
 		if (isdigitstr(host)) /* netcat and telnet invocation syntax */
-			C("Bad host '%s' (use 'srv:port'i, not 'srv port')",
+			C("Bad host '%s' (use 'srv:port', not 'srv port')",
 			    host);
 
 		/* we choke on all other sorts of invalid addr/names later */
