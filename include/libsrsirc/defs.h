@@ -38,7 +38,7 @@
 /* default `distribution' for service logon */
 #define DEF_SERV_DIST "*"
 
-/* default `distribution; string for service logon */
+/* default `distribution' string for service logon */
 #define DEF_SERV_TYPE 0
 
 /* default `info' string for service logon */
