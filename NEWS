@@ -6,3 +6,4 @@
 2015/02/07 - 0.0.5 release -- separated platform-dependent and platform-independent stuff
 2015/05/14 - 0.0.6 release -- fixed an annoying bug sometimes triggered when there's a lot of input
 2015/07/12 - 0.0.7 release -- minor changes only; we seem good and stable
+2015/09/13 - 0.0.8 release -- bugfixes only
