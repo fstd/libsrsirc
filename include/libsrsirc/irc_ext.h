@@ -6,6 +6,7 @@
 #define LIBSRSIRC_IRC_EXT_H 1
 
 
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -222,6 +223,9 @@ bool irc_can_read(irc hnd);
 bool irc_reg_msghnd(irc hnd, const char *cmd, uhnd_fn hndfn, bool pre);
 
 bool irc_eof(irc hnd);
+
+/* like irc_write, but printf-style */
+bool irc_printf(irc hnd, const char *fmt, ...);
 
 
 #endif /* LIBSRSIRC_IRC_EXT_H */

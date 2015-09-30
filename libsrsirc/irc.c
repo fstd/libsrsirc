@@ -321,6 +321,19 @@ irc_write(irc hnd, const char *line)
 	return r;
 }
 
+bool
+irc_printf(irc hnd, const char *fmt, ...)
+{
+	char buf[1024];
+
+	va_list vl;
+	va_start(vl, fmt);
+	vsnprintf(buf, sizeof buf, fmt, vl);
+	va_end(vl);
+
+	return irc_write(hnd, buf);
+}
+
 
 static bool
 send_logon(irc hnd)
