@@ -28,7 +28,7 @@
  * bool irc_colon_trail(irc hnd);
  * int irc_sockfd(irc hnd);
  * tokarr *(*irc_logonconv(irc hnd))[4];
- * const char* irc_005chanmodes(irc hnd, size_t class);
+ * const char* irc_005chanmodes(irc hnd, size_t mclass);
  * const char* irc_005modepfx(irc hnd, bool symbols);
  *
  * void irc_regcb_conread(irc hnd, fp_con_read cb, void *tag);
@@ -108,10 +108,10 @@ tokarr *(*irc_logonconv(irc hnd))[4];
 
 /* irc_005chanmodes - tell what channel modes the ircd claimed to support in
  *     the (non-standard but almost universally implemented) 005-message.
- * Params: `class': "class" of channel modes to return (there are four, 0 - 3)
+ * Params: `mclass': "class" of channel modes to return (there are four, 0 - 3)
  * Returns a pointer to a string consisting of the supported channel modes
  *     for the given class (see 005 ISUPPORT "spec") */
-const char *irc_005chanmodes(irc hnd, size_t class);
+const char *irc_005chanmodes(irc hnd, size_t mclass);
 
 /* irc_005modepfx - tell what channel mode prefixes the ircd claimed to support
  *     in the (non-standard) but almost universally implemented) 005-message.
