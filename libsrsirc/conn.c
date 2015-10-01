@@ -39,18 +39,18 @@
 
 
 iconn
-conn_init(void)
+lsi_conn_init(void)
 { T("trace");
 	iconn r = NULL;
 	int preverrno = errno;
 	errno = 0;
 
-	if (!(r = com_malloc(sizeof *r)))
+	if (!(r = lsi_com_malloc(sizeof *r)))
 		goto conn_init_fail;
 
 	r->host = NULL;
 
-	if (!(r->host = b_strdup(DEF_HOST)))
+	if (!(r->host = lsi_b_strdup(DEF_HOST)))
 		goto conn_init_fail;
 
 	errno = preverrno;
@@ -82,19 +82,19 @@ conn_init_fail:
 }
 
 void
-conn_reset(iconn hnd)
+lsi_conn_reset(iconn hnd)
 { T("trace");
 	D("(%p) resetting", (void*)hnd);
 
 	if (hnd->ssl && hnd->sh.shnd) {
 		D("(%p) shutting down ssl", (void*)hnd);
-		b_sslfin(hnd->sh.shnd);
+		lsi_b_sslfin(hnd->sh.shnd);
 		hnd->sh.shnd = NULL;
 	}
 
 	if (hnd->sh.sck != -1) {
 		D("(%p) closing socket %d", (void*)hnd, hnd->sh.sck);
-		b_close(hnd->sh.sck);
+		lsi_b_close(hnd->sh.sck);
 	}
 
 	hnd->sh.sck = -1;
@@ -103,11 +103,11 @@ conn_reset(iconn hnd)
 }
 
 void
-conn_dispose(iconn hnd)
+lsi_conn_dispose(iconn hnd)
 { T("trace");
-	conn_reset(hnd);
+	lsi_conn_reset(hnd);
 
-	conn_set_ssl(hnd, false); //dispose ssl context if existing
+	lsi_conn_set_ssl(hnd, false); //dispose ssl context if existing
 
 	free(hnd->host);
 	free(hnd->phost);
@@ -118,12 +118,12 @@ conn_dispose(iconn hnd)
 }
 
 bool
-conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
+lsi_conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 { T("trace");
 	if (!hnd || hnd->state != OFF)
 		return false;
 
-	uint64_t tsend = hardto_us ? b_tstamp_us() + hardto_us : 0;
+	uint64_t tsend = hardto_us ? lsi_b_tstamp_us() + hardto_us : 0;
 
 	uint16_t realport = hnd->port;
 	if (!realport)
@@ -137,7 +137,7 @@ conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 		ps[0] = '\0';
 		if (hnd->ptype != -1)
 			snprintf(ps, sizeof ps, " via %s:%s:%" PRIu16,
-			    px_typestr(hnd->ptype), hnd->phost, hnd->pport);
+			    lsi_px_typestr(hnd->ptype), hnd->phost, hnd->pport);
 
 		I("(%p) wanna connect to %s:%"PRIu16"%s, "
 		    "sto: %"PRIu64"us, hto: %"PRIu64"us",
@@ -148,12 +148,12 @@ conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 	uint16_t peerport;
 
 	sckhld sh;
-	sh.sck = com_consocket(host, port, peerhost, sizeof peerhost,
+	sh.sck = lsi_com_consocket(host, port, peerhost, sizeof peerhost,
 	    &peerport, softto_us, hardto_us);
 	sh.shnd = NULL;
 
 	if (sh.sck < 0) {
-		W("(%p) com_consocket failed for %s:%"PRIu16"", (void*)hnd, host, port);
+		W("(%p) lsi_com_consocket failed for %s:%"PRIu16"", (void*)hnd, host, port);
 		return false;
 	}
 
@@ -163,16 +163,16 @@ conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 
 	uint64_t trem = 0;
 	if (hnd->ptype != -1) {
-		if (com_check_timeout(tsend, &trem)) {
+		if (lsi_com_check_timeout(tsend, &trem)) {
 			W("(%p) timeout", (void*)hnd);
-			b_close(sh.sck);
+			lsi_b_close(sh.sck);
 			hnd->sh.sck = -1;
 			return false;
 		}
 
-		if (!b_blocking(sh.sck, false)) {
+		if (!lsi_b_blocking(sh.sck, false)) {
 			WE("(%p) failed to set nonblocking mode", (void*)hnd);
-			b_close(sh.sck);
+			lsi_b_close(sh.sck);
 			hnd->sh.sck = -1;
 			return false;
 		}
@@ -180,18 +180,18 @@ conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 		bool ok = false;
 		D("(%p) logging on to proxy", (void*)hnd);
 		if (hnd->ptype == IRCPX_HTTP)
-			ok = px_logon_http(hnd->sh.sck, hnd->host,
+			ok = lsi_px_logon_http(hnd->sh.sck, hnd->host,
 			    realport, trem);
 		else if (hnd->ptype == IRCPX_SOCKS4)
-			ok = px_logon_socks4(hnd->sh.sck, hnd->host,
+			ok = lsi_px_logon_socks4(hnd->sh.sck, hnd->host,
 			    realport, trem);
 		else if (hnd->ptype == IRCPX_SOCKS5)
-			ok = px_logon_socks5(hnd->sh.sck, hnd->host,
+			ok = lsi_px_logon_socks5(hnd->sh.sck, hnd->host,
 			    realport, trem);
 
 		if (!ok) {
 			W("(%p) proxy logon failed", (void*)hnd);
-			b_close(sh.sck);
+			lsi_b_close(sh.sck);
 			hnd->sh.sck = -1;
 			return false;
 		}
@@ -199,16 +199,16 @@ conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 
 		D("(%p) setting to blocking mode", (void*)hnd);
 
-		if (!b_blocking(sh.sck, true)) {
+		if (!lsi_b_blocking(sh.sck, true)) {
 			WE("(%p) failed to clear nonblocking mode", (void*)hnd);
-			b_close(sh.sck);
+			lsi_b_close(sh.sck);
 			hnd->sh.sck = -1;
 			return false;
 		}
 	}
 
-	if (hnd->ssl && !(hnd->sh.shnd = b_sslize(sh.sck, hnd->sctx))) {
-		b_close(sh.sck);
+	if (hnd->ssl && !(hnd->sh.shnd = lsi_b_sslize(sh.sck, hnd->sctx))) {
+		lsi_b_close(sh.sck);
 		hnd->sh.sck = -1;
 		W("connect bailing out; couldn't initiate ssl");
 		return false;
@@ -223,18 +223,18 @@ conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 }
 
 int
-conn_read(iconn hnd, tokarr *tok, uint64_t to_us)
+lsi_conn_read(iconn hnd, tokarr *tok, uint64_t to_us)
 { T("trace");
 	if (!hnd || hnd->state != ON)
 		return -1;
 
 	int n;
-	if (!(n = io_read(hnd->sh, &hnd->rctx, tok, to_us)))
+	if (!(n = lsi_io_read(hnd->sh, &hnd->rctx, tok, to_us)))
 		return 0; /* timeout */
 
 	if (n < 0) {
-		W("(%p) io_read %s", (void*)hnd, n == -1 ? "failed":"EOF");
-		conn_reset(hnd);
+		W("(%p) lsi_io_read %s", (void*)hnd, n == -1 ? "failed":"EOF");
+		lsi_conn_reset(hnd);
 		hnd->eof = n == -2;
 		return -1;
 	}
@@ -251,15 +251,15 @@ conn_read(iconn hnd, tokarr *tok, uint64_t to_us)
 }
 
 bool
-conn_write(iconn hnd, const char *line)
+lsi_conn_write(iconn hnd, const char *line)
 { T("trace");
 	if (!hnd || hnd->state != ON || !line)
 		return false;
 
 
-	if (!io_write(hnd->sh, line)) {
+	if (!lsi_io_write(hnd->sh, line)) {
 		W("(%p) failed to write '%s'", (void*)hnd, line);
-		conn_reset(hnd);
+		lsi_conn_reset(hnd);
 		hnd->eof = false;
 		return false;
 	}
@@ -270,19 +270,19 @@ conn_write(iconn hnd, const char *line)
 }
 
 bool
-conn_online(iconn hnd)
+lsi_conn_online(iconn hnd)
 { T("trace");
 	return hnd->state == ON;
 }
 
 bool
-conn_eof(iconn hnd)
+lsi_conn_eof(iconn hnd)
 { T("trace");
 	return hnd->eof;
 }
 
 bool
-conn_colon_trail(iconn hnd)
+lsi_conn_colon_trail(iconn hnd)
 { T("trace");
 	if (!hnd || hnd->state != ON)
 		return false;
@@ -291,7 +291,7 @@ conn_colon_trail(iconn hnd)
 }
 
 bool
-conn_set_px(iconn hnd, const char *host, uint16_t port, int ptype)
+lsi_conn_set_px(iconn hnd, const char *host, uint16_t port, int ptype)
 { T("trace");
 	char *n = NULL;
 	switch (ptype) {
@@ -301,14 +301,14 @@ conn_set_px(iconn hnd, const char *host, uint16_t port, int ptype)
 		if (!host || !port) //XXX `most' default port per type?
 			return false;
 
-		if (!(n = b_strdup(host)))
+		if (!(n = lsi_b_strdup(host)))
 			return false;
 
 		hnd->pport = port;
 		hnd->ptype = ptype;
 		free(hnd->phost);
 		hnd->phost = n;
-		I("set proxy to %s:%s:%"PRIu16, px_typestr(hnd->ptype), n, port);
+		I("set proxy to %s:%s:%"PRIu16, lsi_px_typestr(hnd->ptype), n, port);
 		break;
 	default:
 		E("illegal proxy type %d", ptype);
@@ -319,10 +319,10 @@ conn_set_px(iconn hnd, const char *host, uint16_t port, int ptype)
 }
 
 bool
-conn_set_server(iconn hnd, const char *host, uint16_t port)
+lsi_conn_set_server(iconn hnd, const char *host, uint16_t port)
 { T("trace");
 	char *n;
-	if (!(n = b_strdup(host?host:DEF_HOST)))
+	if (!(n = lsi_b_strdup(host?host:DEF_HOST)))
 		return false;
 
 	free(hnd->host);
@@ -333,15 +333,15 @@ conn_set_server(iconn hnd, const char *host, uint16_t port)
 }
 
 bool
-conn_set_ssl(iconn hnd, bool on)
+lsi_conn_set_ssl(iconn hnd, bool on)
 { T("trace");
 	if (on && !hnd->sctx) {
-		if (!(hnd->sctx = b_mksslctx())) {
+		if (!(hnd->sctx = lsi_b_mksslctx())) {
 			E("could not create ssl context, ssl not enabled!");
 			return false;
 		}
 	} else if (!on && hnd->sctx) {
-		b_freesslctx(hnd->sctx);
+		lsi_b_freesslctx(hnd->sctx);
 		hnd->sctx = NULL;
 	}
 
@@ -354,43 +354,43 @@ conn_set_ssl(iconn hnd, bool on)
 }
 
 const char*
-conn_get_px_host(iconn hnd)
+lsi_conn_get_px_host(iconn hnd)
 { T("trace");
 	return hnd->phost;
 }
 
 uint16_t
-conn_get_px_port(iconn hnd)
+lsi_conn_get_px_port(iconn hnd)
 { T("trace");
 	return hnd->pport;
 }
 
 int
-conn_get_px_type(iconn hnd)
+lsi_conn_get_px_type(iconn hnd)
 { T("trace");
 	return hnd->ptype;
 }
 
 const char*
-conn_get_host(iconn hnd)
+lsi_conn_get_host(iconn hnd)
 { T("trace");
 	return hnd->host;
 }
 
 uint16_t
-conn_get_port(iconn hnd)
+lsi_conn_get_port(iconn hnd)
 { T("trace");
 	return hnd->port;
 }
 
 bool
-conn_get_ssl(iconn hnd)
+lsi_conn_get_ssl(iconn hnd)
 { T("trace");
 	return hnd->ssl;
 }
 
 int
-conn_sockfd(iconn hnd)
+lsi_conn_sockfd(iconn hnd)
 { T("trace");
 	if (!hnd || hnd->state != ON)
 		return -1;

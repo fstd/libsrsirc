@@ -13,8 +13,8 @@
 #include "intdefs.h"
 
 
-bool imh_regall(irc hnd, bool dumb);
-void imh_unregall(irc hnd);
+bool lsi_imh_regall(irc hnd, bool dumb);
+void lsi_imh_unregall(irc hnd);
 
 
 #endif /* LIBSRSIRC_IRC_MSGHND_H */

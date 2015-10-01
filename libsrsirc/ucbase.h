@@ -47,40 +47,40 @@ struct user {
 	bool freetag;
 };
 
-bool ucb_init(irc h);
-chan add_chan(irc h, const char *name);
-bool drop_chan(irc h, chan c);
-size_t num_chans(irc h);
-chan get_chan(irc h, const char *name, bool complain);
-size_t num_memb(irc h, chan c);
-memb get_memb(irc h, chan c, const char *nick, bool complain);
-bool add_memb(irc h, chan c, user u, const char *mpfxstr);
-bool drop_memb(irc h, chan c, user u, bool purge, bool complain);
-void clear_memb(irc h, chan c);
-memb alloc_memb(irc h, user u, const char *mpfxstr);
-bool update_modepfx(irc h, chan c, const char *nick, char mpfxsym, bool enab);
-void clear_chanmodes(irc h, chan c);
-bool add_chanmode(irc h, chan c, const char *modestr);
-bool drop_chanmode(irc h, chan c, const char *modestr);
-user touch_user(irc h, const char *ident, bool complain);
-user add_user(irc h, const char *ident);
-bool drop_user(irc h, user u);
-void ucb_deinit(irc h);
-void ucb_clear(irc h);
-void ucb_dump(irc h, bool full);
-user get_user(irc h, const char *ident, bool complain);
-size_t num_users(irc h);
-bool rename_user(irc h, const char *ident, const char *newnick, bool *allocerr);
+bool lsi_ucb_init(irc h);
+chan lsi_add_chan(irc h, const char *name);
+bool lsi_drop_chan(irc h, chan c);
+size_t lsi_num_chans(irc h);
+chan lsi_get_chan(irc h, const char *name, bool complain);
+size_t lsi_num_memb(irc h, chan c);
+memb lsi_get_memb(irc h, chan c, const char *nick, bool complain);
+bool lsi_add_memb(irc h, chan c, user u, const char *mpfxstr);
+bool lsi_drop_memb(irc h, chan c, user u, bool purge, bool complain);
+void lsi_clear_memb(irc h, chan c);
+memb lsi_alloc_memb(irc h, user u, const char *mpfxstr);
+bool lsi_update_modepfx(irc h, chan c, const char *nick, char mpfxsym, bool enab);
+void lsi_clear_chanmodes(irc h, chan c);
+bool lsi_add_chanmode(irc h, chan c, const char *modestr);
+bool lsi_drop_chanmode(irc h, chan c, const char *modestr);
+user lsi_touch_user(irc h, const char *ident, bool complain);
+user lsi_add_user(irc h, const char *ident);
+bool lsi_drop_user(irc h, user u);
+void lsi_ucb_deinit(irc h);
+void lsi_ucb_clear(irc h);
+void lsi_ucb_dump(irc h, bool full);
+user lsi_get_user(irc h, const char *ident, bool complain);
+size_t lsi_num_users(irc h);
+bool lsi_rename_user(irc h, const char *ident, const char *newnick, bool *allocerr);
 /* these might be dangerous to use, be sure to complete the iteration
  * before any other state might change */
-chan first_chan(irc h);
-chan next_chan(irc h);
-user first_user(irc h);
-user next_user(irc h);
-memb first_memb(irc h, chan c);
-memb next_memb(irc h, chan c);
-void tag_chan(chan c, void *tag, bool autofree);
-void tag_user(user u, void *tag, bool autofree);
+chan lsi_first_chan(irc h);
+chan lsi_next_chan(irc h);
+user lsi_first_user(irc h);
+user lsi_next_user(irc h);
+memb lsi_first_memb(irc h, chan c);
+memb lsi_next_memb(irc h, chan c);
+void lsi_tag_chan(chan c, void *tag, bool autofree);
+void lsi_tag_user(user u, void *tag, bool autofree);
 
 
 #endif /* LIBSRSIRC_UCBASE_H */

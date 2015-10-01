@@ -43,7 +43,7 @@ static void usage(FILE *str, const char *a0, int ec, bool sh);
 static void process_args(int *argc, char ***argv);
 static void set_defaults(void);
 static void dump_settings(void);
-static void cleanup(void);
+static void lsi_cleanup(void);
 static void sighnd(int s);
 static void init_logger(void);
 static void update_logger(int verb, int fancy);
@@ -134,50 +134,50 @@ process_args(int *argc, char ***argv)
 { T("trace");
 	char *a0 = (*argv)[0];
 
-	for (int ch; (ch = b_getopt(*argc, *argv,
+	for (int ch; (ch = lsi_b_getopt(*argc, *argv,
 	    "vqchHn:u:f:F:Q:p:P:tT:C:kw:l:L:b:W:rNjiIE:V")) != -1;) {
 		switch (ch) {
 		      case 'n':
-			STRACPY(g_sett.nick, b_optarg());
+			STRACPY(g_sett.nick, lsi_b_optarg());
 		break;case 'u':
-			STRACPY(g_sett.uname, b_optarg());
+			STRACPY(g_sett.uname, lsi_b_optarg());
 		break;case 'f':
-			STRACPY(g_sett.fname, b_optarg());
+			STRACPY(g_sett.fname, lsi_b_optarg());
 		break;case 'F':
-			g_sett.conflags = strtou8(b_optarg(), NULL, 10);
+			g_sett.conflags = lsi_strtou8(lsi_b_optarg(), NULL, 10);
 		break;case 'Q':
-			STRACPY(g_sett.qmsg, b_optarg());
+			STRACPY(g_sett.qmsg, lsi_b_optarg());
 		break;case 'p':
-			STRACPY(g_sett.pass, b_optarg());
+			STRACPY(g_sett.pass, lsi_b_optarg());
 		break;case 'P':
-			if (!ut_parse_pxspec(&g_sett.pxtype, g_sett.pxhost,
-			    sizeof g_sett.pxhost, &g_sett.pxport, b_optarg()))
-				C("Failed to parse pxspec '%s'", b_optarg());
+			if (!lsi_ut_parse_pxspec(&g_sett.pxtype, g_sett.pxhost,
+			    sizeof g_sett.pxhost, &g_sett.pxport, lsi_b_optarg()))
+				C("Failed to parse pxspec '%s'", lsi_b_optarg());
 		break;case 't':
 			g_sett.trgmode = true;
 		break;case 'T':
 			{
-			char *arg = b_strdup(b_optarg());
+			char *arg = lsi_b_strdup(lsi_b_optarg());
 			if (!arg)
 				CE("strdup failed");
 
 			char *ptr = strchr(arg, ':');
 			if (!ptr)
 				g_sett.cto_hard_us =
-				    strtou64(arg, NULL, 10) * 1000ul;
+				    lsi_strtou64(arg, NULL, 10) * 1000ul;
 			else {
 				*ptr = '\0';
 				g_sett.cto_hard_us =
-				    strtou64(arg, NULL, 10) * 1000ul;
+				    lsi_strtou64(arg, NULL, 10) * 1000ul;
 				g_sett.cto_soft_us =
-				    strtou64(ptr+1, NULL, 10) * 1000ul;
+				    lsi_strtou64(ptr+1, NULL, 10) * 1000ul;
 			}
 
 			free(arg);
 			}
 		break;case 'C':
 			{
-			char *str = b_strdup(b_optarg());
+			char *str = lsi_b_strdup(lsi_b_optarg());
 			if (!str)
 				CE("strdup failed");
 			char *tok = strtok(str, " ");
@@ -202,20 +202,20 @@ process_args(int *argc, char ***argv)
 			free(str);
 			}
 		break;case 'E':
-			if (!(g_sett.esc = b_strdup(b_optarg())))
+			if (!(g_sett.esc = lsi_b_strdup(lsi_b_optarg())))
 				CE("strdup failed");
 		break;case 'l':
-			g_sett.linedelay = strtou64(b_optarg(), NULL, 10) * 1000u;
+			g_sett.linedelay = lsi_strtou64(lsi_b_optarg(), NULL, 10) * 1000u;
 		break;case 'L':
-			g_sett.freelines = (unsigned)strtoul(b_optarg(), NULL, 10);
+			g_sett.freelines = (unsigned)strtoul(lsi_b_optarg(), NULL, 10);
 		break;case 'w':
-			g_sett.waitquit_us = strtou64(b_optarg(), NULL, 10) * 1000u;
+			g_sett.waitquit_us = lsi_strtou64(lsi_b_optarg(), NULL, 10) * 1000u;
 		break;case 'k':
 			g_sett.keeptrying = true;
 		break;case 'W':
-			g_sett.cfwait_us = strtou64(b_optarg(), NULL, 10) * 1000u;
+			g_sett.cfwait_us = lsi_strtou64(lsi_b_optarg(), NULL, 10) * 1000u;
 		break;case 'b':
-			g_sett.hbeat_us = strtou64(b_optarg(), NULL, 10) * 1000u;
+			g_sett.hbeat_us = lsi_strtou64(lsi_b_optarg(), NULL, 10) * 1000u;
 		break;case 'r':
 			g_sett.reconnect = true;
 		break;case 'j':
@@ -243,8 +243,8 @@ process_args(int *argc, char ***argv)
 			usage(stderr, a0, EXIT_FAILURE, true);
 		}
 	}
-	*argc -= b_optind();
-	*argv += b_optind();
+	*argc -= lsi_b_optind();
+	*argv += lsi_b_optind();
 
 	if (!*argc)
 		C("No server given");
@@ -253,9 +253,9 @@ process_args(int *argc, char ***argv)
 		char host[256];
 		uint16_t port;
 		bool ssl = false;
-		ut_parse_hostspec(host, sizeof host, &port, &ssl, (*argv)[i]);
+		lsi_ut_parse_hostspec(host, sizeof host, &port, &ssl, (*argv)[i]);
 
-		if (isdigitstr(host)) /* netcat and telnet invocation syntax */
+		if (lsi_isdigitstr(host)) /* netcat and telnet invocation syntax */
 			C("Bad host '%s' (use 'srv:port', not 'srv port')",
 			    host);
 
@@ -265,7 +265,7 @@ process_args(int *argc, char ***argv)
 		if (!node)
 			CE("malloc failed");
 
-		if (!(node->host = b_strdup(host)))
+		if (!(node->host = lsi_b_strdup(host)))
 			CE("strdup failed");
 		node->port = port;
 		node->ssl = ssl;
@@ -351,10 +351,10 @@ dump_settings(void)
 }
 
 static void
-cleanup(void)
+lsi_cleanup(void)
 { T("trace");
 	I("Cleaning up");
-	core_destroy();
+	lsi_core_destroy();
 
 	/* make valgrind happy */
 	struct srvlist_s *n = g_sett.srvlist;
@@ -439,19 +439,19 @@ main(int argc, char **argv)
 	dump_settings();
 
 #if HAVE_SIGPIPE
-	b_regsig(SIGPIPE, SIG_IGN);
+	lsi_b_regsig(SIGPIPE, SIG_IGN);
 #endif
 
 #if HAVE_SIGINFO
-	b_regsig(SIGINFO, sighnd);
+	lsi_b_regsig(SIGINFO, sighnd);
 #elif HAVE_SIGUSR1
-	b_regsig(SIGUSR1, sighnd);
+	lsi_b_regsig(SIGUSR1, sighnd);
 #endif
 
-	core_init();
+	lsi_core_init();
 
-	if (atexit(cleanup) == -1)
+	if (atexit(lsi_cleanup) == -1)
 		EE("atexit");
 
-	exit(core_run());
+	exit(lsi_core_run());
 }

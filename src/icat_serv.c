@@ -56,7 +56,7 @@ static bool conread(tokarr *msg, void *tag);
 
 
 void
-serv_init(void)
+lsi_serv_init(void)
 { T("trace");
 	D("Initializing");
 
@@ -86,7 +86,7 @@ serv_init(void)
 }
 
 void
-serv_destroy(void)
+lsi_serv_destroy(void)
 { T("trace");
 	I("Destroying");
 	if (s_irc) {
@@ -103,7 +103,7 @@ serv_destroy(void)
 }
 
 bool
-serv_operate(void)
+lsi_serv_operate(void)
 { T("trace");
 	if (!s_on) {
 		D("We're not online");
@@ -135,7 +135,7 @@ serv_operate(void)
 }
 
 bool
-serv_canread(void)
+lsi_serv_canread(void)
 { T("trace");
 	if (!s_on)
 		return false;
@@ -143,7 +143,7 @@ serv_canread(void)
 	if (irc_can_read(s_irc))
 		return true;
 
-	int r = b_select(irc_sockfd(s_irc), true, 1);
+	int r = lsi_b_select(irc_sockfd(s_irc), true, 1);
 
 	if (r == -1)
 		return false;
@@ -157,12 +157,12 @@ serv_canread(void)
 }
 
 int
-serv_read(tokarr *t)
+lsi_serv_read(tokarr *t)
 { T("trace");
 	if (!s_on)
 		return -1;
 
-	if (!serv_canread())
+	if (!lsi_serv_canread())
 		return 0;
 
 	int r = irc_read(s_irc, t, 1000000u);
@@ -179,7 +179,7 @@ serv_read(tokarr *t)
 }
 
 int
-serv_printf(const char *fmt, ...)
+lsi_serv_printf(const char *fmt, ...)
 { T("trace");
 	char buf[1024];
 	va_list l;
@@ -201,7 +201,7 @@ serv_printf(const char *fmt, ...)
 	}
 
 	ptr->next = NULL;
-	if (!(ptr->line = b_strdup(buf)))
+	if (!(ptr->line = lsi_b_strdup(buf)))
 		CE("strdup failed");
 
 	D("Queued line '%s'", buf);
@@ -209,19 +209,19 @@ serv_printf(const char *fmt, ...)
 }
 
 bool
-serv_online(void)
+lsi_serv_online(void)
 { T("trace");
 	return s_on;
 }
 
 int
-serv_casemap(void)
+lsi_serv_casemap(void)
 { T("trace");
 	return s_casemap;
 }
 
 uint64_t
-serv_sentquit(void)
+lsi_serv_sentquit(void)
 { T("trace");
 	return s_quitat;
 }
@@ -245,7 +245,7 @@ handle_005(irc irchnd, tokarr *tok, size_t nargs, bool pre)
 	int cm = irc_casemap(s_irc);
 	if (cm != s_casemap) {
 		D("Casemapping changed from %s to %s",
-		    ut_casemap_nam(s_casemap), ut_casemap_nam(cm));
+		    lsi_ut_casemap_nam(s_casemap), lsi_ut_casemap_nam(cm));
 		s_casemap = cm;
 	}
 	return true;
@@ -258,7 +258,7 @@ process_sendq(void)
 	if (!s_outQ)
 		return 0;
 
-	if (g_sett.freelines > 0 || nextsend <= b_tstamp_us()) {
+	if (g_sett.freelines > 0 || nextsend <= lsi_b_tstamp_us()) {
 		D("SendQ time");
 		struct outline_s *ptr = s_outQ;
 		if (!to_srv(ptr->line)) {
@@ -266,17 +266,17 @@ process_sendq(void)
 			return -1;
 		}
 		s_outQ = s_outQ->next;
-		if (b_strncasecmp(ptr->line, "QUIT", 4) == 0) {
+		if (lsi_b_strncasecmp(ptr->line, "QUIT", 4) == 0) {
 			I("QUIT seen, forcing d/c in %"PRIu64" seconds",
 			    g_sett.waitquit_us / 1000000u);
-			s_quitat = b_tstamp_us();
+			s_quitat = lsi_b_tstamp_us();
 		}
 
 		free(ptr->line);
 		free(ptr);
 		if (g_sett.freelines)
 			g_sett.freelines--;
-		nextsend = b_tstamp_us() + g_sett.linedelay;
+		nextsend = lsi_b_tstamp_us() + g_sett.linedelay;
 
 		return 1;
 	}
@@ -287,11 +287,11 @@ process_sendq(void)
 static bool
 do_heartbeat(void)
 { T("trace");
-	if (g_sett.hbeat_us && s_nexthb <= b_tstamp_us()) {
+	if (g_sett.hbeat_us && s_nexthb <= lsi_b_tstamp_us()) {
 		D("Heartbeat time");
 		char buf[512];
 		snprintf(buf, sizeof buf, "PING %s\r\n", irc_myhost(s_irc));
-		s_nexthb = b_tstamp_us() + g_sett.hbeat_us;
+		s_nexthb = lsi_b_tstamp_us() + g_sett.hbeat_us;
 		if (!to_srv(buf))
 			return s_on = false;
 	}
@@ -331,7 +331,7 @@ tryconnect(struct srvlist_s *s)
 			I("Logged on, %sjoining channel(s)",
 			    g_sett.nojoin?"NOT ":"");
 
-			s_nexthb = b_tstamp_us() + g_sett.hbeat_us;
+			s_nexthb = lsi_b_tstamp_us() + g_sett.hbeat_us;
 
 			if (!g_sett.nojoin) {
 				char jmsg[512];
@@ -363,7 +363,7 @@ first_connect(void)
 			if (g_sett.keeptrying) {
 				N("Sleeping for %"PRIu64" seconds",
 				    g_sett.cfwait_us / 1000000u);
-				b_usleep(g_sett.cfwait_us);
+				lsi_b_usleep(g_sett.cfwait_us);
 				continue;
 			}
 
@@ -382,7 +382,7 @@ static bool
 conread(tokarr *msg, void *tag)
 { T("trace");
 	char buf[1024];
-	ut_sndumpmsg(buf, sizeof buf, tag, msg);
+	lsi_ut_sndumpmsg(buf, sizeof buf, tag, msg);
 	I("CR: %s", buf);
 	return true;
 }

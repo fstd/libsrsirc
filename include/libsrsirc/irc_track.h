@@ -52,7 +52,7 @@ size_t irc_all_members(irc h, const char *chnam, userrep *userarr,
 userrep* irc_member(irc h, userrep *dest, const char *chnam, const char *ident);
 
 /* for debugging */
-void trk_dump(irc hnd, bool full);
+void lsi_trk_dump(irc hnd, bool full);
 
 
 #endif /* LIBSRSIRC_IRC_TRACK_H */

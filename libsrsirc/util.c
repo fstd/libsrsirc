@@ -30,12 +30,12 @@
 static char* next_tok(char *buf);
 
 void
-ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx)
+lsi_ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx)
 { T("trace");
 	if (!dest_sz)
 		return;
 
-	com_strNcpy(dest, pfx, dest_sz);
+	lsi_com_strNcpy(dest, pfx, dest_sz);
 
 	char *ptr = strchr(dest, '@');
 	if (ptr)
@@ -47,12 +47,12 @@ ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx)
 }
 
 void
-ut_pfx2uname(char *dest, size_t dest_sz, const char *pfx)
+lsi_ut_pfx2uname(char *dest, size_t dest_sz, const char *pfx)
 { T("trace");
 	if (!dest_sz)
 		return;
 
-	com_strNcpy(dest, pfx, dest_sz);
+	lsi_com_strNcpy(dest, pfx, dest_sz);
 
 	char *ptr = strchr(dest, '@');
 	if (ptr)
@@ -66,12 +66,12 @@ ut_pfx2uname(char *dest, size_t dest_sz, const char *pfx)
 }
 
 void
-ut_pfx2host(char *dest, size_t dest_sz, const char *pfx)
+lsi_ut_pfx2host(char *dest, size_t dest_sz, const char *pfx)
 { T("trace");
 	if (!dest_sz)
 		return;
 
-	com_strNcpy(dest, pfx, dest_sz);
+	lsi_com_strNcpy(dest, pfx, dest_sz);
 
 	char *ptr = strchr(dest, '@');
 	if (ptr)
@@ -81,23 +81,23 @@ ut_pfx2host(char *dest, size_t dest_sz, const char *pfx)
 }
 
 int
-ut_istrcmp(const char *n1, const char *n2, int casemap)
+lsi_ut_istrcmp(const char *n1, const char *n2, int casemap)
 { T("trace");
 	size_t l1 = strlen(n1);
 	size_t l2 = strlen(n2);
 
-	return ut_istrncmp(n1, n2, (l1 < l2 ? l1 : l2) + 1, casemap);
+	return lsi_ut_istrncmp(n1, n2, (l1 < l2 ? l1 : l2) + 1, casemap);
 }
 
 int
-ut_istrncmp(const char *n1, const char *n2, size_t len, int casemap)
+lsi_ut_istrncmp(const char *n1, const char *n2, size_t len, int casemap)
 { T("trace");
 	if (len == 0)
 		return 0;
 
 	while (*n1 && *n2) {
-		char c1 = ut_tolower(*n1, casemap);
-		char c2 = ut_tolower(*n2, casemap);
+		char c1 = lsi_ut_tolower(*n1, casemap);
+		char c2 = lsi_ut_tolower(*n2, casemap);
 		if (c1 != c2)
 			return c1 - c2;
 
@@ -113,7 +113,7 @@ ut_istrncmp(const char *n1, const char *n2, size_t len, int casemap)
 	return 0;
 }
 char
-ut_tolower(char c, int casemap)
+lsi_ut_tolower(char c, int casemap)
 { T("trace");
 	int rangeinc;
 	switch (casemap) {
@@ -134,12 +134,12 @@ ut_tolower(char c, int casemap)
 }
 
 void
-ut_strtolower(char *dest, size_t destsz, const char *str, int casemap)
+lsi_ut_strtolower(char *dest, size_t destsz, const char *str, int casemap)
 { T("trace");
 	size_t c = 0;
 	char *ptr = dest;
 	while (c < destsz) {
-		*ptr++ = ut_tolower(*str, casemap);
+		*ptr++ = lsi_ut_tolower(*str, casemap);
 
 		if (!*str)
 			break;
@@ -150,11 +150,11 @@ ut_strtolower(char *dest, size_t destsz, const char *str, int casemap)
 }
 
 bool
-ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz, uint16_t *port,
+lsi_ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz, uint16_t *port,
     const char *pxspec)
 { T("trace");
 	char linebuf[128];
-	com_strNcpy(linebuf, pxspec, sizeof linebuf);
+	lsi_com_strNcpy(linebuf, pxspec, sizeof linebuf);
 
 	char *ptr = strchr(linebuf, ':');
 	if (!ptr)
@@ -164,27 +164,27 @@ ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz, uint16_t *port,
 	size_t num = (size_t)(ptr - linebuf) < sizeof pxtypestr ?
 	    (size_t)(ptr - linebuf) : sizeof pxtypestr - 1;
 
-	com_strNcpy(pxtypestr, linebuf, num + 1);
+	lsi_com_strNcpy(pxtypestr, linebuf, num + 1);
 
-	int p = px_typenum(pxtypestr);
+	int p = lsi_px_typenum(pxtypestr);
 	if (p == -1)
 		return false;
 
 	*ptype = p;
 
-	ut_parse_hostspec(hoststr, hoststr_sz, port, NULL, ptr + 1);
+	lsi_ut_parse_hostspec(hoststr, hoststr_sz, port, NULL, ptr + 1);
 	return true;
 
 }
 
 void
-ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
+lsi_ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
     bool *ssl, const char *hostspec)
 { T("trace");
 	if (ssl)
 		*ssl = false;
 
-	com_strNcpy(hoststr, hostspec + (hostspec[0] == '['), hoststr_sz);
+	lsi_com_strNcpy(hoststr, hostspec + (hostspec[0] == '['), hoststr_sz);
 
 	char *ptr = strstr(hoststr, "/ssl");
 	if (!ptr)
@@ -211,7 +211,7 @@ ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
 }
 
 char*
-ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr)
+lsi_ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr)
 { T("trace");
 	if ((*msg)[0])
 		snprintf(dest, destsz, ":%s %s", (*msg)[0], (*msg)[1]);
@@ -220,10 +220,10 @@ ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr)
 
 	size_t i = 2;
 	while (i < COUNTOF(*msg) && (*msg)[i]) {
-		com_strNcat(dest, " ", destsz);
+		lsi_com_strNcat(dest, " ", destsz);
 		if ((i+1 == COUNTOF(*msg) || !(*msg)[i+1]) && (coltr || strchr((*msg)[i], ' ')))
-			com_strNcat(dest, ":", destsz);
-		com_strNcat(dest, (*msg)[i], destsz);
+			lsi_com_strNcat(dest, ":", destsz);
+		lsi_com_strNcat(dest, (*msg)[i], destsz);
 		i++;
 	}
 
@@ -231,57 +231,57 @@ ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr)
 }
 
 char*
-ut_sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
+lsi_ut_sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
 { T("trace");
 	snprintf(dest, dest_sz, "(%p) '%s' '%s'", (void*)tag, (*msg)[0], (*msg)[1]);
 	for (size_t i = 2; i < COUNTOF(*msg); i++) {
 		if (!(*msg)[i])
 			break;
-		com_strNcat(dest, " '", dest_sz);
-		com_strNcat(dest, (*msg)[i], dest_sz);
-		com_strNcat(dest, "'", dest_sz);
+		lsi_com_strNcat(dest, " '", dest_sz);
+		lsi_com_strNcat(dest, (*msg)[i], dest_sz);
+		lsi_com_strNcat(dest, "'", dest_sz);
 	}
 
 	return dest;
 }
 
 void
-ut_dumpmsg(void *tag, tokarr *msg)
+lsi_ut_dumpmsg(void *tag, tokarr *msg)
 { T("trace");
 	char buf[1024];
-	ut_sndumpmsg(buf, sizeof buf, tag, msg);
+	lsi_ut_sndumpmsg(buf, sizeof buf, tag, msg);
 	fprintf(stderr, "%s\n", buf);
 }
 
 
 bool
-ut_conread(tokarr *msg, void *tag)
+lsi_ut_conread(tokarr *msg, void *tag)
 { T("trace");
-	ut_dumpmsg(tag, msg);
+	lsi_ut_dumpmsg(tag, msg);
 	return true;
 }
 
 char**
-ut_parse_MODE(irc h, tokarr *msg, size_t *num, bool is324)
+lsi_ut_parse_MODE(irc h, tokarr *msg, size_t *num, bool is324)
 { T("trace");
 	size_t ac = 2;
 	while (ac < COUNTOF(*msg) && (*msg)[ac])
 		ac++;
 
-	char *modes = b_strdup((*msg)[3 + is324]);
+	char *modes = lsi_b_strdup((*msg)[3 + is324]);
 	if (!modes)
 		return NULL;
 
 	const char *arg;
-	size_t nummodes = strlen(modes) - (com_strCchr(modes,'-')
-	    + com_strCchr(modes,'+'));
+	size_t nummodes = strlen(modes) - (lsi_com_strCchr(modes,'-')
+	    + lsi_com_strCchr(modes,'+'));
 
-	char **modearr = com_malloc(nummodes * sizeof *modearr);
+	char **modearr = lsi_com_malloc(nummodes * sizeof *modearr);
 	if (!modearr)
 		goto ut_parse_005_cmodes_fail;
 
 	for (size_t i = 0; i < nummodes; i++)
-		modearr[i] = NULL; //for safe cleanup
+		modearr[i] = NULL; //for safe lsi_cleanup
 
 	size_t i = 4 + is324;
 	int j = 0, cl;
@@ -303,7 +303,7 @@ ut_parse_MODE(irc h, tokarr *msg, size_t *num, bool is324)
 			ptr++;
 			continue;
 		default:
-			cl = ut_classify_chanmode(h, c);
+			cl = lsi_ut_classify_chanmode(h, c);
 			D("classified mode '%c' to class %d", c, cl);
 			switch (cl) {
 			case CHANMODE_CLASS_A:
@@ -332,7 +332,7 @@ ut_parse_MODE(irc h, tokarr *msg, size_t *num, bool is324)
 		if (arg)
 			D("arg is '%s'", arg);
 
-		modearr[j] = com_malloc((3 + (arg ? strlen(arg) + 1 : 0)));
+		modearr[j] = lsi_com_malloc((3 + (arg ? strlen(arg) + 1 : 0)));
 		if (!modearr[j])
 			goto ut_parse_005_cmodes_fail;
 
@@ -365,7 +365,7 @@ ut_parse_005_cmodes_fail:
 }
 
 int
-ut_classify_chanmode(irc h, char c)
+lsi_ut_classify_chanmode(irc h, char c)
 { T("trace");
 	for (int z = 0; z < 4; ++z) {
 		if (h->m005chanmodes[z] && strchr(h->m005chanmodes[z], c))
@@ -376,7 +376,7 @@ ut_classify_chanmode(irc h, char c)
 }
 
 void
-ut_mut_nick(char *nick, size_t nick_sz)
+lsi_ut_mut_nick(char *nick, size_t nick_sz)
 { T("trace");
 	size_t len = strlen(nick);
 	if (len < 9) {
@@ -394,15 +394,15 @@ ut_mut_nick(char *nick, size_t nick_sz)
 }
 
 tokarr *
-ut_clonearr(tokarr *arr)
+lsi_ut_clonearr(tokarr *arr)
 { T("trace");
-	tokarr *res = com_malloc(sizeof *res);
+	tokarr *res = lsi_com_malloc(sizeof *res);
 	if (!res)
 		return NULL;
 
 	for (size_t i = 0; i < COUNTOF(*arr); i++) {
 		if ((*arr)[i]) {
-			if (!((*res)[i] = b_strdup((*arr)[i])))
+			if (!((*res)[i] = lsi_b_strdup((*arr)[i])))
 				goto clonearr_fail;
 		} else
 			(*res)[i] = NULL;
@@ -411,13 +411,13 @@ ut_clonearr(tokarr *arr)
 
 clonearr_fail:
 
-	ut_freearr(res);
+	lsi_ut_freearr(res);
 	return NULL;
 }
 
 
 void
-ut_freearr(tokarr *arr)
+lsi_ut_freearr(tokarr *arr)
 { T("trace");
 	if (arr) {
 		for (size_t i = 0; i < COUNTOF(*arr); i++)
@@ -432,7 +432,7 @@ ut_freearr(tokarr *arr)
  * tokens; if there are less tokens than elements in the array, the remaining
  * elements are set to NULL.  returns true on success, false on failure */
 bool
-ut_tokenize(char *buf, tokarr *tok)
+lsi_ut_tokenize(char *buf, tokarr *tok)
 { T("trace");
 	for (size_t i = 0; i < COUNTOF(*tok); ++i)
 		(*tok)[i] = NULL;
@@ -487,7 +487,7 @@ next_tok(char *buf)
 }
 
 const char *
-ut_casemap_nam(int cm)
+lsi_ut_casemap_nam(int cm)
 { T("trace");
 	switch (cm)
 	{

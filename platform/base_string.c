@@ -21,7 +21,7 @@
 
 
 void
-b_strNcat(char *dest, const char *src, size_t destsz)
+lsi_b_strNcat(char *dest, const char *src, size_t destsz)
 { T("trace");
 	size_t len = strlen(dest);
 	if (len + 1 >= destsz)
@@ -36,7 +36,7 @@ b_strNcat(char *dest, const char *src, size_t destsz)
 }
 
 void
-b_strNcpy(char *dest, const char *src, size_t destsz)
+lsi_b_strNcpy(char *dest, const char *src, size_t destsz)
 { T("trace");
 	if (!destsz)
 		return;
@@ -48,17 +48,17 @@ b_strNcpy(char *dest, const char *src, size_t destsz)
 }
 
 int
-b_strcasecmp(const char *a, const char *b)
+lsi_b_strcasecmp(const char *a, const char *b)
 { T("trace");
 #if HAVE_STRCASECMP
 	return strcasecmp(a, b);
 #else
-	return b_strncasecmp(a, b, strlen(a) + 1);
+	return lsi_b_strncasecmp(a, b, strlen(a) + 1);
 #endif
 }
 
 int
-b_strncasecmp(const char *a, const char *b, size_t n)
+lsi_b_strncasecmp(const char *a, const char *b, size_t n)
 { T("trace");
 #if HAVE_STRNCASECMP
 	return strncasecmp(a, b, n);
@@ -87,7 +87,7 @@ b_strncasecmp(const char *a, const char *b, size_t n)
 }
 
 char*
-b_strdup(const char *s)
+lsi_b_strdup(const char *s)
 { T("trace");
 	char *r = NULL;
 	r = malloc(strlen(s)+1);

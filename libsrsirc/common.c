@@ -32,7 +32,7 @@ static int tryhost(struct addrlist *ai, char *peeraddr, size_t peeraddr_sz,
     uint16_t *peerport, uint64_t to_us);
 
 void
-com_strNcat(char *dest, const char *src, size_t destsz)
+lsi_com_strNcat(char *dest, const char *src, size_t destsz)
 { T("trace");
 	size_t len = strlen(dest);
 	if (len + 1 >= destsz)
@@ -47,7 +47,7 @@ com_strNcat(char *dest, const char *src, size_t destsz)
 }
 
 size_t
-com_strCchr(const char *dst, char c)
+lsi_com_strCchr(const char *dst, char c)
 { T("trace");
 	size_t r = 0;
 	while (*dst)
@@ -58,7 +58,7 @@ com_strCchr(const char *dst, char c)
 
 
 char*
-com_strNcpy(char *dst, const char *src, size_t dst_sz)
+lsi_com_strNcpy(char *dst, const char *src, size_t dst_sz)
 { T("trace");
 	dst[dst_sz-1] = '\0';
 	while (--dst_sz)
@@ -68,13 +68,13 @@ com_strNcpy(char *dst, const char *src, size_t dst_sz)
 }
 
 int
-com_consocket(const char *host, uint16_t port, char *peeraddr,
+lsi_com_consocket(const char *host, uint16_t port, char *peeraddr,
     size_t peeraddr_sz, uint16_t *peerport, uint64_t softto, uint64_t hardto)
 { T("trace");
-	uint64_t hardtsend = hardto ? b_tstamp_us() + hardto : 0;
+	uint64_t hardtsend = hardto ? lsi_b_tstamp_us() + hardto : 0;
 
 	struct addrlist *alist;
-	int count = b_mkaddrlist(host, port, &alist);
+	int count = lsi_b_mkaddrlist(host, port, &alist);
 	if (count <= 0)
 		return -1;
 
@@ -85,7 +85,7 @@ com_consocket(const char *host, uint16_t port, char *peeraddr,
 	for (struct addrlist *ai = alist; ai; ai = ai->next) {
 		uint64_t trem = 0;
 
-		if (com_check_timeout(hardtsend, &trem)) {
+		if (lsi_com_check_timeout(hardtsend, &trem)) {
 			W("hard timeout");
 			return false;
 		}
@@ -99,7 +99,7 @@ com_consocket(const char *host, uint16_t port, char *peeraddr,
 			break;
 	}
 
-	b_freeaddrlist(alist);
+	lsi_b_freeaddrlist(alist);
 
 	return sck;
 }
@@ -108,29 +108,29 @@ static int
 tryhost(struct addrlist *ai, char *peeraddr, size_t peeraddr_sz,
     uint16_t *peerport, uint64_t to_us)
 { T("trace");
-	int sck = b_socket(ai->ipv6);
+	int sck = lsi_b_socket(ai->ipv6);
 
 	if (sck == -1)
 		return -1;
 
-	if (!b_blocking(sck, false))
+	if (!lsi_b_blocking(sck, false))
 		W("failed to set socket non-blocking, timeout will not work");
 
-	int r = b_connect(sck, ai);
+	int r = lsi_b_connect(sck, ai);
 	if (r == 1)
 		return sck;
 	else if (r == -1)
 		goto tryhost_fail;
 
-	r = b_select(sck, false, to_us);
+	r = lsi_b_select(sck, false, to_us);
 
 	if (r == 1) {
-		if (!b_blocking(sck, true))
+		if (!lsi_b_blocking(sck, true))
 			W("failed to clear socket non-blocking mode");
 
-		if (b_sock_ok(sck)) {
+		if (lsi_b_sock_ok(sck)) {
 			if (peeraddr && peeraddr_sz)
-				b_strNcpy(peeraddr, ai->addrstr, peeraddr_sz);
+				lsi_b_strNcpy(peeraddr, ai->addrstr, peeraddr_sz);
 			if (peerport)
 				*peerport = ai->port;
 
@@ -143,16 +143,16 @@ tryhost(struct addrlist *ai, char *peeraddr, size_t peeraddr_sz,
 	/* fall-thru */
 tryhost_fail:
 	if (sck != -1)
-		b_close(sck);
+		lsi_b_close(sck);
 	return -1;
 }
 
 
 bool
-com_update_strprop(char **field, const char *val)
+lsi_com_update_strprop(char **field, const char *val)
 { T("trace");
 	char *n = NULL;
-	if (val && !(n = b_strdup(val)))
+	if (val && !(n = lsi_b_strdup(val)))
 		return false;
 
 	free(*field);
@@ -162,7 +162,7 @@ com_update_strprop(char **field, const char *val)
 }
 
 bool
-com_check_timeout(uint64_t tsend, uint64_t *trem)
+lsi_com_check_timeout(uint64_t tsend, uint64_t *trem)
 { T("trace");
 	if (!tsend) {
 		if (trem)
@@ -170,7 +170,7 @@ com_check_timeout(uint64_t tsend, uint64_t *trem)
 		return false;
 	}
 
-	uint64_t now = b_tstamp_us();
+	uint64_t now = lsi_b_tstamp_us();
 	if (now >= tsend) {
 		if (trem)
 			*trem = 0;
@@ -184,7 +184,7 @@ com_check_timeout(uint64_t tsend, uint64_t *trem)
 }
 
 void*
-com_malloc(size_t sz)
+lsi_com_malloc(size_t sz)
 { T("trace");
 	void *r = malloc(sz);
 	if (!r)
@@ -194,7 +194,7 @@ com_malloc(size_t sz)
 
 /*dumb heuristic to tell apart domain name/ip4/ip6 addr XXX FIXME */
 enum hosttypes
-guess_hosttype(const char *host)
+lsi_guess_hosttype(const char *host)
 { T("trace");
 	if (strchr(host, '['))
 		return HOSTTYPE_IPV6;

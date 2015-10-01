@@ -60,7 +60,7 @@
 #define IRCPX_SOCKS4 1 /* NOT socks4a */
 #define IRCPX_SOCKS5 2
 
-/* for ut_classify_chanmode() */
+/* for lsi_ut_classify_chanmode() */
 #define CHANMODE_CLASS_A 1
 #define CHANMODE_CLASS_B 2
 #define CHANMODE_CLASS_C 3

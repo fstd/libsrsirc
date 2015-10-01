@@ -6,7 +6,7 @@
 #define LIBSRSIRC_BASE_TIME_H 1
 
 
-uint64_t b_tstamp_us(void);
+uint64_t lsi_b_tstamp_us(void);
 
 
 #endif /* LIBSRSIRC_BASE_TIME_H */

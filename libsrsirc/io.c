@@ -41,9 +41,9 @@ static long send_wrap(sckhld sh, const void *buf, size_t len);
 
 /* Documented in io.h */
 int
-io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
+lsi_io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
 { T("trace");
-	uint64_t tsend = to_us ? b_tstamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 
 	while (ctx->wptr < ctx->eptr && ISDELIM(*ctx->wptr))
 		ctx->wptr++; /* skip leading line delimiters */
@@ -56,7 +56,7 @@ io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
 	do {
 		while (!(delim = find_delim(ctx))) {
 			uint64_t trem = 0;
-			if (com_check_timeout(tsend, &trem))
+			if (lsi_com_check_timeout(tsend, &trem))
 				return 0;
 
 			int r = read_more(sh, ctx, trem);
@@ -74,12 +74,12 @@ io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
 
 	I("read: '%s'", linestart);
 
-	return ut_tokenize(linestart, tok) ? 1 : -1;
+	return lsi_ut_tokenize(linestart, tok) ? 1 : -1;
 }
 
 /* Documented in io.h */
 bool
-io_write(sckhld sh, const char *line)
+lsi_io_write(sckhld sh, const char *line)
 { T("trace");
 	size_t len = strlen(line);
 	int needbr = len < 2 || line[len-2] != '\r' || line[len-1] != '\n';
@@ -122,7 +122,7 @@ read_more(sckhld sh, struct readctx *ctx, uint64_t to_us)
 		remain = sizeof ctx->workbuf - (ctx->eptr - ctx->workbuf);
 	}
 
-	int r = b_select(sh.sck, true, to_us);
+	int r = lsi_b_select(sh.sck, true, to_us);
 	if (r != 1)
 		return r;
 
@@ -159,8 +159,8 @@ static long
 read_wrap(sckhld sh, void *buf, size_t sz)
 { T("trace");
 	if (sh.shnd)
-		return b_read_ssl(sh.shnd, buf, sz, NULL);
-	return b_read(sh.sck, buf, sz, NULL);
+		return lsi_b_read_ssl(sh.shnd, buf, sz, NULL);
+	return lsi_b_read(sh.sck, buf, sz, NULL);
 }
 
 /* likewise for send()/SSL_write() */
@@ -168,6 +168,6 @@ static long
 send_wrap(sckhld sh, const void *buf, size_t len)
 { T("trace");
 	if (sh.shnd)
-		return b_write_ssl(sh.shnd, buf, len);
-	return b_write(sh.sck, buf, len);
+		return lsi_b_write_ssl(sh.shnd, buf, len);
+	return lsi_b_write(sh.sck, buf, len);
 }

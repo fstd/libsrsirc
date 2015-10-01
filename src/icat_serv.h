@@ -13,18 +13,18 @@
 #include <libsrsirc/defs.h>
 
 
-void serv_init(void);
-void serv_destroy(void);
+void lsi_serv_init(void);
+void lsi_serv_destroy(void);
 
-bool serv_operate(void);
+bool lsi_serv_operate(void);
 
-bool serv_canread(void);
-int serv_read(tokarr *t);
-int serv_printf(const char *fmt, ...);
+bool lsi_serv_canread(void);
+int lsi_serv_read(tokarr *t);
+int lsi_serv_printf(const char *fmt, ...);
 
-bool serv_online(void);
-int serv_casemap(void);
-uint64_t serv_sentquit(void);
+bool lsi_serv_online(void);
+int lsi_serv_casemap(void);
+uint64_t lsi_serv_sentquit(void);
 
 
 #endif /* LIBSRSIRC_ICAT_SERV_H */

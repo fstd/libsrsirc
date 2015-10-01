@@ -26,7 +26,7 @@
 
 
 bool
-msg_reghnd(irc hnd, const char *cmd, hnd_fn hndfn, const char *module)
+lsi_msg_reghnd(irc hnd, const char *cmd, hnd_fn hndfn, const char *module)
 { T("trace");
 	size_t i = 0;
 	D("'%s' registering '%s'-handler", module, cmd);
@@ -52,12 +52,12 @@ msg_reghnd(irc hnd, const char *cmd, hnd_fn hndfn, const char *module)
 
 	hnd->msghnds[i].module = module;
 	hnd->msghnds[i].hndfn = hndfn;
-	com_strNcpy(hnd->msghnds[i].cmd, cmd, sizeof hnd->msghnds[i].cmd);
+	lsi_com_strNcpy(hnd->msghnds[i].cmd, cmd, sizeof hnd->msghnds[i].cmd);
 	return true;
 }
 
 bool
-msg_reguhnd(irc hnd, const char *cmd, uhnd_fn hndfn, bool pre)
+lsi_msg_reguhnd(irc hnd, const char *cmd, uhnd_fn hndfn, bool pre)
 { T("trace");
 	size_t hcnt = pre ? hnd->uprehnds_cnt : hnd->uposthnds_cnt;
 	struct umsghnd *harr = pre ? hnd->uprehnds : hnd->uposthnds;
@@ -91,12 +91,12 @@ msg_reguhnd(irc hnd, const char *cmd, uhnd_fn hndfn, bool pre)
 	}
 
 	harr[i].hndfn = hndfn;
-	com_strNcpy(harr[i].cmd, cmd, sizeof harr[i].cmd);
+	lsi_com_strNcpy(harr[i].cmd, cmd, sizeof harr[i].cmd);
 	return true;
 }
 
 void
-msg_unregall(irc hnd, const char *module)
+lsi_msg_unregall(irc hnd, const char *module)
 { T("trace");
 	size_t i = 0;
 	for (;i < hnd->msghnds_cnt; i++)
@@ -127,7 +127,7 @@ dispatch_uhnd(irc hnd, tokarr *msg, size_t ac, bool pre)
 }
 
 uint8_t
-msg_handle(irc hnd, tokarr *msg, bool logon)
+lsi_msg_handle(irc hnd, tokarr *msg, bool logon)
 { T("trace");
 	uint8_t res = 0;
 	size_t i = 0;
@@ -181,8 +181,8 @@ msg_handle_fail:
 	} else if (res & PROTO_ERR) {
 		char line[1024];
 		E("proto error on '%s' (ct:%d)",
-		    ut_sndumpmsg(line, sizeof line, NULL, msg),
-		    conn_colon_trail(hnd->con));
+		    lsi_ut_sndumpmsg(line, sizeof line, NULL, msg),
+		    lsi_conn_colon_trail(hnd->con));
 		/* we do proceed for now */
 	} else {
 		E("can't proceed for unknown reasons");

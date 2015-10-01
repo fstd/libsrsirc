@@ -12,7 +12,7 @@
 #include <libsrsirc/defs.h>
 #include "intdefs.h"
 
-/* io_read
+/* lsi_io_read
  * Read one message from the ircd, tokenize and populate `tok' with the results.
  *
  * Params: `sh':    Structure holding socket and, if enabled, SSL handle
@@ -29,9 +29,9 @@
  *
  * Returns 1 on success; 0 on timeout; -1 on failure
  */
-int io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us);
+int lsi_io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us);
 
-/* io_write
+/* lsi_io_write
  * Send a message to the ircd
  *
  * Params: `sh':   Structure holding socket and, if enabled, SSL handle
@@ -41,7 +41,7 @@ int io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us);
  *
  * Returns true on success, false on failure
  */
-bool io_write(sckhld sh, const char *line);
+bool lsi_io_write(sckhld sh, const char *line);
 
 
 #endif /* LIBSRSIRC_IIO_H */

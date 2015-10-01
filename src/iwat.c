@@ -62,7 +62,7 @@ static void process_args(int *argc, char ***argv, struct settings_s *sett);
 static void init(int *argc, char ***argv, struct settings_s *sett);
 static bool conread(tokarr *msg, void *tag);
 static void usage(FILE *str, const char *a0, int ec);
-void cleanup(void);
+void lsi_cleanup(void);
 int main(int argc, char **argv);
 
 
@@ -104,30 +104,30 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 { T("trace");
 	char *a0 = (*argv)[0];
 
-	for (int ch; (ch = b_getopt(*argc, *argv, "n:u:f:p:P:T:W:rb:qvh")) != -1;) {
+	for (int ch; (ch = lsi_b_getopt(*argc, *argv, "n:u:f:p:P:T:W:rb:qvh")) != -1;) {
 		switch (ch) {
 		      case 'n':
-			irc_set_nick(g_irc, b_optarg());
+			irc_set_nick(g_irc, lsi_b_optarg());
 		break;case 'u':
-			irc_set_uname(g_irc, b_optarg());
+			irc_set_uname(g_irc, lsi_b_optarg());
 		break;case 'f':
-			irc_set_fname(g_irc, b_optarg());
+			irc_set_fname(g_irc, lsi_b_optarg());
 		break;case 'p':
-			irc_set_pass(g_irc, b_optarg());
+			irc_set_pass(g_irc, lsi_b_optarg());
 		break;case 'P':
 			{
 			char host[256];
 			uint16_t port;
 			int ptype;
-			if (!ut_parse_pxspec(&ptype, host, sizeof host, &port,
-			    b_optarg()))
-				C("failed to parse pxspec '%s'", b_optarg());
+			if (!lsi_ut_parse_pxspec(&ptype, host, sizeof host, &port,
+			    lsi_b_optarg()))
+				C("failed to parse pxspec '%s'", lsi_b_optarg());
 
 			irc_set_px(g_irc, host, port, ptype);
 			}
 		break;case 'T':
 			{
-			char *arg = b_strdup(b_optarg());
+			char *arg = lsi_b_strdup(lsi_b_optarg());
 			if (!arg)
 				CE("strdup failed");
 
@@ -146,9 +146,9 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			free(arg);
 			}
 		break;case 'W':
-			sett->cfwait_s = (int)strtol(b_optarg(), NULL, 10);
+			sett->cfwait_s = (int)strtol(lsi_b_optarg(), NULL, 10);
 		break;case 'b':
-			sett->heartbeat_us = strtoull(b_optarg(), NULL, 10) * 1000u;
+			sett->heartbeat_us = strtoull(lsi_b_optarg(), NULL, 10) * 1000u;
 		break;case 'r':
 			sett->recon = true;
 		break;case 'q':
@@ -161,8 +161,8 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			usage(stderr, a0, EXIT_FAILURE);
 		}
 	}
-	*argc -= b_optind();
-	*argv += b_optind();
+	*argc -= lsi_b_optind();
+	*argv += lsi_b_optind();
 }
 
 static void
@@ -199,7 +199,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 		char host[256];
 		uint16_t port;
 		bool ssl = false;
-		ut_parse_hostspec(host, sizeof host, &port, &ssl, (*argv)[i]);
+		lsi_ut_parse_hostspec(host, sizeof host, &port, &ssl, (*argv)[i]);
 
 		/* we choke on all other sorts of invalid addresses/hostnames later */
 
@@ -207,7 +207,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 		if (!node)
 			CE("malloc failed");
 
-		node->host = b_strdup(host);
+		node->host = lsi_b_strdup(host);
 		node->port = port;
 		node->ssl = ssl;
 		node->next = NULL;
@@ -233,7 +233,7 @@ static bool
 conread(tokarr *msg, void *tag)
 { T("trace");
 	char buf[1024];
-	ut_sndumpmsg(buf, sizeof buf, tag, msg);
+	lsi_ut_sndumpmsg(buf, sizeof buf, tag, msg);
 	D("%s", buf);
 	return true;
 }
@@ -290,7 +290,7 @@ usage(FILE *str, const char *a0, int ec)
 }
 
 void
-cleanup(void)
+lsi_cleanup(void)
 { T("trace");
 	if (g_irc)
 		irc_dispose(g_irc);
@@ -307,7 +307,7 @@ cleanup(void)
 }
 
 void
-infohnd(int s)
+lsi_infohnd(int s)
 { T("trace");
 	g_dumpplx = true;
 }
@@ -316,11 +316,11 @@ int
 main(int argc, char **argv)
 { T("trace");
 	init(&argc, &argv, &g_sett);
-	atexit(cleanup);
+	atexit(lsi_cleanup);
 #if HAVE_SIGINFO
-	b_regsig(SIGINFO, infohnd);
+	lsi_b_regsig(SIGINFO, lsi_infohnd);
 #elif HAVE_SIGUSR1
-	b_regsig(SIGUSR1, infohnd);
+	lsi_b_regsig(SIGUSR1, lsi_infohnd);
 #endif
 	bool failure = true;
 
@@ -329,7 +329,7 @@ main(int argc, char **argv)
 			D("connecting...");
 
 			if (tryconnect()) {
-				g_nexthb = b_tstamp_us() + g_sett.heartbeat_us;
+				g_nexthb = lsi_b_tstamp_us() + g_sett.heartbeat_us;
 				continue;
 			}
 
@@ -339,7 +339,7 @@ main(int argc, char **argv)
 			if (!g_sett.recon)
 				break;
 
-			b_usleep(1000000ul * g_sett.cfwait_s);
+			lsi_b_usleep(1000000ul * g_sett.cfwait_s);
 			continue;
 		}
 
@@ -353,15 +353,15 @@ main(int argc, char **argv)
 		if (g_dumpplx) {
 			irc_dump(g_irc);
 			if (irc_tracking_enab(g_irc))
-				trk_dump(g_irc, false);
+				lsi_trk_dump(g_irc, false);
 			g_dumpplx = false;
 		}
 
 		if (r > 0)
-			g_nexthb = b_tstamp_us() + g_sett.heartbeat_us;
-		else if (g_sett.heartbeat_us && g_nexthb <= b_tstamp_us()) {
+			g_nexthb = lsi_b_tstamp_us() + g_sett.heartbeat_us;
+		else if (g_sett.heartbeat_us && g_nexthb <= lsi_b_tstamp_us()) {
 			iprintf("PING %s\r\n", irc_myhost(g_irc));
-			g_nexthb = b_tstamp_us() + g_sett.heartbeat_us;
+			g_nexthb = lsi_b_tstamp_us() + g_sett.heartbeat_us;
 		}
 
 		if (r == 0)
@@ -372,7 +372,7 @@ main(int argc, char **argv)
 		else if (strcmp(tok[1], "PRIVMSG") == 0) {
 			if (strncmp(tok[3], "ECHO ", 5) == 0) {
 				char nick[64];
-				ut_pfx2nick(nick, sizeof nick, tok[0]);
+				lsi_ut_pfx2nick(nick, sizeof nick, tok[0]);
 				iprintf("PRIVMSG %s :%s\r\n", nick, tok[3]+5);
 			} else if (strncmp(tok[3], "DO ", 3) == 0) {
 				iprintf("%s\r\n", tok[3]+3);
@@ -381,10 +381,10 @@ main(int argc, char **argv)
 				break;
 			} else if (strcmp(tok[3], "DUMP") == 0) {
 				irc_dump(g_irc);
-				trk_dump(g_irc, false);
+				lsi_trk_dump(g_irc, false);
 			} else if (strcmp(tok[3], "FULLDUMP") == 0) {
 				irc_dump(g_irc);
-				trk_dump(g_irc, true);
+				lsi_trk_dump(g_irc, true);
 			}
 		}
 	}

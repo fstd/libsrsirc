@@ -9,12 +9,12 @@
 #include <stdint.h>
 
 
-void b_usleep(uint64_t us);
+void lsi_b_usleep(uint64_t us);
 
-int b_getopt(int argc, char * const argv[], const char *optstring);
-const char *b_optarg(void);
-int b_optind(void);
-void b_regsig(int sig, void (*sigfn)(int));
+int lsi_b_getopt(int argc, char * const argv[], const char *optstring);
+const char *lsi_b_optarg(void);
+int lsi_b_optind(void);
+void lsi_b_regsig(int sig, void (*sigfn)(int));
 
 
 #endif /* LIBSRSIRC_BASE_MISC_H */

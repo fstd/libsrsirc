@@ -10,16 +10,16 @@
 #include <stdint.h>
 
 
-bool px_logon_http(int sck, const char *host, uint16_t port,
+bool lsi_px_logon_http(int sck, const char *host, uint16_t port,
     uint64_t to_us);
 
-bool px_logon_socks4(int sck, const char *host, uint16_t port,
+bool lsi_px_logon_socks4(int sck, const char *host, uint16_t port,
     uint64_t to_us);
 
-bool px_logon_socks5(int sck, const char *host, uint16_t port,
+bool lsi_px_logon_socks5(int sck, const char *host, uint16_t port,
     uint64_t to_us);
 
-int px_typenum(const char *typestr);
-const char *px_typestr(int typenum);
+int lsi_px_typenum(const char *typestr);
+const char *lsi_px_typestr(int typenum);
 
 #endif /* LIBSRSIRC_PROXY_H */

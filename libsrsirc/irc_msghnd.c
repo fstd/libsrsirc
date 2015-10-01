@@ -35,17 +35,17 @@ handle_001(irc hnd, tokarr *msg, size_t nargs, bool logon)
 	if (nargs < 3)
 		return PROTO_ERR;
 
-	ut_freearr(hnd->logonconv[0]);
-	hnd->logonconv[0] = ut_clonearr(msg);
-	com_strNcpy(hnd->mynick, (*msg)[2],sizeof hnd->mynick);
+	lsi_ut_freearr(hnd->logonconv[0]);
+	hnd->logonconv[0] = lsi_ut_clonearr(msg);
+	lsi_com_strNcpy(hnd->mynick, (*msg)[2],sizeof hnd->mynick);
 	char *tmp;
 	if ((tmp = strchr(hnd->mynick, '@')))
 		*tmp = '\0';
 	if ((tmp = strchr(hnd->mynick, '!')))
 		*tmp = '\0';
 
-	com_strNcpy(hnd->umodes, DEF_UMODES, sizeof hnd->umodes);
-	com_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
+	lsi_com_strNcpy(hnd->umodes, DEF_UMODES, sizeof hnd->umodes);
+	lsi_com_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
 	hnd->ver[0] = '\0';
 	hnd->service = false;
 
@@ -55,8 +55,8 @@ handle_001(irc hnd, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_002(irc hnd, tokarr *msg, size_t nargs, bool logon)
 { T("trace");
-	ut_freearr(hnd->logonconv[1]);
-	hnd->logonconv[1] = ut_clonearr(msg);
+	lsi_ut_freearr(hnd->logonconv[1]);
+	hnd->logonconv[1] = lsi_ut_clonearr(msg);
 
 	return 0;
 }
@@ -64,8 +64,8 @@ handle_002(irc hnd, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_003(irc hnd, tokarr *msg, size_t nargs, bool logon)
 { T("trace");
-	ut_freearr(hnd->logonconv[2]);
-	hnd->logonconv[2] = ut_clonearr(msg);
+	lsi_ut_freearr(hnd->logonconv[2]);
+	hnd->logonconv[2] = lsi_ut_clonearr(msg);
 
 	return 0;
 }
@@ -76,12 +76,12 @@ handle_004(irc hnd, tokarr *msg, size_t nargs, bool logon)
 	if (nargs < 7)
 		return PROTO_ERR;
 
-	ut_freearr(hnd->logonconv[3]);
-	hnd->logonconv[3] = ut_clonearr(msg);
-	com_strNcpy(hnd->myhost, (*msg)[3],sizeof hnd->myhost);
-	com_strNcpy(hnd->umodes, (*msg)[5], sizeof hnd->umodes);
-	com_strNcpy(hnd->cmodes, (*msg)[6], sizeof hnd->cmodes);
-	com_strNcpy(hnd->ver, (*msg)[4], sizeof hnd->ver);
+	lsi_ut_freearr(hnd->logonconv[3]);
+	hnd->logonconv[3] = lsi_ut_clonearr(msg);
+	lsi_com_strNcpy(hnd->myhost, (*msg)[3],sizeof hnd->myhost);
+	lsi_com_strNcpy(hnd->umodes, (*msg)[5], sizeof hnd->umodes);
+	lsi_com_strNcpy(hnd->cmodes, (*msg)[6], sizeof hnd->cmodes);
+	lsi_com_strNcpy(hnd->ver, (*msg)[4], sizeof hnd->ver);
 
 	return LOGON_COMPLETE;
 }
@@ -97,7 +97,7 @@ handle_PING(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 	char buf[256];
 	snprintf(buf, sizeof buf, "PONG :%s\r\n", (*msg)[2]);
-	return conn_write(hnd->con, buf) ? 0 : IO_ERR;
+	return lsi_conn_write(hnd->con, buf) ? 0 : IO_ERR;
 }
 
 static uint8_t
@@ -116,7 +116,7 @@ handle_XXX(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 	char buf[MAX_NICK_LEN];
 	snprintf(buf, sizeof buf, "NICK %s\r\n", hnd->mynick);
-	return conn_write(hnd->con, buf) ? 0 : IO_ERR;
+	return lsi_conn_write(hnd->con, buf) ? 0 : IO_ERR;
 }
 
 static uint8_t
@@ -132,18 +132,18 @@ handle_383(irc hnd, tokarr *msg, size_t nargs, bool logon)
 	if (nargs < 3)
 		return PROTO_ERR;
 
-	com_strNcpy(hnd->mynick, (*msg)[2],sizeof hnd->mynick);
+	lsi_com_strNcpy(hnd->mynick, (*msg)[2],sizeof hnd->mynick);
 	char *tmp;
 	if ((tmp = strchr(hnd->mynick, '@')))
 		*tmp = '\0';
 	if ((tmp = strchr(hnd->mynick, '!')))
 		*tmp = '\0';
 
-	com_strNcpy(hnd->myhost, (*msg)[0] ? (*msg)[0] : hnd->con->host,
+	lsi_com_strNcpy(hnd->myhost, (*msg)[0] ? (*msg)[0] : hnd->con->host,
 	    sizeof hnd->myhost);
 
-	com_strNcpy(hnd->umodes, DEF_UMODES, sizeof hnd->umodes);
-	com_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
+	lsi_com_strNcpy(hnd->umodes, DEF_UMODES, sizeof hnd->umodes);
+	lsi_com_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
 	hnd->ver[0] = '\0';
 	hnd->service = true;
 	D("(%p) got beloved 383", (void*)hnd);
@@ -165,7 +165,7 @@ handle_465(irc hnd, tokarr *msg, size_t nargs, bool logon)
 	W("(%p) we're banned", (void*)hnd);
 	hnd->banned = true;
 	free(hnd->banmsg);
-	hnd->banmsg = b_strdup((*msg)[3] ? (*msg)[3] : "");
+	hnd->banmsg = lsi_b_strdup((*msg)[3] ? (*msg)[3] : "");
 
 	return 0; /* well if we are, the server will sure disconnect ua s*/
 }
@@ -182,7 +182,7 @@ static uint8_t
 handle_ERROR(irc hnd, tokarr *msg, size_t nargs, bool logon)
 { T("trace");
 	free(hnd->lasterr);
-	hnd->lasterr = b_strdup((*msg)[2] ? (*msg)[2] : "");
+	hnd->lasterr = lsi_b_strdup((*msg)[2] ? (*msg)[2] : "");
 	W("sever said ERROR: '%s'", (*msg)[2]);
 	return 0; /* not strictly a case for CANT_PROCEED */
 }
@@ -197,10 +197,10 @@ handle_NICK(irc hnd, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0])
 		return PROTO_ERR;
 
-	ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
+	lsi_ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
 
-	if (!ut_istrcmp(nick, hnd->mynick, hnd->casemap)) {
-		com_strNcpy(hnd->mynick, (*msg)[2], sizeof hnd->mynick);
+	if (!lsi_ut_istrcmp(nick, hnd->mynick, hnd->casemap)) {
+		lsi_com_strNcpy(hnd->mynick, (*msg)[2], sizeof hnd->mynick);
 		I("my nick is now '%s'", hnd->mynick);
 	}
 
@@ -210,12 +210,12 @@ handle_NICK(irc hnd, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_005_CASEMAPPING(irc hnd, const char *val)
 { T("trace");
-	if (b_strcasecmp(val, "ascii") == 0)
+	if (lsi_b_strcasecmp(val, "ascii") == 0)
 		hnd->casemap = CMAP_ASCII;
-	else if (b_strcasecmp(val, "strict-rfc1459") == 0)
+	else if (lsi_b_strcasecmp(val, "strict-rfc1459") == 0)
 		hnd->casemap = CMAP_STRICT_RFC1459;
 	else {
-		if (b_strcasecmp(val, "rfc1459") != 0)
+		if (lsi_b_strcasecmp(val, "rfc1459") != 0)
 			W("unknown 005 casemapping: '%s'", val);
 		hnd->casemap = CMAP_RFC1459;
 	}
@@ -231,7 +231,7 @@ handle_005_PREFIX(irc hnd, const char *val)
 	if (!val[0])
 		return PROTO_ERR;
 
-	com_strNcpy(str, val + 1, sizeof str);
+	lsi_com_strNcpy(str, val + 1, sizeof str);
 	char *p = strchr(str, ')');
 	if (!p)
 		return PROTO_ERR;
@@ -242,8 +242,8 @@ handle_005_PREFIX(irc hnd, const char *val)
 	if (slen == 0 || slen != strlen(p))
 		return PROTO_ERR;
 
-	com_strNcpy(hnd->m005modepfx[0], str, MAX_005_MDPFX);
-	com_strNcpy(hnd->m005modepfx[1], p, MAX_005_MDPFX);
+	lsi_com_strNcpy(hnd->m005modepfx[0], str, MAX_005_MDPFX);
+	lsi_com_strNcpy(hnd->m005modepfx[1], p, MAX_005_MDPFX);
 
 	return 0;
 }
@@ -256,12 +256,12 @@ handle_005_CHANMODES(irc hnd, const char *val)
 
 	int c = 0;
 	char argbuf[64];
-	com_strNcpy(argbuf, val, sizeof argbuf);
+	lsi_com_strNcpy(argbuf, val, sizeof argbuf);
 	char *ptr = strtok(argbuf, ",");
 
 	while (ptr) {
 		if (c < 4)
-			com_strNcpy(hnd->m005chanmodes[c++], ptr, MAX_005_CHMD);
+			lsi_com_strNcpy(hnd->m005chanmodes[c++], ptr, MAX_005_CHMD);
 		ptr = strtok(NULL, ",");
 	}
 
@@ -275,7 +275,7 @@ handle_005_CHANMODES(irc hnd, const char *val)
 static uint8_t
 handle_005_CHANTYPES(irc hnd, const char *val)
 { T("trace");
-	com_strNcpy(hnd->m005chantypes, val, MAX_005_CHTYP);
+	lsi_com_strNcpy(hnd->m005chantypes, val, MAX_005_CHTYP);
 	return 0;
 }
 
@@ -286,14 +286,14 @@ handle_005(irc hnd, tokarr *msg, size_t nargs, bool logon)
 	bool have_casemap = false;
 
 	for (size_t z = 3; z < nargs; ++z) {
-		if (b_strncasecmp((*msg)[z], "CASEMAPPING=", 12) == 0) {
+		if (lsi_b_strncasecmp((*msg)[z], "CASEMAPPING=", 12) == 0) {
 			ret |= handle_005_CASEMAPPING(hnd, (*msg)[z] + 12);
 			have_casemap = true;
-		} else if (b_strncasecmp((*msg)[z], "PREFIX=", 7) == 0)
+		} else if (lsi_b_strncasecmp((*msg)[z], "PREFIX=", 7) == 0)
 			ret |= handle_005_PREFIX(hnd, (*msg)[z] + 7);
-		else if (b_strncasecmp((*msg)[z], "CHANMODES=", 10) == 0)
+		else if (lsi_b_strncasecmp((*msg)[z], "CHANMODES=", 10) == 0)
 			ret |= handle_005_CHANMODES(hnd, (*msg)[z] + 10);
-		else if (b_strncasecmp((*msg)[z], "CHANTYPES=", 10) == 0)
+		else if (lsi_b_strncasecmp((*msg)[z], "CHANTYPES=", 10) == 0)
 			ret |= handle_005_CHANTYPES(hnd, (*msg)[z] + 10);
 
 		if (ret & CANT_PROCEED)
@@ -301,7 +301,7 @@ handle_005(irc hnd, tokarr *msg, size_t nargs, bool logon)
 	}
 
 	if (hnd->tracking && !hnd->tracking_enab && have_casemap) {
-		if (!trk_init(hnd))
+		if (!lsi_trk_init(hnd))
 			E("failed to enable tracking");
 		else {
 			hnd->tracking_enab = true;
@@ -314,35 +314,35 @@ handle_005(irc hnd, tokarr *msg, size_t nargs, bool logon)
 
 
 bool
-imh_regall(irc hnd, bool dumb)
+lsi_imh_regall(irc hnd, bool dumb)
 { T("trace");
 	bool fail = false;
 	if (!dumb) {
-		fail = fail || !msg_reghnd(hnd, "PING", handle_PING, "irc");
-		fail = fail || !msg_reghnd(hnd, "432", handle_XXX, "irc");
-		fail = fail || !msg_reghnd(hnd, "433", handle_XXX, "irc");
-		fail = fail || !msg_reghnd(hnd, "436", handle_XXX, "irc");
-		fail = fail || !msg_reghnd(hnd, "437", handle_XXX, "irc");
-		fail = fail || !msg_reghnd(hnd, "464", handle_464, "irc");
+		fail = fail || !lsi_msg_reghnd(hnd, "PING", handle_PING, "irc");
+		fail = fail || !lsi_msg_reghnd(hnd, "432", handle_XXX, "irc");
+		fail = fail || !lsi_msg_reghnd(hnd, "433", handle_XXX, "irc");
+		fail = fail || !lsi_msg_reghnd(hnd, "436", handle_XXX, "irc");
+		fail = fail || !lsi_msg_reghnd(hnd, "437", handle_XXX, "irc");
+		fail = fail || !lsi_msg_reghnd(hnd, "464", handle_464, "irc");
 	}
 
-	fail = fail || !msg_reghnd(hnd, "NICK", handle_NICK, "irc");
-	fail = fail || !msg_reghnd(hnd, "ERROR", handle_ERROR, "irc");
-	fail = fail || !msg_reghnd(hnd, "001", handle_001, "irc");
-	fail = fail || !msg_reghnd(hnd, "002", handle_002, "irc");
-	fail = fail || !msg_reghnd(hnd, "003", handle_003, "irc");
-	fail = fail || !msg_reghnd(hnd, "004", handle_004, "irc");
-	fail = fail || !msg_reghnd(hnd, "383", handle_383, "irc");
-	fail = fail || !msg_reghnd(hnd, "484", handle_484, "irc");
-	fail = fail || !msg_reghnd(hnd, "465", handle_465, "irc");
-	fail = fail || !msg_reghnd(hnd, "466", handle_466, "irc");
-	fail = fail || !msg_reghnd(hnd, "005", handle_005, "irc");
+	fail = fail || !lsi_msg_reghnd(hnd, "NICK", handle_NICK, "irc");
+	fail = fail || !lsi_msg_reghnd(hnd, "ERROR", handle_ERROR, "irc");
+	fail = fail || !lsi_msg_reghnd(hnd, "001", handle_001, "irc");
+	fail = fail || !lsi_msg_reghnd(hnd, "002", handle_002, "irc");
+	fail = fail || !lsi_msg_reghnd(hnd, "003", handle_003, "irc");
+	fail = fail || !lsi_msg_reghnd(hnd, "004", handle_004, "irc");
+	fail = fail || !lsi_msg_reghnd(hnd, "383", handle_383, "irc");
+	fail = fail || !lsi_msg_reghnd(hnd, "484", handle_484, "irc");
+	fail = fail || !lsi_msg_reghnd(hnd, "465", handle_465, "irc");
+	fail = fail || !lsi_msg_reghnd(hnd, "466", handle_466, "irc");
+	fail = fail || !lsi_msg_reghnd(hnd, "005", handle_005, "irc");
 
 	return !fail;
 }
 
 void
-imh_unregall(irc hnd)
+lsi_imh_unregall(irc hnd)
 { T("trace");
-	msg_unregall(hnd, "irc");
+	lsi_msg_unregall(hnd, "irc");
 }

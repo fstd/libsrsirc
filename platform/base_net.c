@@ -65,7 +65,7 @@ static void sslinit(void);
 
 
 int
-b_socket(bool ipv6)
+lsi_b_socket(bool ipv6)
 { T("trace");
 	int sck = -1;
 #if HAVE_SOCKET
@@ -97,7 +97,7 @@ b_socket(bool ipv6)
 
 
 int
-b_connect(int sck, const struct addrlist *srv)
+lsi_b_connect(int sck, const struct addrlist *srv)
 { T("trace");
 #if HAVE_STRUCT_SOCKADDR_STORAGE
 	struct sockaddr_storage sa;
@@ -136,7 +136,7 @@ b_connect(int sck, const struct addrlist *srv)
 
 
 int
-b_close(int sck)
+lsi_b_close(int sck)
 { T("trace");
 #if HAVE_CLOSE
 	D("Closing sck %d", sck);
@@ -149,9 +149,9 @@ b_close(int sck)
 
 
 int
-b_select(int sck, bool rdbl, uint64_t to_us)
+lsi_b_select(int sck, bool rdbl, uint64_t to_us)
 { T("trace");
-	uint64_t tsend = to_us ? b_tstamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 
 #if HAVE_SELECT
 	struct timeval tout;
@@ -163,7 +163,7 @@ b_select(int sck, bool rdbl, uint64_t to_us)
 		uint64_t trem = 0;
 
 		if (tsend) {
-			uint64_t now = b_tstamp_us();
+			uint64_t now = lsi_b_tstamp_us();
 			if (now >= tsend)
 				return 0;
 			else
@@ -200,7 +200,7 @@ b_select(int sck, bool rdbl, uint64_t to_us)
 
 
 bool
-b_blocking(int sck, bool blocking)
+lsi_b_blocking(int sck, bool blocking)
 { T("trace");
 #if HAVE_FCNTL
 	int flg = fcntl(sck, F_GETFL);
@@ -228,7 +228,7 @@ b_blocking(int sck, bool blocking)
 
 
 bool
-b_sock_ok(int sck)
+lsi_b_sock_ok(int sck)
 { T("trace");
 #if HAVE_GETSOCKOPT
 	int opt = 0;
@@ -260,7 +260,7 @@ b_sock_ok(int sck)
 
 
 long
-b_read(int sck, void *buf, size_t sz, bool *tryagain)
+lsi_b_read(int sck, void *buf, size_t sz, bool *tryagain)
 { T("trace");
 #if HAVE_READ
 	V("read()ing from sck %d (bufsz: %zu)", sck, sz);
@@ -298,7 +298,7 @@ b_read(int sck, void *buf, size_t sz, bool *tryagain)
 
 
 long
-b_write(int sck, const void *buf, size_t len)
+lsi_b_write(int sck, const void *buf, size_t len)
 { T("trace");
 #if HAVE_SEND
 	int flags = 0;
@@ -327,7 +327,7 @@ b_write(int sck, const void *buf, size_t len)
 
 
 long
-b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, bool *tryagain)
+lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, bool *tryagain)
 { T("trace");
 #ifdef WITH_SSL
 	V("SSL_read()ing from ssl hnd %p (bufsz: %zu)", (void *)ssl, sz);
@@ -351,7 +351,7 @@ b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, bool *tryagain)
 
 
 long
-b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
+lsi_b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
 { T("trace");
 #ifdef WITH_SSL
 	V("send()ing %zu bytes over ssl hnd %p", len, (void *)ssl);
@@ -376,7 +376,7 @@ b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
 
 
 int
-b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res)
+lsi_b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res)
 { T("trace");
 #if HAVE_GETADDRINFO
 	struct addrinfo *ai_list = NULL;
@@ -464,7 +464,7 @@ b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res)
 
 
 void
-b_freeaddrlist(struct addrlist *al)
+lsi_b_freeaddrlist(struct addrlist *al)
 { T("trace");
 	while (al) {
 		struct addrlist *tmp = al->next;
@@ -475,7 +475,7 @@ b_freeaddrlist(struct addrlist *al)
 
 
 SSLCTXTYPE
-b_mksslctx(void)
+lsi_b_mksslctx(void)
 { T("trace");
 	if (!s_sslinit)
 		sslinit();
@@ -493,7 +493,7 @@ b_mksslctx(void)
 
 
 void
-b_freesslctx(SSLCTXTYPE ctx)
+lsi_b_freesslctx(SSLCTXTYPE ctx)
 { T("trace");
 #ifdef WITH_SSL
 	SSL_CTX_free(ctx);
@@ -504,7 +504,7 @@ b_freesslctx(SSLCTXTYPE ctx)
 
 
 SSLTYPE
-b_sslize(int sck, SSLCTXTYPE ctx)
+lsi_b_sslize(int sck, SSLCTXTYPE ctx)
 { T("trace");
 	SSLTYPE shnd = NULL;
 #ifdef WITH_SSL
@@ -541,7 +541,7 @@ b_sslize(int sck, SSLCTXTYPE ctx)
 
 
 void
-b_sslfin(SSLTYPE shnd)
+lsi_b_sslfin(SSLTYPE shnd)
 { T("trace");
 #ifdef WITH_SSL
 	SSL_shutdown(shnd);
@@ -554,7 +554,7 @@ b_sslfin(SSLTYPE shnd)
 
 
 uint16_t
-b_htons(uint16_t h)
+lsi_b_htons(uint16_t h)
 { T("trace");
 #if HAVE_HTONS
 	return htons(h);
@@ -566,7 +566,7 @@ b_htons(uint16_t h)
 
 
 uint32_t
-b_inet_addr(const char *ip4str)
+lsi_b_inet_addr(const char *ip4str)
 { T("trace");
 #if HAVE_INET_ADDR
 	return inet_addr(ip4str);
@@ -578,7 +578,7 @@ b_inet_addr(const char *ip4str)
 
 
 bool
-b_inet4_addr(unsigned char *dest, size_t destsz, const char *ip4str)
+lsi_b_inet4_addr(unsigned char *dest, size_t destsz, const char *ip4str)
 { T("trace");
 #if HAVE_INET_PTON
 	struct in_addr ia4;
@@ -603,7 +603,7 @@ b_inet4_addr(unsigned char *dest, size_t destsz, const char *ip4str)
 
 
 bool
-b_inet6_addr(unsigned char *dest, size_t destsz, const char *ip6str)
+lsi_b_inet6_addr(unsigned char *dest, size_t destsz, const char *ip6str)
 { T("trace");
 #if HAVE_INET_PTON
 	struct in6_addr ia6;
@@ -683,7 +683,7 @@ addrstr_from_sockaddr(char *addr, size_t addr_sz, uint16_t *port,
 			*port = ntohs(sin->sin6_port);
 	} else {
 		if (addr && addr_sz)
-			b_strNcpy(addr, "(non-IPv4/IPv6)", addr_sz);
+			lsi_b_strNcpy(addr, "(non-IPv4/IPv6)", addr_sz);
 		if (port)
 			*port = 0;
 	}

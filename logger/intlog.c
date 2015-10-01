@@ -74,7 +74,7 @@ static int s_w_func = 0;
 static const char* lvlnam(int lvl);
 static const char* lvlcol(int lvl);
 static int getenv_m(const char *nam, char *dest, size_t destsz);
-static bool isdigitstr(const char *p);
+static bool lsi_isdigitstr(const char *p);
 
 
 // ----- public interface implementation -----
@@ -84,13 +84,13 @@ void
 ircdbg_syslog(const char *ident)
 {
 	if (s_open)
-		b_closelog();
+		lsi_b_closelog();
 
 	/* currently redundant */
 	s_open = false;
 	s_stderr = true;
 
-	if (!b_openlog(ident))
+	if (!lsi_b_openlog(ident))
 		return;
 
 	s_open = true;
@@ -103,7 +103,7 @@ void
 ircdbg_stderr(void)
 {
 	if (s_open)
-		b_closelog();
+		lsi_b_closelog();
 
 	s_stderr = true;
 }
@@ -168,7 +168,7 @@ ircdbg_log(int mod, int lvl, int errn, const char *file, int line, const char *f
 	if (errn >= 0) {
 		errmsg[0] = ':';
 		errmsg[1] = ' ';
-		b_strerror(errn, errmsg + 2, sizeof errmsg - 2);
+		lsi_b_strerror(errn, errmsg + 2, sizeof errmsg - 2);
 	}
 
 	if (s_stderr) {
@@ -178,8 +178,8 @@ ircdbg_log(int mod, int lvl, int errn, const char *file, int line, const char *f
 		} else {
 			char timebuf[27];
 			time_t t = time(NULL);
-			if (!b_ctime(&t, timebuf))
-				strcpy(timebuf, "(b_ctime() failed)");
+			if (!lsi_b_ctime(&t, timebuf))
+				strcpy(timebuf, "(lsi_b_ctime() failed)");
 			char *ptr = strchr(timebuf, '\n');
 			if (ptr)
 				*ptr = '\0';
@@ -194,11 +194,11 @@ ircdbg_log(int mod, int lvl, int errn, const char *file, int line, const char *f
 		}
 	} else {
 		if (always)
-			b_syslog(LOG_NOTICE, "%s", payload);
+			lsi_b_syslog(LOG_NOTICE, "%s", payload);
 		else {
 			snprintf(resmsg, sizeof resmsg, "%s: %s:%d:%s(): %s%s",
 			    modnames[mod], file, line, func, payload, errmsg);
-			b_syslog(lvl, "%s", resmsg);
+			lsi_b_syslog(lvl, "%s", resmsg);
 		}
 	}
 
@@ -217,7 +217,7 @@ ircdbg_init(void)
 		for (char *tok = strtok(v, " "); tok; tok = strtok(NULL, " ")) {
 			char *eq = strchr(tok, '=');
 			if (eq) {
-				if (tok[0] == '=' || !isdigitstr(eq+1))
+				if (tok[0] == '=' || !lsi_isdigitstr(eq+1))
 					continue;
 
 				*eq = '\0';
@@ -234,7 +234,7 @@ ircdbg_init(void)
 			}
 			eq = strchr(tok, ':');
 			if (eq) {
-				if (tok[0] == ':' || !isdigitstr(eq+1))
+				if (tok[0] == ':' || !lsi_isdigitstr(eq+1))
 					continue;
 
 				*eq = '\0';
@@ -252,7 +252,7 @@ ircdbg_init(void)
 				*eq = ':';
 				continue;
 			}
-			if (isdigitstr(tok)) {
+			if (lsi_isdigitstr(tok)) {
 				/* special case: a stray number
 				 * means set default loglevel */
 				deflvl = (int)strtol(tok, NULL, 10);
@@ -310,7 +310,7 @@ lvlcol(int lvl)
 }
 
 static bool
-isdigitstr(const char *p)
+lsi_isdigitstr(const char *p)
 {
 	while (*p)
 		if (!isdigit((unsigned char)*p++))

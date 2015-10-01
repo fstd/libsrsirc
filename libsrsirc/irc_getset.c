@@ -23,7 +23,7 @@
 bool
 irc_online(irc hnd)
 { T("trace");
-	return conn_online(hnd->con);
+	return lsi_conn_online(hnd->con);
 }
 
 const char*
@@ -89,13 +89,13 @@ irc_banned(irc hnd)
 bool
 irc_colon_trail(irc hnd)
 { T("trace");
-	return conn_colon_trail(hnd->con);
+	return lsi_conn_colon_trail(hnd->con);
 }
 
 int
 irc_sockfd(irc hnd)
 { T("trace");
-	return conn_sockfd(hnd->con);
+	return lsi_conn_sockfd(hnd->con);
 }
 
 tokarr *(* /* ew.  returns pointer to array of 4 pointers to tokarr */
@@ -130,31 +130,31 @@ irc_tracking_enab(irc hnd)
 const char*
 irc_get_host(irc hnd)
 { T("trace");
-	return conn_get_host(hnd->con);
+	return lsi_conn_get_host(hnd->con);
 }
 
 uint16_t
 irc_get_port(irc hnd)
 { T("trace");
-	return conn_get_port(hnd->con);
+	return lsi_conn_get_port(hnd->con);
 }
 
 const char*
 irc_get_px_host(irc hnd)
 { T("trace");
-	return conn_get_px_host(hnd->con);
+	return lsi_conn_get_px_host(hnd->con);
 }
 
 uint16_t
 irc_get_px_port(irc hnd)
 { T("trace");
-	return conn_get_px_port(hnd->con);
+	return lsi_conn_get_px_port(hnd->con);
 }
 
 int
 irc_get_px_type(irc hnd)
 { T("trace");
-	return conn_get_px_type(hnd->con);
+	return lsi_conn_get_px_type(hnd->con);
 }
 
 const char*
@@ -214,7 +214,7 @@ irc_get_service_info(irc hnd)
 bool
 irc_get_ssl(irc hnd)
 { T("trace");
-	return conn_get_ssl(hnd->con);
+	return lsi_conn_get_ssl(hnd->con);
 }
 
 
@@ -225,37 +225,37 @@ irc_get_ssl(irc hnd)
 bool
 irc_set_server(irc hnd, const char *host, uint16_t port)
 { T("trace");
-	return conn_set_server(hnd->con, host, port);
+	return lsi_conn_set_server(hnd->con, host, port);
 }
 
 bool
 irc_set_pass(irc hnd, const char *srvpass)
 { T("trace");
-	return com_update_strprop(&hnd->pass, srvpass);
+	return lsi_com_update_strprop(&hnd->pass, srvpass);
 }
 
 bool
 irc_set_uname(irc hnd, const char *uname)
 { T("trace");
-	return com_update_strprop(&hnd->uname, uname);
+	return lsi_com_update_strprop(&hnd->uname, uname);
 }
 
 bool
 irc_set_fname(irc hnd, const char *fname)
 { T("trace");
-	return com_update_strprop(&hnd->fname, fname);
+	return lsi_com_update_strprop(&hnd->fname, fname);
 }
 
 bool
 irc_set_nick(irc hnd, const char *nick)
 { T("trace");
-	return com_update_strprop(&hnd->nick, nick);
+	return lsi_com_update_strprop(&hnd->nick, nick);
 }
 
 bool
 irc_set_px(irc hnd, const char *host, uint16_t port, int ptype)
 { T("trace");
-	return conn_set_px(hnd->con, host, port, ptype);
+	return lsi_conn_set_px(hnd->con, host, port, ptype);
 }
 
 void
@@ -273,7 +273,7 @@ irc_set_service_connect(irc hnd, bool enabled)
 bool
 irc_set_service_dist(irc hnd, const char *dist)
 { T("trace");
-	return com_update_strprop(&hnd->serv_dist, dist);
+	return lsi_com_update_strprop(&hnd->serv_dist, dist);
 }
 
 bool
@@ -286,7 +286,7 @@ irc_set_service_type(irc hnd, long type)
 bool
 irc_set_service_info(irc hnd, const char *info)
 { T("trace");
-	return com_update_strprop(&hnd->serv_info, info);
+	return lsi_com_update_strprop(&hnd->serv_info, info);
 }
 
 void
@@ -305,7 +305,7 @@ irc_set_connect_timeout(irc hnd, uint64_t soft, uint64_t hard)
 bool
 irc_set_ssl(irc hnd, bool on)
 { T("trace");
-	return conn_set_ssl(hnd->con, on);
+	return lsi_conn_set_ssl(hnd->con, on);
 }
 
 bool
@@ -323,5 +323,5 @@ irc_set_dumb(irc hnd, bool dumbmode)
 bool
 irc_reg_msghnd(irc hnd, const char *cmd, uhnd_fn hndfn, bool pre)
 { T("trace");
-	return msg_reguhnd(hnd, cmd, hndfn, pre);
+	return lsi_msg_reguhnd(hnd, cmd, hndfn, pre);
 }

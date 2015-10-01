@@ -21,7 +21,7 @@
 #include <logger/intlog.h>
 
 void
-b_usleep(uint64_t us)
+lsi_b_usleep(uint64_t us)
 { T("trace");
 	V("Sleeping %"PRIu64" us", us);
 	uint64_t secs = us / 1000000u;
@@ -38,7 +38,7 @@ b_usleep(uint64_t us)
 }
 
 int
-b_getopt(int argc, char * const argv[], const char *optstring)
+lsi_b_getopt(int argc, char * const argv[], const char *optstring)
 { T("trace");
 #if HAVE_GETOPT
 	return getopt(argc, argv, optstring);
@@ -48,7 +48,7 @@ b_getopt(int argc, char * const argv[], const char *optstring)
 }
 
 const char *
-b_optarg(void)
+lsi_b_optarg(void)
 { T("trace");
 #if HAVE_GETOPT
 	return optarg;
@@ -58,7 +58,7 @@ b_optarg(void)
 }
 
 int
-b_optind(void)
+lsi_b_optind(void)
 { T("trace");
 #if HAVE_GETOPT
 	return optind;
@@ -68,7 +68,7 @@ b_optind(void)
 }
 
 void
-b_regsig(int sig, void (*sigfn)(int))
+lsi_b_regsig(int sig, void (*sigfn)(int))
 {
 #if HAVE_SIGACTION
 	struct sigaction act;

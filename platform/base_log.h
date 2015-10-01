@@ -24,12 +24,12 @@
 #endif
 
 
-int b_strerror(int errnum, char *buf, size_t sz);
-char *b_ctime(const time_t *clock, char *buf);
+int lsi_b_strerror(int errnum, char *buf, size_t sz);
+char *lsi_b_ctime(const time_t *clock, char *buf);
 
-bool b_openlog(const char *ident);
-void b_closelog(void);
-void b_syslog(int prio, const char *fmt, ...);
+bool lsi_b_openlog(const char *ident);
+void lsi_b_closelog(void);
+void lsi_b_syslog(int prio, const char *fmt, ...);
 
 
 #endif /* LIBSRSIRC_BASE_LOG_H */

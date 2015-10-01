@@ -19,7 +19,7 @@
 
 
 int
-b_strerror(int errnum, char *buf, size_t sz)
+lsi_b_strerror(int errnum, char *buf, size_t sz)
 {
 	int r = 0;
 #if HAVE_STRERROR_R
@@ -36,7 +36,7 @@ b_strerror(int errnum, char *buf, size_t sz)
 
 
 char *
-b_ctime(const time_t *t, char *buf)
+lsi_b_ctime(const time_t *t, char *buf)
 {
 #if HAVE_CTIME_R
 	return ctime_r(t, buf);
@@ -48,7 +48,7 @@ b_ctime(const time_t *t, char *buf)
 
 
 bool
-b_openlog(const char *ident)
+lsi_b_openlog(const char *ident)
 {
 #if HAVE_SYSLOG_H
 	openlog(ident, LOG_PID, LOG_USER);
@@ -59,7 +59,7 @@ b_openlog(const char *ident)
 
 
 void
-b_closelog(void)
+lsi_b_closelog(void)
 {
 #if HAVE_SYSLOG_H
 	closelog();
@@ -68,7 +68,7 @@ b_closelog(void)
 
 
 void
-b_syslog(int prio, const char *fmt, ...)
+lsi_b_syslog(int prio, const char *fmt, ...)
 {
 #if HAVE_SYSLOG_H
 	va_list l;

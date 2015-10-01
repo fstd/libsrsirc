@@ -36,7 +36,7 @@ static size_t buf_rem(void);
 
 
 bool
-user_canread(void)
+lsi_user_canread(void)
 { T("trace");
 	if (buf_cnt()) {
 		*s_buftail = '\0';
@@ -44,7 +44,7 @@ user_canread(void)
 			return true;
 	}
 
-	int r = b_stdin_canread();
+	int r = lsi_b_stdin_canread();
 
 	if (r < 0)
 		EE("select");
@@ -70,7 +70,7 @@ user_canread(void)
 	if (s_eof)
 		return false;
 
-	long n = b_stdin_read(s_buftail, buf_rem());
+	long n = lsi_b_stdin_read(s_buftail, buf_rem());
 
 	if (n < 0) {
 		EE("read");
@@ -90,9 +90,9 @@ user_canread(void)
 }
 
 size_t
-user_readline(char *dest, size_t destsz)
+lsi_user_readline(char *dest, size_t destsz)
 { T("trace");
-	if (!user_canread())
+	if (!lsi_user_canread())
 		return 0;
 
 	*s_buftail = '\0';
@@ -113,7 +113,7 @@ user_readline(char *dest, size_t destsz)
 }
 
 int
-user_printf(const char *fmt, ...)
+lsi_user_printf(const char *fmt, ...)
 { T("trace");
 	char buf[1024];
 	va_list l;
@@ -128,7 +128,7 @@ user_printf(const char *fmt, ...)
 }
 
 bool
-user_eof(void)
+lsi_user_eof(void)
 { T("trace");
 	return s_eof;
 }

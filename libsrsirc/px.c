@@ -38,15 +38,15 @@
 
 
 bool
-px_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
+lsi_px_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 { T("trace");
-	uint64_t tsend = to_us ? b_tstamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 	char buf[256];
 	snprintf(buf, sizeof buf, "CONNECT %s:%d HTTP/1.0\r\nHost: %s:%d"
 	    "\r\n\r\n", host, port, host, port);
 
 	errno = 0;
-	long n = b_write(sck, buf, strlen(buf));
+	long n = lsi_b_write(sck, buf, strlen(buf));
 	if (n <= -1) {
 		WE(DBGSPEC" write() failed", sck, host, port);
 		return false;
@@ -65,14 +65,14 @@ px_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 	    buf[c-3] != '\n' || buf[c-2] != '\r' || buf[c-1] != '\n')) {
 		errno = 0;
 		bool tryagain = false;
-		n = b_read(sck, &buf[c], 1, &tryagain);
+		n = lsi_b_read(sck, &buf[c], 1, &tryagain);
 		if (n <= 0) {
 			if (n == 0)
 				W(DBGSPEC" unexpected EOF",
 				    sck, host, port);
 			else if (tryagain) {
-				if (!com_check_timeout(tsend, NULL)) {
-					b_usleep(10000);
+				if (!lsi_com_check_timeout(tsend, NULL)) {
+					lsi_b_usleep(10000);
 					continue;
 				}
 				W(DBGSPEC" timeout hit",
@@ -98,14 +98,14 @@ px_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 
 /* SOCKS4 doesntsupport ipv6 */
 bool
-px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
+lsi_px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 { T("trace");
-	uint64_t tsend = to_us ? b_tstamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 	unsigned char logon[14];
-	uint16_t nport = b_htons(port);
+	uint16_t nport = lsi_b_htons(port);
 
 	/*FIXME this doesntwork if host is not an ipv4 addr but dns*/
-	uint32_t ip = b_inet_addr(host);
+	uint32_t ip = lsi_b_inet_addr(host);
 	char name[6];
 	for (size_t i = 0; i < sizeof name - 1; i++)
 		name[i] = rand() % 26 + 'a';
@@ -122,7 +122,7 @@ px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 	c += strlen(name) + 1;
 
 	errno = 0;
-	long n = b_write(sck, logon, c);
+	long n = lsi_b_write(sck, logon, c);
 	if (n <= -1) {
 		WE(DBGSPEC" write() failed", sck, host, port);
 		return false;
@@ -139,11 +139,11 @@ px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 	while (c < 8) {
 		errno = 0;
 		bool tryagain = false;
-		n = b_read(sck, &resp+c, 8-c, &tryagain);
+		n = lsi_b_read(sck, &resp+c, 8-c, &tryagain);
 		if (n <= 0) {
 			if (tryagain) {
-				if (!com_check_timeout(tsend, NULL)) {
-					b_usleep(10000);
+				if (!lsi_com_check_timeout(tsend, NULL)) {
+					lsi_b_usleep(10000);
 					continue;
 				}
 				W(DBGSPEC" timeout hit", sck, host, port);
@@ -161,11 +161,11 @@ px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 }
 
 bool
-px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
+lsi_px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 { T("trace");
 	E("proxu support currently commented out, it's horrible. plx fix.");
 	return false;
-	uint64_t tsend = to_us ? b_tstamp_us() + to_us : 0;
+	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 	unsigned char logon[14];
 
 	if (!port) {
@@ -173,7 +173,7 @@ px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 		return false;
 	}
 
-	uint16_t nport = b_htons(port);
+	uint16_t nport = lsi_b_htons(port);
 	size_t c = 0;
 	logon[c++] = 5;
 
@@ -181,7 +181,7 @@ px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	logon[c++] = 0;
 
 	errno = 0;
-	long n = b_write(sck, logon, c);
+	long n = lsi_b_write(sck, logon, c);
 	if (n <= -1) {
 		WE(DBGSPEC" write() failed", sck, host, port);
 		return false;
@@ -198,11 +198,11 @@ px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	while (c < 2) {
 		errno = 0;
 		bool tryagain = false;
-		n = b_read(sck, &resp+c, 2-c, &tryagain);
+		n = lsi_b_read(sck, &resp+c, 2-c, &tryagain);
 		if (n <= 0) {
 			if (tryagain) {
-				if (!com_check_timeout(tsend, NULL)) {
-					b_usleep(10000);
+				if (!lsi_com_check_timeout(tsend, NULL)) {
+					lsi_b_usleep(10000);
 					continue;
 				}
 				W(DBGSPEC" timeout 1 hit",
@@ -235,17 +235,17 @@ px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	conbuf[c++] = 5;
 	conbuf[c++] = 1;
 	conbuf[c++] = 0;
-	int type = guess_hosttype(host);
+	int type = lsi_guess_hosttype(host);
 	switch (type) {
 	case HOST_IPV4:
 		conbuf[c++] = 1;
-		if (!b_inet4_addr(&conbuf[c], 4, host))
+		if (!lsi_b_inet4_addr(&conbuf[c], 4, host))
 			return false;
 		c += 16;
 		break;
 	case HOST_IPV6:
 		conbuf[c++] = 4;
-		if (!b_inet6_addr(&conbuf[c], 16, host))
+		if (!lsi_b_inet6_addr(&conbuf[c], 16, host))
 			return false;
 		c += 16;
 		break;
@@ -258,7 +258,7 @@ px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	memcpy(conbuf+c, &nport, 2); c += 2;
 
 	errno = 0;
-	n = b_write(sck, conbuf, c);
+	n = lsi_b_write(sck, conbuf, c);
 	if (n <= -1) {
 		WE(DBGSPEC" write() failed",
 		    sck, host, port);
@@ -276,11 +276,11 @@ px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	while (c < l) {
 		errno = 0;
 		bool tryagain = false;
-		n = b_read(sck, resp + c, l - c, &tryagain);
+		n = lsi_b_read(sck, resp + c, l - c, &tryagain);
 		if (n <= 0) {
 			if (tryagain) {
-				if (!com_check_timeout(tsend, NULL)) {
-					b_usleep(10000);
+				if (!lsi_com_check_timeout(tsend, NULL)) {
+					lsi_b_usleep(10000);
 					continue;
 				}
 				W(DBGSPEC" timeout 2 hit",
@@ -326,11 +326,11 @@ px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 		errno = 0;
 		/* read the very first byte seperately */
 		bool tryagain = false;
-		n = b_read(sck, resp + c, c ? l - c : 1, &tryagain);
+		n = lsi_b_read(sck, resp + c, c ? l - c : 1, &tryagain);
 		if (n <= 0) {
 			if (tryagain) {
-				if (!com_check_timeout(tsend, NULL)) {
-					b_usleep(10000);
+				if (!lsi_com_check_timeout(tsend, NULL)) {
+					lsi_b_usleep(10000);
 					continue;
 				}
 				W(DBGSPEC" timeout 2 hit",
@@ -356,15 +356,15 @@ px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 }
 
 int
-px_typenum(const char *typestr)
+lsi_px_typenum(const char *typestr)
 { T("trace");
-	return (b_strcasecmp(typestr, "socks4") == 0) ? IRCPX_SOCKS4 :
-	       (b_strcasecmp(typestr, "socks5") == 0) ? IRCPX_SOCKS5 :
-	       (b_strcasecmp(typestr, "http") == 0) ? IRCPX_HTTP : -1;
+	return (lsi_b_strcasecmp(typestr, "socks4") == 0) ? IRCPX_SOCKS4 :
+	       (lsi_b_strcasecmp(typestr, "socks5") == 0) ? IRCPX_SOCKS5 :
+	       (lsi_b_strcasecmp(typestr, "http") == 0) ? IRCPX_HTTP : -1;
 }
 
 const char*
-px_typestr(int typenum)
+lsi_px_typestr(int typenum)
 { T("trace");
 	return (typenum == IRCPX_HTTP) ? "HTTP" :
 	       (typenum == IRCPX_SOCKS4) ? "SOCKS4" :

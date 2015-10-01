@@ -25,7 +25,7 @@ static void com_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 #endif
 
 uint64_t
-b_tstamp_us(void)
+lsi_b_tstamp_us(void)
 { T("trace");
 #if HAVE_GETTIMEOFDAY
 	struct timeval t;

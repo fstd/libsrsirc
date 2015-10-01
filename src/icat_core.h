@@ -6,10 +6,10 @@
 #define LIBSRSIRC_ICAT_CORE_H 1
 
 
-void core_init(void);
-void core_destroy(void);
+void lsi_core_init(void);
+void lsi_core_destroy(void);
 
-int core_run(void);
+int lsi_core_run(void);
 
 
 #endif /* LIBSRSIRC_ICAT_CORE_H */
