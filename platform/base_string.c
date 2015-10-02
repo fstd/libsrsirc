@@ -86,7 +86,7 @@ lsi_b_strncasecmp(const char *a, const char *b, size_t n)
 #endif
 }
 
-char*
+char *
 lsi_b_strdup(const char *s)
 { T("trace");
 	char *r = NULL;

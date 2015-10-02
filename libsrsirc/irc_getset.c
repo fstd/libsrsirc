@@ -26,13 +26,13 @@ irc_online(irc hnd)
 	return lsi_conn_online(hnd->con);
 }
 
-const char*
+const char *
 irc_mynick(irc hnd)
 { T("trace");
 	return hnd->mynick;
 }
 
-const char*
+const char *
 irc_myhost(irc hnd)
 { T("trace");
 	return hnd->myhost;
@@ -50,31 +50,31 @@ irc_service(irc hnd)
 	return hnd->service;
 }
 
-const char*
+const char *
 irc_umodes(irc hnd)
 { T("trace");
 	return hnd->umodes;
 }
 
-const char*
+const char *
 irc_cmodes(irc hnd)
 { T("trace");
 	return hnd->cmodes;
 }
 
-const char*
+const char *
 irc_version(irc hnd)
 { T("trace");
 	return hnd->ver;
 }
 
-const char*
+const char *
 irc_lasterror(irc hnd)
 { T("trace");
 	return hnd->lasterr;
 }
 
-const char*
+const char *
 irc_banmsg(irc hnd)
 { T("trace");
 	return hnd->banmsg;
@@ -104,7 +104,7 @@ irc_logonconv(irc hnd))[4]
 	return &hnd->logonconv;
 }
 
-const char*
+const char *
 irc_005chanmodes(irc hnd, size_t class) /* suck it, $(CXX) */
 { T("trace");
 	if (class >= COUNTOF(hnd->m005chanmodes))
@@ -112,7 +112,7 @@ irc_005chanmodes(irc hnd, size_t class) /* suck it, $(CXX) */
 	return hnd->m005chanmodes[class];
 }
 
-const char*
+const char *
 irc_005modepfx(irc hnd, bool symbols)
 { T("trace");
 	return hnd->m005modepfx[symbols];
@@ -127,7 +127,7 @@ irc_tracking_enab(irc hnd)
 
 /* Getters - retrieve values previously set by the Setters */
 
-const char*
+const char *
 irc_get_host(irc hnd)
 { T("trace");
 	return lsi_conn_get_host(hnd->con);
@@ -139,7 +139,7 @@ irc_get_port(irc hnd)
 	return lsi_conn_get_port(hnd->con);
 }
 
-const char*
+const char *
 irc_get_px_host(irc hnd)
 { T("trace");
 	return lsi_conn_get_px_host(hnd->con);
@@ -157,19 +157,19 @@ irc_get_px_type(irc hnd)
 	return lsi_conn_get_px_type(hnd->con);
 }
 
-const char*
+const char *
 irc_get_pass(irc hnd)
 { T("trace");
 	return hnd->pass;
 }
 
-const char*
+const char *
 irc_get_uname(irc hnd)
 { T("trace");
 	return hnd->uname;
 }
 
-const char*
+const char *
 irc_get_fname(irc hnd)
 { T("trace");
 	return hnd->fname;
@@ -181,7 +181,7 @@ irc_get_conflags(irc hnd)
 	return hnd->conflags;
 }
 
-const char*
+const char *
 irc_get_nick(irc hnd)
 { T("trace");
 	return hnd->nick;
@@ -193,7 +193,7 @@ irc_get_service_connect(irc hnd)
 	return hnd->serv_con;
 }
 
-const char*
+const char *
 irc_get_service_dist(irc hnd)
 { T("trace");
 	return hnd->serv_dist;
@@ -205,7 +205,7 @@ irc_get_service_type(irc hnd)
 	return hnd->serv_type;
 }
 
-const char*
+const char *
 irc_get_service_info(irc hnd)
 { T("trace");
 	return hnd->serv_info;

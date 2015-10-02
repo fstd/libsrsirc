@@ -29,8 +29,8 @@ bool lsi_bucklist_insert(bucklist_t l, size_t i, char *key, void *val);
 bool lsi_bucklist_get(bucklist_t l, size_t i, char **key, void **val);
 
 /* linear search */
-void* lsi_bucklist_find(bucklist_t l, const char *key, char **origkey);
-void* lsi_bucklist_remove(bucklist_t l, const char *key, char **origkey);
+void *lsi_bucklist_find(bucklist_t l, const char *key, char **origkey);
+void *lsi_bucklist_remove(bucklist_t l, const char *key, char **origkey);
 bool lsi_bucklist_replace(bucklist_t l, const char *key, void *val);
 
 /* iteration */

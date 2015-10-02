@@ -28,8 +28,8 @@
  * bool irc_colon_trail(irc hnd);
  * int irc_sockfd(irc hnd);
  * tokarr *(*irc_logonconv(irc hnd))[4];
- * const char* irc_005chanmodes(irc hnd, size_t mclass);
- * const char* irc_005modepfx(irc hnd, bool symbols);
+ * const char *irc_005chanmodes(irc hnd, size_t mclass);
+ * const char *irc_005modepfx(irc hnd, bool symbols);
  *
  * void irc_regcb_conread(irc hnd, fp_con_read cb, void *tag);
  * void irc_regcb_mutnick(irc hnd, fp_mut_nick mn);
@@ -44,21 +44,21 @@
  * bool irc_set_service_info(irc hnd, const char *info);
  * bool irc_set_track(irc hnd, bool on);
  *
- * const char* irc_get_host(irc hnd);
+ * const char *irc_get_host(irc hnd);
  * uint16_t irc_get_port(irc hnd);
- * const char* irc_get_px_host(irc hnd);
+ * const char *irc_get_px_host(irc hnd);
  * uint16_t irc_get_px_port(irc hnd);
  * int irc_get_px_type(irc hnd);
- * const char* irc_get_pass(irc hnd);
- * const char* irc_get_uname(irc hnd);
- * const char* irc_get_fname(irc hnd);
+ * const char *irc_get_pass(irc hnd);
+ * const char *irc_get_uname(irc hnd);
+ * const char *irc_get_fname(irc hnd);
  * uint8_t irc_get_conflags(irc hnd);
- * const char* irc_get_nick(irc hnd);
+ * const char *irc_get_nick(irc hnd);
  * bool irc_get_ssl(irc hnd);
  * bool irc_get_service_connect(irc hnd);
- * const char* irc_get_service_dist(irc hnd);
+ * const char *irc_get_service_dist(irc hnd);
  * long irc_get_service_type(irc hnd);
- * const char* irc_get_service_info(irc hnd);
+ * const char *irc_get_service_info(irc hnd);
  */
 
 /* irc_myhost - tell who ircd claimed to be in 004.  Don't rely upon. */
@@ -119,7 +119,7 @@ const char *irc_005chanmodes(irc hnd, size_t mclass);
  *             symbols (e.g. "@+"), or (when false) the associated mode
  *             letters (e.g. "ov").
  * Returns a string of mode symbols or letters, in descending order of power. */
-const char* irc_005modepfx(irc hnd, bool symbols);
+const char *irc_005modepfx(irc hnd, bool symbols);
 
 /* irc_regcb_conread - register callback for msgs which are read at logon time
  * Params: `cb': a function pointer of appropriate type (see defs.h)
@@ -176,14 +176,14 @@ bool irc_set_service_info(irc hnd, const char *info);
 bool irc_set_track(irc hnd, bool on);
 
 /* irc_get_host - tell the host of the irc server we use or intend to use */
-const char* irc_get_host(irc hnd);
+const char *irc_get_host(irc hnd);
 
 /* irc_get_port - tell the port of the irc server we use or intend to use
  * A return value of zero means we use the default port */
 uint16_t irc_get_port(irc hnd);
 
 /* irc_get_px_host - tell the host of the proxy we use or intend to use */
-const char* irc_get_px_host(irc hnd);
+const char *irc_get_px_host(irc hnd);
 
 /* irc_get_px_port - tell the port of the proxy we use or intend to use */
 uint16_t irc_get_px_port(irc hnd);
@@ -193,28 +193,28 @@ uint16_t irc_get_px_port(irc hnd);
 int irc_get_px_type(irc hnd);
 
 /* irc_get_pass - tell the password we may have set earlier by irc_set_pass() */
-const char* irc_get_pass(irc hnd);
+const char *irc_get_pass(irc hnd);
 
 /* irc_get_uname - tell the 'user name' we will use on the next log on */
-const char* irc_get_uname(irc hnd);
+const char *irc_get_uname(irc hnd);
 
 /* irc_get_fname - tell the 'full name' we will use on the next log on */
-const char* irc_get_fname(irc hnd);
+const char *irc_get_fname(irc hnd);
 
 /* irc_get_conflags - tell the USER flags we will use on the next log on */
 uint8_t irc_get_conflags(irc hnd);
 
 /* irc_get_nick - tell the nick we will use on the next log on */
-const char* irc_get_nick(irc hnd);
+const char *irc_get_nick(irc hnd);
 
 /* irc_get_ssl - tell whether or not we will use SSL for the next connection */
 bool irc_get_ssl(irc hnd);
 
 /* well you get the idea... */
 bool irc_get_service_connect(irc hnd);
-const char* irc_get_service_dist(irc hnd);
+const char *irc_get_service_dist(irc hnd);
 long irc_get_service_type(irc hnd);
-const char* irc_get_service_info(irc hnd);
+const char *irc_get_service_info(irc hnd);
 bool irc_tracking_enab(irc hnd); //tell if tracking is (actually) enabled
 bool irc_get_dumb(irc hnd);
 void irc_set_dumb(irc hnd, bool dumbmode);

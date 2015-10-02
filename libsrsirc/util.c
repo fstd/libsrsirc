@@ -27,7 +27,7 @@
 #include "px.h"
 
 
-static char* next_tok(char *buf);
+static char *next_tok(char *buf);
 
 void
 lsi_ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx)
@@ -150,8 +150,8 @@ lsi_ut_strtolower(char *dest, size_t destsz, const char *str, int casemap)
 }
 
 bool
-lsi_ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz, uint16_t *port,
-    const char *pxspec)
+lsi_ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz,
+    uint16_t *port, const char *pxspec)
 { T("trace");
 	char linebuf[128];
 	lsi_com_strNcpy(linebuf, pxspec, sizeof linebuf);
@@ -210,7 +210,7 @@ lsi_ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
 		*port = 0;
 }
 
-char*
+char *
 lsi_ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr)
 { T("trace");
 	if ((*msg)[0])
@@ -221,7 +221,8 @@ lsi_ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr)
 	size_t i = 2;
 	while (i < COUNTOF(*msg) && (*msg)[i]) {
 		lsi_com_strNcat(dest, " ", destsz);
-		if ((i+1 == COUNTOF(*msg) || !(*msg)[i+1]) && (coltr || strchr((*msg)[i], ' ')))
+		if ((i+1 == COUNTOF(*msg) || !(*msg)[i+1])
+		    && (coltr || strchr((*msg)[i], ' ')))
 			lsi_com_strNcat(dest, ":", destsz);
 		lsi_com_strNcat(dest, (*msg)[i], destsz);
 		i++;
@@ -230,10 +231,12 @@ lsi_ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr)
 	return dest;
 }
 
-char*
+char *
 lsi_ut_sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
 { T("trace");
-	snprintf(dest, dest_sz, "(%p) '%s' '%s'", (void*)tag, (*msg)[0], (*msg)[1]);
+	snprintf(dest, dest_sz, "(%p) '%s' '%s'",
+	    (void *)tag, (*msg)[0], (*msg)[1]);
+
 	for (size_t i = 2; i < COUNTOF(*msg); i++) {
 		if (!(*msg)[i])
 			break;
@@ -261,7 +264,7 @@ lsi_ut_conread(tokarr *msg, void *tag)
 	return true;
 }
 
-char**
+char **
 lsi_ut_parse_MODE(irc h, tokarr *msg, size_t *num, bool is324)
 { T("trace");
 	size_t ac = 2;
@@ -468,7 +471,7 @@ lsi_ut_tokenize(char *buf, tokarr *tok)
 
 /* \0-terminate the (to-be)-token `buf' points to, then locate the next token,
  * if any, and return pointer to it (or NULL) */
-static char*
+static char *
 next_tok(char *buf)
 { T("trace");
 	while (*buf && *buf != ' ') /* walk until end of (former) token */

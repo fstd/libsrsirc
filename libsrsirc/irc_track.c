@@ -392,7 +392,8 @@ h_TOPIC(irc h, tokarr *msg, size_t nargs, bool logon)
 	free(c->topic);
 	free(c->topicnick);
 	c->topicnick = NULL;
-	if (!(c->topic = lsi_b_strdup((*msg)[3])) || !(c->topicnick = lsi_b_strdup(nick)))
+	if (!(c->topic = lsi_b_strdup((*msg)[3]))
+	    || !(c->topicnick = lsi_b_strdup(nick)))
 		return ALLOC_ERR;
 
 	return 0;
@@ -425,7 +426,7 @@ h_MODE_chanmode(irc h, tokarr *msg, size_t nargs, bool logon)
 		char *ptr = strchr(h->m005modepfx[0], p[i][1]);
 		if (ptr) {
 			char sym = h->m005modepfx[1][ptr - h->m005modepfx[0]];
-			lsi_update_modepfx(h, c, p[i] + 3, sym, enab); //XXX check?
+			lsi_update_modepfx(h, c, p[i] + 3, sym, enab); //XXX chk
 		} else {
 			if (enab) {
 				if (!lsi_add_chanmode(h, c, p[i] + 1))
@@ -628,8 +629,8 @@ lsi_trk_dump(irc h, bool full)
 // :port80c.se.quakenet.org 324 mynick #srsbsns +sk *
 // :port80c.se.quakenet.org 329 mynick #srsbsns 1313083493
 
-static chanrep* mkchanrep(chanrep *dest, chan c);
-static userrep* mkuserrep(userrep *dest, user u, const char *modepfx);
+static chanrep *mkchanrep(chanrep *dest, chan c);
+static userrep *mkuserrep(userrep *dest, user u, const char *modepfx);
 
 size_t
 irc_num_chans(irc h)
@@ -656,7 +657,7 @@ irc_all_chans(irc h, chanrep *chanarr, size_t chanarr_cnt)
 	return cnt;
 }
 
-static chanrep*
+static chanrep *
 mkchanrep(chanrep *dest, chan c)
 { T("trace");
 	dest->name = c->name;
@@ -668,7 +669,7 @@ mkchanrep(chanrep *dest, chan c)
 	return dest;
 }
 
-chanrep*
+chanrep *
 irc_chan(irc h, chanrep *dest, const char *name)
 { T("trace");
 	chan c = lsi_get_chan(h, name, false);
@@ -704,7 +705,7 @@ irc_all_users(irc h, userrep *userarr, size_t userarr_cnt)
 	return cnt;
 }
 
-static userrep*
+static userrep *
 mkuserrep(userrep *dest, user u, const char *modepfx)
 { T("trace");
 	dest->modepfx = modepfx;
@@ -717,7 +718,7 @@ mkuserrep(userrep *dest, user u, const char *modepfx)
 	return dest;
 }
 
-userrep*
+userrep *
 irc_user(irc h, userrep *dest, const char *ident)
 { T("trace");
 	user u = lsi_get_user(h, ident, false);
@@ -761,7 +762,7 @@ irc_all_members(irc h, const char *chname, userrep *userarr, size_t userarr_cnt)
 	return cnt;
 }
 
-userrep*
+userrep *
 irc_member(irc h, userrep *dest, const char *chname, const char *ident)
 { T("trace");
 	chan c = lsi_get_chan(h, chname, false);

@@ -152,7 +152,7 @@ lsi_bucklist_replace(bucklist_t l, const char *key, void *val)
 	return false;
 }
 
-void*
+void *
 lsi_bucklist_remove(bucklist_t l, const char *key, char **origkey)
 { T("trace");
 	struct pl_node *n = l->head;
@@ -200,7 +200,7 @@ lsi_bucklist_get(bucklist_t l, size_t i, char **key, void **val)
 	return true;
 }
 
-void*
+void *
 lsi_bucklist_find(bucklist_t l, const char *key, char **origkey)
 { T("trace");
 	struct pl_node *n = l->head;

@@ -64,7 +64,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	fprintf(str, "usage: %s [-vqchHVtkrNjiInufFQWbpPTCwlLE] <hostspec> "
 	    "[<hostspec> ...]\n", a0);
 	BH("");
-	BH("\t<hostspec> specifies one or more IRC server to connect to (see -H)");
+	BH("\t<hostspec> specifies one or more IRC server to use (see -H)");
 	LH("\t\thostspec := srvaddr[:port]['/ssl']");
 	LH("\t\tsrvaddr  := ip4addr|ip6addr|dnsname");
 	LH("\t\tport     := int(0..65535)");
@@ -205,17 +205,22 @@ process_args(int *argc, char ***argv)
 			if (!(g_sett.esc = lsi_b_strdup(lsi_b_optarg())))
 				CE("strdup failed");
 		break;case 'l':
-			g_sett.linedelay = lsi_strtou64(lsi_b_optarg(), NULL, 10) * 1000u;
+			g_sett.linedelay =
+			    lsi_strtou64(lsi_b_optarg(), NULL, 10) * 1000u;
 		break;case 'L':
-			g_sett.freelines = (unsigned)strtoul(lsi_b_optarg(), NULL, 10);
+			g_sett.freelines =
+			    (unsigned)strtoul(lsi_b_optarg(), NULL, 10);
 		break;case 'w':
-			g_sett.waitquit_us = lsi_strtou64(lsi_b_optarg(), NULL, 10) * 1000u;
+			g_sett.waitquit_us =
+			    lsi_strtou64(lsi_b_optarg(), NULL, 10) * 1000u;
 		break;case 'k':
 			g_sett.keeptrying = true;
 		break;case 'W':
-			g_sett.cfwait_us = lsi_strtou64(lsi_b_optarg(), NULL, 10) * 1000u;
+			g_sett.cfwait_us =
+			    lsi_strtou64(lsi_b_optarg(), NULL, 10) * 1000u;
 		break;case 'b':
-			g_sett.hbeat_us = lsi_strtou64(lsi_b_optarg(), NULL, 10) * 1000u;
+			g_sett.hbeat_us =
+			    lsi_strtou64(lsi_b_optarg(), NULL, 10) * 1000u;
 		break;case 'r':
 			g_sett.reconnect = true;
 		break;case 'j':
@@ -255,7 +260,7 @@ process_args(int *argc, char ***argv)
 		bool ssl = false;
 		lsi_ut_parse_hostspec(host, sizeof host, &port, &ssl, (*argv)[i]);
 
-		if (lsi_isdigitstr(host)) /* netcat and telnet invocation syntax */
+		if (lsi_isdigitstr(host)) /* nc and telnet invocation syntax */
 			C("Bad host '%s' (use 'srv:port', not 'srv port')",
 			    host);
 
@@ -294,14 +299,14 @@ set_defaults(void)
 	g_sett.pxport = 0;
 	g_sett.pxtype = -1;
 	g_sett.trgmode = false;
-	g_sett.cto_soft_us = DEF_CONTO_SOFT_MS*1000u;
-	g_sett.cto_hard_us = DEF_CONTO_HARD_MS*1000u;
-	g_sett.linedelay = DEF_LINEDELAY_MS*1000u;
+	g_sett.cto_soft_us = DEF_CONTO_SOFT_MS * 1000u;
+	g_sett.cto_hard_us = DEF_CONTO_HARD_MS * 1000u;
+	g_sett.linedelay = DEF_LINEDELAY_MS * 1000u;
 	g_sett.freelines = DEF_FREELINES;
-	g_sett.waitquit_us = DEF_WAITQUIT_MS*1000u;
+	g_sett.waitquit_us = DEF_WAITQUIT_MS * 1000u;
 	g_sett.keeptrying = false;
-	g_sett.cfwait_us = DEF_CONFAILWAIT_MS*1000u;
-	g_sett.hbeat_us = DEF_HEARTBEAT_MS*1000u;
+	g_sett.cfwait_us = DEF_CONFAILWAIT_MS * 1000u;
+	g_sett.hbeat_us = DEF_HEARTBEAT_MS * 1000u;
 	g_sett.reconnect = false;
 	g_sett.nojoin = false;
 	g_sett.ignore_pm = DEF_IGNORE_PM;

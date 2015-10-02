@@ -37,19 +37,19 @@ typedef struct userrep userrep;
  * is called.  if you need persistence, copy the data. */
 size_t irc_num_chans(irc h);
 size_t irc_all_chans(irc h, chanrep *chanarr, size_t chanarr_cnt);
-chanrep* irc_chan(irc h, chanrep *dest, const char *name);
+chanrep *irc_chan(irc h, chanrep *dest, const char *name);
 bool irc_tag_chan(irc h, const char *chnam, void *tag, bool autofree);
 
 size_t irc_num_users(irc h);
 size_t irc_all_users(irc h, userrep *userarr, size_t userarr_cnt);
-userrep* irc_user(irc h, userrep *dest, const char *ident);
+userrep *irc_user(irc h, userrep *dest, const char *ident);
 bool irc_tag_user(irc h, const char *ident, void *tag, bool autofree);
 
 size_t irc_num_members(irc h, const char *chnam);
 size_t irc_all_members(irc h, const char *chnam, userrep *userarr,
     size_t userarr_cnt);
 
-userrep* irc_member(irc h, userrep *dest, const char *chnam, const char *ident);
+userrep *irc_member(irc h, userrep *dest, const char *chnam, const char *ident);
 
 /* for debugging */
 void lsi_trk_dump(irc hnd, bool full);

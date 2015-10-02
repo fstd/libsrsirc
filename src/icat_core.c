@@ -63,7 +63,7 @@ int
 lsi_core_run(void)
 { T("trace");
 	tokarr tok;
-	char line[1024];
+	char ln[1024];
 	bool idle;
 
 	bool ignoreuser = false;
@@ -82,9 +82,9 @@ lsi_core_run(void)
 			if (r <= 0)
 				continue;
 
-			lsi_ut_sndumpmsg(line, sizeof line, NULL, &tok);
+			lsi_ut_sndumpmsg(ln, sizeof ln, NULL, &tok);
 
-			I("From server: '%s'", line);
+			I("From server: '%s'", ln);
 
 			if (strcmp(tok[1], "PRIVMSG") == 0)
 				handle_ircmsg(&tok);
@@ -94,12 +94,12 @@ lsi_core_run(void)
 
 		if (!ignoreuser) {
 			if (lsi_user_canread()) {
-				size_t olen = lsi_user_readline(line, sizeof line);
-				I("From user: '%s'", line);
-				if (olen >= sizeof line)
+				size_t olen = lsi_user_readline(ln, sizeof ln);
+				I("From user: '%s'", ln);
+				if (olen >= sizeof ln)
 					W("Line was too long -- truncated!");
 
-				handle_usermsg(line);
+				handle_usermsg(ln);
 
 				idle = false;
 			} else if (lsi_user_eof()) {
@@ -133,7 +133,8 @@ lsi_core_run(void)
 				E("lsi_serv_operate() failed");
 				if (!on) {
 					N("Delaying next connection attempt");
-					nextop = lsi_b_tstamp_us() + g_sett.cfwait_us;
+					nextop = lsi_b_tstamp_us()
+					    + g_sett.cfwait_us;
 				}
 			}
 		}
@@ -159,7 +160,8 @@ handle_ircmsg(tokarr *tok)
 
 	lsi_ut_pfx2nick(nick, sizeof nick, (*tok)[0]);
 
-	if (g_sett.ignore_cs && !lsi_ut_istrcmp(nick, "ChanServ", lsi_serv_casemap()))
+	if (g_sett.ignore_cs
+	    && !lsi_ut_istrcmp(nick, "ChanServ", lsi_serv_casemap()))
 		return;
 
 	if (g_sett.trgmode)
@@ -195,7 +197,8 @@ handle_usermsg(char *lnbuf)
 		lnbuf = tok + strlen(tok) + 1;
 	}
 
-	lsi_serv_printf("%s %s :%s", g_sett.notices?"NOTICE":"PRIVMSG", dst, lnbuf);
+	lsi_serv_printf("%s %s :%s",
+	    g_sett.notices?"NOTICE":"PRIVMSG", dst, lnbuf);
 }
 
 static void

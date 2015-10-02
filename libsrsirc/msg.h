@@ -18,7 +18,7 @@
 # define OUT_OF_NICKS  (CANT_PROCEED|(1<<1)) // logon: nick in use and no alt
 # define AUTH_ERR      (CANT_PROCEED|(1<<2)) // wrong server password
 # define PROTO_ERR     (CANT_PROCEED|(1<<3)) // illegal protocol message
-# define IO_ERR        (CANT_PROCEED|(1<<4)) // failure doing i/o (lsi_conn_write())
+# define IO_ERR        (CANT_PROCEED|(1<<4)) // i/o failure (lsi_conn_write())
 # define ALLOC_ERR     (CANT_PROCEED|(1<<5)) // out of memory
 # define USER_ERR      (CANT_PROCEED|(1<<6)) // user msg handler failed
 #define LOGON_COMPLETE (1<<7) // we now consider ourselves logged on

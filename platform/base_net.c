@@ -57,9 +57,11 @@
 static bool s_sslinit;
 
 
-static bool sockaddr_from_addr(struct sockaddr *dst, size_t *dstlen, const struct addrlist *ai);
+static bool sockaddr_from_addr(struct sockaddr *dst, size_t *dstlen,
+    const struct addrlist *ai);
 #if HAVE_GETADDRINFO
-static void addrstr_from_sockaddr(char *addr, size_t addr_sz, uint16_t *port, const struct addrinfo *ai);
+static void addrstr_from_sockaddr(char *addr, size_t addrsz, uint16_t *port,
+    const struct addrinfo *ai);
 #endif
 static void sslinit(void);
 
@@ -78,9 +80,9 @@ lsi_b_socket(bool ipv6)
 #  if HAVE_SETSOCKOPT && HAVE_SO_NOSIGPIPE
 		int opt = 1;
 
-		socklen_t optlen = (socklen_t)sizeof opt;
+		socklen_t ol = (socklen_t)sizeof opt;
 
-		if (setsockopt(sck, SOL_SOCKET, SO_NOSIGPIPE, &opt, optlen) != 0) {
+		if (setsockopt(sck, SOL_SOCKET, SO_NOSIGPIPE, &opt, ol) != 0) {
 			EE("setsockopt(%d, SOL_SOCKET, SO_NOSIGPIPE)", sck);
 		}
 #  else
@@ -122,7 +124,8 @@ lsi_b_connect(int sck, const struct addrlist *srv)
 		return 1;
 	}
 
-	EE("connect() sck %d to '%s' port %"PRIu16"'", sck, srv->addrstr, srv->port);
+	EE("connect() sck %d to '%s' port %"PRIu16"'",
+	    sck, srv->addrstr, srv->port);
 # else
 	E("We need something like connect()");
 # endif
@@ -176,8 +179,8 @@ lsi_b_select(int sck, bool rdbl, uint64_t to_us)
 		V("select()ing fd %d for %sability (to: %"PRIu64"us)",
 		    sck, rdbl?"read":"writ", trem);
 
-		int r = select(sck+1, rdbl ? &fds : NULL, rdbl ? NULL : &fds, NULL,
-		    tsend ? &tout : NULL);
+		int r = select(sck+1, rdbl ? &fds : NULL, rdbl ? NULL : &fds,
+		    NULL, tsend ? &tout : NULL);
 
 		if (r < 0) {
 			int e = errno;
@@ -216,7 +219,7 @@ lsi_b_blocking(int sck, bool blocking)
 
 	D("Setting sck %d to %sblocking mode", sck, blocking?"":"non-");
 	if (fcntl(sck, F_SETFL, flg) == -1) {
-		EE("fcntl(): failed to %s blocking mode", blocking?"set":"clear");
+		EE("fcntl(): failed to %s blocking", blocking?"set":"clear");
 		return false;
 	}
 #else
@@ -627,7 +630,8 @@ lsi_b_inet6_addr(unsigned char *dest, size_t destsz, const char *ip6str)
 
 
 static bool
-sockaddr_from_addr(struct sockaddr *dst, size_t *dstlen, const struct addrlist *ai)
+sockaddr_from_addr(struct sockaddr *dst, size_t *dstlen,
+    const struct addrlist *ai)
 { T("trace");
 #if HAVE_GETADDRINFO
 	struct addrinfo *ai_list = NULL;
@@ -662,28 +666,28 @@ sockaddr_from_addr(struct sockaddr *dst, size_t *dstlen, const struct addrlist *
 
 #if HAVE_GETADDRINFO
 static void
-addrstr_from_sockaddr(char *addr, size_t addr_sz, uint16_t *port,
+addrstr_from_sockaddr(char *addr, size_t addrsz, uint16_t *port,
     const struct addrinfo *ai)
 { T("trace");
 	if (ai->ai_family == AF_INET) {
-		struct sockaddr_in *sin = (struct sockaddr_in*)ai->ai_addr;
+		struct sockaddr_in *sin = (struct sockaddr_in *)ai->ai_addr;
 
-		if (addr && addr_sz)
-			if (!inet_ntop(AF_INET, &sin->sin_addr, addr, addr_sz))
+		if (addr && addrsz)
+			if (!inet_ntop(AF_INET, &sin->sin_addr, addr, addrsz))
 				EE("inet_ntop");
 		if (port)
 			*port = ntohs(sin->sin_port);
 	} else if (ai->ai_family == AF_INET6) {
-		struct sockaddr_in6 *sin = (struct sockaddr_in6*)ai->ai_addr;
+		struct sockaddr_in6 *sin = (struct sockaddr_in6 *)ai->ai_addr;
 
-		if (addr && addr_sz)
-			if (!inet_ntop(AF_INET6, &sin->sin6_addr, addr, addr_sz))
+		if (addr && addrsz)
+			if (!inet_ntop(AF_INET6, &sin->sin6_addr, addr, addrsz))
 				EE("inet_ntop");
 		if (port)
 			*port = ntohs(sin->sin6_port);
 	} else {
-		if (addr && addr_sz)
-			lsi_b_strNcpy(addr, "(non-IPv4/IPv6)", addr_sz);
+		if (addr && addrsz)
+			lsi_b_strNcpy(addr, "(non-IPv4/IPv6)", addrsz);
 		if (port)
 			*port = 0;
 	}

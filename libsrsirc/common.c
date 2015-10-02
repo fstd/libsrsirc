@@ -28,7 +28,7 @@
 #include <libsrsirc/defs.h>
 
 
-static int tryhost(struct addrlist *ai, char *peeraddr, size_t peeraddr_sz,
+static int tryhost(struct addrlist *ai, char *remaddr, size_t remaddr_sz,
     uint16_t *peerport, uint64_t to_us);
 
 void
@@ -57,7 +57,7 @@ lsi_com_strCchr(const char *dst, char c)
 }
 
 
-char*
+char *
 lsi_com_strNcpy(char *dst, const char *src, size_t dst_sz)
 { T("trace");
 	dst[dst_sz-1] = '\0';
@@ -68,8 +68,8 @@ lsi_com_strNcpy(char *dst, const char *src, size_t dst_sz)
 }
 
 int
-lsi_com_consocket(const char *host, uint16_t port, char *peeraddr,
-    size_t peeraddr_sz, uint16_t *peerport, uint64_t softto, uint64_t hardto)
+lsi_com_consocket(const char *host, uint16_t port, char *remaddr,
+    size_t remaddr_sz, uint16_t *peerport, uint64_t softto, uint64_t hardto)
 { T("trace");
 	uint64_t hardtsend = hardto ? lsi_b_tstamp_us() + hardto : 0;
 
@@ -93,7 +93,7 @@ lsi_com_consocket(const char *host, uint16_t port, char *peeraddr,
 		if (trem > softto)
 			trem = softto;
 
-		sck = tryhost(ai, peeraddr, peeraddr_sz, peerport, trem);
+		sck = tryhost(ai, remaddr, remaddr_sz, peerport, trem);
 
 		if (sck != -1)
 			break;
@@ -105,7 +105,7 @@ lsi_com_consocket(const char *host, uint16_t port, char *peeraddr,
 }
 
 static int
-tryhost(struct addrlist *ai, char *peeraddr, size_t peeraddr_sz,
+tryhost(struct addrlist *ai, char *remaddr, size_t remaddr_sz,
     uint16_t *peerport, uint64_t to_us)
 { T("trace");
 	int sck = lsi_b_socket(ai->ipv6);
@@ -129,8 +129,8 @@ tryhost(struct addrlist *ai, char *peeraddr, size_t peeraddr_sz,
 			W("failed to clear socket non-blocking mode");
 
 		if (lsi_b_sock_ok(sck)) {
-			if (peeraddr && peeraddr_sz)
-				lsi_b_strNcpy(peeraddr, ai->addrstr, peeraddr_sz);
+			if (remaddr && remaddr_sz)
+				lsi_b_strNcpy(remaddr, ai->addrstr, remaddr_sz);
 			if (peerport)
 				*peerport = ai->port;
 
@@ -183,7 +183,7 @@ lsi_com_check_timeout(uint64_t tsend, uint64_t *trem)
 	return false;
 }
 
-void*
+void *
 lsi_com_malloc(size_t sz)
 { T("trace");
 	void *r = malloc(sz);

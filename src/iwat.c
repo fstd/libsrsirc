@@ -103,8 +103,9 @@ static void
 process_args(int *argc, char ***argv, struct settings_s *sett)
 { T("trace");
 	char *a0 = (*argv)[0];
+	const char *optstr = "n:u:f:p:P:T:W:rb:qvh";
 
-	for (int ch; (ch = lsi_b_getopt(*argc, *argv, "n:u:f:p:P:T:W:rb:qvh")) != -1;) {
+	for (int ch; (ch = lsi_b_getopt(*argc, *argv, optstr)) != -1;) {
 		switch (ch) {
 		      case 'n':
 			irc_set_nick(g_irc, lsi_b_optarg());
@@ -119,9 +120,9 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			char host[256];
 			uint16_t port;
 			int ptype;
-			if (!lsi_ut_parse_pxspec(&ptype, host, sizeof host, &port,
-			    lsi_b_optarg()))
-				C("failed to parse pxspec '%s'", lsi_b_optarg());
+			if (!lsi_ut_parse_pxspec(&ptype, host, sizeof host,
+			    &port, lsi_b_optarg()))
+				C("failed to parse proxy '%s'", lsi_b_optarg());
 
 			irc_set_px(g_irc, host, port, ptype);
 			}
@@ -148,7 +149,8 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 		break;case 'W':
 			sett->cfwait_s = (int)strtol(lsi_b_optarg(), NULL, 10);
 		break;case 'b':
-			sett->heartbeat_us = strtoull(lsi_b_optarg(), NULL, 10) * 1000u;
+			sett->heartbeat_us =
+			    strtoull(lsi_b_optarg(), NULL, 10) * 1000u;
 		break;case 'r':
 			sett->recon = true;
 		break;case 'q':
@@ -184,11 +186,11 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	irc_set_conflags(g_irc, 0);
 	irc_regcb_conread(g_irc, conread, 0);
 
-	sett->heartbeat_us = DEF_HEARTBEAT_MS*1000u;
+	sett->heartbeat_us = DEF_HEARTBEAT_MS * 1000u;
 	sett->cfwait_s = DEF_CONFAILWAIT_S;
 	sett->verb = DEF_VERB;
-	sett->scto_us = DEF_CONTO_SOFT_MS*1000u;
-	sett->hcto_us = DEF_CONTO_HARD_MS*1000u;
+	sett->scto_us = DEF_CONTO_SOFT_MS * 1000u;
+	sett->hcto_us = DEF_CONTO_HARD_MS * 1000u;
 
 	process_args(argc, argv, sett);
 
@@ -201,7 +203,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 		bool ssl = false;
 		lsi_ut_parse_hostspec(host, sizeof host, &port, &ssl, (*argv)[i]);
 
-		/* we choke on all other sorts of invalid addresses/hostnames later */
+		/* we choke on all other sorts of invalid addrs/hosts later */
 
 		struct srvlist_s *node = malloc(sizeof *node);
 		if (!node)
@@ -329,7 +331,8 @@ main(int argc, char **argv)
 			D("connecting...");
 
 			if (tryconnect()) {
-				g_nexthb = lsi_b_tstamp_us() + g_sett.heartbeat_us;
+				g_nexthb =
+				    lsi_b_tstamp_us() + g_sett.heartbeat_us;
 				continue;
 			}
 

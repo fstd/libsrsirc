@@ -71,8 +71,8 @@ static int s_w_file = 0;
 static int s_w_line = 0;
 static int s_w_func = 0;
 
-static const char* lvlnam(int lvl);
-static const char* lvlcol(int lvl);
+static const char *lvlnam(int lvl);
+static const char *lvlcol(int lvl);
 static int getenv_m(const char *nam, char *dest, size_t destsz);
 static bool lsi_isdigitstr(const char *p);
 
@@ -138,8 +138,8 @@ ircdbg_getlvl(int mod)
 }
 
 void
-ircdbg_log(int mod, int lvl, int errn, const char *file, int line, const char *func,
-    const char *fmt, ...)
+ircdbg_log(int mod, int lvl, int errn, const char *file, int line,
+    const char *func, const char *fmt, ...)
 {
 	if (!s_init)
 		ircdbg_init();
@@ -186,8 +186,9 @@ ircdbg_log(int mod, int lvl, int errn, const char *file, int line, const char *f
 
 			snprintf(resmsg, sizeof resmsg, "%s%s: %*s: "
 			    "%s: %*s:%*d:%*s(): %s%s%s\n",
-			    s_fancy ? lvlcol(lvl) : "", timebuf, s_w_modnam, modnames[mod],
-			    lvlnam(lvl), s_w_file, file, s_w_line, line, s_w_func, func, payload, errmsg,
+			    s_fancy ? lvlcol(lvl) : "", timebuf, s_w_modnam,
+			    modnames[mod], lvlnam(lvl), s_w_file, file,
+			    s_w_line, line, s_w_func, func, payload, errmsg,
 			    s_fancy ? COL_RST : "");
 
 			fputs(resmsg, stderr);
@@ -227,7 +228,8 @@ ircdbg_init(void)
 						break;
 
 				if (mod < COUNTOF(s_lvlarr))
-					s_lvlarr[mod] = (int)strtol(eq+1, NULL, 10);
+					s_lvlarr[mod] =
+					    (int)strtol(eq+1, NULL, 10);
 
 				*eq = '=';
 				continue;
@@ -283,7 +285,7 @@ ircdbg_init(void)
 // ---- local helpers ----
 
 
-static const char*
+static const char *
 lvlnam(int lvl)
 {
 	return lvl == LOG_DEBUG ? "DBG" :
@@ -296,7 +298,7 @@ lvlnam(int lvl)
 	       lvl == LOG_ERR ? "ERR" : "???";
 }
 
-static const char*
+static const char *
 lvlcol(int lvl)
 {
 	return lvl == LOG_DEBUG ? COL_GRAY :

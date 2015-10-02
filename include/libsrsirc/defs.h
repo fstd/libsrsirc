@@ -67,14 +67,14 @@
 #define CHANMODE_CLASS_D 4
 
 /* the main handle type for our irc objects - this is what irc_init() returns */
-typedef struct irc_s* irc;
+typedef struct irc_s *irc;
 
 /* tokarr is the type we store pointers to a tokenized IRC protocol msg in */
 typedef char *tokarr[MAX_IRCARGS];
 
 /* type of the function which is called on IRC protocol messages read at logon
  * time.  Return false to abort the attempt to log on. see irc_regcb_conread */
-typedef bool (*fp_con_read)(tokarr *msg, void* tag);
+typedef bool (*fp_con_read)(tokarr *msg, void *tag);
 
 /* type of the function to come up with new nicknames, if at logon time our
  * desired nickname is unavailable. see irc_regcb_mutnick */

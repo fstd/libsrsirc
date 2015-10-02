@@ -18,7 +18,7 @@ void lsi_b_strNcpy(char *dest, const char *src, size_t destsz);
 
 int lsi_b_strcasecmp(const char *a, const char *b);
 int lsi_b_strncasecmp(const char *a, const char *b, size_t n);
-char* lsi_b_strdup(const char *s);
+char *lsi_b_strdup(const char *s);
 
 
 #endif /* LIBSRSIRC_BASE_STRING_H */

@@ -67,7 +67,7 @@ struct umsghnd {
 };
 
 /* this is a relict of the former design */
-typedef struct iconn_s* iconn;
+typedef struct iconn_s *iconn;
 struct iconn_s {
 	char *host;
 	uint16_t port;

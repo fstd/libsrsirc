@@ -26,8 +26,8 @@
 //bool lsi_bucklist_get(bucklist_t l, size_t i, char **key, void **val);
 //
 ///* linear search */
-//void* lsi_bucklist_find(bucklist_t l, const char *key, char **origkey);
-//void* lsi_bucklist_remove(bucklist_t l, const char *key, char **origkey);
+//void *lsi_bucklist_find(bucklist_t l, const char *key, char **origkey);
+//void *lsi_bucklist_remove(bucklist_t l, const char *key, char **origkey);
 //bool lsi_bucklist_replace(bucklist_t l, const char *key, void *val);
 //
 ///* iteration */
@@ -38,7 +38,7 @@
 ///* debug */
 //void lsi_bucklist_dump(bucklist_t l, bucklist_op_fn op);
 
-const char* /*UNITTEST*/
+const char * /*UNITTEST*/
 test_basic(void)
 {
 	bucklist_t l = lsi_bucklist_init(g_cmap[CMAP_RFC1459]);

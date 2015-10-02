@@ -122,7 +122,7 @@ handle_XXX(irc hnd, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_464(irc hnd, tokarr *msg, size_t nargs, bool logon)
 { T("trace");
-	W("(%p) wrong server password", (void*)hnd);
+	W("(%p) wrong server password", (void *)hnd);
 	return AUTH_ERR;
 }
 
@@ -146,7 +146,7 @@ handle_383(irc hnd, tokarr *msg, size_t nargs, bool logon)
 	lsi_com_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
 	hnd->ver[0] = '\0';
 	hnd->service = true;
-	D("(%p) got beloved 383", (void*)hnd);
+	D("(%p) got beloved 383", (void *)hnd);
 
 	return LOGON_COMPLETE;
 }
@@ -155,25 +155,25 @@ static uint8_t
 handle_484(irc hnd, tokarr *msg, size_t nargs, bool logon)
 { T("trace");
 	hnd->restricted = true;
-	I("(%p) we're 'restricted'", (void*)hnd);
+	I("(%p) we're 'restricted'", (void *)hnd);
 	return 0;
 }
 
 static uint8_t
 handle_465(irc hnd, tokarr *msg, size_t nargs, bool logon)
 { T("trace");
-	W("(%p) we're banned", (void*)hnd);
+	W("(%p) we're banned", (void *)hnd);
 	hnd->banned = true;
 	free(hnd->banmsg);
 	hnd->banmsg = lsi_b_strdup((*msg)[3] ? (*msg)[3] : "");
 
-	return 0; /* well if we are, the server will sure disconnect ua s*/
+	return 0; /* well if we are, the server will sure disconnect us */
 }
 
 static uint8_t
 handle_466(irc hnd, tokarr *msg, size_t nargs, bool logon)
 { T("trace");
-	W("(%p) we will be banned", (void*)hnd);
+	W("(%p) we will be banned", (void *)hnd);
 
 	return 0; /* so what, bitch? */
 }
@@ -261,7 +261,8 @@ handle_005_CHANMODES(irc hnd, const char *val)
 
 	while (ptr) {
 		if (c < 4)
-			lsi_com_strNcpy(hnd->m005chanmodes[c++], ptr, MAX_005_CHMD);
+			lsi_com_strNcpy(hnd->m005chanmodes[c++], ptr,
+			    MAX_005_CHMD);
 		ptr = strtok(NULL, ",");
 	}
 

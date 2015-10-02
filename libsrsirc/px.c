@@ -297,7 +297,7 @@ lsi_px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	}
 
 	if (resp[0] != 5 || resp[1] != 0) {
-		W(DBGSPEC" socks5 denied/failed (%"PRIu8" %"PRIu8" %"PRIu8" %"PRIu8")",
+		W(DBGSPEC" socks5 deny/err %"PRIu8" %"PRIu8" %"PRIu8" %"PRIu8"",
 		    sck, host, port, resp[0], resp[1], resp[2], resp[3]);
 		return false;
 	}
@@ -363,7 +363,7 @@ lsi_px_typenum(const char *typestr)
 	       (lsi_b_strcasecmp(typestr, "http") == 0) ? IRCPX_HTTP : -1;
 }
 
-const char*
+const char *
 lsi_px_typestr(int typenum)
 { T("trace");
 	return (typenum == IRCPX_HTTP) ? "HTTP" :

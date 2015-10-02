@@ -149,7 +149,7 @@ skmap_put_fail:
 	return false;
 }
 
-void*
+void *
 lsi_skmap_get(skmap h, const char *key)
 { T("trace");
 	size_t ind = h->hfn(key, h->cmap) % h->bsz;
@@ -161,7 +161,7 @@ lsi_skmap_get(skmap h, const char *key)
 	return lsi_bucklist_find(kl, key, NULL);
 }
 
-void*
+void *
 lsi_skmap_del(skmap h, const char *key)
 { T("trace");
 	size_t ind = h->hfn(key, h->cmap) % h->bsz;
@@ -309,7 +309,8 @@ lsi_skmap_dumpstat(skmap h, const char *dbgname)
 	double avglistlen;
 	size_t maxlistlen;
 
-	lsi_skmap_stat(h, &nbuck, &nbuckused, &nitems, &loadfac, &avglistlen, &maxlistlen);
+	lsi_skmap_stat(h, &nbuck, &nbuckused, &nitems, &loadfac, &avglistlen,
+	    &maxlistlen);
 
 	A("hashmap '%s' stat: bucksz: %zu, buckused: %zu (%f%%), items: %zu, "
 	    "loadfac: %f, avg listlen: %f, max listlen: %zu",

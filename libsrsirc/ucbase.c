@@ -100,7 +100,7 @@ lsi_drop_chan(irc h, chan c)
 			memb m = e;
 			if (--m->u->nchans == 0) {
 				if (!lsi_skmap_del(h->users, m->u->nick))
-					W("user '%s' not in user map", m->u->nick);
+					W("user '%s' not in umap", m->u->nick);
 				D("implicitly dropped user '%s'", m->u->nick);
 				free(m->u->nick);
 				free(m->u->uname);
@@ -252,7 +252,7 @@ lsi_update_modepfx(irc h, chan c, const char *nick, char mpfxsym, bool enab)
 	char *p = strchr(m->modepfx, mpfxsym);
 
 	if (!!enab == !!p) {
-		W("enab: %d, p: '%s' (c: '%s', n: '%s', mpfx: '%s', mpfxsym: '%c')",
+		W("enab: %d, p: '%s' (c: '%s', n: '%s', mpfx: '%s', sym: '%c')",
 		    enab, p, c->name, m->u->nick, m->modepfx, mpfxsym);
 		return false;
 	}
@@ -405,7 +405,7 @@ lsi_touch_user(irc h, const char *ident, bool complain)
 
 
 user
-lsi_add_user(irc h, const char *ident) //ident may be a nick, or nick!uname@host style
+lsi_add_user(irc h, const char *ident) //ident may be a nick, or nick!uname@host
 { T("trace");
 	char nick[MAX_NICK_LEN];
 	lsi_ut_pfx2nick(nick, sizeof nick, ident);
@@ -561,7 +561,10 @@ lsi_ucb_dump(irc h, bool full)
 				continue;
 			do {
 				memb m = e2;
-				A("    member ('%s') '%s!%s@%s' ['%s']", m->modepfx, m->u->nick, m->u->uname, m->u->host, m->u->fname);
+				A("    member ('%s') '%s!%s@%s' ['%s']",
+				    m->modepfx, m->u->nick, m->u->uname,
+				    m->u->host, m->u->fname);
+
 				m->u->dangling = false;
 			} while (lsi_skmap_next(c->memb, &k, &e2));
 		} while (lsi_skmap_next(h->chans, &key, &e1));
@@ -570,9 +573,9 @@ lsi_ucb_dump(irc h, bool full)
 		do {
 			user u = e1;
 			if (u->dangling)
-				A("dangling user '%s!%s@%s'", u->nick, u->uname, u->host);
+				A("dangling user '%s!%s@%s'",
+				    u->nick, u->uname, u->host);
 		} while (lsi_skmap_next(h->users, &key, &e1));
-
 }
 
 user
@@ -591,7 +594,7 @@ lsi_num_users(irc h)
 }
 
 bool
-lsi_rename_user(irc h, const char *ident, const char *newnick, bool *allocerr) //mh.
+lsi_rename_user(irc h, const char *ident, const char *newnick, bool *allocerr)
 { T("trace");
 	char nick[MAX_NICK_LEN];
 	lsi_ut_pfx2nick(nick, sizeof nick, ident);

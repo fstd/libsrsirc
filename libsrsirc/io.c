@@ -32,7 +32,7 @@
 
 
 /* local helpers */
-static char* find_delim(struct readctx *ctx);
+static char *find_delim(struct readctx *ctx);
 static int read_more(sckhld sh, struct readctx *ctx, uint64_t to_us);
 static bool write_str(sckhld sh, const char *buf);
 static long read_wrap(sckhld sh, void *buf, size_t sz);
@@ -92,7 +92,7 @@ lsi_io_write(sckhld sh, const char *line)
 
 
 /* return pointer to first line delim in our receive buffer, or NULL if none */
-static char*
+static char *
 find_delim(struct readctx *ctx)
 { T("trace");
 	for (char *ptr = ctx->wptr; ptr < ctx->eptr; ptr++)

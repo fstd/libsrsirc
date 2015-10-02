@@ -131,7 +131,7 @@ irc_init(void)
 		r->logonconv[i] = NULL;
 
 
-	D("(%p) irc_bas initialized (backend: %p)", (void*)r, (void*)r->con);
+	D("(%p) irc_bas initialized (backend: %p)", (void *)r, (void *)r->con);
 	return r;
 
 irc_init_fail:
@@ -193,7 +193,7 @@ irc_dispose(irc hnd)
 	for (size_t i = 0; i < COUNTOF(hnd->m005modepfx); i++)
 		free(hnd->m005modepfx[i]);
 
-	D("(%p) disposed", (void*)hnd);
+	D("(%p) disposed", (void *)hnd);
 	free(hnd);
 }
 
@@ -222,7 +222,7 @@ irc_connect(irc hnd)
 	if (!lsi_conn_connect(hnd->con, hnd->scto_us, hnd->hcto_us))
 		return false;
 
-	I("(%p) connection established", (void*)hnd);
+	I("(%p) connection established", (void *)hnd);
 
 	if (hnd->dumb)
 		return true;
@@ -230,7 +230,7 @@ irc_connect(irc hnd)
 	if (!send_logon(hnd))
 		goto irc_connect_fail;
 
-	I("(%p) IRC logon sequence sent", (void*)hnd);
+	I("(%p) IRC logon sequence sent", (void *)hnd);
 
 	lsi_com_strNcpy(hnd->mynick, hnd->nick, sizeof hnd->mynick);
 	tokarr msg;
@@ -240,7 +240,7 @@ irc_connect(irc hnd)
 	int r;
 	do {
 		if (lsi_com_check_timeout(tsend, &trem)) {
-			W("(%p) timeout waiting for 004", (void*)hnd);
+			W("(%p) timeout waiting for 004", (void *)hnd);
 			goto irc_connect_fail;
 		}
 
@@ -252,7 +252,7 @@ irc_connect(irc hnd)
 
 		if (hnd->cb_con_read &&
 		    !hnd->cb_con_read(&msg, hnd->tag_con_read)) {
-			W("(%p) further logon prohibited by conread", (void*)hnd);
+			W("(%p) logon prohibited by conread", (void *)hnd);
 			goto irc_connect_fail;
 		}
 
@@ -274,7 +274,7 @@ irc_connect(irc hnd)
 
 	} while (!success);
 
-	N("(%p) logged on to IRC", (void*)hnd);
+	N("(%p) logged on to IRC", (void *)hnd);
 	return true;
 
 irc_connect_fail:
@@ -394,7 +394,7 @@ irc_regcb_mutnick(irc hnd, fp_mut_nick cb)
 void
 irc_dump(irc h)
 { T("trace");
-	N("--- irc object %p dump---", (void*)h);
+	N("--- irc object %p dump---", (void *)h);
 	N("mynick: '%s'", h->mynick);
 	N("myhost: '%s'", h->myhost);
 	N("service: %d", h->service);
@@ -425,7 +425,7 @@ irc_dump(irc h)
 	N("m005modepfx[0]: '%s'", h->m005modepfx[0]);
 	N("m005modepfx[1]: '%s'", h->m005modepfx[1]);
 	N("m005chantypes: '%s'", h->m005chantypes);
-	N("tag_con_read: %p", (void*)h->tag_con_read);
+	N("tag_con_read: %p", (void *)h->tag_con_read);
 	N("tracking: %d", h->tracking);
 	N("tracking_enab: %d", h->tracking_enab);
 	N("endofnames: %d", h->endofnames);

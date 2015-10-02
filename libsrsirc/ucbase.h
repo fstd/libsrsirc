@@ -58,7 +58,7 @@ bool lsi_add_memb(irc h, chan c, user u, const char *mpfxstr);
 bool lsi_drop_memb(irc h, chan c, user u, bool purge, bool complain);
 void lsi_clear_memb(irc h, chan c);
 memb lsi_alloc_memb(irc h, user u, const char *mpfxstr);
-bool lsi_update_modepfx(irc h, chan c, const char *nick, char mpfxsym, bool enab);
+bool lsi_update_modepfx(irc h, chan c, const char *nick, char sym, bool enab);
 void lsi_clear_chanmodes(irc h, chan c);
 bool lsi_add_chanmode(irc h, chan c, const char *modestr);
 bool lsi_drop_chanmode(irc h, chan c, const char *modestr);
@@ -70,7 +70,9 @@ void lsi_ucb_clear(irc h);
 void lsi_ucb_dump(irc h, bool full);
 user lsi_get_user(irc h, const char *ident, bool complain);
 size_t lsi_num_users(irc h);
-bool lsi_rename_user(irc h, const char *ident, const char *newnick, bool *allocerr);
+bool lsi_rename_user(irc h, const char *ident, const char *newnick,
+    bool *allocerr);
+
 /* these might be dangerous to use, be sure to complete the iteration
  * before any other state might change */
 chan lsi_first_chan(irc h);

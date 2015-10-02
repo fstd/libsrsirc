@@ -67,7 +67,7 @@ lsi_conn_init(void)
 	r->sh.sck = -1;
 	r->sctx = NULL;
 
-	D("(%p) iconn initialized", (void*)r);
+	D("(%p) iconn initialized", (void *)r);
 
 	return r;
 
@@ -84,16 +84,16 @@ conn_init_fail:
 void
 lsi_conn_reset(iconn hnd)
 { T("trace");
-	D("(%p) resetting", (void*)hnd);
+	D("(%p) resetting", (void *)hnd);
 
 	if (hnd->ssl && hnd->sh.shnd) {
-		D("(%p) shutting down ssl", (void*)hnd);
+		D("(%p) shutting down ssl", (void *)hnd);
 		lsi_b_sslfin(hnd->sh.shnd);
 		hnd->sh.shnd = NULL;
 	}
 
 	if (hnd->sh.sck != -1) {
-		D("(%p) closing socket %d", (void*)hnd, hnd->sh.sck);
+		D("(%p) closing socket %d", (void *)hnd, hnd->sh.sck);
 		lsi_b_close(hnd->sh.sck);
 	}
 
@@ -113,7 +113,7 @@ lsi_conn_dispose(iconn hnd)
 	free(hnd->phost);
 	hnd->state = INV;
 
-	D("(%p) disposed", (void*)hnd);
+	D("(%p) disposed", (void *)hnd);
 	free(hnd);
 }
 
@@ -141,7 +141,7 @@ lsi_conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 
 		I("(%p) wanna connect to %s:%"PRIu16"%s, "
 		    "sto: %"PRIu64"us, hto: %"PRIu64"us",
-		    (void*)hnd, hnd->host, realport, ps, softto_us, hardto_us);
+		    (void *)hnd, hnd->host, realport, ps, softto_us, hardto_us);
 	}
 
 	char peerhost[256];
@@ -153,32 +153,34 @@ lsi_conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 	sh.shnd = NULL;
 
 	if (sh.sck < 0) {
-		W("(%p) lsi_com_consocket failed for %s:%"PRIu16"", (void*)hnd, host, port);
+		W("(%p) lsi_com_consocket failed for %s:%"PRIu16"",
+		    (void *)hnd, host, port);
 		return false;
 	}
 
-	D("(%p) connected socket %d for %s:%"PRIu16"", (void*)hnd, sh.sck, host, port);
+	D("(%p) connected socket %d for %s:%"PRIu16"",
+	    (void *)hnd, sh.sck, host, port);
 
 	hnd->sh = sh; //must be set here for px_logon
 
 	uint64_t trem = 0;
 	if (hnd->ptype != -1) {
 		if (lsi_com_check_timeout(tsend, &trem)) {
-			W("(%p) timeout", (void*)hnd);
+			W("(%p) timeout", (void *)hnd);
 			lsi_b_close(sh.sck);
 			hnd->sh.sck = -1;
 			return false;
 		}
 
 		if (!lsi_b_blocking(sh.sck, false)) {
-			WE("(%p) failed to set nonblocking mode", (void*)hnd);
+			WE("(%p) failed to set nonblocking mode", (void *)hnd);
 			lsi_b_close(sh.sck);
 			hnd->sh.sck = -1;
 			return false;
 		}
 
 		bool ok = false;
-		D("(%p) logging on to proxy", (void*)hnd);
+		D("(%p) logging on to proxy", (void *)hnd);
 		if (hnd->ptype == IRCPX_HTTP)
 			ok = lsi_px_logon_http(hnd->sh.sck, hnd->host,
 			    realport, trem);
@@ -190,17 +192,17 @@ lsi_conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 			    realport, trem);
 
 		if (!ok) {
-			W("(%p) proxy logon failed", (void*)hnd);
+			W("(%p) proxy logon failed", (void *)hnd);
 			lsi_b_close(sh.sck);
 			hnd->sh.sck = -1;
 			return false;
 		}
-		D("(%p) sent proxy logon sequence", (void*)hnd);
+		D("(%p) sent proxy logon sequence", (void *)hnd);
 
-		D("(%p) setting to blocking mode", (void*)hnd);
+		D("(%p) setting to blocking mode", (void *)hnd);
 
 		if (!lsi_b_blocking(sh.sck, true)) {
-			WE("(%p) failed to clear nonblocking mode", (void*)hnd);
+			WE("(%p) failed to set blocking mode", (void *)hnd);
 			lsi_b_close(sh.sck);
 			hnd->sh.sck = -1;
 			return false;
@@ -217,7 +219,7 @@ lsi_conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 	hnd->state = ON;
 
 	D("(%p) %s connection to ircd established",
-	    (void*)hnd, hnd->ptype == -1?"TCP":"proxy");
+	    (void *)hnd, hnd->ptype == -1?"TCP":"proxy");
 
 	return true;
 }
@@ -233,7 +235,7 @@ lsi_conn_read(iconn hnd, tokarr *tok, uint64_t to_us)
 		return 0; /* timeout */
 
 	if (n < 0) {
-		W("(%p) lsi_io_read %s", (void*)hnd, n == -1 ? "failed":"EOF");
+		W("(%p) lsi_io_read %s", (void *)hnd, n == -1 ? "failed":"EOF");
 		lsi_conn_reset(hnd);
 		hnd->eof = n == -2;
 		return -1;
@@ -245,7 +247,7 @@ lsi_conn_read(iconn hnd, tokarr *tok, uint64_t to_us)
 	if (last > 2)
 		hnd->colon_trail = (*tok)[last-1][-1] == ':';
 
-	D("(%p) got a msg ('%s', %zu args)", (void*)hnd, (*tok)[1], last);
+	D("(%p) got a msg ('%s', %zu args)", (void *)hnd, (*tok)[1], last);
 
 	return 1;
 }
@@ -258,13 +260,13 @@ lsi_conn_write(iconn hnd, const char *line)
 
 
 	if (!lsi_io_write(hnd->sh, line)) {
-		W("(%p) failed to write '%s'", (void*)hnd, line);
+		W("(%p) failed to write '%s'", (void *)hnd, line);
 		lsi_conn_reset(hnd);
 		hnd->eof = false;
 		return false;
 	}
 
-	D("(%p) wrote: '%s'", (void*)hnd, line);
+	D("(%p) wrote: '%s'", (void *)hnd, line);
 	return true;
 
 }
@@ -308,7 +310,8 @@ lsi_conn_set_px(iconn hnd, const char *host, uint16_t port, int ptype)
 		hnd->ptype = ptype;
 		free(hnd->phost);
 		hnd->phost = n;
-		I("set proxy to %s:%s:%"PRIu16, lsi_px_typestr(hnd->ptype), n, port);
+		I("set proxy to %s:%s:%"PRIu16,
+		    lsi_px_typestr(hnd->ptype), n, port);
 		break;
 	default:
 		E("illegal proxy type %d", ptype);
@@ -353,7 +356,7 @@ lsi_conn_set_ssl(iconn hnd, bool on)
 	return true;
 }
 
-const char*
+const char *
 lsi_conn_get_px_host(iconn hnd)
 { T("trace");
 	return hnd->phost;
@@ -371,7 +374,7 @@ lsi_conn_get_px_type(iconn hnd)
 	return hnd->ptype;
 }
 
-const char*
+const char *
 lsi_conn_get_host(iconn hnd)
 { T("trace");
 	return hnd->host;
