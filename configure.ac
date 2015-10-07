@@ -166,7 +166,8 @@ AC_CONFIG_FILES([Makefile
 		 logger/Makefile
 		 libsrsirc/Makefile
 		 src/Makefile
-                 unittests/Makefile])
+		 unittests/Makefile
+		 libsrsirc.pc])
 AC_OUTPUT
 
 echo \
