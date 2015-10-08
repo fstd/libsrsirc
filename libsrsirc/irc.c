@@ -285,6 +285,11 @@ irc_connect_fail:
 int
 irc_read(irc hnd, tokarr *tok, uint64_t to_us)
 { T("trace");
+	/* Allow to be called with tok == NULL if we don't need the result */
+	tokarr dummy;
+	if (!tok)
+		tok = &dummytok;
+
 	int r = lsi_conn_read(hnd->con, tok, to_us);
 	if (r == 0)
 		return 0;
