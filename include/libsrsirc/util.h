@@ -77,9 +77,6 @@ char lsi_ut_tolower(char c, int casemap);
  *         `casemap': CMAP_* constant (usually what irc_casemap() returns) */
 void lsi_ut_strtolower(char *dest, size_t destsz, const char *str, int casemap);
 
-/* ut_strtolower_ip - like lsi_ut_strtolower, but do it in-place */
-void ut_strtolower_ip(char *str, int casemap);
-
 /* lsi_ut_parse_hostspec - parse a "host spec" (i.e. something "host:port"-ish)
  * Params: `hoststr': buffer where the host part will be put in
  *         `hoststr_sz' : size of said buffer (\0-termination is ensured)
