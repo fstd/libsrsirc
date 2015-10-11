@@ -26,7 +26,7 @@ static void com_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 
 uint64_t
 lsi_b_tstamp_us(void)
-{ T("trace");
+{ T("(no args)");
 #if HAVE_GETTIMEOFDAY
 	struct timeval t;
 	uint64_t ts = 0;
@@ -44,7 +44,7 @@ lsi_b_tstamp_us(void)
 #if HAVE_GETTIMEOFDAY
 static void
 com_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts)
-{ T("trace");
+{ T("tv=%p, ts=%p, tv_to_ts=%d", (void *)tv, (void *)ts, tv_to_ts);
 	if (tv_to_ts)
 		*ts = (uint64_t)tv->tv_sec * 1000000 + tv->tv_usec;
 	else {

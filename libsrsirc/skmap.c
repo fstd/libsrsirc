@@ -11,6 +11,7 @@
 
 #include "skmap.h"
 
+#include <inttypes.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,7 +47,7 @@ static size_t strhash_mid(const char *s, const uint8_t *cmap);
 
 skmap
 lsi_skmap_init(size_t bsz, int cmap)
-{ T("trace");
+{ T("bsz=%zu, cmap=%d", bsz, cmap);
 	struct skmap *h = lsi_com_malloc(sizeof *h);
 	if (!h)
 		return NULL;
@@ -76,7 +77,7 @@ skmap_init_fail:
 
 void
 lsi_skmap_clear(skmap h)
-{ T("trace");
+{ T("h=%p", (void *)h);
 	char *k;
 	for (size_t i = 0; i < h->bsz; i++) {
 		if (!h->buck[i])
@@ -96,7 +97,7 @@ lsi_skmap_clear(skmap h)
 
 void
 lsi_skmap_dispose(skmap h)
-{ T("trace");
+{ T("h=%p", (void *)h);
 	if (!h)
 		return;
 
@@ -108,7 +109,7 @@ lsi_skmap_dispose(skmap h)
 
 bool
 lsi_skmap_put(skmap h, const char *key, void *elem)
-{ T("trace");
+{ T("h=%p, key='%s', elem=%p", (void *)h, key, elem);
 	if (!key || !elem)
 		return false;
 
@@ -151,7 +152,7 @@ skmap_put_fail:
 
 void *
 lsi_skmap_get(skmap h, const char *key)
-{ T("trace");
+{ T("h=%p, key='%s'", (void *)h, key);
 	size_t ind = h->hfn(key, h->cmap) % h->bsz;
 
 	bucklist_t kl = h->buck[ind];
@@ -163,7 +164,7 @@ lsi_skmap_get(skmap h, const char *key)
 
 void *
 lsi_skmap_del(skmap h, const char *key)
-{ T("trace");
+{ T("h=%p, key='%s'", (void *)h, key);
 	size_t ind = h->hfn(key, h->cmap) % h->bsz;
 
 	bucklist_t kl = h->buck[ind];
@@ -183,13 +184,13 @@ lsi_skmap_del(skmap h, const char *key)
 
 size_t
 lsi_skmap_count(skmap h)
-{ T("trace");
+{ T("h=%p", (void *)h);
 	return h->count;
 }
 
 bool
 lsi_skmap_first(skmap h, char **key, void **val)
-{ T("trace");
+{ T("h=%p, key=%p, val=%p", (void *)h, (void *)key, (void *)val);
 	h->bit = 0;
 	while (h->bit < h->bsz &&
 	    (!h->buck[h->bit] || lsi_bucklist_isempty(h->buck[h->bit])))
@@ -209,7 +210,7 @@ lsi_skmap_first(skmap h, char **key, void **val)
 
 bool
 lsi_skmap_next(skmap h, char **key, void **val)
-{ T("trace");
+{ T("h=%p, key=%p, val=%p", (void *)h, (void *)key, (void *)val);
 	if (!h->iterating)
 		return false;
 
@@ -235,14 +236,14 @@ lsi_skmap_next(skmap h, char **key, void **val)
 
 void
 lsi_skmap_del_iter(skmap h)
-{ T("trace");
+{ T("h=%p", (void *)h);
 	if (h->iterating)
 		lsi_bucklist_del_iter(h->buck[h->bit]);
 }
 
 void
 lsi_skmap_dump(skmap h, skmap_op_fn valop)
-{ T("trace");
+{ T("h=%p, valop=(fp)", (void *)h);
 	#define M(...) fprintf(stderr, __VA_ARGS__)
 	M("===hashmap dump (count: %zu)===\n", h->count);
 	if (!h)
@@ -270,7 +271,7 @@ lsi_skmap_dump(skmap h, skmap_op_fn valop)
 void
 lsi_skmap_stat(skmap h, size_t *nbuck, size_t *nbuckused, size_t *nitems,
     double *loadfac, double *avglistlen, size_t *maxlistlen)
-{ T("trace");
+{ T("h=%p, nbuck=%p, nbuckused=%p, nitems=%p, loadfac=%p, avglistlen=%p, maxlistlen=%p", (void *)h, (void *)nbuck, (void *)nbuckused, (void *)nitems, (void *)loadfac, (void *)avglistlen, (void *)maxlistlen);
 	size_t used = 0;
 	size_t usedlen = 0;
 	size_t empty = 0;
@@ -301,7 +302,7 @@ lsi_skmap_stat(skmap h, size_t *nbuck, size_t *nbuckused, size_t *nitems,
 
 void
 lsi_skmap_dumpstat(skmap h, const char *dbgname)
-{ T("trace");
+{ T("h=%p, dbgname='%s'", (void *)h, dbgname);
 	size_t nbuck;
 	size_t nbuckused;
 	size_t nitems;
@@ -321,7 +322,7 @@ lsi_skmap_dumpstat(skmap h, const char *dbgname)
 
 static size_t
 strhash_small(const char *s, const uint8_t *cmap)
-{ T("trace");
+{ T("s='%s', cmap=%p", s, (void *)cmap);
 	uint8_t res = 0xaa;
 	uint8_t cur;
 	unsigned shift = 0;
@@ -334,7 +335,7 @@ strhash_small(const char *s, const uint8_t *cmap)
 
 static size_t
 strhash_mid(const char *s, const uint8_t *cmap)
-{ T("trace");
+{ T("s='%s', cmap=%p", s, (void *)cmap);
 	uint8_t res[2] = { 0xaa, 0xaa };
 	uint8_t cur;
 	unsigned shift = 0;

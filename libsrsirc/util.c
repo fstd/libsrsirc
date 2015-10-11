@@ -31,7 +31,7 @@ static char *next_tok(char *buf);
 
 void
 lsi_ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx)
-{ T("trace");
+{ T("dest=%p, dest_sz=%zu, pfx='%s'", (void *)dest, dest_sz, pfx);
 	if (!dest_sz)
 		return;
 
@@ -48,7 +48,7 @@ lsi_ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx)
 
 void
 lsi_ut_pfx2uname(char *dest, size_t dest_sz, const char *pfx)
-{ T("trace");
+{ T("dest=%p, dest_sz=%zu, pfx='%s'", (void *)dest, dest_sz, pfx);
 	if (!dest_sz)
 		return;
 
@@ -67,7 +67,7 @@ lsi_ut_pfx2uname(char *dest, size_t dest_sz, const char *pfx)
 
 void
 lsi_ut_pfx2host(char *dest, size_t dest_sz, const char *pfx)
-{ T("trace");
+{ T("dest=%p, dest_sz=%zu, pfx='%s'", (void *)dest, dest_sz, pfx);
 	if (!dest_sz)
 		return;
 
@@ -82,7 +82,7 @@ lsi_ut_pfx2host(char *dest, size_t dest_sz, const char *pfx)
 
 int
 lsi_ut_istrcmp(const char *n1, const char *n2, int casemap)
-{ T("trace");
+{ T("n1='%s', n2='%s', casemap=%d", n1, n2, casemap);
 	size_t l1 = strlen(n1);
 	size_t l2 = strlen(n2);
 
@@ -91,7 +91,7 @@ lsi_ut_istrcmp(const char *n1, const char *n2, int casemap)
 
 int
 lsi_ut_istrncmp(const char *n1, const char *n2, size_t len, int casemap)
-{ T("trace");
+{ T("n1='%s', n2='%s', len=%zu, casemap=%d", n1, n2, len, casemap);
 	if (len == 0)
 		return 0;
 
@@ -112,9 +112,10 @@ lsi_ut_istrncmp(const char *n1, const char *n2, size_t len, int casemap)
 
 	return 0;
 }
+
 char
 lsi_ut_tolower(char c, int casemap)
-{ T("trace");
+{ T("c=%c, casemap=%d", c, casemap);
 	int rangeinc;
 	switch (casemap) {
 	case CMAP_RFC1459:
@@ -135,7 +136,7 @@ lsi_ut_tolower(char c, int casemap)
 
 void
 lsi_ut_strtolower(char *dest, size_t destsz, const char *str, int casemap)
-{ T("trace");
+{ T("dest=%p, destsz=%zu, str='%s', casemap=%d", (void *)dest, destsz, str, casemap);
 	size_t c = 0;
 	char *ptr = dest;
 	while (c < destsz) {
@@ -152,7 +153,7 @@ lsi_ut_strtolower(char *dest, size_t destsz, const char *str, int casemap)
 bool
 lsi_ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz,
     uint16_t *port, const char *pxspec)
-{ T("trace");
+{ T("ptype=%p, hoststr=%p, hoststr_sz=%zu, port=%p, pxspec='%s'", (void *)ptype, (void *)hoststr, hoststr_sz, (void *)port, pxspec);
 	char linebuf[128];
 	lsi_com_strNcpy(linebuf, pxspec, sizeof linebuf);
 
@@ -180,7 +181,7 @@ lsi_ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz,
 void
 lsi_ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
     bool *ssl, const char *hostspec)
-{ T("trace");
+{ T("hoststr=%p, hoststr_sz=%zu, port=%p, ssl=%p, hostspec='%s'", (void *)hoststr, hoststr_sz, (void *)port, (void *)ssl, hostspec);
 	if (ssl)
 		*ssl = false;
 
@@ -212,7 +213,7 @@ lsi_ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
 
 char *
 lsi_ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr)
-{ T("trace");
+{ T("dest=%p, destsz=%zu, msg=%p, coltr=%d", (void *)dest, destsz, (void *)msg, coltr);
 	if ((*msg)[0])
 		snprintf(dest, destsz, ":%s %s", (*msg)[0], (*msg)[1]);
 	else
@@ -233,7 +234,7 @@ lsi_ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr)
 
 char *
 lsi_ut_sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
-{ T("trace");
+{ T("dest=%p, dest_sz=%zu, tag=%p, msg=%p", (void *)dest, dest_sz, tag, (void *)msg);
 	snprintf(dest, dest_sz, "(%p) '%s' '%s'",
 	    (void *)tag, (*msg)[0], (*msg)[1]);
 
@@ -250,7 +251,7 @@ lsi_ut_sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
 
 void
 lsi_ut_dumpmsg(void *tag, tokarr *msg)
-{ T("trace");
+{ T("tag=%p, msg=%p", tag, (void *)msg);
 	char buf[1024];
 	lsi_ut_sndumpmsg(buf, sizeof buf, tag, msg);
 	fprintf(stderr, "%s\n", buf);
@@ -259,14 +260,14 @@ lsi_ut_dumpmsg(void *tag, tokarr *msg)
 
 bool
 lsi_ut_conread(tokarr *msg, void *tag)
-{ T("trace");
+{ T("msg=%p, tag=%p", (void *)msg, tag);
 	lsi_ut_dumpmsg(tag, msg);
 	return true;
 }
 
 char **
 lsi_ut_parse_MODE(irc h, tokarr *msg, size_t *num, bool is324)
-{ T("trace");
+{ T("h=%p, msg=%p, num=%p, is324=%d", (void *)h, (void *)msg, (void *)num, is324);
 	size_t ac = 2;
 	while (ac < COUNTOF(*msg) && (*msg)[ac])
 		ac++;
@@ -369,7 +370,7 @@ ut_parse_005_cmodes_fail:
 
 int
 lsi_ut_classify_chanmode(irc h, char c)
-{ T("trace");
+{ T("h=%p, c=%c", (void *)h, c);
 	for (int z = 0; z < 4; ++z) {
 		if (h->m005chanmodes[z] && strchr(h->m005chanmodes[z], c))
 			/*XXX this locks the chantype class constants */
@@ -380,7 +381,7 @@ lsi_ut_classify_chanmode(irc h, char c)
 
 void
 lsi_ut_mut_nick(char *nick, size_t nick_sz)
-{ T("trace");
+{ T("nick='%s', nick_sz=%zu", nick, nick_sz);
 	size_t len = strlen(nick);
 	if (len < 9) {
 		nick[len++] = '_';
@@ -398,7 +399,7 @@ lsi_ut_mut_nick(char *nick, size_t nick_sz)
 
 tokarr *
 lsi_ut_clonearr(tokarr *arr)
-{ T("trace");
+{ T("arr=%p", (void *)arr);
 	tokarr *res = lsi_com_malloc(sizeof *res);
 	if (!res)
 		return NULL;
@@ -421,7 +422,7 @@ clonearr_fail:
 
 void
 lsi_ut_freearr(tokarr *arr)
-{ T("trace");
+{ T("arr=%p", (void *)arr);
 	if (arr) {
 		for (size_t i = 0; i < COUNTOF(*arr); i++)
 			free((*arr)[i]);
@@ -436,7 +437,7 @@ lsi_ut_freearr(tokarr *arr)
  * elements are set to NULL.  returns true on success, false on failure */
 bool
 lsi_ut_tokenize(char *buf, tokarr *tok)
-{ T("trace");
+{ T("buf='%s', tok=%p", buf, (void *)tok);
 	for (size_t i = 0; i < COUNTOF(*tok); ++i)
 		(*tok)[i] = NULL;
 
@@ -473,7 +474,7 @@ lsi_ut_tokenize(char *buf, tokarr *tok)
  * if any, and return pointer to it (or NULL) */
 static char *
 next_tok(char *buf)
-{ T("trace");
+{ T("buf='%s'", buf);
 	while (*buf && *buf != ' ') /* walk until end of (former) token */
 		buf++;
 
@@ -491,7 +492,7 @@ next_tok(char *buf)
 
 const char *
 lsi_ut_casemap_nam(int cm)
-{ T("trace");
+{ T("cm=%d", cm);
 	switch (cm)
 	{
 		case CMAP_RFC1459:

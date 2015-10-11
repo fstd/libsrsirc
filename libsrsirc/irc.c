@@ -35,7 +35,7 @@ static bool send_logon(irc hnd);
 
 irc
 irc_init(void)
-{ T("trace");
+{ T("(no args)");
 	iconn con;
 	irc r = NULL;
 	int preverrno = errno;
@@ -161,13 +161,13 @@ irc_init_fail:
 
 void
 irc_reset(irc hnd)
-{ T("trace");
+{ T("hnd=%p", (void *)hnd);
 	lsi_conn_reset(hnd->con);
 }
 
 void
 irc_dispose(irc hnd)
-{ T("trace");
+{ T("hnd=%p", (void *)hnd);
 	lsi_trk_deinit(hnd);
 	lsi_conn_dispose(hnd->con);
 	free(hnd->lasterr);
@@ -199,7 +199,7 @@ irc_dispose(irc hnd)
 
 bool
 irc_connect(irc hnd)
-{ T("trace");
+{ T("hnd=%p", (void *)hnd);
 	uint64_t tsend = hnd->hcto_us ?
 	    lsi_b_tstamp_us() + hnd->hcto_us : 0;
 
@@ -284,7 +284,7 @@ irc_connect_fail:
 
 int
 irc_read(irc hnd, tokarr *tok, uint64_t to_us)
-{ T("trace");
+{ T("hnd=%p, tok=%p, to_us=%"PRIu64, (void *)hnd, (void *)tok, to_us);
 	/* Allow to be called with tok == NULL if we don't need the result */
 	tokarr dummy;
 	if (!tok)
@@ -304,20 +304,20 @@ irc_read(irc hnd, tokarr *tok, uint64_t to_us)
 
 bool
 irc_eof(irc hnd)
-{ T("trace");
+{ T("hnd=%p", (void *)hnd);
 	return lsi_conn_eof(hnd->con);
 }
 
 /* this is ugly and insane and BTW: it won't work */
 bool
 irc_can_read(irc hnd)
-{ T("trace");
+{ T("hnd=%p", (void *)hnd);
 	return hnd->con->rctx.eptr - hnd->con->rctx.wptr >= 3;
 }
 
 bool
 irc_write(irc hnd, const char *line)
-{ T("trace");
+{ T("hnd=%p, line='%s'", (void *)hnd, line);
 	bool r = lsi_conn_write(hnd->con, line);
 
 	if (!r)
@@ -328,7 +328,7 @@ irc_write(irc hnd, const char *line)
 
 bool
 irc_printf(irc hnd, const char *fmt, ...)
-{
+{ T("hnd=%p, fmt='%s', ...", (void *)hnd, fmt);
 	char buf[1024];
 
 	va_list vl;
@@ -342,7 +342,7 @@ irc_printf(irc hnd, const char *fmt, ...)
 
 static bool
 send_logon(irc hnd)
-{ T("trace");
+{ T("hnd=%p", (void *)hnd);
 	if (!lsi_conn_online(hnd->con))
 		return false;
 	char aBuf[256];
@@ -385,20 +385,20 @@ send_logon(irc hnd)
 
 void
 irc_regcb_conread(irc hnd, fp_con_read cb, void *tag)
-{ T("trace");
+{ T("hnd=%p, cb=(fp), tag=%p", (void *)hnd, tag);
 	hnd->cb_con_read = cb;
 	hnd->tag_con_read = tag;
 }
 
 void
 irc_regcb_mutnick(irc hnd, fp_mut_nick cb)
-{ T("trace");
+{ T("hnd=%p, cb=(fp)", (void *)hnd);
 	hnd->cb_mut_nick = cb;
 }
 
 void
 irc_dump(irc h)
-{ T("trace");
+{ T("h=%p", (void *)h);
 	N("--- irc object %p dump---", (void *)h);
 	N("mynick: '%s'", h->mynick);
 	N("myhost: '%s'", h->myhost);

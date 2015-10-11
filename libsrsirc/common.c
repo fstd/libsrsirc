@@ -33,7 +33,7 @@ static int tryhost(struct addrlist *ai, char *remaddr, size_t remaddr_sz,
 
 void
 lsi_com_strNcat(char *dest, const char *src, size_t destsz)
-{ T("trace");
+{ T("dest=%p, src='%s', destsz=%zu", (void *)dest, src, destsz);
 	size_t len = strlen(dest);
 	if (len + 1 >= destsz)
 		return;
@@ -47,11 +47,11 @@ lsi_com_strNcat(char *dest, const char *src, size_t destsz)
 }
 
 size_t
-lsi_com_strCchr(const char *dst, char c)
-{ T("trace");
+lsi_com_strCchr(const char *str, char c)
+{ T("str='%s', c=0x%"PRIx8, str, (uint8_t)c);
 	size_t r = 0;
-	while (*dst)
-		if (*dst++ == c)
+	while (*str)
+		if (*str++ == c)
 			r++;
 	return r;
 }
@@ -59,7 +59,7 @@ lsi_com_strCchr(const char *dst, char c)
 
 char *
 lsi_com_strNcpy(char *dst, const char *src, size_t dst_sz)
-{ T("trace");
+{ T("dst=%p, src='%s', dst_sz=%zu", (void *)dst, src, dst_sz);
 	dst[dst_sz-1] = '\0';
 	while (--dst_sz)
 		if (!(*dst++ = *src++))
@@ -70,7 +70,7 @@ lsi_com_strNcpy(char *dst, const char *src, size_t dst_sz)
 int
 lsi_com_consocket(const char *host, uint16_t port, char *remaddr,
     size_t remaddr_sz, uint16_t *peerport, uint64_t softto, uint64_t hardto)
-{ T("trace");
+{ T("host='%s', port=%"PRIu16", remaddr=%p, remaddr_sz=%zu, peerport=%p" "softto=%"PRIu64", hardto=%"PRIu64, host, port, (void *)remaddr, remaddr_sz, (void *)peerport, softto, hardto);
 	uint64_t hardtsend = hardto ? lsi_b_tstamp_us() + hardto : 0;
 
 	struct addrlist *alist;
@@ -107,7 +107,7 @@ lsi_com_consocket(const char *host, uint16_t port, char *remaddr,
 static int
 tryhost(struct addrlist *ai, char *remaddr, size_t remaddr_sz,
     uint16_t *peerport, uint64_t to_us)
-{ T("trace");
+{ T("ai=%p, remaddr=%p, remaddr_sz=%zu, peerport=%p, to_us=%"PRIu64, (void *)ai, (void *)remaddr, remaddr_sz, (void *)peerport, to_us);
 	int sck = lsi_b_socket(ai->ipv6);
 
 	if (sck == -1)
@@ -150,7 +150,7 @@ tryhost_fail:
 
 bool
 lsi_com_update_strprop(char **field, const char *val)
-{ T("trace");
+{ T("field=%p, val='%s'", (void *)field, val);
 	char *n = NULL;
 	if (val && !(n = lsi_b_strdup(val)))
 		return false;
@@ -163,7 +163,7 @@ lsi_com_update_strprop(char **field, const char *val)
 
 bool
 lsi_com_check_timeout(uint64_t tsend, uint64_t *trem)
-{ T("trace");
+{ T("tsend=%"PRIu64", trem=%p", tsend, (void *)trem);
 	if (!tsend) {
 		if (trem)
 			*trem = 0;
@@ -185,7 +185,7 @@ lsi_com_check_timeout(uint64_t tsend, uint64_t *trem)
 
 void *
 lsi_com_malloc(size_t sz)
-{ T("trace");
+{ T("sz=%zu", sz);
 	void *r = malloc(sz);
 	if (!r)
 		EE("malloc"); /* NOTE: This does NOT call exit() or anything */
@@ -195,7 +195,7 @@ lsi_com_malloc(size_t sz)
 /*dumb heuristic to tell apart domain name/ip4/ip6 addr XXX FIXME */
 enum hosttypes
 lsi_guess_hosttype(const char *host)
-{ T("trace");
+{ T("host='%s'", host);
 	if (strchr(host, '['))
 		return HOSTTYPE_IPV6;
 	int dc = 0;

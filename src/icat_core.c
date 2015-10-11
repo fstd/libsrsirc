@@ -49,19 +49,19 @@ static void dump_info(void);
 
 void
 lsi_core_init(void)
-{ T("trace");
+{ T("(no args)");
 	lsi_serv_init();
 }
 
 void
 lsi_core_destroy(void)
-{ T("trace");
+{ T("(no args)");
 	lsi_serv_destroy();
 }
 
 int
 lsi_core_run(void)
-{ T("trace");
+{ T("(no args)");
 	tokarr tok;
 	char ln[1024];
 	bool idle;
@@ -151,7 +151,7 @@ lsi_core_run(void)
 
 static void
 handle_ircmsg(tokarr *tok)
-{ T("trace");
+{ T("tok=%p", (void *)tok);
 	char nick[32];
 	if (!(*tok)[0])
 		return;
@@ -173,7 +173,7 @@ handle_ircmsg(tokarr *tok)
 
 static void
 handle_usermsg(char *lnbuf)
-{ T("trace");
+{ T("lnbuf='%s'", lnbuf);
 	s_writecnt++;
 
 	char *end = lnbuf + strlen(lnbuf) - 1;
@@ -203,7 +203,7 @@ handle_usermsg(char *lnbuf)
 
 static void
 dump_info(void)
-{ T("trace");
+{ T("(no args)");
 	fprintf(stderr, "icat: %sline; read %uln wrote %uln\n",
 	    lsi_serv_online()?"on":"off", s_readcnt, s_writecnt);
 }

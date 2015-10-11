@@ -29,19 +29,19 @@
 
 uint8_t
 lsi_strtou8(const char *nptr, char **endptr, int base)
-{ T("trace");
+{ T("nptr='%s', endptr=%p, base=%d", nptr, (void *)endptr, base);
 	return (uint8_t)strtoul(nptr, endptr, base);
 }
 
 uint64_t
 lsi_strtou64(const char *nptr, char **endptr, int base)
-{ T("trace");
+{ T("nptr='%s', endptr=%p, base=%d", nptr, (void *)endptr, base);
 	return (uint64_t)strtoull(nptr, endptr, base);
 }
 
 bool
 lsi_ismychan(const char *chan)
-{ T("trace");
+{ T("chan='%s'", chan);
 	char chans[512];
 	char search[512];
 	snprintf(chans, sizeof chans, ",%s,", g_sett.chanlist);
@@ -52,7 +52,7 @@ lsi_ismychan(const char *chan)
 
 bool
 lsi_isdigitstr(const char *str)
-{ T("trace");
+{ T("str='%s'", str);
 	while (*str)
 		if (!isdigit((unsigned char)*str++))
 			return false;
