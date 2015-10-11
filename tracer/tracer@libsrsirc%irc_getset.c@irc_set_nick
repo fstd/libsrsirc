@@ -1,0 +1,1 @@
+{ T("hnd=%p, nick='%s'", (void *)hnd, nick);

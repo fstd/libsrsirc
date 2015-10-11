@@ -1,0 +1,1 @@
+{ T("n1='%s', n2='%s', cmap=%p", n1, n2, (void *)cmap);

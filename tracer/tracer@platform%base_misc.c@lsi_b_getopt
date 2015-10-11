@@ -1,0 +1,1 @@
+{ T("argc=%d, argv=%p, optstring='%s'", argc, (void *)argv, optstring);

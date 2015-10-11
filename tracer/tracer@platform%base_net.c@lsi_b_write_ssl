@@ -1,0 +1,1 @@
+{ T("ssl=%p, buf=%p, len=%zu", (void *)ssl, buf, len);

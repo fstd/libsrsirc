@@ -1,0 +1,1 @@
+{ T("c=%c, casemap=%d", c, casemap);

@@ -1,0 +1,1 @@
+{ T("dest=%p, c=%p (%s)", (void *)dest, (void *)c, c->name);

@@ -1,0 +1,1 @@
+{ T("hnd=%p, cmd='%s', hndfn=(fp), module='%s'", (void *)hnd, cmd, module);

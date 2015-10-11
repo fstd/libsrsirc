@@ -1,0 +1,1 @@
+{ T("dest=%p, src='%s', destsz=%zu", (void *)dest, src, destsz);

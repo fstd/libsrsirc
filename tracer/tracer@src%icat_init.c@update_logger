@@ -1,0 +1,1 @@
+{ T("verb=%d, fancy=%d", verb, fancy);

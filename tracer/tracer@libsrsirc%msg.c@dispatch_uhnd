@@ -1,0 +1,1 @@
+{ T("hnd=%p, msg=%p, ac=%zu, pre=%d", (void *)hnd, (void *)msg, ac, pre);

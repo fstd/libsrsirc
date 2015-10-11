@@ -1,0 +1,1 @@
+{ T("ai=%p, remaddr=%p, remaddr_sz=%zu, peerport=%p, to_us=%"PRIu64, (void *)ai, (void *)remaddr, remaddr_sz, (void *)peerport, to_us);

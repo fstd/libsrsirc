@@ -1,0 +1,1 @@
+{ T("host='%s', port=%"PRIu16", remaddr=%p, remaddr_sz=%zu, peerport=%p" "softto=%"PRIu64", hardto=%"PRIu64, host, port, (void *)remaddr, remaddr_sz, (void *)peerport, softto, hardto);

@@ -1,0 +1,1 @@
+{ T("hnd=%p, soft=%"PRIu64", hard=%"PRIu64, (void *)hnd, soft, hard);

@@ -1,0 +1,1 @@
+{ T("h=%p, key='%s', elem=%p", (void *)h, key, elem);

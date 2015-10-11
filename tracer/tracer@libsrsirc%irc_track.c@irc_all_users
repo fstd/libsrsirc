@@ -1,0 +1,1 @@
+{ T("h=%p, userarr=%p, userarr_cnt=%zu", (void *)h, (void *)userarr, userarr_cnt);

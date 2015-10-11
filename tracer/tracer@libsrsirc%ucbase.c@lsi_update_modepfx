@@ -1,0 +1,1 @@
+{ T("h=%p, c=%p (%s), nick='%s', mpfxsym=0x%"PRIx8", enab=%d", (void *)h, (void *)c, c->name, nick, (uint8_t)mpfxsym, enab);

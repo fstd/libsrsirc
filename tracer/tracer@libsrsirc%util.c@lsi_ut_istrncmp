@@ -1,0 +1,1 @@
+{ T("n1='%s', n2='%s', len=%zu, casemap=%d", n1, n2, len, casemap);

@@ -1,0 +1,1 @@
+{ T("h=%p, ident='%s', newnick='%s', allocerr=%p", (void *)h, ident, newnick, (void *)allocerr);

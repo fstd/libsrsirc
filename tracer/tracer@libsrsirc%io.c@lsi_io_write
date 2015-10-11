@@ -1,0 +1,1 @@
+{ T("sh={.sck=%d, .shnd=%p}, line='%s'", sh.sck, (void *)sh.shnd, line);

@@ -1,0 +1,1 @@
+{ T("hnd=%p, info='%s'", (void *)hnd, info);

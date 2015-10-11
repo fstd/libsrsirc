@@ -1,0 +1,1 @@
+{ T("nptr='%s', endptr=%p, base=%d", nptr, (void *)endptr, base);

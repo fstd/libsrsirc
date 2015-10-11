@@ -1,0 +1,1 @@
+{ T("u=%p (%s), tag=%p, autofree=%d", (void *)u, u->nick, tag, autofree);

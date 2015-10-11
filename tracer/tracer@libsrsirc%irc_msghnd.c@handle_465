@@ -1,0 +1,1 @@
+{ T("hnd=%p, msg=%p, nargs=%zu, logon=%d", (void *)hnd, (void *)msg, nargs, logon);

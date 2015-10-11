@@ -1,0 +1,1 @@
+{ T("cmap=%p", (void *)cmap);

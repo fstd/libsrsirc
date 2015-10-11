@@ -1,0 +1,1 @@
+{ T("dest=%p, dest_sz=%zu, pfx='%s'", (void *)dest, dest_sz, pfx);

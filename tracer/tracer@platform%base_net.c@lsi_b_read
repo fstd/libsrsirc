@@ -1,0 +1,1 @@
+{ T("sck=%d, buf=%p, sz=%zu, tryagain=%p", sck, buf, sz, (void *)tryagain);

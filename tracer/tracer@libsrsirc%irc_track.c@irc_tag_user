@@ -1,0 +1,1 @@
+{ T("h=%p, ident='%s', tag=%p, autofree=%d", (void *)h, ident, tag, autofree);

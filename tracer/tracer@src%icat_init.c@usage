@@ -1,0 +1,1 @@
+{ T("str=%p, a0='%s', ec=%d, sh=%d", (void *)str, a0, ec, sh);

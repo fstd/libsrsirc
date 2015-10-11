@@ -1,0 +1,1 @@
+{ T("hoststr=%p, hoststr_sz=%zu, port=%p, ssl=%p, hostspec='%s'", (void *)hoststr, hoststr_sz, (void *)port, (void *)ssl, hostspec);
