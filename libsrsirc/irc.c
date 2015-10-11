@@ -288,7 +288,7 @@ irc_read(irc hnd, tokarr *tok, uint64_t to_us)
 	/* Allow to be called with tok == NULL if we don't need the result */
 	tokarr dummy;
 	if (!tok)
-		tok = &dummytok;
+		tok = &dummy;
 
 	int r = lsi_conn_read(hnd->con, tok, to_us);
 	if (r == 0)
