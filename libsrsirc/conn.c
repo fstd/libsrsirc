@@ -40,7 +40,7 @@
 
 iconn
 lsi_conn_init(void)
-{ T("(no args)");
+{
 	iconn r = NULL;
 	int preverrno = errno;
 	errno = 0;
@@ -83,7 +83,7 @@ conn_init_fail:
 
 void
 lsi_conn_reset(iconn hnd)
-{ T("hnd=%p", (void *)hnd);
+{
 	D("(%p) resetting", (void *)hnd);
 
 	if (hnd->ssl && hnd->sh.shnd) {
@@ -104,7 +104,7 @@ lsi_conn_reset(iconn hnd)
 
 void
 lsi_conn_dispose(iconn hnd)
-{ T("hnd=%p", (void *)hnd);
+{
 	lsi_conn_reset(hnd);
 
 	lsi_conn_set_ssl(hnd, false); //dispose ssl context if existing
@@ -119,7 +119,7 @@ lsi_conn_dispose(iconn hnd)
 
 bool
 lsi_conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
-{ T("hnd=%p, softto_us=%"PRIu64", hardto_us=%"PRIu64, (void *)hnd, softto_us, hardto_us);
+{
 	if (!hnd || hnd->state != OFF)
 		return false;
 
@@ -226,7 +226,7 @@ lsi_conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 
 int
 lsi_conn_read(iconn hnd, tokarr *tok, uint64_t to_us)
-{ T("hnd=%p, tokarr=%p, to_us=%"PRIu64, (void *)hnd, (void *)tok, to_us);
+{
 	if (!hnd || hnd->state != ON)
 		return -1;
 
@@ -254,7 +254,7 @@ lsi_conn_read(iconn hnd, tokarr *tok, uint64_t to_us)
 
 bool
 lsi_conn_write(iconn hnd, const char *line)
-{ T("hnd=%p, line='%s'", (void *)hnd, line);
+{
 	if (!hnd || hnd->state != ON || !line)
 		return false;
 
@@ -273,19 +273,19 @@ lsi_conn_write(iconn hnd, const char *line)
 
 bool
 lsi_conn_online(iconn hnd)
-{ T("hnd=%p", (void *)hnd);
+{
 	return hnd->state == ON;
 }
 
 bool
 lsi_conn_eof(iconn hnd)
-{ T("hnd=%p", (void *)hnd);
+{
 	return hnd->eof;
 }
 
 bool
 lsi_conn_colon_trail(iconn hnd)
-{ T("hnd=%p", (void *)hnd);
+{
 	if (!hnd || hnd->state != ON)
 		return false;
 
@@ -294,7 +294,7 @@ lsi_conn_colon_trail(iconn hnd)
 
 bool
 lsi_conn_set_px(iconn hnd, const char *host, uint16_t port, int ptype)
-{ T("hnd=%p, host='%s', port=%"PRIu16", ptype=%d", (void *)hnd, host, port, ptype);
+{
 	char *n = NULL;
 	switch (ptype) {
 	case IRCPX_HTTP:
@@ -323,7 +323,7 @@ lsi_conn_set_px(iconn hnd, const char *host, uint16_t port, int ptype)
 
 bool
 lsi_conn_set_server(iconn hnd, const char *host, uint16_t port)
-{ T("hnd=%p, host='%s', port=%"PRIu16, (void *)hnd, host, port);
+{
 	char *n;
 	if (!(n = lsi_b_strdup(host?host:DEF_HOST)))
 		return false;
@@ -337,7 +337,7 @@ lsi_conn_set_server(iconn hnd, const char *host, uint16_t port)
 
 bool
 lsi_conn_set_ssl(iconn hnd, bool on)
-{ T("hnd=%p, on=%d", (void *)hnd, on);
+{
 	if (on && !hnd->sctx) {
 		if (!(hnd->sctx = lsi_b_mksslctx())) {
 			E("could not create ssl context, ssl not enabled!");
@@ -358,43 +358,43 @@ lsi_conn_set_ssl(iconn hnd, bool on)
 
 const char *
 lsi_conn_get_px_host(iconn hnd)
-{ T("hnd=%p", (void *)hnd);
+{
 	return hnd->phost;
 }
 
 uint16_t
 lsi_conn_get_px_port(iconn hnd)
-{ T("hnd=%p", (void *)hnd);
+{
 	return hnd->pport;
 }
 
 int
 lsi_conn_get_px_type(iconn hnd)
-{ T("hnd=%p", (void *)hnd);
+{
 	return hnd->ptype;
 }
 
 const char *
 lsi_conn_get_host(iconn hnd)
-{ T("hnd=%p", (void *)hnd);
+{
 	return hnd->host;
 }
 
 uint16_t
 lsi_conn_get_port(iconn hnd)
-{ T("hnd=%p", (void *)hnd);
+{
 	return hnd->port;
 }
 
 bool
 lsi_conn_get_ssl(iconn hnd)
-{ T("hnd=%p", (void *)hnd);
+{
 	return hnd->ssl;
 }
 
 int
 lsi_conn_sockfd(iconn hnd)
-{ T("hnd=%p", (void *)hnd);
+{
 	if (!hnd || hnd->state != ON)
 		return -1;
 

@@ -39,7 +39,7 @@
 
 bool
 lsi_px_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
-{ T("sck=%d, host='%s', port=%"PRIu16", to_us=%"PRIu64, sck, host, port, to_us);
+{
 	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 	char buf[256];
 	snprintf(buf, sizeof buf, "CONNECT %s:%d HTTP/1.0\r\nHost: %s:%d"
@@ -99,7 +99,7 @@ lsi_px_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 /* SOCKS4 doesntsupport ipv6 */
 bool
 lsi_px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
-{ T("sck=%d, host='%s', port=%"PRIu16", to_us=%"PRIu64, sck, host, port, to_us);
+{
 	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 	unsigned char logon[14];
 	uint16_t nport = lsi_b_htons(port);
@@ -162,7 +162,7 @@ lsi_px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 
 bool
 lsi_px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
-{ T("sck=%d, host='%s', port=%"PRIu16", to_us=%"PRIu64, sck, host, port, to_us);
+{
 	E("proxu support currently commented out, it's horrible. plx fix.");
 	return false;
 	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
@@ -357,7 +357,7 @@ lsi_px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 
 int
 lsi_px_typenum(const char *typestr)
-{ T("typestr='%s'", typestr);
+{
 	return (lsi_b_strcasecmp(typestr, "socks4") == 0) ? IRCPX_SOCKS4 :
 	       (lsi_b_strcasecmp(typestr, "socks5") == 0) ? IRCPX_SOCKS5 :
 	       (lsi_b_strcasecmp(typestr, "http") == 0) ? IRCPX_HTTP : -1;
@@ -365,7 +365,7 @@ lsi_px_typenum(const char *typestr)
 
 const char *
 lsi_px_typestr(int typenum)
-{ T("typenum=%d", typenum);
+{
 	return (typenum == IRCPX_HTTP) ? "HTTP" :
 	       (typenum == IRCPX_SOCKS4) ? "SOCKS4" :
 	       (typenum == IRCPX_SOCKS5) ? "SOCKS5" : "unknown";

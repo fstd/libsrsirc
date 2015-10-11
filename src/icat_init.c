@@ -52,7 +52,7 @@ int main(int argc, char **argv);
 
 static void
 usage(FILE *str, const char *a0, int ec, bool sh)
-{ T("str=%p, a0='%s', ec=%d, sh=%d", (void *)str, a0, ec, sh);
+{
 	#define XSTR(s) STR(s)
 	#define STR(s) #s
 	#define SH(STR) if (sh) fputs(STR "\n", str)
@@ -131,7 +131,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 
 static void
 process_args(int *argc, char ***argv)
-{ T("argc=%p (%d), argv=%p", (void *)argc, *argc, (void *)argv);
+{
 	char *a0 = (*argv)[0];
 
 	for (int ch; (ch = lsi_b_getopt(*argc, *argv,
@@ -289,7 +289,7 @@ process_args(int *argc, char ***argv)
 
 static void
 set_defaults(void)
-{ T("(no args)");
+{
 	STRACPY(g_sett.nick, "icat");
 	STRACPY(g_sett.uname, "icat");
 	STRACPY(g_sett.fname, "IRC netcat");
@@ -320,7 +320,7 @@ set_defaults(void)
 
 static void
 dump_settings(void)
-{ T("(no args)");
+{
 	D("nick: '%s'", g_sett.nick);
 	D("uname: '%s'", g_sett.uname);
 	D("fname: '%s'", g_sett.fname);
@@ -357,7 +357,7 @@ dump_settings(void)
 
 static void
 lsi_cleanup(void)
-{ T("(no args)");
+{
 	I("Cleaning up");
 	lsi_core_destroy();
 
@@ -374,7 +374,7 @@ lsi_cleanup(void)
 
 static void
 sighnd(int s)
-{ T("s=%d", s);
+{
 	switch (s)
 	{
 #if HAVE_SIGINT
@@ -396,7 +396,7 @@ sighnd(int s)
 
 static void
 init_logger(void)
-{ T("(no args)");
+{
 	ircdbg_init();
 	ircdbg_setlvl(MOD_ICATINIT, DEF_LOGLVL);
 	ircdbg_setlvl(MOD_ICATCORE, DEF_LOGLVL);
@@ -407,7 +407,7 @@ init_logger(void)
 
 static void
 update_logger(int verb, int fancy)
-{ T("verb=%d, fancy=%d", verb, fancy);
+{
 	int v = ircdbg_getlvl(MOD_ICATINIT) + verb;
 	if (v < 0)
 		v = 0;

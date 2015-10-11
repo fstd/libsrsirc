@@ -57,7 +57,7 @@ static bool conread(tokarr *msg, void *tag);
 
 void
 lsi_serv_init(void)
-{ T("(no args)");
+{
 	D("Initializing");
 
 	if (!(s_irc = irc_init()))
@@ -87,7 +87,7 @@ lsi_serv_init(void)
 
 void
 lsi_serv_destroy(void)
-{ T("(no args)");
+{
 	I("Destroying");
 	if (s_irc) {
 		D("Disposing of the irc object");
@@ -104,7 +104,7 @@ lsi_serv_destroy(void)
 
 bool
 lsi_serv_operate(void)
-{ T("(no args)");
+{
 	if (!s_on) {
 		D("We're not online");
 
@@ -136,7 +136,7 @@ lsi_serv_operate(void)
 
 bool
 lsi_serv_canread(void)
-{ T("(no args)");
+{
 	if (!s_on)
 		return false;
 
@@ -158,7 +158,7 @@ lsi_serv_canread(void)
 
 int
 lsi_serv_read(tokarr *t)
-{ T("t=%p", (void *)t);
+{
 	if (!s_on)
 		return -1;
 
@@ -180,7 +180,7 @@ lsi_serv_read(tokarr *t)
 
 int
 lsi_serv_printf(const char *fmt, ...)
-{ T("fmt='%s', ...", fmt);
+{
 	char buf[1024];
 	va_list l;
 	va_start(l, fmt);
@@ -210,26 +210,26 @@ lsi_serv_printf(const char *fmt, ...)
 
 bool
 lsi_serv_online(void)
-{ T("(no args)");
+{
 	return s_on;
 }
 
 int
 lsi_serv_casemap(void)
-{ T("(no args)");
+{
 	return s_casemap;
 }
 
 uint64_t
 lsi_serv_sentquit(void)
-{ T("(no args)");
+{
 	return s_quitat;
 }
 
 
 static bool
 handle_PING(irc irchnd, tokarr *tok, size_t nargs, bool pre)
-{ T("irchnd=%p, tok=%p, nargs=%zu, pre=%d", (void *)irchnd, (void *)tok, nargs, pre);
+{
 	char buf[1024];
 	snprintf(buf, sizeof buf, "PONG :%s\r\n", (*tok)[2]);
 	if (!to_srv(buf))
@@ -241,7 +241,7 @@ handle_PING(irc irchnd, tokarr *tok, size_t nargs, bool pre)
 
 static bool
 handle_005(irc irchnd, tokarr *tok, size_t nargs, bool pre)
-{ T("irchnd=%p, tok=%p, nargs=%zu, pre=%d", (void *)irchnd, (void *)tok, nargs, pre);
+{
 	int cm = irc_casemap(s_irc);
 	if (cm != s_casemap) {
 		D("Casemapping changed from %s to %s",
@@ -253,7 +253,7 @@ handle_005(irc irchnd, tokarr *tok, size_t nargs, bool pre)
 
 static int
 process_sendq(void)
-{ T("(no args)");
+{
 	static uint64_t nextsend = 0;
 	if (!s_outQ)
 		return 0;
@@ -286,7 +286,7 @@ process_sendq(void)
 
 static bool
 do_heartbeat(void)
-{ T("(no args)");
+{
 	if (g_sett.hbeat_us && s_nexthb <= lsi_b_tstamp_us()) {
 		D("Heartbeat time");
 		char buf[512];
@@ -301,7 +301,7 @@ do_heartbeat(void)
 
 static bool
 to_srv(const char *line)
-{ T("line='%s'", line);
+{
 	bool ret;
 	I("To server: '%s'", line);
 	if (!(ret = irc_write(s_irc, line)))
@@ -312,7 +312,7 @@ to_srv(const char *line)
 
 static bool
 tryconnect(struct srvlist_s *s)
-{ T("s=%p", (void *)s);
+{
 	I("Trying to get a connection going...");
 	while (s) {
 		irc_set_server(s_irc, s->host, s->port);
@@ -354,7 +354,7 @@ tryconnect(struct srvlist_s *s)
 
 static bool
 first_connect(void)
-{ T("(no args)");
+{
 	while (!g_interrupted) {
 		if (!tryconnect(g_sett.srvlist)) {
 			E("Failed to connect/logon (%s)",
@@ -380,7 +380,7 @@ first_connect(void)
 
 static bool
 conread(tokarr *msg, void *tag)
-{ T("msg=%p, tag=%p", (void *)msg, tag);
+{
 	char buf[1024];
 	lsi_ut_sndumpmsg(buf, sizeof buf, tag, msg);
 	I("CR: %s", buf);

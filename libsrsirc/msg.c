@@ -27,7 +27,7 @@
 
 bool
 lsi_msg_reghnd(irc hnd, const char *cmd, hnd_fn hndfn, const char *module)
-{ T("hnd=%p, cmd='%s', hndfn=(fp), module='%s'", (void *)hnd, cmd, module);
+{
 	size_t i = 0;
 	D("'%s' registering '%s'-handler", module, cmd);
 	for (;i < hnd->msghnds_cnt; i++)
@@ -58,7 +58,7 @@ lsi_msg_reghnd(irc hnd, const char *cmd, hnd_fn hndfn, const char *module)
 
 bool
 lsi_msg_reguhnd(irc hnd, const char *cmd, uhnd_fn hndfn, bool pre)
-{ T("hnd=%p, cmd='%s', hndfn=(fp), pre=%d", (void *)hnd, cmd, pre);
+{
 	size_t hcnt = pre ? hnd->uprehnds_cnt : hnd->uposthnds_cnt;
 	struct umsghnd *harr = pre ? hnd->uprehnds : hnd->uposthnds;
 	size_t i = 0;
@@ -97,7 +97,7 @@ lsi_msg_reguhnd(irc hnd, const char *cmd, uhnd_fn hndfn, bool pre)
 
 void
 lsi_msg_unregall(irc hnd, const char *module)
-{ T("hnd=%p, module='%s'", (void *)hnd, module);
+{
 	size_t i = 0;
 	for (;i < hnd->msghnds_cnt; i++)
 		if (hnd->msghnds[i].cmd[0]
@@ -107,7 +107,7 @@ lsi_msg_unregall(irc hnd, const char *module)
 
 static bool
 dispatch_uhnd(irc hnd, tokarr *msg, size_t ac, bool pre)
-{ T("hnd=%p, msg=%p, ac=%zu, pre=%d", (void *)hnd, (void *)msg, ac, pre);
+{
 	size_t hcnt = pre ? hnd->uprehnds_cnt : hnd->uposthnds_cnt;
 	struct umsghnd *harr = pre ? hnd->uprehnds : hnd->uposthnds;
 
@@ -128,7 +128,7 @@ dispatch_uhnd(irc hnd, tokarr *msg, size_t ac, bool pre)
 
 uint8_t
 lsi_msg_handle(irc hnd, tokarr *msg, bool logon)
-{ T("hnd=%p, msg=%p, logon=%d", (void *)hnd, (void *)msg, logon);
+{
 	uint8_t res = 0;
 	size_t i = 0;
 	size_t ac = 2;

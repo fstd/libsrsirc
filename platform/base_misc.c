@@ -22,7 +22,7 @@
 
 void
 lsi_b_usleep(uint64_t us)
-{ T("us=%"PRIu64, us);
+{
 	V("Sleeping %"PRIu64" us", us);
 	uint64_t secs = us / 1000000u;
 	if (secs > INT_MAX)
@@ -39,7 +39,7 @@ lsi_b_usleep(uint64_t us)
 
 int
 lsi_b_getopt(int argc, char * const argv[], const char *optstring)
-{ T("argc=%d, argv=%p, optstring='%s'", argc, (void *)argv, optstring);
+{
 #if HAVE_GETOPT
 	return getopt(argc, argv, optstring);
 #else
@@ -49,7 +49,7 @@ lsi_b_getopt(int argc, char * const argv[], const char *optstring)
 
 const char *
 lsi_b_optarg(void)
-{ T("(no args)");
+{
 #if HAVE_GETOPT
 	return optarg;
 #else
@@ -59,7 +59,7 @@ lsi_b_optarg(void)
 
 int
 lsi_b_optind(void)
-{ T("(no args)");
+{
 #if HAVE_GETOPT
 	return optind;
 #else
@@ -69,7 +69,7 @@ lsi_b_optind(void)
 
 void
 lsi_b_regsig(int sig, void (*sigfn)(int))
-{ T("sig=%d, sigfn=(fp)", sig);
+{
 #if HAVE_SIGACTION
 	struct sigaction act;
 	act.sa_handler = sigfn;

@@ -68,7 +68,7 @@ static void sslinit(void);
 
 int
 lsi_b_socket(bool ipv6)
-{ T("ipv6=%d", ipv6);
+{
 	int sck = -1;
 #if HAVE_SOCKET
 	sck = socket(ipv6 ? PF_INET6 : PF_INET, SOCK_STREAM, 0);
@@ -100,7 +100,7 @@ lsi_b_socket(bool ipv6)
 
 int
 lsi_b_connect(int sck, const struct addrlist *srv)
-{ T("sck=%d, srv=%p", sck, (void *)srv);
+{
 #if HAVE_STRUCT_SOCKADDR_STORAGE
 	struct sockaddr_storage sa;
 	memset(&sa, 0, sizeof sa); // :S XXX
@@ -140,7 +140,7 @@ lsi_b_connect(int sck, const struct addrlist *srv)
 
 int
 lsi_b_close(int sck)
-{ T("sck=%d", sck);
+{
 #if HAVE_CLOSE
 	D("Closing sck %d", sck);
 	return close(sck);
@@ -153,7 +153,7 @@ lsi_b_close(int sck)
 
 int
 lsi_b_select(int sck, bool rdbl, uint64_t to_us)
-{ T("sck=%d, rdbl=%d, to_us=%"PRIu64, sck, rdbl, to_us);
+{
 	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 
 #if HAVE_SELECT
@@ -204,7 +204,7 @@ lsi_b_select(int sck, bool rdbl, uint64_t to_us)
 
 bool
 lsi_b_blocking(int sck, bool blocking)
-{ T("sck=%d, blocking=%d", sck, blocking);
+{
 #if HAVE_FCNTL
 	int flg = fcntl(sck, F_GETFL);
 	if (flg == -1) {
@@ -232,7 +232,7 @@ lsi_b_blocking(int sck, bool blocking)
 
 bool
 lsi_b_sock_ok(int sck)
-{ T("sck=%d", sck);
+{
 #if HAVE_GETSOCKOPT
 	int opt = 0;
 
@@ -264,7 +264,7 @@ lsi_b_sock_ok(int sck)
 
 long
 lsi_b_read(int sck, void *buf, size_t sz, bool *tryagain)
-{ T("sck=%d, buf=%p, sz=%zu, tryagain=%p", sck, buf, sz, (void *)tryagain);
+{
 #if HAVE_READ
 	V("read()ing from sck %d (bufsz: %zu)", sck, sz);
 	ssize_t r = read(sck, buf, sz);
@@ -302,7 +302,7 @@ lsi_b_read(int sck, void *buf, size_t sz, bool *tryagain)
 
 long
 lsi_b_write(int sck, const void *buf, size_t len)
-{ T("sck=%d, buf=%p, len=%zu", sck, buf, len);
+{
 #if HAVE_SEND
 	int flags = 0;
 # if HAVE_MSG_NOSIGNAL
@@ -331,7 +331,7 @@ lsi_b_write(int sck, const void *buf, size_t len)
 
 long
 lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, bool *tryagain)
-{ T("ssl=%p, buf=%p, sz=%zu, tryagain=%p", (void *)ssl, buf, sz, (void *)tryagain);
+{
 #ifdef WITH_SSL
 	V("SSL_read()ing from ssl hnd %p (bufsz: %zu)", (void *)ssl, sz);
 	int r = SSL_read(ssl, buf, sz);
@@ -355,7 +355,7 @@ lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, bool *tryagain)
 
 long
 lsi_b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
-{ T("ssl=%p, buf=%p, len=%zu", (void *)ssl, buf, len);
+{
 #ifdef WITH_SSL
 	V("send()ing %zu bytes over ssl hnd %p", len, (void *)ssl);
 	int r = SSL_write(ssl, buf, len);
@@ -380,7 +380,7 @@ lsi_b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
 
 int
 lsi_b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res)
-{ T("host='%s', port=%"PRIu16", res=%p", host, port, (void *)res);
+{
 #if HAVE_GETADDRINFO
 	struct addrinfo *ai_list = NULL;
 	struct addrinfo hints = {
@@ -468,7 +468,7 @@ lsi_b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res)
 
 void
 lsi_b_freeaddrlist(struct addrlist *al)
-{ T("al=%p", (void *)al);
+{
 	while (al) {
 		struct addrlist *tmp = al->next;
 		free(al);
@@ -479,7 +479,7 @@ lsi_b_freeaddrlist(struct addrlist *al)
 
 SSLCTXTYPE
 lsi_b_mksslctx(void)
-{ T("(no args)");
+{
 	if (!s_sslinit)
 		sslinit();
 
@@ -497,7 +497,7 @@ lsi_b_mksslctx(void)
 
 void
 lsi_b_freesslctx(SSLCTXTYPE ctx)
-{ T("ctx=%p", (void *)ctx);
+{
 #ifdef WITH_SSL
 	SSL_CTX_free(ctx);
 #else
@@ -508,7 +508,7 @@ lsi_b_freesslctx(SSLCTXTYPE ctx)
 
 SSLTYPE
 lsi_b_sslize(int sck, SSLCTXTYPE ctx)
-{ T("sck=%d, ctx=%p", sck, (void *)ctx);
+{
 	SSLTYPE shnd = NULL;
 #ifdef WITH_SSL
 	bool fail = !(shnd = SSL_new(ctx));
@@ -545,7 +545,7 @@ lsi_b_sslize(int sck, SSLCTXTYPE ctx)
 
 void
 lsi_b_sslfin(SSLTYPE shnd)
-{ T("shnd=%p", (void *)shnd);
+{
 #ifdef WITH_SSL
 	SSL_shutdown(shnd);
 	SSL_free(shnd);
@@ -558,7 +558,7 @@ lsi_b_sslfin(SSLTYPE shnd)
 
 uint16_t
 lsi_b_htons(uint16_t h)
-{ T("h=%"PRIu16, h);
+{
 #if HAVE_HTONS
 	return htons(h);
 #else
@@ -570,7 +570,7 @@ lsi_b_htons(uint16_t h)
 
 uint32_t
 lsi_b_inet_addr(const char *ip4str)
-{ T("ip4str='%s'", ip4str);
+{
 #if HAVE_INET_ADDR
 	return inet_addr(ip4str);
 #else
@@ -582,7 +582,7 @@ lsi_b_inet_addr(const char *ip4str)
 
 bool
 lsi_b_inet4_addr(unsigned char *dest, size_t destsz, const char *ip4str)
-{ T("dest=%p, destsz=%zu, ip4str='%s'", (void *)dest, destsz, ip4str);
+{
 #if HAVE_INET_PTON
 	struct in_addr ia4;
 	int n = inet_pton(AF_INET, ip4str, &ia4);
@@ -607,7 +607,7 @@ lsi_b_inet4_addr(unsigned char *dest, size_t destsz, const char *ip4str)
 
 bool
 lsi_b_inet6_addr(unsigned char *dest, size_t destsz, const char *ip6str)
-{ T("dest=%p, destsz=%zu, ip6str='%s'", (void *)dest, destsz, ip6str);
+{
 #if HAVE_INET_PTON
 	struct in6_addr ia6;
 	int n = inet_pton(AF_INET6, ip6str, &ia6);
@@ -632,7 +632,7 @@ lsi_b_inet6_addr(unsigned char *dest, size_t destsz, const char *ip6str)
 static bool
 sockaddr_from_addr(struct sockaddr *dst, size_t *dstlen,
     const struct addrlist *ai)
-{ T("dst=%p, dstlen=%p, ai=%p", (void *)dst, (void *)dstlen, (void *)ai);
+{
 #if HAVE_GETADDRINFO
 	struct addrinfo *ai_list = NULL;
 	struct addrinfo hints = {
@@ -668,7 +668,7 @@ sockaddr_from_addr(struct sockaddr *dst, size_t *dstlen,
 static void
 addrstr_from_sockaddr(char *addr, size_t addrsz, uint16_t *port,
     const struct addrinfo *ai)
-{ T("addr=%p, addrsz=%zu, port=%p, ai=%p", addr, addrsz, (void *)port, (void *)ai);
+{
 	if (ai->ai_family == AF_INET) {
 		struct sockaddr_in *sin = (struct sockaddr_in *)ai->ai_addr;
 
@@ -697,7 +697,7 @@ addrstr_from_sockaddr(char *addr, size_t addrsz, uint16_t *port,
 
 static void
 sslinit(void)
-{ T("(no args)");
+{
 #ifdef WITH_SSL
 	/* XXX not reentrant FIXME */
 	SSL_load_error_strings();

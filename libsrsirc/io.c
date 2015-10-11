@@ -42,7 +42,7 @@ static long send_wrap(sckhld sh, const void *buf, size_t len);
 /* Documented in io.h */
 int
 lsi_io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
-{ T("sh={.sck=%d, .shnd=%p}, ctx=%p, tok=%p, to_us=%"PRIu64, sh.sck, (void *)sh.shnd, (void *)ctx, (void *)tok, to_us);
+{
 	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 
 	while (ctx->wptr < ctx->eptr && ISDELIM(*ctx->wptr))
@@ -80,7 +80,7 @@ lsi_io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
 /* Documented in io.h */
 bool
 lsi_io_write(sckhld sh, const char *line)
-{ T("sh={.sck=%d, .shnd=%p}, line='%s'", sh.sck, (void *)sh.shnd, line);
+{
 	size_t len = strlen(line);
 	int needbr = len < 2 || line[len-2] != '\r' || line[len-1] != '\n';
 
@@ -94,7 +94,7 @@ lsi_io_write(sckhld sh, const char *line)
 /* return pointer to first line delim in our receive buffer, or NULL if none */
 static char *
 find_delim(struct readctx *ctx)
-{ T("ctx=%p", (void *)ctx);
+{
 	for (char *ptr = ctx->wptr; ptr < ctx->eptr; ptr++)
 		if (ISDELIM(*ptr))
 			return ptr;
@@ -105,7 +105,7 @@ find_delim(struct readctx *ctx)
  * returns 1 if something was read; 0 on timeout; -1 on failure */
 static int
 read_more(sckhld sh, struct readctx *ctx, uint64_t to_us)
-{ T("sh={.sck=%d, .shnd=%p}, ctx=%p, to_us=%"PRIu64, sh.sck, (void *)sh.shnd, (void *)ctx, to_us);
+{
 	size_t remain = sizeof ctx->workbuf - (ctx->eptr - ctx->workbuf);
 	if (!remain) { /* no more space left in receive buffer */
 		if (ctx->wptr == ctx->workbuf) { /* completely full */
@@ -141,7 +141,7 @@ read_more(sckhld sh, struct readctx *ctx, uint64_t to_us)
  * returns true on success, false on failure */
 static bool
 write_str(sckhld sh, const char *str)
-{ T("sh={.sck=%d, .shnd=%p}, str='%s'", sh.sck, (void *)sh.shnd, str);
+{
 	size_t cnt = 0;
 	size_t len = strlen(str);
 	while (cnt < len) {
@@ -157,7 +157,7 @@ write_str(sckhld sh, const char *str)
  * or not SSL is compiled-in and enabled (or not) */
 static long
 read_wrap(sckhld sh, void *buf, size_t sz)
-{ T("sh={.sck=%d, .shnd=%p}, buf=%p, sz=%zu", sh.sck, (void *)sh.shnd, buf, sz);
+{
 	if (sh.shnd)
 		return lsi_b_read_ssl(sh.shnd, buf, sz, NULL);
 	return lsi_b_read(sh.sck, buf, sz, NULL);
@@ -166,7 +166,7 @@ read_wrap(sckhld sh, void *buf, size_t sz)
 /* likewise for send()/SSL_write() */
 static long
 send_wrap(sckhld sh, const void *buf, size_t len)
-{ T("sh={.sck=%d, .shnd=%p}, buf=%p, len=%zu", sh.sck, (void *)sh.shnd, buf, len);
+{
 	if (sh.shnd)
 		return lsi_b_write_ssl(sh.shnd, buf, len);
 	return lsi_b_write(sh.sck, buf, len);

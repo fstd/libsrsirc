@@ -28,7 +28,7 @@
 
 long
 lsi_b_stdin_read(void *buf, size_t nbytes)
-{ T("buf=%p, nbytes=%zu", buf, nbytes);
+{
 #if HAVE_FILENO
 	int fd = fileno(stdin);
 #else
@@ -56,7 +56,7 @@ lsi_b_stdin_read(void *buf, size_t nbytes)
 
 int
 lsi_b_stdin_canread(void)
-{ T("(no args)");
+{
 #if HAVE_FILENO
 	int fd = fileno(stdin);
 #else

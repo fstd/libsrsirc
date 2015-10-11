@@ -37,7 +37,7 @@ static size_t buf_rem(void);
 
 bool
 lsi_user_canread(void)
-{ T("(no args)");
+{
 	if (buf_cnt()) {
 		*s_buftail = '\0';
 		if (strchr(s_bufhead, '\n'))
@@ -91,7 +91,7 @@ lsi_user_canread(void)
 
 size_t
 lsi_user_readline(char *dest, size_t destsz)
-{ T("dest=%p, destsz=%zu", (void *)dest, destsz);
+{
 	if (!lsi_user_canread())
 		return 0;
 
@@ -114,7 +114,7 @@ lsi_user_readline(char *dest, size_t destsz)
 
 int
 lsi_user_printf(const char *fmt, ...)
-{ T("fmt='%s', ...", fmt);
+{
 	char buf[1024];
 	va_list l;
 	va_start(l, fmt);
@@ -129,20 +129,20 @@ lsi_user_printf(const char *fmt, ...)
 
 bool
 lsi_user_eof(void)
-{ T("(no args)");
+{
 	return s_eof;
 }
 
 
 static size_t
 buf_cnt(void)
-{ T("(no args)");
+{
 	return (size_t)(s_buftail - s_bufhead);
 }
 
 static size_t
 buf_rem(void)
-{ T("(no args)");
+{
 	size_t unusable = (size_t)(s_bufhead - s_inbuf);
 	return s_bufsz - buf_cnt() - unusable;
 }

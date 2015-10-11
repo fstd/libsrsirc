@@ -22,7 +22,7 @@
 
 void
 lsi_b_strNcat(char *dest, const char *src, size_t destsz)
-{ T("dest=%p, src='%s', destsz=%zu", (void *)dest, src, destsz);
+{
 	size_t len = strlen(dest);
 	if (len + 1 >= destsz)
 		return;
@@ -37,7 +37,7 @@ lsi_b_strNcat(char *dest, const char *src, size_t destsz)
 
 void
 lsi_b_strNcpy(char *dest, const char *src, size_t destsz)
-{ T("dest=%p, src='%s', destsz=%zu", (void *)dest, src, destsz);
+{
 	if (!destsz)
 		return;
 
@@ -49,7 +49,7 @@ lsi_b_strNcpy(char *dest, const char *src, size_t destsz)
 
 int
 lsi_b_strcasecmp(const char *a, const char *b)
-{ T("a='%s', b='%s'", a, b);
+{
 #if HAVE_STRCASECMP
 	return strcasecmp(a, b);
 #else
@@ -59,7 +59,7 @@ lsi_b_strcasecmp(const char *a, const char *b)
 
 int
 lsi_b_strncasecmp(const char *a, const char *b, size_t n)
-{ T("a='%s', b='%s', n=%zu", a, b, n);
+{
 #if HAVE_STRNCASECMP
 	return strncasecmp(a, b, n);
 #else
@@ -88,7 +88,7 @@ lsi_b_strncasecmp(const char *a, const char *b, size_t n)
 
 char *
 lsi_b_strdup(const char *s)
-{ T("s='%s'", s);
+{
 	char *r = NULL;
 	r = malloc(strlen(s)+1);
 	if (!r)

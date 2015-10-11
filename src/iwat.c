@@ -70,7 +70,7 @@ int main(int argc, char **argv);
 
 static int
 iprintf(const char *fmt, ...)
-{ T("fmt='%s', ...", fmt);
+{
 	char buf[1024];
 	va_list l;
 	va_start(l, fmt);
@@ -81,7 +81,7 @@ iprintf(const char *fmt, ...)
 
 static bool
 tryconnect(void)
-{ T("(no args)");
+{
 	struct srvlist_s *s = g_srvlist;
 
 	while (s) {
@@ -103,7 +103,7 @@ tryconnect(void)
 
 static void
 process_args(int *argc, char ***argv, struct settings_s *sett)
-{ T("argc=%p (%d), argv=%p, sett=%p", (void *)argc, *argc, (void *)argv, (void *)sett);
+{
 	char *a0 = (*argv)[0];
 	const char *optstr = "n:u:f:p:P:T:W:rb:qvh";
 
@@ -171,7 +171,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 
 static void
 init(int *argc, char ***argv, struct settings_s *sett)
-{ T("argc=%p (%d), argv=%p, sett=%p", (void *)argc, *argc, (void *)argv, (void *)sett);
+{
 	if (setvbuf(stdin, NULL, _IOLBF, 0) != 0)
 		WE("setvbuf stdin");
 
@@ -235,7 +235,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 
 static bool
 conread(tokarr *msg, void *tag)
-{ T("msg=%p, tag=%p", (void *)msg, tag);
+{
 	char buf[1024];
 	lsi_ut_sndumpmsg(buf, sizeof buf, tag, msg);
 	D("%s", buf);
@@ -245,7 +245,7 @@ conread(tokarr *msg, void *tag)
 
 static void
 usage(FILE *str, const char *a0, int ec)
-{ T("str=%p, a0='%s', ec=%d", (void *)str, a0, ec);
+{
 	#define XSTR(s) STR(s)
 	#define STR(s) #s
 	#define LH(STR) fputs(STR "\n", str)
@@ -295,7 +295,7 @@ usage(FILE *str, const char *a0, int ec)
 
 void
 lsi_cleanup(void)
-{ T("(no args)");
+{
 	if (g_irc)
 		irc_dispose(g_irc);
 
@@ -312,7 +312,7 @@ lsi_cleanup(void)
 
 void
 lsi_infohnd(int s)
-{ T("s=%d", s);
+{
 	g_dumpplx = true;
 }
 
