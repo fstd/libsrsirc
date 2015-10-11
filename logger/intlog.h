@@ -35,8 +35,9 @@
 #define MOD_ICATSERV 18
 #define MOD_ICATUSER 19
 #define MOD_ICATMISC 20
-#define MOD_UNKNOWN 21
-#define NUM_MODS 22 /* when adding modules, don't forget intlog.c's `modnames'*/
+#define MOD_IWAT 21
+#define MOD_UNKNOWN 22
+#define NUM_MODS 23 /* when adding modules, don't forget intlog.c's `modnames' */
 
 /* our two higher-than-debug custom loglevels */
 #define LOG_TRACE (LOG_VIVI+1)

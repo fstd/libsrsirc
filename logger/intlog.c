@@ -56,6 +56,7 @@ const char *modnames[NUM_MODS] = {
 	[MOD_ICATSERV] = "icat/serv",
 	[MOD_ICATUSER] = "icat/user",
 	[MOD_ICATMISC] = "icat/misc",
+	[MOD_IWAT] = "iwat",
 	[MOD_UNKNOWN] = "(??" "?)"
 };
 

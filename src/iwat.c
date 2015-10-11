@@ -2,6 +2,8 @@
  * iwat - IRC netwat on top of libsrsirc - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
+#define LOG_MODULE MOD_IWAT
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
