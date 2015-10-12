@@ -29,7 +29,7 @@ main(void)
 
 	/* Connect and logon to IRC */
 	if (!irc_connect(ihnd)) {
-		fprintf(stderr, "could not connect/logon");
+		fprintf(stderr, "could not connect/logon\n");
 		exit(EXIT_FAILURE);
 	}
 
