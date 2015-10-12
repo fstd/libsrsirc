@@ -27,7 +27,7 @@
 
 
 struct skmap {
-	bucklist_t **buck;
+	bucklist **buck;
 	size_t bsz;
 	size_t count;
 
@@ -117,7 +117,7 @@ lsi_skmap_put(skmap *h, const char *key, void *elem)
 	size_t ind = h->hfn(key, h->cmap) % h->bsz;
 	char *kd = NULL;
 
-	bucklist_t *kl = h->buck[ind];
+	bucklist *kl = h->buck[ind];
 	if (!kl) {
 		allocated = true;
 		if (!(kl = h->buck[ind] = lsi_bucklist_init(h->cmap)))
@@ -155,7 +155,7 @@ lsi_skmap_get(skmap *h, const char *key)
 {
 	size_t ind = h->hfn(key, h->cmap) % h->bsz;
 
-	bucklist_t *kl = h->buck[ind];
+	bucklist *kl = h->buck[ind];
 	if (!kl)
 		return NULL;
 
@@ -167,7 +167,7 @@ lsi_skmap_del(skmap *h, const char *key)
 {
 	size_t ind = h->hfn(key, h->cmap) % h->bsz;
 
-	bucklist_t *kl = h->buck[ind];
+	bucklist *kl = h->buck[ind];
 	if (!kl)
 		return NULL;
 
@@ -252,7 +252,7 @@ lsi_skmap_dump(skmap *h, skmap_op_fn valop)
 	for (size_t i = 0; i < h->bsz; i++) {
 		if (h->buck[i] && lsi_bucklist_count(h->buck[i])) {
 			fprintf(stderr, "[%zu]: ", i);
-			bucklist_t *kl = h->buck[i];
+			bucklist *kl = h->buck[i];
 			char *key;
 			void *val;
 			if (lsi_bucklist_first(kl, &key, &val))
