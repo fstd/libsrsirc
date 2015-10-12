@@ -1,10 +1,11 @@
 2012/08/30 - 0.0.0 release
 2013/07/04 - 0.0.1 release
 2014/04/17 - 0.0.2 release
-2014/05/29 - 0.0.3 release -- utterly broke the interface but well, this is 0.0.x, we're not supposed to have a stable interface (yet)
-2015/01/25 - 0.0.4 release -- major rework of icat
-2015/02/07 - 0.0.5 release -- separated platform-dependent and platform-independent stuff
-2015/05/14 - 0.0.6 release -- fixed an annoying bug sometimes triggered when there's a lot of input
-2015/07/12 - 0.0.7 release -- minor changes only; we seem good and stable
-2015/09/13 - 0.0.8 release -- bugfixes only
-2015/10/03 - 0.0.9 release -- massive function renaming (collision avoidance) -- most of the public interface remains unaffected.  Happy birthday, Kerstin Pfeifer.
+2014/05/29 - 0.0.3 release  -- utterly broke the interface but well, this is 0.0.x, we're not supposed to have a stable interface (yet)
+2015/01/25 - 0.0.4 release  -- major rework of icat
+2015/02/07 - 0.0.5 release  -- separated platform-dependent and platform-independent stuff
+2015/05/14 - 0.0.6 release  -- fixed an annoying bug sometimes triggered when there's a lot of input
+2015/07/12 - 0.0.7 release  -- minor changes only; we seem good and stable
+2015/09/13 - 0.0.8 release  -- bugfixes only
+2015/10/03 - 0.0.9 release  -- massive function renaming (collision avoidance) -- most of the public interface remains unaffected.  Happy birthday, Kerstin Pfeifer.
+2015/10/12 - 0.0.10 release -- another big refactor with huge backwards compatibility implications; added a helloworld-style example because icat/iwat are just too big
