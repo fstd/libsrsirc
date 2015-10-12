@@ -6,6 +6,7 @@
 #define LIBSRSIRC_IRC_H 1
 
 
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -91,6 +92,9 @@ int irc_read(irc *hnd, tokarr *tok, uint64_t to_us);
  * In the case of failure, an implicit call to irc_reset() is made.
  */
 bool irc_write(irc *hnd, const char *line);
+
+/* like irc_write, but printf-style */
+bool irc_printf(irc *hnd, const char *fmt, ...);
 
 /* irc_mynick - Tell what we think is our current nick (we keep track of it) */
 const char *irc_mynick(irc *hnd);

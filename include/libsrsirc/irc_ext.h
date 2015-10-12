@@ -224,8 +224,4 @@ bool irc_reg_msghnd(irc *hnd, const char *cmd, uhnd_fn hndfn, bool pre);
 
 bool irc_eof(irc *hnd);
 
-/* like irc_write, but printf-style */
-bool irc_printf(irc *hnd, const char *fmt, ...);
-
-
 #endif /* LIBSRSIRC_IRC_EXT_H */
