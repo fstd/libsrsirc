@@ -14,30 +14,30 @@
 
 /* Overview:
  *
- * irc irc_init(void);
- * bool irc_reset(irc hnd);
- * bool irc_dispose(irc hnd);
- * bool irc_connect(irc hnd);
- * bool irc_online(irc hnd);
- * int irc_read(irc hnd, tokarr *tok, uint64_t to_us);
- * bool irc_write(irc hnd, const char *line);
- * const char *irc_mynick(irc hnd);
- * bool irc_set_server(irc hnd, const char *host, uint16_t port);
- * bool irc_set_pass(irc hnd, const char *srvpass);
- * bool irc_set_uname(irc hnd, const char *uname);
- * bool irc_set_fname(irc hnd, const char *fname);
- * bool irc_set_nick(irc hnd, const char *nick);
+ * irc *irc_init(void);
+ * bool irc_reset(irc *hnd);
+ * bool irc_dispose(irc *hnd);
+ * bool irc_connect(irc *hnd);
+ * bool irc_online(irc *hnd);
+ * int irc_read(irc *hnd, tokarr *tok, uint64_t to_us);
+ * bool irc_write(irc *hnd, const char *line);
+ * const char *irc_mynick(irc *hnd);
+ * bool irc_set_server(irc *hnd, const char *host, uint16_t port);
+ * bool irc_set_pass(irc *hnd, const char *srvpass);
+ * bool irc_set_uname(irc *hnd, const char *uname);
+ * bool irc_set_fname(irc *hnd, const char *fname);
+ * bool irc_set_nick(irc *hnd, const char *nick);
 */
 
 /* irc_init - Allocate and initialize a new irc object
  * Returns a handle to the instance, or NULL if out of memory.  */
-irc irc_init(void);
+irc *irc_init(void);
 
 /* irc_reset - Force a disconnect from the IRC server */
-void irc_reset(irc hnd);
+void irc_reset(irc *hnd);
 
 /* irc_dispose - Destroy irc object and relinquish associated resources */
-void irc_dispose(irc hnd);
+void irc_dispose(irc *hnd);
 
 /* irc_connect - Connect and log on to IRC
  *
@@ -55,11 +55,11 @@ void irc_dispose(irc hnd);
  *
  * Returns true on success, false on failure
  */
-bool irc_connect(irc hnd);
+bool irc_connect(irc *hnd);
 
 /* irc_online - Tell whether or not we (think we) are connected
  * Of course, we can't /really/ know unless we attempt to read or write */
-bool irc_online(irc hnd);
+bool irc_online(irc *hnd);
 
 /* irc_read - Read and process the next protocol message from server
  *
@@ -79,7 +79,7 @@ bool irc_online(irc hnd);
  * Returns 1 on success; 0 on timeout; -1 on failure
  * In the case of failure, an implicit call to irc_reset() is made.
  */
-int irc_read(irc hnd, tokarr *tok, uint64_t to_us);
+int irc_read(irc *hnd, tokarr *tok, uint64_t to_us);
 
 /* irc_write - Send a message to the ircd
  *
@@ -90,10 +90,10 @@ int irc_read(irc hnd, tokarr *tok, uint64_t to_us);
  * Returns true on success, false on failure
  * In the case of failure, an implicit call to irc_reset() is made.
  */
-bool irc_write(irc hnd, const char *line);
+bool irc_write(irc *hnd, const char *line);
 
 /* irc_mynick - Tell what we think is our current nick (we keep track of it) */
-const char *irc_mynick(irc hnd);
+const char *irc_mynick(irc *hnd);
 
 /* irc_set_server - Set server and port to connect to
  * Params: `host': Server host, may be an IPv4 or IPv6 address or a DNS name
@@ -103,28 +103,28 @@ const char *irc_mynick(irc hnd);
  * Returns true on success, false on failure (which means we're out of memory)
  * In case of failure, the old value is left untouched.
  */
-bool irc_set_server(irc hnd, const char *host, uint16_t port);
+bool irc_set_server(irc *hnd, const char *host, uint16_t port);
 
 /* irc_set_pass - set server password (NULL means no password)
  * This setting will take effect on the next call to irc_connect()
  * Returns true on success, false on failure (which means we're out of memory)
  * In case of failure, the old value is left untouched.
  */
-bool irc_set_pass(irc hnd, const char *srvpass);
+bool irc_set_pass(irc *hnd, const char *srvpass);
 
 /* irc_set_uname - Set IRC 'user name' (not the same as nickname)
  * This setting will take effect on the next call to irc_connect()
  * Returns true on success, false on failure (which means we're out of memory)
  * In case of failure, the old value is left untouched.
  */
-bool irc_set_uname(irc hnd, const char *uname);
+bool irc_set_uname(irc *hnd, const char *uname);
 
 /* irc_set_fname - Set IRC 'full name' (which appears e.g. in WHOIS)
  * This setting will take effect on the next call to irc_connect()
  * Returns true on success, false on failure (which means we're out of memory)
  * In case of failure, the old value is left untouched.
  */
-bool irc_set_fname(irc hnd, const char *fname);
+bool irc_set_fname(irc *hnd, const char *fname);
 
 /* irc_set_nick - Set IRC 'nickname'
  * This setting will take effect on the next call to irc_connect() (i.e. it does
@@ -132,10 +132,10 @@ bool irc_set_fname(irc hnd, const char *fname);
  * Returns true on success, false on failure (which means we're out of memory)
  * In case of failure, the old value is left untouched.
  */
-bool irc_set_nick(irc hnd, const char *nick);
+bool irc_set_nick(irc *hnd, const char *nick);
 
 /* for debugging */
-void irc_dump(irc h);
+void irc_dump(irc *h);
 
 
 #endif /* LIBSRSIRC_IRC_H */

@@ -67,7 +67,7 @@
 #define CHANMODE_CLASS_D 4
 
 /* the main handle type for our irc objects - this is what irc_init() returns */
-typedef struct irc_s *irc;
+typedef struct irc_s irc;
 
 /* tokarr is the type we store pointers to a tokenized IRC protocol msg in */
 typedef char *tokarr[MAX_IRCARGS];
@@ -80,7 +80,7 @@ typedef bool (*fp_con_read)(tokarr *msg, void *tag);
  * desired nickname is unavailable. see irc_regcb_mutnick */
 typedef void (*fp_mut_nick)(char *nick, size_t nick_sz);
 
-typedef bool (*uhnd_fn)(irc hnd, tokarr *msg, size_t nargs, bool pre);
+typedef bool (*uhnd_fn)(irc *hnd, tokarr *msg, size_t nargs, bool pre);
 
 
 #endif /* LIBSRSIRC_IRC_DEFS_H */

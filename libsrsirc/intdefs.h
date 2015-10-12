@@ -53,7 +53,7 @@ struct readctx {
 
 
 /* protocol message handler function pointers */
-typedef uint8_t (*hnd_fn)(irc hnd, tokarr *msg, size_t nargs, bool logon);
+typedef uint8_t (*hnd_fn)(irc *hnd, tokarr *msg, size_t nargs, bool logon);
 struct msghnd {
 	char cmd[32];
 	hnd_fn hndfn;
@@ -67,7 +67,7 @@ struct umsghnd {
 };
 
 /* this is a relict of the former design */
-typedef struct iconn_s *iconn;
+typedef struct iconn_s iconn;
 struct iconn_s {
 	char *host;
 	uint16_t port;
@@ -86,7 +86,7 @@ struct iconn_s {
 	SSLCTXTYPE sctx;
 };
 
-/* this is our main IRC object context structure (typedef'd as `*irc') */
+/* this is our main IRC object context structure (typedef'd as `irc') */
 struct irc_s {
 	char mynick[MAX_NICK_LEN];
 	char myhost[MAX_HOST_LEN];
@@ -141,8 +141,8 @@ struct irc_s {
 	bool tracking; /* true if we want to track */
 	bool tracking_enab; /* tracking is enabled (after 005 CASEMAPPING) */
 	bool endofnames;
-	skmap chans;
-	skmap users;
+	skmap *chans;
+	skmap *users;
 
 
 	struct iconn_s *con;

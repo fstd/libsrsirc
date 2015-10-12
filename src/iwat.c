@@ -53,7 +53,7 @@ static struct srvlist_s {
 	struct srvlist_s *next;
 } *g_srvlist;
 
-static irc g_irc;
+static irc *g_irc;
 static uint64_t g_nexthb;
 static bool g_dumpplx = 0;
 

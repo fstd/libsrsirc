@@ -38,7 +38,7 @@ struct bucklist {
 
 static bool lsi_pfxeq(const char *n1, const char *n2, const uint8_t *cmap);
 
-bucklist_t
+bucklist_t *
 lsi_bucklist_init(const uint8_t *cmap)
 {
 	struct bucklist *l = lsi_com_malloc(sizeof *l);
@@ -52,14 +52,14 @@ lsi_bucklist_init(const uint8_t *cmap)
 }
 
 void
-lsi_bucklist_dispose(bucklist_t l)
+lsi_bucklist_dispose(bucklist_t *l)
 {
 	lsi_bucklist_clear(l);
 	free(l);
 }
 
 size_t
-lsi_bucklist_count(bucklist_t l)
+lsi_bucklist_count(bucklist_t *l)
 {
 	if (!l || !l->head)
 		return 0;
@@ -74,13 +74,13 @@ lsi_bucklist_count(bucklist_t l)
 }
 
 bool
-lsi_bucklist_isempty(bucklist_t l)
+lsi_bucklist_isempty(bucklist_t *l)
 {
 	return !l->head;
 }
 
 void
-lsi_bucklist_clear(bucklist_t l)
+lsi_bucklist_clear(bucklist_t *l)
 {
 	if (!l)
 		return;
@@ -96,7 +96,7 @@ lsi_bucklist_clear(bucklist_t l)
 }
 
 bool
-lsi_bucklist_insert(bucklist_t l, size_t i, char *key, void *val)
+lsi_bucklist_insert(bucklist_t *l, size_t i, char *key, void *val)
 {
 	struct pl_node *n = l->head;
 	struct pl_node *prev = NULL;
@@ -136,7 +136,7 @@ lsi_bucklist_insert(bucklist_t l, size_t i, char *key, void *val)
 
 /* key or val == NULL means don't touch */
 bool
-lsi_bucklist_replace(bucklist_t l, const char *key, void *val)
+lsi_bucklist_replace(bucklist_t *l, const char *key, void *val)
 {
 	if (!val)
 		return false;
@@ -154,7 +154,7 @@ lsi_bucklist_replace(bucklist_t l, const char *key, void *val)
 }
 
 void *
-lsi_bucklist_remove(bucklist_t l, const char *key, char **origkey)
+lsi_bucklist_remove(bucklist_t *l, const char *key, char **origkey)
 {
 	struct pl_node *n = l->head;
 	struct pl_node *prev = NULL;
@@ -180,7 +180,7 @@ lsi_bucklist_remove(bucklist_t l, const char *key, char **origkey)
 }
 
 bool
-lsi_bucklist_get(bucklist_t l, size_t i, char **key, void **val)
+lsi_bucklist_get(bucklist_t *l, size_t i, char **key, void **val)
 {
 	if (!l->head)
 		return false;
@@ -202,7 +202,7 @@ lsi_bucklist_get(bucklist_t l, size_t i, char **key, void **val)
 }
 
 void *
-lsi_bucklist_find(bucklist_t l, const char *key, char **origkey)
+lsi_bucklist_find(bucklist_t *l, const char *key, char **origkey)
 {
 	struct pl_node *n = l->head;
 	while (n) {
@@ -218,7 +218,7 @@ lsi_bucklist_find(bucklist_t l, const char *key, char **origkey)
 }
 
 bool
-lsi_bucklist_first(bucklist_t l, char **key, void **val)
+lsi_bucklist_first(bucklist_t *l, char **key, void **val)
 {
 	if (!l->head)
 		return false;
@@ -233,7 +233,7 @@ lsi_bucklist_first(bucklist_t l, char **key, void **val)
 }
 
 bool
-lsi_bucklist_next(bucklist_t l, char **key, void **val)
+lsi_bucklist_next(bucklist_t *l, char **key, void **val)
 {
 	if (!l->iter || !l->iter->next)
 		return false;
@@ -248,7 +248,7 @@ lsi_bucklist_next(bucklist_t l, char **key, void **val)
 }
 
 void
-lsi_bucklist_del_iter(bucklist_t l)
+lsi_bucklist_del_iter(bucklist_t *l)
 {
 	struct pl_node *next = l->iter->next;
 	if (!l->previter)
@@ -261,7 +261,7 @@ lsi_bucklist_del_iter(bucklist_t l)
 }
 
 void
-lsi_bucklist_dump(bucklist_t l, bucklist_op_fn op)
+lsi_bucklist_dump(bucklist_t *l, bucklist_op_fn op)
 {
 	#define M(...) fprintf(stderr, __VA_ARGS__)
 	if (!l)

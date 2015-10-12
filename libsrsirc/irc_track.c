@@ -28,25 +28,25 @@
 #include "ucbase.h"
 #include "irc_track_int.h"
 
-static uint8_t h_JOIN(irc h, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_311(irc h, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_332(irc h, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_333(irc h, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_352(irc h, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_353(irc h, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_366(irc h, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_PART(irc h, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_QUIT(irc h, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_NICK(irc h, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_KICK(irc h, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_MODE(irc h, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_PRIVMSG(irc h, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_NOTICE(irc h, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_324(irc h, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_TOPIC(irc h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_JOIN(irc *h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_311(irc *h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_332(irc *h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_333(irc *h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_352(irc *h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_353(irc *h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_366(irc *h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_PART(irc *h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_QUIT(irc *h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_NICK(irc *h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_KICK(irc *h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_MODE(irc *h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_PRIVMSG(irc *h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_NOTICE(irc *h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_324(irc *h, tokarr *msg, size_t nargs, bool logon);
+static uint8_t h_TOPIC(irc *h, tokarr *msg, size_t nargs, bool logon);
 
 bool
-lsi_trk_init(irc h)
+lsi_trk_init(irc *h)
 {
 	bool fail = false;
 	fail = fail || !lsi_msg_reghnd(h, "JOIN", h_JOIN, "track");
@@ -76,7 +76,7 @@ lsi_trk_init(irc h)
 }
 
 void
-lsi_trk_deinit(irc h)
+lsi_trk_deinit(irc *h)
 {
 	lsi_ucb_deinit(h);
 	lsi_msg_unregall(h, "track");
@@ -84,7 +84,7 @@ lsi_trk_deinit(irc h)
 
 
 static uint8_t
-h_JOIN(irc h, tokarr *msg, size_t nargs, bool logon)
+h_JOIN(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 3)
 		return PROTO_ERR;
@@ -93,7 +93,7 @@ h_JOIN(irc h, tokarr *msg, size_t nargs, bool logon)
 	lsi_ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
 
 	bool me = lsi_ut_istrcmp(nick, h->mynick, h->casemap) == 0;
-	chan c = lsi_get_chan(h, (*msg)[2], !me);
+	chan *c = lsi_get_chan(h, (*msg)[2], !me);
 
 	if (me) {
 		if (!c && !lsi_add_chan(h, (*msg)[2])) {
@@ -106,7 +106,7 @@ h_JOIN(irc h, tokarr *msg, size_t nargs, bool logon)
 			return 0;
 		}
 
-		user u = lsi_get_user(h, (*msg)[0], false);
+		user *u = lsi_get_user(h, (*msg)[0], false);
 		bool uadd = false;
 		if (!u) {
 			uadd = true;
@@ -132,12 +132,12 @@ h_JOIN(irc h, tokarr *msg, size_t nargs, bool logon)
 
 /*:rajaniemi.freenode.net 352 nvmme CHAN UNAME HOST SRV NICK H :0 irc netcat*/
 static uint8_t
-h_352(irc h, tokarr *msg, size_t nargs, bool logon)
+h_352(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 10)
 		return PROTO_ERR;
 
-	user u = lsi_get_user(h, (*msg)[7], true);
+	user *u = lsi_get_user(h, (*msg)[7], true);
 	if (!u)
 		return 0;
 
@@ -174,15 +174,15 @@ h_352(irc h, tokarr *msg, size_t nargs, bool logon)
 
 /*:rajaniemi.freenode.net 315 nvmme #fstd :End of /WHO list.*/
 //static uint8_t
-//h_315(irc h, tokarr *msg, size_t nargs, bool logon)
+//h_315(irc *h, tokarr *msg, size_t nargs, bool logon)
 
 static uint8_t
-h_332(irc h, tokarr *msg, size_t nargs, bool logon)
+h_332(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 5)
 		return PROTO_ERR;
 
-	chan c = lsi_get_chan(h, (*msg)[3], true);
+	chan *c = lsi_get_chan(h, (*msg)[3], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[3]);
 		return 0;
@@ -195,12 +195,12 @@ h_332(irc h, tokarr *msg, size_t nargs, bool logon)
 }
 
 static uint8_t
-h_333(irc h, tokarr *msg, size_t nargs, bool logon)
+h_333(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 6)
 		return PROTO_ERR;
 
-	chan c = lsi_get_chan(h, (*msg)[3], true);
+	chan *c = lsi_get_chan(h, (*msg)[3], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[3]);
 		return 0;
@@ -215,12 +215,12 @@ h_333(irc h, tokarr *msg, size_t nargs, bool logon)
 }
 
 static uint8_t
-h_353(irc h, tokarr *msg, size_t nargs, bool logon)
+h_353(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 6)
 		return PROTO_ERR;
 
-	chan c = lsi_get_chan(h, (*msg)[4], true);
+	chan *c = lsi_get_chan(h, (*msg)[4], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[4]);
 		return 0;
@@ -249,7 +249,7 @@ h_353(irc h, tokarr *msg, size_t nargs, bool logon)
 
 		lsi_com_strNcpy(nick, p, len + 1);
 
-		user u = lsi_get_user(h, nick, false);
+		user *u = lsi_get_user(h, nick, false);
 		bool uadd = false;
 		if (!u) {
 			uadd = true;
@@ -272,14 +272,14 @@ h_353(irc h, tokarr *msg, size_t nargs, bool logon)
 }
 
 static uint8_t
-h_366(irc h, tokarr *msg, size_t nargs, bool logon)
+h_366(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 
 	h->endofnames = true;
 
-	chan c = lsi_get_chan(h, (*msg)[3], true);
+	chan *c = lsi_get_chan(h, (*msg)[3], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[3]);
 		return 0;
@@ -290,7 +290,7 @@ h_366(irc h, tokarr *msg, size_t nargs, bool logon)
 }
 
 static uint8_t
-h_PART(irc h, tokarr *msg, size_t nargs, bool logon)
+h_PART(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 3)
 		return PROTO_ERR;
@@ -299,7 +299,7 @@ h_PART(irc h, tokarr *msg, size_t nargs, bool logon)
 	lsi_ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
 	lsi_touch_user(h, (*msg)[0], true);
 
-	chan c = lsi_get_chan(h, (*msg)[2], true);
+	chan *c = lsi_get_chan(h, (*msg)[2], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[2]);
 		return 0;
@@ -308,7 +308,7 @@ h_PART(irc h, tokarr *msg, size_t nargs, bool logon)
 	if (lsi_ut_istrcmp(nick, h->mynick, h->casemap) == 0)
 		lsi_drop_chan(h, c);
 	else {
-		user u = lsi_get_user(h, (*msg)[0], true);
+		user *u = lsi_get_user(h, (*msg)[0], true);
 		if (u)
 			lsi_drop_memb(h, c, u, true, true);
 	}
@@ -317,14 +317,14 @@ h_PART(irc h, tokarr *msg, size_t nargs, bool logon)
 }
 
 static uint8_t
-h_QUIT(irc h, tokarr *msg, size_t nargs, bool logon)
+h_QUIT(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0])
 		return PROTO_ERR;
 
 	lsi_touch_user(h, (*msg)[0], true);
 
-	user u = lsi_get_user(h, (*msg)[0], true);
+	user *u = lsi_get_user(h, (*msg)[0], true);
 	if (u)
 		lsi_drop_user(h, u);
 
@@ -332,13 +332,13 @@ h_QUIT(irc h, tokarr *msg, size_t nargs, bool logon)
 }
 
 static uint8_t
-h_KICK(irc h, tokarr *msg, size_t nargs, bool logon)
+h_KICK(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 
 	lsi_touch_user(h, (*msg)[0], true);
-	chan c = lsi_get_chan(h, (*msg)[2], true);
+	chan *c = lsi_get_chan(h, (*msg)[2], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[2]);
 		return 0;
@@ -347,7 +347,7 @@ h_KICK(irc h, tokarr *msg, size_t nargs, bool logon)
 	if (lsi_ut_istrcmp((*msg)[3], h->mynick, h->casemap) == 0)
 		lsi_drop_chan(h, c);
 	else {
-		user u = lsi_get_user(h, (*msg)[3], true);
+		user *u = lsi_get_user(h, (*msg)[3], true);
 		if (u)
 			lsi_drop_memb(h, c, u, true, true);
 	}
@@ -356,7 +356,7 @@ h_KICK(irc h, tokarr *msg, size_t nargs, bool logon)
 }
 
 static uint8_t
-h_NICK(irc h, tokarr *msg, size_t nargs, bool logon)
+h_NICK(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	uint8_t res = 0;
 
@@ -375,7 +375,7 @@ h_NICK(irc h, tokarr *msg, size_t nargs, bool logon)
 }
 
 static uint8_t
-h_TOPIC(irc h, tokarr *msg, size_t nargs, bool logon)
+h_TOPIC(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
@@ -384,7 +384,7 @@ h_TOPIC(irc h, tokarr *msg, size_t nargs, bool logon)
 	char nick[MAX_NICK_LEN];
 	lsi_ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
 
-	chan c = lsi_get_chan(h, (*msg)[2], true);
+	chan *c = lsi_get_chan(h, (*msg)[2], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[2]);
 		return 0;
@@ -400,7 +400,7 @@ h_TOPIC(irc h, tokarr *msg, size_t nargs, bool logon)
 }
 
 static uint8_t
-h_MODE_chanmode(irc h, tokarr *msg, size_t nargs, bool logon)
+h_MODE_chanmode(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	uint8_t res = 0;
 
@@ -410,7 +410,7 @@ h_MODE_chanmode(irc h, tokarr *msg, size_t nargs, bool logon)
 	if (!strchr((*msg)[0], '.')) //servermode
 		lsi_touch_user(h, (*msg)[0], true);
 
-	chan c = lsi_get_chan(h, (*msg)[2], true);
+	chan *c = lsi_get_chan(h, (*msg)[2], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[2]);
 		return 0;
@@ -445,7 +445,7 @@ h_MODE_chanmode(irc h, tokarr *msg, size_t nargs, bool logon)
 }
 
 static uint8_t
-h_MODE_usermode(irc h, tokarr *msg, size_t nargs, bool logon)
+h_MODE_usermode(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	if (nargs < 4)
 		return PROTO_ERR;
@@ -481,7 +481,7 @@ h_MODE_usermode(irc h, tokarr *msg, size_t nargs, bool logon)
 }
 
 static uint8_t
-h_MODE(irc h, tokarr *msg, size_t nargs, bool logon)
+h_MODE(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
@@ -493,7 +493,7 @@ h_MODE(irc h, tokarr *msg, size_t nargs, bool logon)
 }
 
 static uint8_t
-h_PRIVMSG(irc h, tokarr *msg, size_t nargs, bool logon)
+h_PRIVMSG(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
@@ -505,7 +505,7 @@ h_PRIVMSG(irc h, tokarr *msg, size_t nargs, bool logon)
 }
 
 static uint8_t
-h_NOTICE(irc h, tokarr *msg, size_t nargs, bool logon)
+h_NOTICE(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
@@ -518,14 +518,14 @@ h_NOTICE(irc h, tokarr *msg, size_t nargs, bool logon)
 
 
 static uint8_t
-h_324(irc h, tokarr *msg, size_t nargs, bool logon)
+h_324(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 5)
 		return PROTO_ERR;
 
 	uint8_t res = 0;
 
-	chan c = lsi_get_chan(h, (*msg)[3], true);
+	chan *c = lsi_get_chan(h, (*msg)[3], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[3]);
 		return 0;
@@ -560,7 +560,7 @@ h_324(irc h, tokarr *msg, size_t nargs, bool logon)
  * reply = nickname [ "*" ] "=" ( "+" / "-" ) hostname
  */
 //static uint8_t
-//h_302(irc h, tokarr *msg, size_t nargs, bool logon)
+//h_302(irc *h, tokarr *msg, size_t nargs, bool logon)
 //{
 //}
 
@@ -568,12 +568,12 @@ h_324(irc h, tokarr *msg, size_t nargs, bool logon)
  * "<nick> <user> <host> * :<real name>"
  */
 static uint8_t
-h_311(irc h, tokarr *msg, size_t nargs, bool logon)
+h_311(irc *h, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 8)
 		return PROTO_ERR;
 
-	user u = lsi_get_user(h, (*msg)[3], false);
+	user *u = lsi_get_user(h, (*msg)[3], false);
 	if (!u)
 		return 0;
 
@@ -607,7 +607,7 @@ h_311(irc h, tokarr *msg, size_t nargs, bool logon)
 
 
 void
-lsi_trk_dump(irc h, bool full)
+lsi_trk_dump(irc *h, bool full)
 {
 	lsi_ucb_dump(h, full);
 }
@@ -629,24 +629,24 @@ lsi_trk_dump(irc h, bool full)
 // :port80c.se.quakenet.org 324 mynick #srsbsns +sk *
 // :port80c.se.quakenet.org 329 mynick #srsbsns 1313083493
 
-static chanrep *mkchanrep(chanrep *dest, chan c);
-static userrep *mkuserrep(userrep *dest, user u, const char *modepfx);
+static chanrep *mkchanrep(chanrep *dest, chan *c);
+static userrep *mkuserrep(userrep *dest, user *u, const char *modepfx);
 
 size_t
-irc_num_chans(irc h)
+irc_num_chans(irc *h)
 {
 	return lsi_num_chans(h);
 }
 
 size_t
-irc_all_chans(irc h, chanrep *chanarr, size_t chanarr_cnt)
+irc_all_chans(irc *h, chanrep *chanarr, size_t chanarr_cnt)
 {
 	if (!chanarr_cnt)
 		return 0;
 
 	size_t cnt = 0;
 
-	chan c = lsi_first_chan(h);
+	chan *c = lsi_first_chan(h);
 	if (!c)
 		return 0;
 
@@ -658,7 +658,7 @@ irc_all_chans(irc h, chanrep *chanarr, size_t chanarr_cnt)
 }
 
 static chanrep *
-mkchanrep(chanrep *dest, chan c)
+mkchanrep(chanrep *dest, chan *c)
 {
 	dest->name = c->name;
 	dest->topic = c->topic;
@@ -670,9 +670,9 @@ mkchanrep(chanrep *dest, chan c)
 }
 
 chanrep *
-irc_chan(irc h, chanrep *dest, const char *name)
+irc_chan(irc *h, chanrep *dest, const char *name)
 {
-	chan c = lsi_get_chan(h, name, false);
+	chan *c = lsi_get_chan(h, name, false);
 	if (!c)
 		return NULL;
 
@@ -681,20 +681,20 @@ irc_chan(irc h, chanrep *dest, const char *name)
 
 
 size_t
-irc_num_users(irc h)
+irc_num_users(irc *h)
 {
 	return lsi_num_users(h);
 }
 
 size_t
-irc_all_users(irc h, userrep *userarr, size_t userarr_cnt)
+irc_all_users(irc *h, userrep *userarr, size_t userarr_cnt)
 {
 	if (!userarr_cnt)
 		return 0;
 
 	size_t cnt = 0;
 
-	user u = lsi_first_user(h);
+	user *u = lsi_first_user(h);
 	if (!u)
 		return 0;
 
@@ -706,7 +706,7 @@ irc_all_users(irc h, userrep *userarr, size_t userarr_cnt)
 }
 
 static userrep *
-mkuserrep(userrep *dest, user u, const char *modepfx)
+mkuserrep(userrep *dest, user *u, const char *modepfx)
 {
 	dest->modepfx = modepfx;
 	dest->nick = u->nick;
@@ -719,9 +719,9 @@ mkuserrep(userrep *dest, user u, const char *modepfx)
 }
 
 userrep *
-irc_user(irc h, userrep *dest, const char *ident)
+irc_user(irc *h, userrep *dest, const char *ident)
 {
-	user u = lsi_get_user(h, ident, false);
+	user *u = lsi_get_user(h, ident, false);
 	if (!u)
 		return NULL;
 
@@ -730,9 +730,9 @@ irc_user(irc h, userrep *dest, const char *ident)
 
 
 size_t
-irc_num_members(irc h, const char *chname)
+irc_num_members(irc *h, const char *chname)
 {
-	chan c = lsi_get_chan(h, chname, false);
+	chan *c = lsi_get_chan(h, chname, false);
 	if (!c)
 		return 0;
 
@@ -740,18 +740,18 @@ irc_num_members(irc h, const char *chname)
 }
 
 size_t
-irc_all_members(irc h, const char *chname, userrep *userarr, size_t userarr_cnt)
+irc_all_members(irc *h, const char *chname, userrep *userarr, size_t userarr_cnt)
 {
 	if (!userarr_cnt)
 		return 0;
 
-	chan c = lsi_get_chan(h, chname, false);
+	chan *c = lsi_get_chan(h, chname, false);
 	if (!c)
 		return 0;
 
 	size_t cnt = 0;
 
-	memb m = lsi_first_memb(h, c);
+	memb *m = lsi_first_memb(h, c);
 	if (!m)
 		return 0;
 
@@ -763,13 +763,13 @@ irc_all_members(irc h, const char *chname, userrep *userarr, size_t userarr_cnt)
 }
 
 userrep *
-irc_member(irc h, userrep *dest, const char *chname, const char *ident)
+irc_member(irc *h, userrep *dest, const char *chname, const char *ident)
 {
-	chan c = lsi_get_chan(h, chname, false);
+	chan *c = lsi_get_chan(h, chname, false);
 	if (!c)
 		return NULL;
 
-	memb m = lsi_get_memb(h, c, ident, false);
+	memb *m = lsi_get_memb(h, c, ident, false);
 	if (!m)
 		return NULL;
 
@@ -784,9 +784,9 @@ irc_member(irc h, userrep *dest, const char *chname, const char *ident)
 
 
 bool
-irc_tag_chan(irc h, const char *chname, void *tag, bool autofree)
+irc_tag_chan(irc *h, const char *chname, void *tag, bool autofree)
 {
-	chan c = lsi_get_chan(h, chname, false);
+	chan *c = lsi_get_chan(h, chname, false);
 	if (!c)
 		return false;
 
@@ -795,9 +795,9 @@ irc_tag_chan(irc h, const char *chname, void *tag, bool autofree)
 }
 
 bool
-irc_tag_user(irc h, const char *ident, void *tag, bool autofree)
+irc_tag_user(irc *h, const char *ident, void *tag, bool autofree)
 {
-	user u = lsi_get_user(h, ident, false);
+	user *u = lsi_get_user(h, ident, false);
 	if (!u)
 		return false;
 

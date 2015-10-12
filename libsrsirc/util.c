@@ -266,7 +266,7 @@ lsi_ut_conread(tokarr *msg, void *tag)
 }
 
 char **
-lsi_ut_parse_MODE(irc h, tokarr *msg, size_t *num, bool is324)
+lsi_ut_parse_MODE(irc *h, tokarr *msg, size_t *num, bool is324)
 {
 	size_t ac = 2;
 	while (ac < COUNTOF(*msg) && (*msg)[ac])
@@ -369,7 +369,7 @@ ut_parse_005_cmodes_fail:
 }
 
 int
-lsi_ut_classify_chanmode(irc h, char c)
+lsi_ut_classify_chanmode(irc *h, char c)
 {
 	for (int z = 0; z < 4; ++z) {
 		if (h->m005chanmodes[z] && strchr(h->m005chanmodes[z], c))

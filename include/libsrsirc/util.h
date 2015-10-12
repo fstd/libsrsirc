@@ -119,10 +119,10 @@ bool lsi_ut_conread(tokarr *msg, void *tag);
 void lsi_ut_mut_nick(char *nick, size_t nick_sz);
 
 /* lsi_ut_parse_MODE - oh well. if you need this documented, email me. */
-char **lsi_ut_parse_MODE(irc h, tokarr *msg, size_t *num, bool is324);
+char **lsi_ut_parse_MODE(irc *h, tokarr *msg, size_t *num, bool is324);
 
 /* lsi_ut_classify_chanmode - tell class (see 005 ISUPPORT spec) of a chanmode*/
-int lsi_ut_classify_chanmode(irc h, char c);
+int lsi_ut_classify_chanmode(irc *h, char c);
 
 /* lsi_ut_clonearr - deep-copy a tokarr (usually containing a tokenized irc msg)
  * Params: `arr': pointer to the tokarr to clone

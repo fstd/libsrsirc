@@ -1,4 +1,4 @@
-/* irc.c - basic irc functionality (see also irc_ext.c)
+/* irc.c - basic IRC functionality (see also irc_ext.c)
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
@@ -31,19 +31,19 @@
 #include <libsrsirc/util.h>
 
 
-static bool send_logon(irc hnd);
+static bool send_logon(irc *hnd);
 
-irc
+irc *
 irc_init(void)
 {
-	iconn con;
-	irc r = NULL;
+	iconn *con;
+	irc *r = NULL;
 	int preverrno = errno;
 	errno = 0;
 	if (!(con = lsi_conn_init()))
 		goto irc_init_fail;
 
-	if (!(r = lsi_com_malloc(sizeof (*(irc)0))))
+	if (!(r = lsi_com_malloc(sizeof *r)))
 		goto irc_init_fail;
 
 	r->pass = r->nick = r->uname = r->fname = r->serv_dist
@@ -135,7 +135,7 @@ irc_init(void)
 	return r;
 
 irc_init_fail:
-	EE("failed to initialize irc handle");
+	EE("failed to initialize IRC handle");
 	if (r) {
 		free(r->pass);
 		free(r->nick);
@@ -160,13 +160,13 @@ irc_init_fail:
 }
 
 void
-irc_reset(irc hnd)
+irc_reset(irc *hnd)
 {
 	lsi_conn_reset(hnd->con);
 }
 
 void
-irc_dispose(irc hnd)
+irc_dispose(irc *hnd)
 {
 	lsi_trk_deinit(hnd);
 	lsi_conn_dispose(hnd->con);
@@ -198,7 +198,7 @@ irc_dispose(irc hnd)
 }
 
 bool
-irc_connect(irc hnd)
+irc_connect(irc *hnd)
 {
 	uint64_t tsend = hnd->hcto_us ?
 	    lsi_b_tstamp_us() + hnd->hcto_us : 0;
@@ -283,7 +283,7 @@ irc_connect_fail:
 }
 
 int
-irc_read(irc hnd, tokarr *tok, uint64_t to_us)
+irc_read(irc *hnd, tokarr *tok, uint64_t to_us)
 {
 	/* Allow to be called with tok == NULL if we don't need the result */
 	tokarr dummy;
@@ -303,20 +303,20 @@ irc_read(irc hnd, tokarr *tok, uint64_t to_us)
 }
 
 bool
-irc_eof(irc hnd)
+irc_eof(irc *hnd)
 {
 	return lsi_conn_eof(hnd->con);
 }
 
 /* this is ugly and insane and BTW: it won't work */
 bool
-irc_can_read(irc hnd)
+irc_can_read(irc *hnd)
 {
 	return hnd->con->rctx.eptr - hnd->con->rctx.wptr >= 3;
 }
 
 bool
-irc_write(irc hnd, const char *line)
+irc_write(irc *hnd, const char *line)
 {
 	bool r = lsi_conn_write(hnd->con, line);
 
@@ -327,7 +327,7 @@ irc_write(irc hnd, const char *line)
 }
 
 bool
-irc_printf(irc hnd, const char *fmt, ...)
+irc_printf(irc *hnd, const char *fmt, ...)
 {
 	char buf[1024];
 
@@ -341,7 +341,7 @@ irc_printf(irc hnd, const char *fmt, ...)
 
 
 static bool
-send_logon(irc hnd)
+send_logon(irc *hnd)
 {
 	if (!lsi_conn_online(hnd->con))
 		return false;
@@ -384,20 +384,20 @@ send_logon(irc hnd)
 }
 
 void
-irc_regcb_conread(irc hnd, fp_con_read cb, void *tag)
+irc_regcb_conread(irc *hnd, fp_con_read cb, void *tag)
 {
 	hnd->cb_con_read = cb;
 	hnd->tag_con_read = tag;
 }
 
 void
-irc_regcb_mutnick(irc hnd, fp_mut_nick cb)
+irc_regcb_mutnick(irc *hnd, fp_mut_nick cb)
 {
 	hnd->cb_mut_nick = cb;
 }
 
 void
-irc_dump(irc h)
+irc_dump(irc *h)
 {
 	N("--- irc object %p dump---", (void *)h);
 	N("mynick: '%s'", h->mynick);
@@ -441,8 +441,8 @@ irc_dump(irc h)
 		lsi_ut_sndumpmsg(line, sizeof line, NULL, h->logonconv[i]),
 		N("logonconv[%zu]: '%s'", i, line);
 	}
-	//skmap chans
-	//skmap users
+	//skmap *chans
+	//skmap *users
 	//fp_con_read cb_con_read
 	//fp_mut_nick cb_mut_nick
 	//struct msghnd msghnds[64]

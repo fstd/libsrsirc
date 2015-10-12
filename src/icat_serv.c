@@ -37,7 +37,7 @@ struct outline_s {
 };
 
 
-static irc s_irc;
+static irc *s_irc;
 static bool s_on;
 static struct outline_s *s_outQ;
 static uint64_t s_nexthb;
@@ -45,8 +45,8 @@ static uint64_t s_quitat;
 static int s_casemap = CMAP_RFC1459;
 
 
-static bool handle_PING(irc irchnd, tokarr *tok, size_t nargs, bool pre);
-static bool handle_005(irc irchnd, tokarr *tok, size_t nargs, bool pre);
+static bool handle_PING(irc *irchnd, tokarr *tok, size_t nargs, bool pre);
+static bool handle_005(irc *irchnd, tokarr *tok, size_t nargs, bool pre);
 static int process_sendq(void);
 static bool do_heartbeat(void);
 static bool to_srv(const char *line);
@@ -228,7 +228,7 @@ lsi_serv_sentquit(void)
 
 
 static bool
-handle_PING(irc irchnd, tokarr *tok, size_t nargs, bool pre)
+handle_PING(irc *irchnd, tokarr *tok, size_t nargs, bool pre)
 {
 	char buf[1024];
 	snprintf(buf, sizeof buf, "PONG :%s\r\n", (*tok)[2]);
@@ -240,7 +240,7 @@ handle_PING(irc irchnd, tokarr *tok, size_t nargs, bool pre)
 }
 
 static bool
-handle_005(irc irchnd, tokarr *tok, size_t nargs, bool pre)
+handle_005(irc *irchnd, tokarr *tok, size_t nargs, bool pre)
 {
 	int cm = irc_casemap(s_irc);
 	if (cm != s_casemap) {

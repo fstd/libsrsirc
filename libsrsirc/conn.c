@@ -1,4 +1,4 @@
-/* conn.c - irc connection handling
+/* conn.c - IRC connection handling
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
@@ -38,10 +38,10 @@
 #define ON 1
 
 
-iconn
+iconn *
 lsi_conn_init(void)
 {
-	iconn r = NULL;
+	iconn *r = NULL;
 	int preverrno = errno;
 	errno = 0;
 
@@ -82,7 +82,7 @@ conn_init_fail:
 }
 
 void
-lsi_conn_reset(iconn hnd)
+lsi_conn_reset(iconn *hnd)
 {
 	D("(%p) resetting", (void *)hnd);
 
@@ -103,7 +103,7 @@ lsi_conn_reset(iconn hnd)
 }
 
 void
-lsi_conn_dispose(iconn hnd)
+lsi_conn_dispose(iconn *hnd)
 {
 	lsi_conn_reset(hnd);
 
@@ -118,7 +118,7 @@ lsi_conn_dispose(iconn hnd)
 }
 
 bool
-lsi_conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
+lsi_conn_connect(iconn *hnd, uint64_t softto_us, uint64_t hardto_us)
 {
 	if (!hnd || hnd->state != OFF)
 		return false;
@@ -225,7 +225,7 @@ lsi_conn_connect(iconn hnd, uint64_t softto_us, uint64_t hardto_us)
 }
 
 int
-lsi_conn_read(iconn hnd, tokarr *tok, uint64_t to_us)
+lsi_conn_read(iconn *hnd, tokarr *tok, uint64_t to_us)
 {
 	if (!hnd || hnd->state != ON)
 		return -1;
@@ -253,7 +253,7 @@ lsi_conn_read(iconn hnd, tokarr *tok, uint64_t to_us)
 }
 
 bool
-lsi_conn_write(iconn hnd, const char *line)
+lsi_conn_write(iconn *hnd, const char *line)
 {
 	if (!hnd || hnd->state != ON || !line)
 		return false;
@@ -272,19 +272,19 @@ lsi_conn_write(iconn hnd, const char *line)
 }
 
 bool
-lsi_conn_online(iconn hnd)
+lsi_conn_online(iconn *hnd)
 {
 	return hnd->state == ON;
 }
 
 bool
-lsi_conn_eof(iconn hnd)
+lsi_conn_eof(iconn *hnd)
 {
 	return hnd->eof;
 }
 
 bool
-lsi_conn_colon_trail(iconn hnd)
+lsi_conn_colon_trail(iconn *hnd)
 {
 	if (!hnd || hnd->state != ON)
 		return false;
@@ -293,7 +293,7 @@ lsi_conn_colon_trail(iconn hnd)
 }
 
 bool
-lsi_conn_set_px(iconn hnd, const char *host, uint16_t port, int ptype)
+lsi_conn_set_px(iconn *hnd, const char *host, uint16_t port, int ptype)
 {
 	char *n = NULL;
 	switch (ptype) {
@@ -322,7 +322,7 @@ lsi_conn_set_px(iconn hnd, const char *host, uint16_t port, int ptype)
 }
 
 bool
-lsi_conn_set_server(iconn hnd, const char *host, uint16_t port)
+lsi_conn_set_server(iconn *hnd, const char *host, uint16_t port)
 {
 	char *n;
 	if (!(n = lsi_b_strdup(host?host:DEF_HOST)))
@@ -336,7 +336,7 @@ lsi_conn_set_server(iconn hnd, const char *host, uint16_t port)
 }
 
 bool
-lsi_conn_set_ssl(iconn hnd, bool on)
+lsi_conn_set_ssl(iconn *hnd, bool on)
 {
 	if (on && !hnd->sctx) {
 		if (!(hnd->sctx = lsi_b_mksslctx())) {
@@ -357,43 +357,43 @@ lsi_conn_set_ssl(iconn hnd, bool on)
 }
 
 const char *
-lsi_conn_get_px_host(iconn hnd)
+lsi_conn_get_px_host(iconn *hnd)
 {
 	return hnd->phost;
 }
 
 uint16_t
-lsi_conn_get_px_port(iconn hnd)
+lsi_conn_get_px_port(iconn *hnd)
 {
 	return hnd->pport;
 }
 
 int
-lsi_conn_get_px_type(iconn hnd)
+lsi_conn_get_px_type(iconn *hnd)
 {
 	return hnd->ptype;
 }
 
 const char *
-lsi_conn_get_host(iconn hnd)
+lsi_conn_get_host(iconn *hnd)
 {
 	return hnd->host;
 }
 
 uint16_t
-lsi_conn_get_port(iconn hnd)
+lsi_conn_get_port(iconn *hnd)
 {
 	return hnd->port;
 }
 
 bool
-lsi_conn_get_ssl(iconn hnd)
+lsi_conn_get_ssl(iconn *hnd)
 {
 	return hnd->ssl;
 }
 
 int
-lsi_conn_sockfd(iconn hnd)
+lsi_conn_sockfd(iconn *hnd)
 {
 	if (!hnd || hnd->state != ON)
 		return -1;
