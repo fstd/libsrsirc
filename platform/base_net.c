@@ -57,11 +57,13 @@
 static bool s_sslinit;
 
 
+#if HAVE_STRUCT_SOCKADDR
 static bool sockaddr_from_addr(struct sockaddr *dst, size_t *dstlen,
     const struct addrlist *ai);
-#if HAVE_GETADDRINFO
+# if HAVE_STRUCT_ADDRINFO
 static void addrstr_from_sockaddr(char *addr, size_t addrsz, uint16_t *port,
     const struct addrinfo *ai);
+# endif
 #endif
 static void sslinit(void);
 
@@ -449,10 +451,9 @@ lsi_b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res)
 		node->next = NULL;
 		STRACPY(node->reqname, host);
 		STRACPY(node->addrstr, host);
+
+		node->ipv6 = ip6addr;
 		node->port = port;
-		node->family = ip4addr ? AF_INET : AF_INET6;
-		node->socktype = SOCK_STREAM;
-		node->protocol = 0;
 		*res = node;
 
 		W("fake \"resolved\" '%s:%"PRIu16"' - getaddrinfo() anyone?",

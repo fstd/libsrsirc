@@ -58,6 +58,8 @@ fi
 AC_HEADER_STDBOOL
 
 AC_CHECK_TYPES([ptrdiff_t])
+AC_CHECK_TYPES([struct addrinfo], [], [], [#include <netdb.h>])
+AC_CHECK_TYPES([struct sockaddr], [], [], [#include <sys/socket.h>])
 AC_CHECK_TYPES([struct sockaddr_storage], [], [], [#include <sys/socket.h>])
 AC_CHECK_TYPES([struct sockaddr_in], [], [], [#include <netinet/in.h>])
 AC_CHECK_TYPES([struct sockaddr_in6], [], [], [#include <netinet/in.h>])
