@@ -48,8 +48,7 @@ lsi_b_stdin_read(void *buf, size_t nbytes)
 
 	return (long)r;
 #else
-	E("We need something like read()");
-	return -1;
+# error "We need something like read()"
 #endif
 }
 
@@ -84,7 +83,7 @@ lsi_b_stdin_canread(void)
 
 	V("select: %d", r);
 #else
-	E("We need something like select() or poll()");
+# error "We need something like select() or poll()"
 #endif
 
 	return r;

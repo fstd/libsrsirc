@@ -33,7 +33,7 @@ lsi_b_usleep(uint64_t us)
 	if (tv.tv_sec || tv.tv_nsec)
 		nanosleep(&tv, NULL);
 #else
-	E("we need something like nanosleep() (or usleep()-ish)")
+# error "We need something like nanosleep() (or usleep()-ish)
 #endif
 }
 
@@ -43,7 +43,7 @@ lsi_b_getopt(int argc, char * const argv[], const char *optstring)
 #if HAVE_GETOPT
 	return getopt(argc, argv, optstring);
 #else
-	E("we need something like getopt()");
+# error "We need something like getopt()"
 #endif
 }
 
@@ -53,7 +53,7 @@ lsi_b_optarg(void)
 #if HAVE_GETOPT
 	return optarg;
 #else
-	E("we need something like getopt()");
+# error "We need something like getopt()"
 #endif
 }
 
@@ -63,7 +63,7 @@ lsi_b_optind(void)
 #if HAVE_GETOPT
 	return optind;
 #else
-	E("we need something like getopt()'s optind");
+# error "We need something like getopt()'s optind"
 #endif
 }
 
@@ -80,6 +80,6 @@ lsi_b_regsig(int sig, void (*sigfn)(int))
 		WE("sigaction");
 	}
 #else
-	E("we need something like sigaction()");
+# error "We need something like sigaction()"
 #endif
 }

@@ -93,7 +93,7 @@ lsi_b_socket(bool ipv6)
 # endif
 	}
 #else
-	E("We need something like socket()");
+# error "We need something like socket()"
 #endif
 
 	return sck;
@@ -129,11 +129,11 @@ lsi_b_connect(int sck, const struct addrlist *srv)
 	EE("connect() sck %d to '%s' port %"PRIu16"'",
 	    sck, srv->addrstr, srv->port);
 # else
-	E("We need something like connect()");
+# error "We need something like connect()"
 # endif
 
 #else
-	E("We need something like struct sockaddr_storage");
+# error "We need something like struct sockaddr_storage"
 #endif
 
 	return -1;
@@ -147,8 +147,7 @@ lsi_b_close(int sck)
 	D("Closing sck %d", sck);
 	return close(sck);
 #else
-	E("We need something like close()");
-	return -1;
+# error "We need something like close()"
 #endif
 }
 
@@ -198,8 +197,7 @@ lsi_b_select(int sck, bool rdbl, uint64_t to_us)
 		V("Nothing selected");
 	}
 #else
-	E("We need something like select() or poll()");
-	return -1;
+# error "We need something like select() or poll()"
 #endif
 }
 
@@ -225,8 +223,7 @@ lsi_b_blocking(int sck, bool blocking)
 		return false;
 	}
 #else
-	E("We need something like fcntl()");
-	return false;
+# error "We need something like fcntl()"
 #endif
 	return true;
 }
@@ -257,7 +254,7 @@ lsi_b_sock_ok(int sck)
 	W("socket error (%d: %s)", opt, berr);
 
 #else
-	E("we need something like getsockopt()");
+# error "We need something like getsockopt()"
 #endif
 
 	return false;
@@ -296,8 +293,7 @@ lsi_b_read(int sck, void *buf, size_t sz, bool *tryagain)
 
 	return (long)r;
 #else
-	E("We need something like read()");
-	return -1;
+# error "We need something like read()"
 #endif
 }
 
@@ -325,8 +321,7 @@ lsi_b_write(int sck, const void *buf, size_t len)
 
 	return (long)r;
 #else
-	E("We need something like read()");
-	return -1;
+# error "We need something like read()"
 #endif
 }
 
@@ -563,8 +558,7 @@ lsi_b_htons(uint16_t h)
 #if HAVE_HTONS
 	return htons(h);
 #else
-	E("We need something like htons()");
-	return h;
+# error "We need something like htons()"
 #endif
 }
 
@@ -575,8 +569,7 @@ lsi_b_inet_addr(const char *ip4str)
 #if HAVE_INET_ADDR
 	return inet_addr(ip4str);
 #else
-	E("We need something like htons()");
-	return (uint32_t)-1;
+# error "We need something like htons()"
 #endif
 }
 
@@ -600,7 +593,7 @@ lsi_b_inet4_addr(unsigned char *dest, size_t destsz, const char *ip4str)
 	memcpy(dest, &ia4.s_addr, destsz);
 	return true;
 #else
-	E("We need something like inet_pton()");
+# error "We need something like inet_pton()"
 #endif
 
 }
@@ -625,7 +618,7 @@ lsi_b_inet6_addr(unsigned char *dest, size_t destsz, const char *ip6str)
 	memcpy(dest, &ia6.s6_addr, destsz);
 	return true;
 #else
-	E("We need something like inet_pton()");
+# error "We need something like inet_pton()"
 #endif
 }
 
@@ -659,8 +652,7 @@ sockaddr_from_addr(struct sockaddr *dst, size_t *dstlen,
 
 	return true;
 #else
-	E("We need something like getaddrinfo()");
-	return false;
+# error "We need something like getaddrinfo()"
 #endif
 }
 

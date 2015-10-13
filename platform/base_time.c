@@ -37,7 +37,7 @@ lsi_b_tstamp_us(void)
 
 	return ts;
 #else
-	E("We need something like gettimeofday()");
+# error "We need something like gettimeofday()"
 #endif
 }
 
