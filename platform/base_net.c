@@ -349,8 +349,8 @@ lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, bool *tryagain)
 
 	return r;
 #else
-	C("SSL read attempted, but we haven't been compiled with SSL support");
-	/* not reached */
+	E("SSL read attempted, but we haven't been compiled with SSL support");
+	return -1;
 #endif
 }
 
@@ -374,8 +374,8 @@ lsi_b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
 
 	return r;
 #else
-	C("SSL write attempted, but we haven't been compiled with SSL support");
-	/* not reached */
+	E("SSL write attempted, but we haven't been compiled with SSL support");
+	return -1;
 #endif
 }
 
