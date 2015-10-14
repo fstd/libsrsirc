@@ -20,7 +20,7 @@ AC_PROG_MAKE_SET
 
 AC_HEADER_STDC
 
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdbool.h stddef.h stdlib.h string.h strings.h sys/select.h sys/socket.h sys/time.h sys/types.h syslog.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdbool.h stddef.h stdlib.h string.h strings.h sys/select.h sys/socket.h sys/time.h sys/types.h syslog.h unistd.h windows.h winsock2.h])
 AC_ARG_WITH(ssl,
 [  --with-ssl            Build with SSL support],
 	if test x$withval = xno; then
@@ -41,6 +41,14 @@ if test "x$want_ssl" = "xyes"; then
 #		AC_CHECK_HEADERS([openssl/ssl.h])
 #	])
 fi
+
+case "$(uname)" in
+MINGW*)
+AC_CHECK_LIB(ws2_32, _head_libws2_32_a,,
+    AC_CHECK_LIB(ws2_32, _head_lib32_libws2_32_a,,
+        AC_MSG_ERROR([winsock2 is required])))
+	;;
+esac
 
 if test "$(uname)" = "FreeBSD"; then
 AC_DEFINE([_WITH_GETLINE], [1], [FreeBSD needs this to be defined])

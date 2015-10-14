@@ -44,6 +44,12 @@
 # include <unistd.h>
 #endif
 
+#ifdef HAVE_WINSOCK2_H
+# include <winsock2.h>
+# include <ws2tcpip.h>
+#endif
+
+
 #include <logger/intlog.h>
 
 #include "base_string.h"
@@ -56,27 +62,64 @@
 
 static bool s_sslinit;
 
+#if HAVE_LIBWS2_32
+static WSADATA wsa;
+static bool wsainit;
 
-#if HAVE_STRUCT_SOCKADDR
+static bool wsa_init(void);
+#endif
+
+#if HAVE_STRUCT_SOCKADDR || HAVE_LIBWS2_32
 static bool sockaddr_from_addr(struct sockaddr *dst, size_t *dstlen,
     const struct addrlist *ai);
-# if HAVE_STRUCT_ADDRINFO
+# if HAVE_STRUCT_ADDRINFO || HAVE_LIBWS2_32
 static void addrstr_from_sockaddr(char *addr, size_t addrsz, uint16_t *port,
     const struct addrinfo *ai);
 # endif
 #endif
 static void sslinit(void);
 
+#if HAVE_LIBWS2_32
+static bool
+wsa_init(void)
+{
+	if (wsainit)
+		return true;
+
+	if (WSAStartup(MAKEWORD(2, 2), &wsa)) {
+		E("WSAStartup failed, code %d", WSAGetLastError());
+		return false;
+	}
+
+	return wsainit = true;
+}
+
+static void filladdr(char *dest, const char *addr);
+#endif
+
 
 int
 lsi_b_socket(bool ipv6)
 {
 	int sck = -1;
-#if HAVE_SOCKET
-	sck = socket(ipv6 ? PF_INET6 : PF_INET, SOCK_STREAM, 0);
-	if (sck < 0)
+	int invsck = -1;
+#if HAVE_LIBWS2_32
+	if (!wsa_init())
+		return -1;
+	
+	invsck = INVALID_SOCKET;
+#endif
+
+#if HAVE_SOCKET || HAVE_LIBWS2_32
+	sck = socket(ipv6 ? AF_INET6 : AF_INET, SOCK_STREAM, 0);
+	if (sck == invsck) {
+# if HAVE_LIBWS2_32
+		E("Could not create IPv%d socket, code: %d",
+		    ipv6?6:4, WSAGetLastError());
+# else
 		EE("Could not create IPv%d socket", ipv6?6:4);
-	else {
+# endif
+	} else {
 		D("Created IPv%d socket (fd: %d)", ipv6?6:4, sck);
 # if ! HAVE_MSG_NOSIGNAL
 #  if HAVE_SETSOCKOPT && HAVE_SO_NOSIGPIPE
@@ -103,7 +146,7 @@ lsi_b_socket(bool ipv6)
 int
 lsi_b_connect(int sck, const struct addrlist *srv)
 {
-#if HAVE_STRUCT_SOCKADDR_STORAGE
+#if HAVE_STRUCT_SOCKADDR_STORAGE || HAVE_LIBWS2_32
 	struct sockaddr_storage sa;
 	memset(&sa, 0, sizeof sa); // :S XXX
 	size_t addrlen = 0;
@@ -113,12 +156,16 @@ lsi_b_connect(int sck, const struct addrlist *srv)
 		return -1;
 	}
 
-# if HAVE_CONNECT
+# if HAVE_CONNECT || HAVE_LIBWS2_32
 	D("connect()ing sck %d to '%s' port %"PRIu16"'...",
 	    sck, srv->addrstr, srv->port);
 
 	int r = connect(sck, (struct sockaddr *)&sa, addrlen);
+#  if HAVE_LIBWS2_32
+	if (r == SOCKET_ERROR && WSAGetLastError() == WSAEWOULDBLOCK) {
+#  else
 	if (r == -1 && errno == EINPROGRESS) {
+#  endif
 		D("Connection in progress");
 		return 0;
 	} else if (r == 0) {
@@ -143,8 +190,10 @@ lsi_b_connect(int sck, const struct addrlist *srv)
 int
 lsi_b_close(int sck)
 {
-#if HAVE_CLOSE
 	D("Closing sck %d", sck);
+#if HAVE_LIBWS2_32
+	return closesocket(sck);
+#elif HAVE_CLOSE
 	return close(sck);
 #else
 # error "We need something like close()"
@@ -157,7 +206,7 @@ lsi_b_select(int sck, bool rdbl, uint64_t to_us)
 {
 	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 
-#if HAVE_SELECT
+#if HAVE_SELECT || HAVE_LIBWS2_32
 	struct timeval tout;
 
 	for (;;) {
@@ -222,8 +271,14 @@ lsi_b_blocking(int sck, bool blocking)
 		EE("fcntl(): failed to %s blocking", blocking?"set":"clear");
 		return false;
 	}
+#elif HAVE_LIBWS2_32
+	unsigned long on = blocking;
+	if (ioctlsocket(sck, FIONBIO, &on) != 0) {
+		E("ioctlsocket failed to %s blocking", blocking?"set":"clear");
+		return false;
+	}
 #else
-# error "We need something like fcntl()"
+# error "We need something to set a socket (non-)blocking"
 #endif
 	return true;
 }
@@ -232,17 +287,23 @@ lsi_b_blocking(int sck, bool blocking)
 bool
 lsi_b_sock_ok(int sck)
 {
-#if HAVE_GETSOCKOPT
+#if HAVE_GETSOCKOPT || HAVE_LIBWS2_32
 	int opt = 0;
 
 	socklen_t optlen = (socklen_t)sizeof opt;
 
-	if (getsockopt(sck, SOL_SOCKET, SO_ERROR, &opt, &optlen) != 0) {
+# if HAVE_LIBWS2_32
+	char *ov = (char *)&opt;
+# else
+	int *ov = &opt;
+# endif
+
+	if (getsockopt(sck, SOL_SOCKET, SO_ERROR, ov, &optlen) != 0) {
 		EE("getsockopt failed");
 		return false;
 	}
 
-	if (opt == 0)
+	if (*ov == 0)
 		return true;
 
 	char berr[128];
@@ -264,8 +325,14 @@ lsi_b_sock_ok(int sck)
 long
 lsi_b_read(int sck, void *buf, size_t sz, bool *tryagain)
 {
-#if HAVE_READ
 	V("read()ing from sck %d (bufsz: %zu)", sck, sz);
+#if HAVE_LIBWS2_32
+	int r = recv(sck, buf, sz, 0);
+	if (r == SOCKET_ERROR) {
+		bool wb = WSAGetLastError() == WSAEWOULDBLOCK
+		       || WSAGetLastError() == WSAEINPROGRESS;
+
+#elif HAVE_READ
 	ssize_t r = read(sck, buf, sz);
 	if (r == -1) {
 		bool wb =
@@ -276,10 +343,12 @@ lsi_b_read(int sck, void *buf, size_t sz, bool *tryagain)
 		    errno == EAGAIN ||
 # endif
 		    false;
+#else
+# error "We need something like read()"
+#endif
 
-		if (tryagain) {
+		if (tryagain)
 			*tryagain = wb;
-		}
 
 		if (wb)
 			V("read() would block...");
@@ -292,16 +361,13 @@ lsi_b_read(int sck, void *buf, size_t sz, bool *tryagain)
 	}
 
 	return (long)r;
-#else
-# error "We need something like read()"
-#endif
 }
 
 
 long
 lsi_b_write(int sck, const void *buf, size_t len)
 {
-#if HAVE_SEND
+#if HAVE_SEND || HAVE_LIBWS2_32
 	int flags = 0;
 # if HAVE_MSG_NOSIGNAL
 	flags = MSG_NOSIGNAL;
@@ -321,7 +387,7 @@ lsi_b_write(int sck, const void *buf, size_t len)
 
 	return (long)r;
 #else
-# error "We need something like read()"
+# error "We need something like send()"
 #endif
 }
 
@@ -434,6 +500,54 @@ lsi_b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res)
 
 	return count;
 
+#elif HAVE_LIBWS2_32
+	if (!wsa_init())
+		return -1;
+
+	struct hostent *he = gethostbyname(host);
+	if (!he) {
+		int e = WSAGetLastError();
+		if (e)
+			E("gethostbyname failed, code %d (%s)\n", e,
+			    e == WSAHOST_NOT_FOUND ? "Host not found" :
+			    e == WSANO_DATA ? "No record for host" : "");
+		return -1;
+	}
+
+	if (he->h_addrtype != AF_INET) {
+		E("bad address type %d from gethostbyname", he->h_addrtype);
+		return -1;
+	}
+
+	struct addrlist *head = NULL, *node = NULL, *tmp;
+	int i = 0;
+	while (he->h_addr_list[i]) {
+		tmp = malloc(sizeof *head);
+		if (node)
+			node->next = tmp;
+		node = tmp;
+		node->next = NULL;
+
+		if (!head)
+			head = node;
+
+		struct in_addr ia =
+		    { .S_un.S_addr = *(uint32_t *)he->h_addr_list[i] };
+
+		STRACPY(node->addrstr, inet_ntoa(ia));
+		STRACPY(node->reqname, host);
+		node->ipv6 = false;
+		node->port = port;
+		i++;
+
+		D("addrlist node: '%s': '%s:%"PRIu16"'",
+		    node->reqname, node->addrstr, node->port);
+
+	}
+
+	*res = head;
+
+	return i;
 #else
 	bool ip4addr = false, ip6addr = false;
 	if (strspn(host, "0123456789.") == strlen(host))
@@ -555,7 +669,7 @@ lsi_b_sslfin(SSLTYPE shnd)
 uint16_t
 lsi_b_htons(uint16_t h)
 {
-#if HAVE_HTONS
+#if HAVE_HTONS || HAVE_LIBWS2_32
 	return htons(h);
 #else
 # error "We need something like htons()"
@@ -566,13 +680,138 @@ lsi_b_htons(uint16_t h)
 uint32_t
 lsi_b_inet_addr(const char *ip4str)
 {
-#if HAVE_INET_ADDR
+#if HAVE_INET_ADDR || HAVE_LIBWS2_32
 	return inet_addr(ip4str);
 #else
-# error "We need something like htons()"
+# error "We need something like inet_addr()"
 #endif
 }
 
+
+#if HAVE_LIBWS2_32
+/* This assumes a little-endian Windows, orobably a rather safe bet.
+ * On real operating systems, we're endian-independent (supposedly) */
+static int
+lsi_b_win_inet_pton(int af, const char *src, void *dst)
+{
+	char buf[40];
+	unsigned char *dptr = dst;
+
+	char *tok;
+	if (af == AF_INET) {
+		strncpy(buf, src, sizeof buf);
+		buf[sizeof buf - 1] = '\0';
+		if (!(tok = strtok(buf, "."))) {
+			fprintf(stderr, "not an ipv4 address: '%s'", src);
+			return 0;
+		}
+		int n = strtol(tok, NULL, 10);
+		*dptr++ = (unsigned char)n;
+		for (int x = 0; x < 3; x++) {
+			if (!(tok = strtok(NULL, "."))) {
+				fprintf(stderr, "not an ipv4 address: '%s'", src);
+				return 0;
+			}
+			n = strtol(tok, NULL, 10);
+			*dptr++ = (unsigned char)n;
+		}
+
+		return 1;
+	} else if (af == AF_INET6) {
+		filladdr(buf, src); // FIXME
+
+		if (!(tok = strtok(buf, ":"))) {
+			fprintf(stderr, "not an ipv6 address: '%s'", src);
+			return 0;
+		}
+		long n = strtol(tok, NULL, 16);
+		*dptr++ = (unsigned char)(n/256);
+		*dptr++ = (unsigned char)(n%256);
+		for (int x = 0; x < 7; x++) {
+			if (!(tok = strtok(NULL, ":"))) {
+				fprintf(stderr, "not an ipv4 address: '%s'", src);
+				return 0;
+			}
+			n = strtol(tok, NULL, 16);
+			*dptr++ = (unsigned char)(n/256);
+			*dptr++ = (unsigned char)(n%256);
+		}
+
+		return 1;
+	} else {
+		fprintf(stderr, "Cannot handle anything but IPv4/IPv6 on windows...");
+	}
+
+	return -1;
+
+}
+
+/* turn a possibly abbreviated ipv6 address into its full form
+ * consisting of eight x 4 hex digits, separated by colons.
+ * we need this to simulate inet_pton on windows, because it is
+ * missing [from a sufficiently ancient winapi i want compat with]
+ * On platforms other than windows, this won't be used (nor compiled in)
+ * probably unsafe, use w/ caution */
+static void
+filladdr(char *dest, const char *addr)
+{
+	int part = 0;
+
+	int done = 0;
+	const char *cur = addr;
+
+	int fillgr = 0;
+	if (strstr(addr, "::")) {
+		int ncol = 0;
+		const char *s = addr;
+		while (*s)
+			if (*s++ == ':')
+				ncol++;
+		fillgr=8-ncol;
+
+		if (strncmp(addr, "::", 2) == 0)
+			fillgr++;
+
+	}
+
+	do {
+		if (part)
+			*dest++ = ':';
+		if (*cur == ':') {
+			for (int y = 0; y < fillgr; y++) {
+				if (y)
+					*dest++ = ':';
+				*dest++ = '0';
+				*dest++ = '0';
+				*dest++ = '0';
+				*dest++ = '0';
+			}
+			cur++;
+			if (*cur == ':')
+				cur++;
+
+		} else {
+
+			const char *c = strchr(cur, ':');
+			if (!c) {
+				c = cur+strlen(cur);
+				done=1;
+			}
+			int len = c - cur;
+			for (int x = 0; x < 4-len; x++)
+				*dest++ = '0';
+
+			while (cur != c)
+				*dest++ = *cur++;
+			cur=c+1;
+		}
+
+		part++;
+	} while (!done);
+
+	*dest = '\0';
+}
+#endif
 
 bool
 lsi_b_inet4_addr(unsigned char *dest, size_t destsz, const char *ip4str)
@@ -580,6 +819,12 @@ lsi_b_inet4_addr(unsigned char *dest, size_t destsz, const char *ip4str)
 #if HAVE_INET_PTON
 	struct in_addr ia4;
 	int n = inet_pton(AF_INET, ip4str, &ia4);
+#elif HAVE_LIBWS2_32
+	struct in_addr ia4;
+	int n = lsi_b_win_inet_pton(AF_INET, ip4str, &ia4);
+#else
+# error "We need something like inet_pton()"
+#endif
 	if (n == -1) {
 		EE("inet_pton failed on '%s'", ip4str);
 		return false;
@@ -592,9 +837,6 @@ lsi_b_inet4_addr(unsigned char *dest, size_t destsz, const char *ip4str)
 		destsz = 4;
 	memcpy(dest, &ia4.s_addr, destsz);
 	return true;
-#else
-# error "We need something like inet_pton()"
-#endif
 
 }
 
@@ -605,6 +847,12 @@ lsi_b_inet6_addr(unsigned char *dest, size_t destsz, const char *ip6str)
 #if HAVE_INET_PTON
 	struct in6_addr ia6;
 	int n = inet_pton(AF_INET6, ip6str, &ia6);
+#elif HAVE_LIBWS2_32
+	struct in6_addr ia6;
+	int n = lsi_b_win_inet_pton(AF_INET6, ip6str, &ia6);
+#else
+# error "We need something like inet_pton()"
+#endif
 	if (n == -1) {
 		EE("inet_pton failed on '%s'", ip6str);
 		return false;
@@ -617,9 +865,6 @@ lsi_b_inet6_addr(unsigned char *dest, size_t destsz, const char *ip6str)
 		destsz = 16;
 	memcpy(dest, &ia6.s6_addr, destsz);
 	return true;
-#else
-# error "We need something like inet_pton()"
-#endif
 }
 
 
@@ -627,7 +872,23 @@ static bool
 sockaddr_from_addr(struct sockaddr *dst, size_t *dstlen,
     const struct addrlist *ai)
 {
-#if HAVE_GETADDRINFO
+#if HAVE_LIBWS2_32
+	if (ai->ipv6) {
+		E("No IPv6 on windows, srz");
+		return false;
+	}
+
+	struct sockaddr_in *sain = (struct sockaddr_in *)dst;
+
+	memset(sain, 0, sizeof *sain);
+	sain->sin_family = AF_INET;
+	sain->sin_port = htons(ai->port);
+	sain->sin_addr.S_un.S_addr = lsi_b_inet_addr(ai->addrstr);
+
+	*dstlen = sizeof *sain;
+
+	return true;
+#elif HAVE_GETADDRINFO
 	struct addrinfo *ai_list = NULL;
 	struct addrinfo hints = {
 		.ai_family = ai->ipv6 ? AF_INET6 : AF_INET,

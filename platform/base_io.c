@@ -23,6 +23,10 @@
 # include <unistd.h>
 #endif
 
+#if HAVE_WINDOWS_H
+# include <windows.h>
+#endif
+
 #include <logger/intlog.h>
 
 
@@ -65,7 +69,16 @@ lsi_b_stdin_canread(void)
 
 	int r = -1;
 
-#if HAVE_SELECT
+#if HAVE_WINDOWS_H
+	HANDLE h = GetStdHandle(STD_INPUT_HANDLE);
+	uint32_t ret = WaitForSingleObjectEx(h ,0, 0);
+	switch (ret) {
+		case WAIT_TIMEOUT: r = 0;  break;
+		case WAIT_FAILED:  r = -1; break;
+		default:           r = 1;  break;
+	}
+
+#elif HAVE_SELECT
 	struct timeval tout = {0, 0};
 
 	V("select()ing stdin");
@@ -83,7 +96,7 @@ lsi_b_stdin_canread(void)
 
 	V("select: %d", r);
 #else
-# error "We need something like select() or poll()"
+# error "We need a way to tell whether stdin will block"
 #endif
 
 	return r;
