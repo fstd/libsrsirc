@@ -108,6 +108,7 @@ static int
 tryhost(struct addrlist *ai, char *remaddr, size_t remaddr_sz,
     uint16_t *peerport, uint64_t to_us)
 {
+	D("trying host '%s' ('%s')", ai->reqname, ai->addrstr);
 	int sck = lsi_b_socket(ai->ipv6);
 
 	if (sck == -1)
