@@ -2,7 +2,7 @@
 
 set -e
 
-tmp=$(mktemp /tmp/gentests.XXXXX)
+tmp=/tmp/gentests.tmp
 
 trap 'rm -f "$tmp"' EXIT
 
