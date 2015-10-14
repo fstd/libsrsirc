@@ -1,0 +1,34 @@
+Steps to build libsrsirc on Windows
+===================================
+- Tested on WinXP 32bit with MinGW 2013072200, MSYS 2013072200, libsrsirc 0.0.10
+
+
+MinGW/MSYS setup (needs to be done just once)
+---------------------------------------------
+1. Download mingw-get-setup.exe (http://sourceforge.net/projects/mingw/files/)
+2. Run it to install the MinGW/MSYS installation manager
+   Installation directory: C:\MinGW
+   [x] ...also install support for the graphical user interface
+   (*) ...just for me
+   Perform the installation.
+
+3. In the MinGW installation manager (should open automatically, run
+   C:\MinGW\libexec\mingw-get\guimain.exe if it doesn't), select
+   "Basic Setup" on the left pane, mark "mingw32-base" and "msys-base"
+   for installation.  Apply the changes using the menu.
+
+
+libsrsirc build procedure
+-------------------------
+1. On a Unix-ish machine, create a distribution tarball the usual way
+   (./autogen.sh && ./configure && make dist).
+   Copy the tarball over to the Windows machine as C:\libsrsirc-$VERSION.tar.gz
+   Copy scripts/winbuild.sh over to the Windows machine e.g. as C:\winbuild.sh
+   (Note: If you want to use other directories, or if your MinGW isn't
+   in C:\MinGW, edit the three variables at the top of winbuild.sh)
+
+2. Run C:\MinGW\msys\1.0\msys.bat, to start a shell (bash)
+
+3. Execute in that shell: sh /c/winbuild.sh [<version>] ['release'] 
+   (version can be omitted if only one libsrsirc tarball sits in C:\,
+   if 'release' is given, creates a tarbomb of the resulting binaries (exe+dll))
