@@ -9,3 +9,4 @@
 2015/09/13 - 0.0.8 release  -- bugfixes only
 2015/10/03 - 0.0.9 release  -- massive function renaming (collision avoidance) -- most of the public interface remains unaffected.  Happy birthday, Kerstin Pfeifer.
 2015/10/12 - 0.0.10 release -- another big refactor with huge backwards compatibility implications; added a helloworld-style example because icat/iwat are just too big
+2015/10/15 - 0.0.11 release -- there's a port to windows now...shudder.
