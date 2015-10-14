@@ -1,6 +1,6 @@
 Steps to build libsrsirc on Windows
 ===================================
-- Tested on WinXP 32bit with MinGW 2013072200, MSYS 2013072200, libsrsirc 0.0.10
+- Tested on WinXP 32bit with MinGW 2013072200, MSYS 2013072200, libsrsirc 0.0.11
 
 
 MinGW/MSYS setup (needs to be done just once)
