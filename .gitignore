@@ -16,8 +16,13 @@ config.status
 configure
 libtool
 src/icat
+src/iwat
+src/helloworld
 stamp-h1
 autoscan.log
 config.h.in~
 configure.scan
 m4/l*
+libsrsirc.pc
+unittests/run_test_bucklist.c
+unittests/test_bucklist
