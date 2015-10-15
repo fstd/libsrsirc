@@ -1,0 +1,1 @@
+{ T("dest=%p, addr='%s'", (void *)dest, addr);
