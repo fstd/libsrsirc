@@ -32,3 +32,19 @@ libsrsirc build procedure
 3. Execute in that shell: sh /c/winbuild.sh [<version>] ['release']
    (version can be omitted if only one libsrsirc tarball sits in C:\,
    if 'release' is given, creates a tarbomb of the resulting binaries (exe+dll))
+
+
+qemu (just a little reminder for myself)
+----------------------------------------
+qemu-system-i386 -localtime -m 512 -boot c -netdev user,id=network0 \
+    -device rtl8139,netdev=network0 /mnt/fast/qemu_winhdd.qcow2
+
+# For an extra FAT32 disk for data transfer, add:
+#   -drive file=/mnt/fast/qemu_winhdd2,format=raw,index=1
+# Which is constructed using:
+# dd if=/dev/zero of=/mnt/fast/qemu_winhdd2 bs=1m count=50 progress=1
+# vnconfig -c vnd0 /mnt/fast/qemu_winhdd2
+# fdisk -u vnd0
+# (add one partition)
+# newfs_msdos /dev/rvnd0e
+# vnconfig -u vnd0
