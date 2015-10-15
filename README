@@ -1,18 +1,32 @@
 This is libsrsirc, version 0.0.11
-A lightweight IRC library
+A lightweight, cross-platform IRC library
+Written in portable standard C (C99)
 
-Quickstart:
-run ./autogen.sh to setup the autohell
-afterwards, usual ./configure ; make ; make install stuff applies
+Quickstart for libsrsirc users:
+  - Get a release tarball off the "tar" branch, DO NOT use the
+    github-internal "release" feature.
+    I.e. use https://github.com/fstd/libsrsirc/tree/tar
+    (use "view raw" for downloading)
 
-libsrsirc/irc.h is what you usually want to #include when using
-  the lib, libsrsirc/irc_ext.h if you plan on using more than the
-  very basics; libsrsirc/irc_util.h is useful, too.
-  see src/icat.c for an example application of the lib.
+  - Extract the tarball, cd into the resulting directory
+
+  - run "./configure && make" to build the lib, "make install" to install.
+
+Quickstart for libsrsirc developers:
+  - Clone the repo
+
+  - Run ./autogen.sh to setup the autohell.
+    (This requires autoconf >= 2.69, automake >= 1.14, libtool >= 2.4)
+
+  - run "./configure && make" to build the lib, "make install" to install.
+
+  - To tear down the autohell, run ./autoclean.sh
+
+See src/helloworld.c for a trivial example application of the lib.
 
 See INSTALL for generic autohell compile/install instructions.
 
-(C) 2012-2015 Timo Buhrmester <van.fisted@googlemail.com>
-Contact: #fstd on irc.freenode.org
+See COPYING for license information (tl;dr: 3-clause BSD)
 
-See COPYING for license information
+(C) 2012-2015 Timo Buhrmester <van.fstd@gmail.com>
+Contact: #fstd on irc.freenode.org (or by email)
