@@ -29,6 +29,6 @@ libsrsirc build procedure
 
 2. Run C:\MinGW\msys\1.0\msys.bat, to start a shell (bash)
 
-3. Execute in that shell: sh /c/winbuild.sh [<version>] ['release'] 
+3. Execute in that shell: sh /c/winbuild.sh [<version>] ['release']
    (version can be omitted if only one libsrsirc tarball sits in C:\,
    if 'release' is given, creates a tarbomb of the resulting binaries (exe+dll))

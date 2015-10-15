@@ -8,7 +8,7 @@ workdir='/c/libsrsirc'  #where we build. NOTE THAT we rm -rf and recreate this
 compiler="$(printf '%c' "${mingwroot#?}"):/${mingwroot#???}/bin/gcc.exe"
 
 if [ "x$1" = 'x-h' ]; then
-	echo "Usage: $0 [<version (e.g. 0.0.10)>] ["release"]" >&2 
+	echo "Usage: $0 [<version (e.g. 0.0.10)>] ["release"]" >&2
 	echo "  version can be omitted if there is only one libsrsirc tarball in C:/" >&2
 	echo "  if the string 'release' is present, tar up the resulted executables and the DLL" >&2
 	exit 0
@@ -19,7 +19,7 @@ if [ -z "$1" ] || [ "x$1" = 'xrelease' ]; then
 		VERSION="$(ls $tardir | grep 'libsrsirc-[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.tar\.gz' | grep -o '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*')"
 		printf "autodetected " >&2
 	else
-		echo "Usage: $0 <version (e.g. 0.0.10)> ["release"]" >&2 
+		echo "Usage: $0 <version (e.g. 0.0.10)> ["release"]" >&2
 		exit 1
 	fi
 else

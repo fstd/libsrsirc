@@ -28,7 +28,7 @@ git push --tags
 
 ./autoclean.sh
 ./autogen.sh
-./configure 
+./configure
 make dist
 
 echo "Copy libsrsirc-$newver.tar.gz to C:\libsrsirc-$newver.tar.gz" >&2
@@ -48,9 +48,9 @@ done
 mkdir dist windist
 cd dist/
 
-tar -xzpf ../libsrsirc-$newver.tar.gz 
+tar -xzpf ../libsrsirc-$newver.tar.gz
 cd ../windist/
-tar -xzf ../libsrsirc-$newver-winbin.tarbomb.gz 
+tar -xzf ../libsrsirc-$newver-winbin.tarbomb.gz
 cp *.exe libsrsirc-0.dll ../dist/libsrsirc-$newver/
 cd ../dist/
 zip -r libsrsirc-$newver-win.zip libsrsirc-$newver

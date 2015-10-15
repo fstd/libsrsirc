@@ -106,7 +106,7 @@ lsi_b_socket(bool ipv6)
 #if HAVE_LIBWS2_32
 	if (!wsa_init())
 		return -1;
-	
+
 	invsck = INVALID_SOCKET;
 #endif
 
