@@ -88,64 +88,72 @@ struct iconn_s {
 
 /* this is our main IRC object context structure (typedef'd as `irc') */
 struct irc_s {
-	char mynick[MAX_NICK_LEN];
-	char myhost[MAX_HOST_LEN];
-	bool service;
-	char cmodes[MAX_CMODES_LEN]; //supported chanmodes (as per 004, dun use)
-	char umodes[MAX_UMODES_LEN]; //supported usermodes
-	char myumodes[MAX_UMODES_LEN]; //actual usermodes
-	char ver[MAX_VER_LEN];
-	char *lasterr;
+	/* These are kept up to date as the pertinent messages are seen */
+	char mynick[MAX_NICK_LEN];     // Hold our current nickname
+	char myhost[MAX_HOST_LEN];     // Hostname of the server as per 004
+	bool service;                  // Set if we see a 383 (RPL_YOURESERVICE)
+	char cmodes[MAX_CMODES_LEN];   // Supported chanmodes as per 004
+	char umodes[MAX_UMODES_LEN];   // Supported usermodes
+	char myumodes[MAX_UMODES_LEN]; // Actual usermodes
+	char ver[MAX_VER_LEN];         // Server version as per 004
+	char *lasterr;                 // Argument of the last ERROR we received
 
-	/* zero timeout means no timeout */
-	uint64_t hcto_us;/*connect() timeout per A/AAAA record*/
-	uint64_t scto_us;/*overall irc_connect() timeout*/
+	bool restricted; // Set if the ircd sent us a 484 (ERR_RESTRICTED)
+	bool banned;     // Set if the ircd sent us a 465 (ERR_YOUREBANNEDCREEP)
+	char *banmsg;    // If `banned`, this holds the argument of the 465
+	int casemap;     // Character case mapping in use (CMAP_*, see defs.h)
 
-	bool restricted;
-	bool banned;
-	char *banmsg;
-
-	int casemap;
-
-	char *pass;
-	char *nick;
-	char *uname;
-	char *fname;
-	uint8_t conflags;
-	bool serv_con;
-	char *serv_dist;
-	long serv_type;
-	char *serv_info;
-
-	tokarr *logonconv[4];
-	char *m005chanmodes[4];
-	char *m005modepfx[2];
-	char *m005chantypes;
-
-	fp_con_read cb_con_read;
-	void *tag_con_read;
-	fp_mut_nick cb_mut_nick;
-
-	bool dumb;
-
-	struct umsghnd *uprehnds;
-	size_t uprehnds_cnt;
-
-	struct umsghnd *uposthnds;
-	size_t uposthnds_cnt;
-
-	struct msghnd *msghnds;
-	size_t msghnds_cnt;
-
-	/* tracking specific -- should probably split this up somehow */
-	bool tracking; /* true if we want to track */
-	bool tracking_enab; /* tracking is enabled (after 005 CASEMAPPING) */
-	bool endofnames;
-	skmap *chans;
-	skmap *users;
+	tokarr *logonconv[4];   // Holds 001-004 because irc_connect() eats them
+	char *m005chanmodes[4]; // Supported channel modes as per 005
+	char *m005modepfx[2];   // Supported channel mode prefixes as per 005
+	char *m005chantypes;    // Supported channel types as per 005
 
 
-	struct iconn_s *con;
+
+	/* These are set by their respective irc_set_*() functions and
+	 * generally changes to these don't take effect before the next
+	 * call to irc_connect() */
+	char *pass;       // Server password set by irc_set_pass()
+	char *nick;       // Nickname set by irc_set_nick()
+	char *uname;      // Username set by irc_set_uname()
+	char *fname;      // Full name set by irc_set_fname()
+	uint8_t conflags; // USER flags for logging on
+	bool serv_con;    // Do we want to be service? irc_set_service_connect()
+	char *serv_dist;  // Service logon information (distribution)
+	long serv_type;   // Service logon information (service type)
+	char *serv_info;  // Service logon information (service info)
+	uint64_t hcto_us; // Overall irc_connect() timeout (0=inf)
+	uint64_t scto_us; // Socket connect() timeout per A/AAAA record (0=inf)
+	bool tracking;    // Do we want chan/user tracking? by irc_set_track()
+	bool dumb;        // Connect only, leave logon sequence to the user
+
+
+
+	/* These are set by registering callbacks using irc_reg*() */
+	fp_con_read cb_con_read; // Callback for incoming messages at logon time
+	void *tag_con_read;      // Userdata handed back to the above callback
+	fp_mut_nick cb_mut_nick; // Callback for unavailable nick at logon time
+
+	struct umsghnd *uprehnds;  // User-registered PRE message handlers
+	size_t uprehnds_cnt;       // Amount of the above
+	struct umsghnd *uposthnds; // User-registered POST message handlers
+	size_t uposthnds_cnt;      // Amount of the above
+	struct msghnd *msghnds;    // System-registered message handlers
+	size_t msghnds_cnt;        // Amount of the above
+
+
+
+	/* These are only used if irc_set_track() was used to enable tracking */
+	skmap *chans;       // The channels we're aware of (or in?)
+	skmap *users;       // The users we're aware of
+
+
+
+	/* These are internal helper structures */
+	bool tracking_enab;  // If `tracking`, set once we see 005 CASEMAPPING
+	bool endofnames;     // Helper flag for channel names update
+
+	struct iconn_s *con; // Connection-specifics (socket, read buffers, ...)
 };
 
 
