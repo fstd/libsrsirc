@@ -7,3 +7,9 @@ a general code cleanup is overdue
 
 revise the autohell, i'm new to it and probably messed up
   also config.h isn't used anywhere lol
+
+in dumb mode, should we handle 001-004 etc anyway?
+
+tracking only works with servers that use 005 CASEMAPPING.
+if skmap could rehash, tracking could be enabled
+before connecting and hence we wouldn't depend on 005
