@@ -306,7 +306,7 @@ handle_005(irc *hnd, tokarr *msg, size_t nargs, bool logon)
 			E("failed to enable tracking");
 		else {
 			hnd->tracking_enab = true;
-			N("tracking enabled");
+			I("tracking enabled");
 		}
 	}
 
