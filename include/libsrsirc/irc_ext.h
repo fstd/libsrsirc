@@ -202,7 +202,6 @@ void irc_regcb_conread(irc *hnd, fp_con_read cb, void *tag);
  * \param mn   Function pointer to the callback function to be registered.
  *             If NULL, the attempt to logon will be aborted if we can't have
  *             the nickname we want.
- * \param tag   Arbitrary userdata that is passed back to the callback as-is
  *
  * A default callback is provided which is probably okay for most cases. */
 void irc_regcb_mutnick(irc *hnd, fp_mut_nick mn);
