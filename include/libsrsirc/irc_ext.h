@@ -82,7 +82,7 @@ const char *irc_myhost(irc *hnd);
 /** \brief Tell what "case mapping" the server advertised in 005
  * \return One of CMAP_* constants; CMAP_RFC1459 if there was no 005
  *
- * See CMAP_ASCII, CMAP_RFC1459, CMAP_STRICT_RFC1459
+ * \sa CMAP_ASCII, CMAP_RFC1459, CMAP_STRICT_RFC1459
  */
 int irc_casemap(irc *hnd);
 
@@ -169,7 +169,8 @@ tokarr *(*irc_logonconv(irc *hnd))[4];
  *
  * \param mclass: class of channel modes to return (see above)
  * \return A pointer to a string consisting of the supported channel modes
- *     for the given class */
+ *     for the given class
+ * \sa CHANMODE_CLASS_A, CHANMODE_CLASS_B, CHANMODE_CLASS_C, CHANMODE_CLASS_D */
 const char *irc_005chanmodes(irc *hnd, size_t mclass);
 
 /** \brief Tell what channel mode prefixes the ircd claims to support as per 005
@@ -193,7 +194,7 @@ const char *irc_005modepfx(irc *hnd, bool symbols);
  * \param cb   Function pointer to the callback function to be registered
  * \param tag   Arbitrary userdata that is passed back to the callback as-is
  *
- * See uhnd_fn for semantics of the callback. */ // XXX xref
+ * \sa uhnd_fn for semantics of the callback. */
 void irc_regcb_conread(irc *hnd, fp_con_read cb, void *tag);
 
 /** \brief Register a function to come up with an alternative nickname at logon
@@ -444,6 +445,7 @@ bool irc_can_read(irc *hnd);
  *              me to disprove my assumption about how many would be enough for
  *              everybody(TM).  A compile-time constant will need to be bumped
  *              then.
+ * \sa uhnd_fn
  */
 bool irc_reg_msghnd(irc *hnd, const char *cmd, uhnd_fn hndfn, bool pre);
 

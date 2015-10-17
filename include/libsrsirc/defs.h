@@ -60,7 +60,7 @@
  * }, { and | are the uppercase versions of ], [ and \,
  * respectively.
  *
- * See also irc_casemap().
+ * \sa irc_casemap().
  */
 #define CMAP_RFC1459 0
 
@@ -70,7 +70,7 @@
  * }, {, | and ^ are the uppercase versions of ], [, \ and ~,
  * respectively.
  *
- * See also irc_casemap().
+ * \sa irc_casemap().
  */
 #define CMAP_STRICT_RFC1459 1
 
@@ -79,7 +79,7 @@
  * In the ASCII case mapping, no special uppercase/lowercase rules exist.
  * A-Z are uppercase of a-z and that's it.
  *
- * See also irc_casemap().
+ * \sa irc_casemap().
  */
 #define CMAP_ASCII 2
 
@@ -95,9 +95,12 @@
 /** \brief Channel mode classes as per the 005 ISUPPORT spec. (A)
  *
  * Channel modes of class A are those that add or remove an entry from a list.
- * They take an argument when set and also when unset. Examples: +b, +o
+ * They take an argument when set and also when unset. Example: +b
+ * (but not the mode prefix chars like +o, see irc_005modepfx())
  *
- * This is relevant for dealing with MODE. See also lsi_ut_classify_chanmode().
+ * This is relevant for dealing with MODE.
+ *
+ * \sa lsi_ut_classify_chanmode() and irc_005chanmodes()
  */
 #define CHANMODE_CLASS_A 1
 
@@ -106,7 +109,9 @@
  * Channel modes of class B don't deal with lists, but will also take an
  * argument when set and when unset. Example: +k
  *
- * This is relevant for dealing with MODE. See also lsi_ut_classify_chanmode().
+ * This is relevant for dealing with MODE.
+ *
+ * \sa lsi_ut_classify_chanmode() and irc_005chanmodes()
  */
 #define CHANMODE_CLASS_B 2
 
@@ -115,7 +120,9 @@
  * Channel modes of class C will only take an argument when set.
  * Example: +l (letter L)
  *
- * This is relevant for dealing with MODE. See also lsi_ut_classify_chanmode().
+ * This is relevant for dealing with MODE.
+ *
+ * \sa lsi_ut_classify_chanmode() and irc_005chanmodes()
  */
 #define CHANMODE_CLASS_C 3
 
@@ -123,7 +130,9 @@
  *
  * Channel modes of class D will never need an argument. Examples: +n, +t
  *
- * This is relevant for dealing with MODE. See also lsi_ut_classify_chanmode().
+ * This is relevant for dealing with MODE.
+ *
+ * \sa lsi_ut_classify_chanmode() and irc_005chanmodes()
  */
 #define CHANMODE_CLASS_D 4
 
@@ -186,7 +195,7 @@ typedef char *tokarr[17];
  *
  * \return If the callback returns false, the attempt to logon is aborted.
  *
- * See also irc_regcb_conread()
+ * \sa irc_regcb_conread()
  */ //XXX why no handle param?
 typedef bool (*fp_con_read)(tokarr *msg, void *tag);
 
@@ -201,7 +210,7 @@ typedef bool (*fp_con_read)(tokarr *msg, void *tag);
  *                 in this buffer, which will then be tried as an alternative
  * \param   nick_sz   Size of the buffer pointer to by `nick`.
  *
- * See also irc_regcb_mutnick()
+ * \sa irc_regcb_mutnick()
  */ //XXX return true or false to proceed/abort?
 typedef void (*fp_mut_nick)(char *nick, size_t nick_sz);
 
@@ -226,7 +235,7 @@ typedef void (*fp_mut_nick)(char *nick, size_t nick_sz);
  *              messages.
  * \return   If the callback returns `false`, the connection is reset.
  *
- * See also irc_reg_msghnd()
+ * \sa irc_reg_msghnd()
  */
 typedef bool (*uhnd_fn)(irc *hnd, tokarr *msg, size_t nargs, bool pre);
 
