@@ -109,6 +109,23 @@ bool irc_online(irc *hnd);
  * Reads a protocol message from the server, field-splits it and populates
  * populates the structure pointed to by`tok' with the results.
  *
+ * Usage example:
+ * \code
+ *   tokarr tok;
+ *
+ *   int r = irc_read(hnd, &tok, 1000000); // 1 second timeout
+ *
+ *   if (r == -1) {
+ *       // ...read failure, we're now disconnected...
+ *   } else if (r == 0) {
+ *       // ...timeout, nothing to read...
+ *   } else {
+ *       // Okay, we have read a message.
+ *       if (strcmp(tok[1], "PING") == 0)
+ *           irc_printf(hnd, "PONG %s", tok[2]);
+ *   }
+ * \endcode
+ *
  * \param hnd   IRC handle as obtained by irc_init()
  * \param tok   Pointer to the result array, where pointers to the identified
  *              fields tokens are stored in.
