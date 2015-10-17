@@ -147,8 +147,8 @@ int irc_read(irc *hnd, tokarr *tok, uint64_t to_us);
  *
  * \param hnd   IRC handle as obtained by irc_init()
  * \param line   Data to send, typically a single IRC protocol line (but may
- *               be multiple if properly separated by \r\n).
- *               If the line does not end in \r\n, it will be appended.
+ *               be multiple if properly separated by \\r\\n).
+ *               If the line does not end in \\r\\n, it will be appended.
  *
  * \return true on success, false on failure
  *
@@ -209,7 +209,7 @@ bool irc_set_pass(irc *hnd, const char *srvpass);
 
 /** \brief set IRC 'user name' (not the same as nickname)
  *
- * The 'username' is the middle part of an IRC identity (nickname!username@host)
+ * The 'username' is the middle part of an IRC identity (nickname!username\@host)
  *
  * This setting will take effect not before the next call to irc_connect()
  *
@@ -261,6 +261,6 @@ bool irc_set_nick(irc *hnd, const char *nick);
  */
 void irc_dump(irc *hnd);
 
-/** }@ */
+/** @} */
 
 #endif /* LIBSRSIRC_IRC_H */
