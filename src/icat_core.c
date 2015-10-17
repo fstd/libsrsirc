@@ -158,7 +158,7 @@ handle_ircmsg(tokarr *tok)
 
 	s_readcnt++;
 
-	lsi_ut_pfx2nick(nick, sizeof nick, (*tok)[0]);
+	lsi_ut_ident2nick(nick, sizeof nick, (*tok)[0]);
 
 	if (g_sett.ignore_cs
 	    && !lsi_ut_istrcmp(nick, "ChanServ", lsi_serv_casemap()))

@@ -90,7 +90,7 @@ h_JOIN(irc *h, tokarr *msg, size_t nargs, bool logon)
 		return PROTO_ERR;
 
 	char nick[MAX_NICK_LEN];
-	lsi_ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
+	lsi_ut_ident2nick(nick, sizeof nick, (*msg)[0]);
 
 	bool me = lsi_ut_istrcmp(nick, h->mynick, h->casemap) == 0;
 	chan *c = lsi_get_chan(h, (*msg)[2], !me);
@@ -296,7 +296,7 @@ h_PART(irc *h, tokarr *msg, size_t nargs, bool logon)
 		return PROTO_ERR;
 
 	char nick[MAX_NICK_LEN];
-	lsi_ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
+	lsi_ut_ident2nick(nick, sizeof nick, (*msg)[0]);
 	lsi_touch_user(h, (*msg)[0], true);
 
 	chan *c = lsi_get_chan(h, (*msg)[2], true);
@@ -382,7 +382,7 @@ h_TOPIC(irc *h, tokarr *msg, size_t nargs, bool logon)
 
 	lsi_touch_user(h, (*msg)[0], true);
 	char nick[MAX_NICK_LEN];
-	lsi_ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
+	lsi_ut_ident2nick(nick, sizeof nick, (*msg)[0]);
 
 	chan *c = lsi_get_chan(h, (*msg)[2], true);
 	if (!c) {

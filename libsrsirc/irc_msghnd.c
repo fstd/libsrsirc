@@ -197,7 +197,7 @@ handle_NICK(irc *hnd, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0])
 		return PROTO_ERR;
 
-	lsi_ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
+	lsi_ut_ident2nick(nick, sizeof nick, (*msg)[0]);
 
 	if (!lsi_ut_istrcmp(nick, hnd->mynick, hnd->casemap)) {
 		lsi_com_strNcpy(hnd->mynick, (*msg)[2], sizeof hnd->mynick);

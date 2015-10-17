@@ -14,9 +14,9 @@
 
 /* Overview:
  *
- * void lsi_ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx);
- * void lsi_ut_pfx2uname(char *dest, size_t dest_sz, const char *pfx);
- * void lsi_ut_pfx2host(char *dest, size_t dest_sz, const char *pfx);
+ * void lsi_ut_ident2nick(char *dest, size_t dest_sz, const char *ident);
+ * void lsi_ut_ident2uname(char *dest, size_t dest_sz, const char *ident);
+ * void lsi_ut_ident2host(char *dest, size_t dest_sz, const char *ident);
  *
  * int lsi_ut_istrcmp(const char *n1, const char *n2, int casemap);
  * int lsi_ut_istrncmp(const char *n1, const char *n2, size_t len, int casemap);
@@ -46,15 +46,15 @@
  * Params: `dest': Buffer where the extracted nickname will be put in
  *         `dest_sz': Size of `dest' buffer (\0-termination is ensured)
  *         `pfx': The `nick[!user][@host]-style' prefix to deal with. */
-void lsi_ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx);
+void lsi_ut_ident2nick(char *dest, size_t dest_sz, const char *ident);
 
 /* lsi_ut_pfx2uname - does the same as lsi_ut_pfx2nick, just for the `user' part
  * If there is no user part, `dest' will point to an empty string */
-void lsi_ut_pfx2uname(char *dest, size_t dest_sz, const char *pfx);
+void lsi_ut_ident2uname(char *dest, size_t dest_sz, const char *ident);
 
 /* lsi_ut_pfx2host - does the same as lsi_ut_pfx2nick, just for the `host' part
  * If there is no host part, `dest' will point to an empty string */
-void lsi_ut_pfx2host(char *dest, size_t dest_sz, const char *pfx);
+void lsi_ut_ident2host(char *dest, size_t dest_sz, const char *ident);
 
 /* lsi_ut_istrcmp - case-insensitively compare strings while taking IRC
  *     case mapping into account (e.g. "foo\[]bar" might be the lowercase

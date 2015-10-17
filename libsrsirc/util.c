@@ -30,7 +30,7 @@
 static char *next_tok(char *buf);
 
 void
-lsi_ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx)
+lsi_ut_ident2nick(char *dest, size_t dest_sz, const char *pfx)
 {
 	if (!dest_sz)
 		return;
@@ -47,7 +47,7 @@ lsi_ut_pfx2nick(char *dest, size_t dest_sz, const char *pfx)
 }
 
 void
-lsi_ut_pfx2uname(char *dest, size_t dest_sz, const char *pfx)
+lsi_ut_ident2uname(char *dest, size_t dest_sz, const char *pfx)
 {
 	if (!dest_sz)
 		return;
@@ -66,7 +66,7 @@ lsi_ut_pfx2uname(char *dest, size_t dest_sz, const char *pfx)
 }
 
 void
-lsi_ut_pfx2host(char *dest, size_t dest_sz, const char *pfx)
+lsi_ut_ident2host(char *dest, size_t dest_sz, const char *pfx)
 {
 	if (!dest_sz)
 		return;

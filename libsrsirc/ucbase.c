@@ -383,13 +383,13 @@ lsi_touch_user_int(user *u, const char *ident)
 {
 	if (!u->uname && strchr(ident, '!')) {
 		char unam[MAX_UNAME_LEN];
-		lsi_ut_pfx2uname(unam, sizeof unam, ident);
+		lsi_ut_ident2uname(unam, sizeof unam, ident);
 		u->uname = lsi_b_strdup(unam); //pointless to check
 	}
 
 	if (!u->host && strchr(ident, '@')) {
 		char host[MAX_HOST_LEN];
-		lsi_ut_pfx2host(host, sizeof host, ident);
+		lsi_ut_ident2host(host, sizeof host, ident);
 		u->host = lsi_b_strdup(host); //pointless to check
 	}
 }
@@ -408,7 +408,7 @@ user *
 lsi_add_user(irc *h, const char *ident) //ident may be a nick, or nick!uname@host
 {
 	char nick[MAX_NICK_LEN];
-	lsi_ut_pfx2nick(nick, sizeof nick, ident);
+	lsi_ut_ident2nick(nick, sizeof nick, ident);
 
 	user *u = lsi_com_malloc(sizeof *u);
 	if (!u)
@@ -597,7 +597,7 @@ bool
 lsi_rename_user(irc *h, const char *ident, const char *newnick, bool *allocerr)
 {
 	char nick[MAX_NICK_LEN];
-	lsi_ut_pfx2nick(nick, sizeof nick, ident);
+	lsi_ut_ident2nick(nick, sizeof nick, ident);
 
 	bool justcase = lsi_ut_istrcmp(nick, newnick, h->casemap) == 0;
 

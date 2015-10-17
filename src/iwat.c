@@ -377,7 +377,7 @@ main(int argc, char **argv)
 		else if (strcmp(tok[1], "PRIVMSG") == 0) {
 			if (strncmp(tok[3], "ECHO ", 5) == 0) {
 				char nick[64];
-				lsi_ut_pfx2nick(nick, sizeof nick, tok[0]);
+				lsi_ut_ident2nick(nick, sizeof nick, tok[0]);
 				iprintf("PRIVMSG %s :%s\r\n", nick, tok[3]+5);
 			} else if (strncmp(tok[3], "DO ", 3) == 0) {
 				iprintf("%s\r\n", tok[3]+3);
