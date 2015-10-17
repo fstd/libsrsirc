@@ -2,6 +2,39 @@ This is libsrsirc, version 0.0.11
 A lightweight, cross-platform IRC library
 Written in portable standard C (C99)
 
+Interface documentation: http://penenen.de/libsrsirc/doxygen/modules.html
+
+Some highlights:
+  - Lightweight: libsrsirc is small and uses very little resources; most of the
+                 protcol handling is essentially zero-copy.  It does not try to
+		 offer every conceivable feature an IRC lib could possibly have,
+		 if the costs would outweight the gains.
+                 This allows creating thousands of independent instances.
+
+  - Portable:    libsrsirc is written in portable standard C, with all
+                 platform-specifics cleanly separated from the core library.
+                 It compiles and works on *BSD, Linux, Mac OS and even Windows.
+		 Porting it to new platforms is relatively straightforward.
+
+  - Robust:      libsrsirc is tested against a huge variety of different IRC
+                 networks, and while it is certainly possible for a malicious
+		 IRC server to thoroughly confuse the lib, it will not cause
+		 crashes or security problems.  If it does, file a bug report
+		 which will be dealt with promptly.
+		 It will even handle out-of-memory situations gracefully.
+
+  - Debuggable:  libsrsirc comes with a lot of built-in debug statements, which
+                 can be controlled using an environment variable.
+		 This allows troubleshooting even if using a dedicated debugger
+		 isn't feasible for some reason.
+
+  - Useful:      libsrsirc should be a decent foundation to build all sort of
+                 IRC-related software upon, from IRC support for a specific
+		 use case in a specific application, to dedicated IRC software
+		 like bots, bouncers, clients.
+		 It comes with 'icat', which implements a netcat-like utility
+		 for writing and reading messages to/from IRC channels.
+
 Quickstart for libsrsirc users:
   - Get a release tarball off the "tar" branch, DO NOT use the
     github-internal "release" feature.
@@ -11,6 +44,7 @@ Quickstart for libsrsirc users:
   - Extract the tarball, cd into the resulting directory
 
   - run "./configure && make" to build the lib, "make install" to install.
+
 
 Quickstart for libsrsirc developers:
   - Clone the repo
@@ -22,7 +56,10 @@ Quickstart for libsrsirc developers:
 
   - To tear down the autohell, run ./autoclean.sh
 
+
 See src/helloworld.c for a trivial example application of the lib.
+
+See http://penenen.de/libsrsirc/doxygen/modules.html for documentation
 
 See INSTALL for generic autohell compile/install instructions.
 
