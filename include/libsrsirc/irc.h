@@ -144,7 +144,7 @@ bool irc_online(irc *ctx);
 /** \brief Read and process the next protocol message from the IRC server
  *
  * Reads a protocol message from the server, field-splits it and populates
- * populates the structure pointed to by`tok' with the results.
+ * the tokarr structure pointed to by `tok` with the results.
  *
  * Usage example:
  * \code
@@ -157,9 +157,9 @@ bool irc_online(irc *ctx);
  *   } else if (r == 0) {
  *       // ...timeout, nothing to read...
  *   } else {
- *       // Okay, we have read a message.
- *       if (strcmp(tok[1], "PING") == 0)
- *           irc_printf(ctx, "PONG %s", tok[2]);
+ *       // Okay, we have read a message.  If it is a PING, respond with a PONG.
+ *       if (strcmp(tok[1], "PING") == 0)        // tok[1] is always the command
+ *           irc_printf(ctx, "PONG %s", tok[2]); // tok[2] is the first argument
  *   }
  * \endcode
  *
@@ -168,7 +168,7 @@ bool irc_online(irc *ctx);
  *              fields tokens are stored in.
  *                  (*tok)[0] will point to the "prefix" (not including the
  *                      leading colon), or NULL if the message did not
- *                      contain a prefix.
+ *                      contain a prefix (see also doc/terminology.txt)
  *                  (*tok)[1] will point to the (mandatory) "command"
  *                  (*tok)[2+n] will point to the n-th "argument", if it
  *                      exists; NULL otherwise
@@ -176,7 +176,12 @@ bool irc_online(irc *ctx);
  *
  * \return 1 on success; 0 on timeout; -1 on failure
  *
+ * The data pointed to by the elements of `tok` is valid until the next call
+ * to this function is made.
+ *
  * In the case of failure, an implicit call to irc_reset() is performed.
+ *
+ * \sa tokarr, irc_write(), irc_printf(), irc_reset()
  */
 int irc_read(irc *ctx, tokarr *tok, uint64_t to_us);
 
