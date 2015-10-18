@@ -13,25 +13,6 @@
 #include <libsrsirc/defs.h>
 
 
-/* Overview:
- *
- * irc *irc_init(void);
- * void irc_reset(irc *ctx);
- * void irc_dispose(irc *ctx);
- * bool irc_connect(irc *ctx);
- * bool irc_online(irc *ctx);
- * int irc_read(irc *ctx, tokarr *tok, uint64_t to_us);
- * bool irc_write(irc *ctx, const char *line);
- * bool irc_printf(irc *ctx, const char *fmt, ...);
- * const char *irc_mynick(irc *ctx);
- * bool irc_set_server(irc *ctx, const char *host, uint16_t port);
- * bool irc_set_pass(irc *ctx, const char *srvpass);
- * bool irc_set_uname(irc *ctx, const char *uname);
- * bool irc_set_fname(irc *ctx, const char *fname);
- * bool irc_set_nick(irc *ctx, const char *nick);
- * void irc_dump(irc *ctx);
-*/
-
 /** @file
  * \defgroup basicif Basic interface provided by irc.h
  * \addtogroup basicif
@@ -65,21 +46,6 @@
  * \sa irc, irc_dispose()
  */
 irc *irc_init(void);
-
-/** \brief Force a disconnect from the IRC server.
- *
- * Contrary to what the name suggests, this function does *not* reset any other
- * state apart from the TCP connection, so functions like irc_lasterror(),
- * irc_mynick() etc. will keep returning the information they would have
- * returned when the connection was still alive.
- *
- * The mentioned kind of information will be reset not before the next call to
- * irc_connect()
- *
- * \param ctx   IRC context as obtained by irc_init()
- * \sa irc_connect()
- */
-void irc_reset(irc *ctx);
 
 /** \brief Destroy an IRC context, invalidating the provided pointer.
  *
@@ -124,6 +90,21 @@ void irc_dispose(irc *ctx);
  *     irc_logonconv()
  */
 bool irc_connect(irc *ctx);
+
+/** \brief Force a disconnect from the IRC server.
+ *
+ * Contrary to what the name suggests, this function does *not* reset any other
+ * state apart from the TCP connection, so functions like irc_lasterror(),
+ * irc_mynick() etc. will keep returning the information they would have
+ * returned when the connection was still alive.
+ *
+ * The mentioned kind of information will be reset not before the next call to
+ * irc_connect()
+ *
+ * \param ctx   IRC context as obtained by irc_init()
+ * \sa irc_connect()
+ */
+void irc_reset(irc *ctx);
 
 /** \brief Tell whether or not we (think we) are connected.
  *
