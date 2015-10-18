@@ -233,12 +233,15 @@ bool irc_printf(irc *ctx, const char *fmt, ...);
  */
 const char *irc_mynick(irc *ctx);
 
-/** \brief Set server and port to connect to
+/** \brief Set IRC server and port to connect to.
  *
  * This setting will take effect not before the next call to irc_connect()
  *
  * \param ctx   IRC context as obtained by irc_init()
- * \param host   Server host, may be an IPv4 or IPv6 address or a DNS name
+ * \param host   Server host, may be an IPv4 or IPv6 address or a DNS name.
+ *               It is an error to pass NULL.
+ *               We do *not* depend on this pointer to remain valid after
+ *               we return, i.e. we do make a copy.
  * \param port   Server port (0 uses default (6667 or 6697 (with SSL)))
  *
  * \return true on success, false on failure (which means we're out of memory)
