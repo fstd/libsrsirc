@@ -68,12 +68,16 @@ irc *irc_init(void);
 
 /** \brief Force a disconnect from the IRC server.
  *
- * Contrary to what the name suggests, this function does not reset any other
- * state apart from the TCP connection, so e.g. irc_lasterror() will still
- * return the ERROR message of the previous connection.  This kind of
- * information will be reset not before the next call to irc_connect()
+ * Contrary to what the name suggests, this function does *not* reset any other
+ * state apart from the TCP connection, so functions like irc_lasterror(),
+ * irc_mynick() etc. will keep returning the information they would have
+ * returned when the connection was still alive.
+ *
+ * The mentioned kind of information will be reset not before the next call to
+ * irc_connect()
  *
  * \param ctx   IRC context as obtained by irc_init()
+ * \sa irc_connect()
  */
 void irc_reset(irc *ctx);
 
