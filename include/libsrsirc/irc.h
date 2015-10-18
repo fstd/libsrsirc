@@ -205,11 +205,13 @@ bool irc_write(irc *ctx, const char *line);
  * \param ctx   IRC context as obtained by irc_init()
  * \param fmt   A printf-style format string.
  *
- * This function uses irc_write() behind the scenes.
+ * After evaluating the format string and its respective arguments, irc_write()
+ * is used to actually send the message.
  *
  * \return true on success, false on failure
  *
  * In the case of failure, an implicit call to irc_reset() is performed.
+ * \sa irc_write(), irc_read(), irc_reset()
  */
 bool irc_printf(irc *ctx, const char *fmt, ...);
 
