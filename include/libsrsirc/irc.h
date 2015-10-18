@@ -15,6 +15,87 @@
 
 /** @file
  * \defgroup basicif Basic interface provided by irc.h
+ *
+ * \brief This is the basic interface to the core facilities of libsrsirc.
+ *
+ * This is the basic interface to the core facilities of libsrsirc.  Everything
+ * needed to get an IRC connection going and do simple IRC operations is
+ * provided by this header.
+ *
+ * Usage example for a simple ECHO-like IRC bot (receives messages and sends
+ * them back to the channel it saw them on):
+ * \code
+ * #include <stdio.h>
+ * #include <stdlib.h>
+ * #include <string.h>
+ *
+ * #include <libsrsirc/irc.h>
+ *
+ * #define SERVER "irc.example.org"
+ * #define PORT 6667
+ * #define CHANNEL "#mychannel"
+ * #define NICKNAME "mynickname"
+ *
+ * int main(void) {
+ *     irc *ictx = irc_init();
+ *
+ *     irc_set_server(ictx, SERVER, PORT);
+ *     irc_set_nick(ictx, NICKNAME);
+ *
+ *     if (!irc_connect(ictx)) {
+ *         fprintf(stderr, "irc_connect() failed\n");
+ *         exit(EXIT_FAILURE);
+ *     }
+ *
+ *     irc_printf(ictx, "JOIN %s", CHANNEL);
+ *
+ *     while (irc_online(ictx)) {
+ *         tokarr msg;
+ *         int r = irc_read(ictx, &msg, 1000000); // 1 second timeout
+ *
+ *         if (r == 0)
+ *             continue; // Timeout, nothing was read yet.
+ *
+ *         if (r == -1) {
+ *             fprintf(stderr, "irc_read() failed\n");
+ *             break; // We're offline, irc_read() calls irc_reset() on error.
+ *         }
+ *
+ *         // If we have reached this point, r must be 1, which means a message
+ *         // was read.  Let's see what it is.  We care about PRIVMSG to
+ *         // implement our ECHO behavior, and about PING to avoid timing out.
+ *
+ *         if (strcmp(msg[1], "PING") == 0)         // msg[1] is always the cmd
+ *             irc_printf(ictx, "PONG %s", msg[2]); // msg[2] is the first arg
+ *         else if (strcmp(msg[1], "PRIVMSG") == 0)
+ *             irc_printf(ictx, "PRIVMSG %s :%s", msg[2], msg[3]);
+ *     }
+ *
+ *     fprintf(stderr, "Our connection is rekt.\n");
+ *
+ *     irc_dispose(ictx);
+ *
+ *     return 0;
+ * }
+ * \endcode
+ * Assuming that code is saved as ircecho.c and libsrsirc was installed under
+ * the /usr/local prefix (`./configure --prefix=/usr/local`), you'd build it
+ * as follows:
+ * \code
+ * cc -I /usr/local/include -L /usr/local/lib -o ircecho ircecho.c -lsrsirc
+ * \endcode
+ * And run as:
+ * \code
+ * ./ircecho
+ * \endcode
+ * If that doesn't seem to work, run it with debugging messages as follows:
+ * \code
+ * export LIBSRSIRC_DEBUG=7       # 7 enables loglevels up to DEBUG.
+ * export LIBSRSIRC_DEBUG_FANCY=1 # Only if your terminal supports ANSI colors
+ * ./ircecho # Should now spit out information about what went wrong.
+ *           # Forgot to change those #define-s, eh, master paster? :-)
+ * \endcode
+ * Have fun!
  * \addtogroup basicif
  *  @{
  */
@@ -41,7 +122,7 @@
  * If the IRC context is no longer required, call irc_dispose() on it to
  * release the associated state and resources.
  *
- * \return A pointer to the new IRC context, or NULL if we are out of memory.
+ * \return A pointer to the new IRC context, or NULL if we are out of memory. \n
  *         This pointer will remain valid until it is given to irc_dispose().
  * \sa irc, irc_dispose()
  */
