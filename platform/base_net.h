@@ -52,9 +52,9 @@ int lsi_b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res);
 void lsi_b_freeaddrlist(struct addrlist *al);
 
 SSLCTXTYPE lsi_b_mksslctx(void);
-void lsi_b_freesslctx(SSLCTXTYPE ctx);
+void lsi_b_freesslctx(SSLCTXTYPE sslctx);
 
-SSLTYPE lsi_b_sslize(int sck, SSLCTXTYPE ctx);
+SSLTYPE lsi_b_sslize(int sck, SSLCTXTYPE sslctx);
 void lsi_b_sslfin(SSLTYPE shnd);
 
 uint16_t lsi_b_htons(uint16_t h);

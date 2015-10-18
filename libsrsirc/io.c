@@ -32,8 +32,8 @@
 
 
 /* local helpers */
-static char *find_delim(struct readctx *ctx);
-static int read_more(sckhld sh, struct readctx *ctx, uint64_t to_us);
+static char *find_delim(struct readctx *rctx);
+static int read_more(sckhld sh, struct readctx *rctx, uint64_t to_us);
 static bool write_str(sckhld sh, const char *str);
 static long read_wrap(sckhld sh, void *buf, size_t sz);
 static long send_wrap(sckhld sh, const void *buf, size_t len);
@@ -41,34 +41,34 @@ static long send_wrap(sckhld sh, const void *buf, size_t len);
 
 /* Documented in io.h */
 int
-lsi_io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us)
+lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok, uint64_t to_us)
 {
 	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 
-	while (ctx->wptr < ctx->eptr && ISDELIM(*ctx->wptr))
-		ctx->wptr++; /* skip leading line delimiters */
-	if (ctx->wptr == ctx->eptr) /* empty buffer, use the opportunity.. */
-		ctx->wptr = ctx->eptr = ctx->workbuf;
+	while (rctx->wptr < rctx->eptr && ISDELIM(*rctx->wptr))
+		rctx->wptr++; /* skip leading line delimiters */
+	if (rctx->wptr == rctx->eptr) /* empty buffer, use the opportunity.. */
+		rctx->wptr = rctx->eptr = rctx->workbuf;
 
 	size_t linelen;
 	char *delim;
 	char *linestart;
 	do {
-		while (!(delim = find_delim(ctx))) {
+		while (!(delim = find_delim(rctx))) {
 			uint64_t trem = 0;
 			if (lsi_com_check_timeout(tsend, &trem))
 				return 0;
 
-			int r = read_more(sh, ctx, trem);
+			int r = read_more(sh, rctx, trem);
 			if (r <= 0)
 				return r;
 		}
 
-		linestart = ctx->wptr;
+		linestart = rctx->wptr;
 		linelen = delim - linestart;
-		ctx->wptr++;
+		rctx->wptr++;
 	} while (linelen == 0);
-	ctx->wptr += linelen;
+	rctx->wptr += linelen;
 
 	*delim = '\0';
 
@@ -93,9 +93,9 @@ lsi_io_write(sckhld sh, const char *line)
 
 /* return pointer to first line delim in our receive buffer, or NULL if none */
 static char *
-find_delim(struct readctx *ctx)
+find_delim(struct readctx *rctx)
 {
-	for (char *ptr = ctx->wptr; ptr < ctx->eptr; ptr++)
+	for (char *ptr = rctx->wptr; ptr < rctx->eptr; ptr++)
 		if (ISDELIM(*ptr))
 			return ptr;
 	return NULL;
@@ -104,35 +104,35 @@ find_delim(struct readctx *ctx)
 /* attempt to read more data from the ircd into our read buffer.
  * returns 1 if something was read; 0 on timeout; -1 on failure */
 static int
-read_more(sckhld sh, struct readctx *ctx, uint64_t to_us)
+read_more(sckhld sh, struct readctx *rctx, uint64_t to_us)
 {
-	size_t remain = sizeof ctx->workbuf - (ctx->eptr - ctx->workbuf);
+	size_t remain = sizeof rctx->workbuf - (rctx->eptr - rctx->workbuf);
 	if (!remain) { /* no more space left in receive buffer */
-		if (ctx->wptr == ctx->workbuf) { /* completely full */
+		if (rctx->wptr == rctx->workbuf) { /* completely full */
 			E("input too long");
 			return -1;
 		}
 
 		/* make additional room by moving data to the beginning */
-		size_t datalen = (size_t)(ctx->eptr - ctx->wptr);
-		memmove(ctx->workbuf, ctx->wptr, datalen);
-		ctx->wptr = ctx->workbuf;
-		ctx->eptr = &ctx->workbuf[datalen];
+		size_t datalen = (size_t)(rctx->eptr - rctx->wptr);
+		memmove(rctx->workbuf, rctx->wptr, datalen);
+		rctx->wptr = rctx->workbuf;
+		rctx->eptr = &rctx->workbuf[datalen];
 
-		remain = sizeof ctx->workbuf - (ctx->eptr - ctx->workbuf);
+		remain = sizeof rctx->workbuf - (rctx->eptr - rctx->workbuf);
 	}
 
 	int r = lsi_b_select(sh.sck, true, to_us);
 	if (r != 1)
 		return r;
 
-	long n = read_wrap(sh, ctx->eptr, remain);
+	long n = read_wrap(sh, rctx->eptr, remain);
 	if (n <= 0) {
 		n == 0 ?  W("read: EOF") : WE("read failed");
 		return n == 0 ? -2 : -1; // FIXME: magic numbers
 	}
 
-	ctx->eptr += n;
+	rctx->eptr += n;
 	return 1;
 }
 

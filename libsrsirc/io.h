@@ -16,7 +16,7 @@
  * Read one message from the ircd, tokenize and populate `tok' with the results.
  *
  * Params: `sh':    Structure holding socket and, if enabled, SSL handle
- *         `ctx':   Read context structure primarily holding the read buffer
+ *         `rctx':  Read context structure primarily holding the read buffer
  *         `tok':   Pointer to result array, where pointers to the identified
  *                      tokens are stored in.
  *                  (*tok)[0] will point to the "prefix" (not including the
@@ -29,7 +29,7 @@
  *
  * Returns 1 on success; 0 on timeout; -1 on failure
  */
-int lsi_io_read(sckhld sh, struct readctx *ctx, tokarr *tok, uint64_t to_us);
+int lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok, uint64_t to_us);
 
 /* lsi_io_write
  * Send a message to the ircd

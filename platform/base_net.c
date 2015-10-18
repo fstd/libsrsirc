@@ -593,23 +593,23 @@ lsi_b_mksslctx(void)
 	if (!s_sslinit)
 		sslinit();
 
-	SSLCTXTYPE ctx = NULL;
+	SSLCTXTYPE sslctx = NULL;
 #ifdef WITH_SSL
-	ctx = SSL_CTX_new(SSLv23_client_method());
-	if (!ctx)
+	sslctx = SSL_CTX_new(SSLv23_client_method());
+	if (!sslctx)
 		E("SSL_CTX_new failed");
 #else
 	E("no ssl support compiled in");
 #endif
-	return ctx;
+	return sslctx;
 }
 
 
 void
-lsi_b_freesslctx(SSLCTXTYPE ctx)
+lsi_b_freesslctx(SSLCTXTYPE sslctx)
 {
 #ifdef WITH_SSL
-	SSL_CTX_free(ctx);
+	SSL_CTX_free(sslctx);
 #else
 	E("no ssl support compiled in");
 #endif
@@ -617,11 +617,11 @@ lsi_b_freesslctx(SSLCTXTYPE ctx)
 
 
 SSLTYPE
-lsi_b_sslize(int sck, SSLCTXTYPE ctx)
+lsi_b_sslize(int sck, SSLCTXTYPE sslctx)
 {
 	SSLTYPE shnd = NULL;
 #ifdef WITH_SSL
-	bool fail = !(shnd = SSL_new(ctx));
+	bool fail = !(shnd = SSL_new(sslctx));
 	fail = fail || !SSL_set_fd(shnd, sck);
 	if (!fail) {
 		D("calling SSL_connect()");
