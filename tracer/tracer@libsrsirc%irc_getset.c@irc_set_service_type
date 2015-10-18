@@ -1,1 +1,1 @@
-{ T("hnd=%p, type=%ld", (void *)hnd, type);
+{ T("ctx=%p, type=%ld", (void *)ctx, type);

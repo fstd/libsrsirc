@@ -20,7 +20,7 @@
 int
 main(void)
 {
-	/* Allocate and initialize new IRC object */
+	/* Allocate and initialize new IRC context */
 	irc *ihnd = irc_init();
 
 	/* Set connection parameters */

@@ -1,1 +1,1 @@
-{ T("hnd=%p, enabled=%d", (void *)hnd, enabled);
+{ T("ctx=%p, enabled=%d", (void *)ctx, enabled);

@@ -22,200 +22,200 @@
 /* Determiners - read-only access to information we keep track of */
 
 bool
-irc_online(irc *hnd)
+irc_online(irc *ctx)
 {
-	return lsi_conn_online(hnd->con);
+	return lsi_conn_online(ctx->con);
 }
 
 const char *
-irc_mynick(irc *hnd)
+irc_mynick(irc *ctx)
 {
-	return hnd->mynick;
+	return ctx->mynick;
 }
 
 const char *
-irc_myhost(irc *hnd)
+irc_myhost(irc *ctx)
 {
-	return hnd->myhost;
+	return ctx->myhost;
 }
 
 int
-irc_casemap(irc *hnd)
+irc_casemap(irc *ctx)
 {
-	return hnd->casemap;
+	return ctx->casemap;
 }
 
 bool
-irc_service(irc *hnd)
+irc_service(irc *ctx)
 {
-	return hnd->service;
+	return ctx->service;
 }
 
 const char *
-irc_umodes(irc *hnd)
+irc_umodes(irc *ctx)
 {
-	return hnd->umodes;
+	return ctx->umodes;
 }
 
 const char *
-irc_cmodes(irc *hnd)
+irc_cmodes(irc *ctx)
 {
-	return hnd->cmodes;
+	return ctx->cmodes;
 }
 
 const char *
-irc_version(irc *hnd)
+irc_version(irc *ctx)
 {
-	return hnd->ver;
+	return ctx->ver;
 }
 
 const char *
-irc_lasterror(irc *hnd)
+irc_lasterror(irc *ctx)
 {
-	return hnd->lasterr;
+	return ctx->lasterr;
 }
 
 const char *
-irc_banmsg(irc *hnd)
+irc_banmsg(irc *ctx)
 {
-	return hnd->banmsg;
+	return ctx->banmsg;
 }
 
 bool
-irc_banned(irc *hnd)
+irc_banned(irc *ctx)
 {
-	return hnd->banned;
+	return ctx->banned;
 }
 
 bool
-irc_colon_trail(irc *hnd)
+irc_colon_trail(irc *ctx)
 {
-	return lsi_conn_colon_trail(hnd->con);
+	return lsi_conn_colon_trail(ctx->con);
 }
 
 int
-irc_sockfd(irc *hnd)
+irc_sockfd(irc *ctx)
 {
-	return lsi_conn_sockfd(hnd->con);
+	return lsi_conn_sockfd(ctx->con);
 }
 
 tokarr *(* /* ew.  returns pointer to array of 4 pointers to tokarr */
-irc_logonconv(irc *hnd))[4]
+irc_logonconv(irc *ctx))[4]
 {
-	return &hnd->logonconv;
+	return &ctx->logonconv;
 }
 
 const char *
-irc_005chanmodes(irc *hnd, size_t class) /* suck it, $(CXX) */
+irc_005chanmodes(irc *ctx, size_t class) /* suck it, $(CXX) */
 {
-	if (class >= COUNTOF(hnd->m005chanmodes))
+	if (class >= COUNTOF(ctx->m005chanmodes))
 		return NULL;
-	return hnd->m005chanmodes[class];
+	return ctx->m005chanmodes[class];
 }
 
 const char *
-irc_005modepfx(irc *hnd, bool symbols)
+irc_005modepfx(irc *ctx, bool symbols)
 {
-	return hnd->m005modepfx[symbols];
+	return ctx->m005modepfx[symbols];
 }
 
 
 bool
-irc_tracking_enab(irc *hnd)
+irc_tracking_enab(irc *ctx)
 {
-	return hnd->tracking && hnd->tracking_enab;
+	return ctx->tracking && ctx->tracking_enab;
 }
 
 /* Getters - retrieve values previously set by the Setters */
 
 const char *
-irc_get_host(irc *hnd)
+irc_get_host(irc *ctx)
 {
-	return lsi_conn_get_host(hnd->con);
+	return lsi_conn_get_host(ctx->con);
 }
 
 uint16_t
-irc_get_port(irc *hnd)
+irc_get_port(irc *ctx)
 {
-	return lsi_conn_get_port(hnd->con);
+	return lsi_conn_get_port(ctx->con);
 }
 
 const char *
-irc_get_px_host(irc *hnd)
+irc_get_px_host(irc *ctx)
 {
-	return lsi_conn_get_px_host(hnd->con);
+	return lsi_conn_get_px_host(ctx->con);
 }
 
 uint16_t
-irc_get_px_port(irc *hnd)
+irc_get_px_port(irc *ctx)
 {
-	return lsi_conn_get_px_port(hnd->con);
+	return lsi_conn_get_px_port(ctx->con);
 }
 
 int
-irc_get_px_type(irc *hnd)
+irc_get_px_type(irc *ctx)
 {
-	return lsi_conn_get_px_type(hnd->con);
+	return lsi_conn_get_px_type(ctx->con);
 }
 
 const char *
-irc_get_pass(irc *hnd)
+irc_get_pass(irc *ctx)
 {
-	return hnd->pass;
+	return ctx->pass;
 }
 
 const char *
-irc_get_uname(irc *hnd)
+irc_get_uname(irc *ctx)
 {
-	return hnd->uname;
+	return ctx->uname;
 }
 
 const char *
-irc_get_fname(irc *hnd)
+irc_get_fname(irc *ctx)
 {
-	return hnd->fname;
+	return ctx->fname;
 }
 
 uint8_t
-irc_get_conflags(irc *hnd)
+irc_get_conflags(irc *ctx)
 {
-	return hnd->conflags;
+	return ctx->conflags;
 }
 
 const char *
-irc_get_nick(irc *hnd)
+irc_get_nick(irc *ctx)
 {
-	return hnd->nick;
+	return ctx->nick;
 }
 
 bool
-irc_get_service_connect(irc *hnd)
+irc_get_service_connect(irc *ctx)
 {
-	return hnd->serv_con;
+	return ctx->serv_con;
 }
 
 const char *
-irc_get_service_dist(irc *hnd)
+irc_get_service_dist(irc *ctx)
 {
-	return hnd->serv_dist;
+	return ctx->serv_dist;
 }
 
 long
-irc_get_service_type(irc *hnd)
+irc_get_service_type(irc *ctx)
 {
-	return hnd->serv_type;
+	return ctx->serv_type;
 }
 
 const char *
-irc_get_service_info(irc *hnd)
+irc_get_service_info(irc *ctx)
 {
-	return hnd->serv_info;
+	return ctx->serv_info;
 }
 
 bool
-irc_get_ssl(irc *hnd)
+irc_get_ssl(irc *ctx)
 {
-	return lsi_conn_get_ssl(hnd->con);
+	return lsi_conn_get_ssl(ctx->con);
 }
 
 
@@ -224,105 +224,105 @@ irc_get_ssl(irc *hnd)
 
 
 bool
-irc_set_server(irc *hnd, const char *host, uint16_t port)
+irc_set_server(irc *ctx, const char *host, uint16_t port)
 {
-	return lsi_conn_set_server(hnd->con, host, port);
+	return lsi_conn_set_server(ctx->con, host, port);
 }
 
 bool
-irc_set_pass(irc *hnd, const char *srvpass)
+irc_set_pass(irc *ctx, const char *srvpass)
 {
-	return lsi_com_update_strprop(&hnd->pass, srvpass);
+	return lsi_com_update_strprop(&ctx->pass, srvpass);
 }
 
 bool
-irc_set_uname(irc *hnd, const char *uname)
+irc_set_uname(irc *ctx, const char *uname)
 {
-	return lsi_com_update_strprop(&hnd->uname, uname);
+	return lsi_com_update_strprop(&ctx->uname, uname);
 }
 
 bool
-irc_set_fname(irc *hnd, const char *fname)
+irc_set_fname(irc *ctx, const char *fname)
 {
-	return lsi_com_update_strprop(&hnd->fname, fname);
+	return lsi_com_update_strprop(&ctx->fname, fname);
 }
 
 bool
-irc_set_nick(irc *hnd, const char *nick)
+irc_set_nick(irc *ctx, const char *nick)
 {
-	return lsi_com_update_strprop(&hnd->nick, nick);
+	return lsi_com_update_strprop(&ctx->nick, nick);
 }
 
 bool
-irc_set_px(irc *hnd, const char *host, uint16_t port, int ptype)
+irc_set_px(irc *ctx, const char *host, uint16_t port, int ptype)
 {
-	return lsi_conn_set_px(hnd->con, host, port, ptype);
+	return lsi_conn_set_px(ctx->con, host, port, ptype);
 }
 
 void
-irc_set_conflags(irc *hnd, uint8_t flags)
+irc_set_conflags(irc *ctx, uint8_t flags)
 {
-	hnd->conflags = flags;
+	ctx->conflags = flags;
 }
 
 void
-irc_set_service_connect(irc *hnd, bool enabled)
+irc_set_service_connect(irc *ctx, bool enabled)
 {
-	hnd->serv_con = enabled;
+	ctx->serv_con = enabled;
 }
 
 bool
-irc_set_service_dist(irc *hnd, const char *dist)
+irc_set_service_dist(irc *ctx, const char *dist)
 {
-	return lsi_com_update_strprop(&hnd->serv_dist, dist);
+	return lsi_com_update_strprop(&ctx->serv_dist, dist);
 }
 
 bool
-irc_set_service_type(irc *hnd, long type)
+irc_set_service_type(irc *ctx, long type)
 {
-	hnd->serv_type = type;
+	ctx->serv_type = type;
 	return true;
 }
 
 bool
-irc_set_service_info(irc *hnd, const char *info)
+irc_set_service_info(irc *ctx, const char *info)
 {
-	return lsi_com_update_strprop(&hnd->serv_info, info);
+	return lsi_com_update_strprop(&ctx->serv_info, info);
 }
 
 void
-irc_set_track(irc *hnd, bool on)
+irc_set_track(irc *ctx, bool on)
 {
-	hnd->tracking = on;
+	ctx->tracking = on;
 }
 
 void
-irc_set_connect_timeout(irc *hnd, uint64_t soft, uint64_t hard)
+irc_set_connect_timeout(irc *ctx, uint64_t soft, uint64_t hard)
 {
-	hnd->hcto_us = hard;
-	hnd->scto_us = soft;
+	ctx->hcto_us = hard;
+	ctx->scto_us = soft;
 }
 
 bool
-irc_set_ssl(irc *hnd, bool on)
+irc_set_ssl(irc *ctx, bool on)
 {
-	return lsi_conn_set_ssl(hnd->con, on);
+	return lsi_conn_set_ssl(ctx->con, on);
 }
 
 bool
-irc_get_dumb(irc *hnd)
+irc_get_dumb(irc *ctx)
 {
-	return hnd->dumb;
+	return ctx->dumb;
 }
 
 void
-irc_set_dumb(irc *hnd, bool dumbmode)
+irc_set_dumb(irc *ctx, bool dumbmode)
 {
-	hnd->dumb = dumbmode;
+	ctx->dumb = dumbmode;
 }
 
 bool
-irc_reg_msghnd(irc *hnd, const char *cmd, uhnd_fn hndfn, bool pre)
+irc_reg_msghnd(irc *ctx, const char *cmd, uhnd_fn hndfn, bool pre)
 {
-	return lsi_msg_reguhnd(hnd, cmd, hndfn, pre);
+	return lsi_msg_reguhnd(ctx, cmd, hndfn, pre);
 }

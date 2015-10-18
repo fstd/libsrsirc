@@ -1,1 +1,1 @@
-{ T("hnd=%p, cmd='%s', hndfn=(fp), pre=%d", (void *)hnd, cmd, pre);
+{ T("ctx=%p, cmd='%s', hndfn=(fp), pre=%d", (void *)ctx, cmd, pre);

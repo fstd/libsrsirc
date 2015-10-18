@@ -16,55 +16,55 @@
 
 /* Overview:
  *
- * const char *irc_myhost(irc *hnd);
- * int irc_casemap(irc *hnd);
- * bool irc_service(irc *hnd);
- * const char *irc_umodes(irc *hnd);
- * const char *irc_cmodes(irc *hnd);
- * const char *irc_version(irc *hnd);
- * const char *irc_lasterror(irc *hnd);
- * const char *irc_banmsg(irc *hnd);
- * bool irc_banned(irc *hnd);
- * bool irc_colon_trail(irc *hnd);
- * int irc_sockfd(irc *hnd);
- * tokarr *(*irc_logonconv(irc *hnd))[4];
- * const char *irc_005chanmodes(irc *hnd, size_t mclass);
- * const char *irc_005modepfx(irc *hnd, bool symbols);
+ * const char *irc_myhost(irc *ctx);
+ * int irc_casemap(irc *ctx);
+ * bool irc_service(irc *ctx);
+ * const char *irc_umodes(irc *ctx);
+ * const char *irc_cmodes(irc *ctx);
+ * const char *irc_version(irc *ctx);
+ * const char *irc_lasterror(irc *ctx);
+ * const char *irc_banmsg(irc *ctx);
+ * bool irc_banned(irc *ctx);
+ * bool irc_colon_trail(irc *ctx);
+ * int irc_sockfd(irc *ctx);
+ * tokarr *(*irc_logonconv(irc *ctx))[4];
+ * const char *irc_005chanmodes(irc *ctx, size_t mclass);
+ * const char *irc_005modepfx(irc *ctx, bool symbols);
  *
- * void irc_regcb_conread(irc *hnd, fp_con_read cb, void *tag);
- * void irc_regcb_mutnick(irc *hnd, fp_mut_nick mn);
+ * void irc_regcb_conread(irc *ctx, fp_con_read cb, void *tag);
+ * void irc_regcb_mutnick(irc *ctx, fp_mut_nick mn);
  *
- * bool irc_set_ssl(irc *hnd, bool on);
- * void irc_set_connect_timeout(irc *hnd, uint64_t soft, uint64_t hard);
- * bool irc_set_px(irc *hnd, const char *host, uint16_t port, int ptype);
- * void irc_set_conflags(irc *hnd, uint8_t flags);
- * void irc_set_service_connect(irc *hnd, bool enabled);
- * bool irc_set_service_dist(irc *hnd, const char *dist);
- * bool irc_set_service_type(irc *hnd, long type);
- * bool irc_set_service_info(irc *hnd, const char *info);
- * bool irc_set_track(irc *hnd, bool on);
+ * bool irc_set_ssl(irc *ctx, bool on);
+ * void irc_set_connect_timeout(irc *ctx, uint64_t soft, uint64_t hard);
+ * bool irc_set_px(irc *ctx, const char *host, uint16_t port, int ptype);
+ * void irc_set_conflags(irc *ctx, uint8_t flags);
+ * void irc_set_service_connect(irc *ctx, bool enabled);
+ * bool irc_set_service_dist(irc *ctx, const char *dist);
+ * bool irc_set_service_type(irc *ctx, long type);
+ * bool irc_set_service_info(irc *ctx, const char *info);
+ * bool irc_set_track(irc *ctx, bool on);
  *
- * const char *irc_get_host(irc *hnd);
- * uint16_t irc_get_port(irc *hnd);
- * const char *irc_get_px_host(irc *hnd);
- * uint16_t irc_get_px_port(irc *hnd);
- * int irc_get_px_type(irc *hnd);
- * const char *irc_get_pass(irc *hnd);
- * const char *irc_get_uname(irc *hnd);
- * const char *irc_get_fname(irc *hnd);
- * uint8_t irc_get_conflags(irc *hnd);
- * const char *irc_get_nick(irc *hnd);
- * bool irc_get_ssl(irc *hnd);
- * bool irc_get_service_connect(irc *hnd);
- * const char *irc_get_service_dist(irc *hnd);
- * long irc_get_service_type(irc *hnd);
- * const char *irc_get_service_info(irc *hnd);
- * bool irc_tracking_enab(irc *hnd); //tell if tracking is (actually) enabled
- * bool irc_get_dumb(irc *hnd);
- * void irc_set_dumb(irc *hnd, bool dumbmode);
- * bool irc_can_read(irc *hnd);
- * bool irc_reg_msghnd(irc *hnd, const char *cmd, uhnd_fn hndfn, bool pre);
- * bool irc_eof(irc *hnd);
+ * const char *irc_get_host(irc *ctx);
+ * uint16_t irc_get_port(irc *ctx);
+ * const char *irc_get_px_host(irc *ctx);
+ * uint16_t irc_get_px_port(irc *ctx);
+ * int irc_get_px_type(irc *ctx);
+ * const char *irc_get_pass(irc *ctx);
+ * const char *irc_get_uname(irc *ctx);
+ * const char *irc_get_fname(irc *ctx);
+ * uint8_t irc_get_conflags(irc *ctx);
+ * const char *irc_get_nick(irc *ctx);
+ * bool irc_get_ssl(irc *ctx);
+ * bool irc_get_service_connect(irc *ctx);
+ * const char *irc_get_service_dist(irc *ctx);
+ * long irc_get_service_type(irc *ctx);
+ * const char *irc_get_service_info(irc *ctx);
+ * bool irc_tracking_enab(irc *ctx); //tell if tracking is (actually) enabled
+ * bool irc_get_dumb(irc *ctx);
+ * void irc_set_dumb(irc *ctx, bool dumbmode);
+ * bool irc_can_read(irc *ctx);
+ * bool irc_reg_msghnd(irc *ctx, const char *cmd, uhnd_fn hndfn, bool pre);
+ * bool irc_eof(irc *ctx);
  */
 
 
@@ -77,22 +77,22 @@
 
 /** \brief Tell who the ircd claimed to be in the 004 message.
  * \return Whoever the server pretends to be in 004.  Typically, a FQDN. */
-const char *irc_myhost(irc *hnd);
+const char *irc_myhost(irc *ctx);
 
 /** \brief Tell what "case mapping" the server advertised in 005
  * \return One of CMAP_* constants; CMAP_RFC1459 if there was no 005
  *
  * \sa CMAP_ASCII, CMAP_RFC1459, CMAP_STRICT_RFC1459
  */
-int irc_casemap(irc *hnd);
+int irc_casemap(irc *ctx);
 
 /** \brief Tell whether or not we're a service
  * \return True if we are a service, false if we are a normal client */
-bool irc_service(irc *hnd);
+bool irc_service(irc *ctx);
 
 /** \brief Tell the (as per 004) supported user modes
  * \return A string of supported mode chars, e.g. "iswo". */
-const char *irc_umodes(irc *hnd);
+const char *irc_umodes(irc *ctx);
 
 /** \brief Tell the (as per 004) supported channel modes
  *
@@ -100,16 +100,16 @@ const char *irc_umodes(irc *hnd);
  * by this function is likely *wrong*.  Use irc_005chanmodes().
  *
  * \return A string similar to irc_umodes() (but see also irc_005chanmodes()) */
-const char *irc_cmodes(irc *hnd);
+const char *irc_cmodes(irc *ctx);
 
 /** \brief Tell what ircd version the ircd advertised in 004
  * \return A ircd-specific version string from the 004 message */
-const char *irc_version(irc *hnd);
+const char *irc_version(irc *ctx);
 
 /** \brief Tell the last received ERROR message
  * \return The argument of the last received ERROR message, or NULL if there
  *         was none so far. */
-const char *irc_lasterror(irc *hnd);
+const char *irc_lasterror(irc *ctx);
 
 /** \brief Tell the 'ban reason' the server MIGHT have told us w/ 465
  *
@@ -117,11 +117,11 @@ const char *irc_lasterror(irc *hnd);
  *
  * \return The argument of the last received 465 message, or NULL if there was
  *         none so far. */
-const char *irc_banmsg(irc *hnd);
+const char *irc_banmsg(irc *ctx);
 
 /** \brief Tell whether the server told us w/ a 465 that we're banned
  * \return true if a 465 has been seen. */
-bool irc_banned(irc *hnd);
+bool irc_banned(irc *ctx);
 
 /** \brief Deprecated.  Please disregard.
  *
@@ -132,7 +132,7 @@ bool irc_banned(irc *hnd);
  *
  * This is as useless as it sounds, don't use.  It was a hack, and it will
  * be removed in the near future. */
-bool irc_colon_trail(irc *hnd);
+bool irc_colon_trail(irc *ctx);
 
 /** \brief Deprecated.  Please disregard.
  *
@@ -142,7 +142,7 @@ bool irc_colon_trail(irc *hnd);
  *
  * \returns The socket.
  */
-int irc_sockfd(irc *hnd);
+int irc_sockfd(irc *ctx);
 
 /** \brief Give access to the "log on conversation" (messages 001-004)
  *
@@ -154,7 +154,7 @@ int irc_sockfd(irc *hnd);
  *
  * \return A pointer to an array of 4 elements, each pointing to a tokarr.
  *         (i.e. one for each of 001, 002, 003, 004). */
-tokarr *(*irc_logonconv(irc *hnd))[4];
+tokarr *(*irc_logonconv(irc *ctx))[4];
 
 /** \brief Tell what channel modes the ircd claims to support as per 005
  *
@@ -171,7 +171,7 @@ tokarr *(*irc_logonconv(irc *hnd))[4];
  * \return A pointer to a string consisting of the supported channel modes
  *     for the given class
  * \sa CHANMODE_CLASS_A, CHANMODE_CLASS_B, CHANMODE_CLASS_C, CHANMODE_CLASS_D */
-const char *irc_005chanmodes(irc *hnd, size_t mclass);
+const char *irc_005chanmodes(irc *ctx, size_t mclass);
 
 /** \brief Tell what channel mode prefixes the ircd claims to support as per 005
  *
@@ -187,7 +187,7 @@ const char *irc_005chanmodes(irc *hnd, size_t mclass);
  * \param symbols   If true, use symbols, otherwise use letters
  * \return A string of available mode symbols or letters, in descending order
  *         of power.  For example, "@+" or "ov". */
-const char *irc_005modepfx(irc *hnd, bool symbols);
+const char *irc_005modepfx(irc *ctx, bool symbols);
 
 /** \brief Register callback for protocol messages that are read at logon time
  *
@@ -195,7 +195,7 @@ const char *irc_005modepfx(irc *hnd, bool symbols);
  * \param tag   Arbitrary userdata that is passed back to the callback as-is
  *
  * \sa uhnd_fn for semantics of the callback. */
-void irc_regcb_conread(irc *hnd, fp_con_read cb, void *tag);
+void irc_regcb_conread(irc *ctx, fp_con_read cb, void *tag);
 
 /** \brief Register a function to come up with an alternative nickname at logon
  *         time
@@ -205,7 +205,7 @@ void irc_regcb_conread(irc *hnd, fp_con_read cb, void *tag);
  *             the nickname we want.
  *
  * A default callback is provided which is probably okay for most cases. */
-void irc_regcb_mutnick(irc *hnd, fp_mut_nick mn);
+void irc_regcb_mutnick(irc *ctx, fp_mut_nick mn);
 
 /** \brief Enable or disable SSL
  *
@@ -218,7 +218,7 @@ void irc_regcb_mutnick(irc *hnd, fp_mut_nick mn);
  *
  * \return true if the request could be fulfilled. *Be sure to check this*,
  *         to avoid accidentally doing plaintext when you meant to use SSL */
-bool irc_set_ssl(irc *hnd, bool on);
+bool irc_set_ssl(irc *ctx, bool on);
 
 /** \brief Set timeout(s) for irc_connect()
  *
@@ -254,7 +254,7 @@ bool irc_set_ssl(irc *hnd, bool on);
  *
  * A timeout of 0 means no timeout (but still, a hard timeout >0 overrules
  * a soft timeout of 0) */
-void irc_set_connect_timeout(irc *hnd, uint64_t soft, uint64_t hard);
+void irc_set_connect_timeout(irc *ctx, uint64_t soft, uint64_t hard);
 
 /** \brief Set proxy server to use
  *
@@ -266,7 +266,7 @@ void irc_set_connect_timeout(irc *hnd, uint64_t soft, uint64_t hard);
  * \param port   Proxy port (1 <= `port' <= 65535)
  * \param ptype   Proxy type, one of IRCPX_HTTP, IRCPX_SOCKS4, IRCPX_SOCKS5.
  * \return true on success, false on failure (out of memory, illegal args) */
-bool irc_set_px(irc *hnd, const char *host, uint16_t port, int ptype);
+bool irc_set_px(irc *ctx, const char *host, uint16_t port, int ptype);
 
 /** \brief Set flags for the USER message at log on time.
  *
@@ -276,7 +276,7 @@ bool irc_set_px(irc *hnd, const char *host, uint16_t port, int ptype);
  *
  * \param flags   Connect flags for the USER message
  */
-void irc_set_conflags(irc *hnd, uint8_t flags);
+void irc_set_conflags(irc *ctx, uint8_t flags);
 
 /** \brief Log on as service? if not, we're a normal client
  *
@@ -286,25 +286,25 @@ void irc_set_conflags(irc *hnd, uint8_t flags);
  *
  * \param enabled   If true, we're trying to be a service.  If not, we're a user.
  */
-void irc_set_service_connect(irc *hnd, bool enabled);
+void irc_set_service_connect(irc *ctx, bool enabled);
 
 /** \brief Set the "distribution" string for service log on
  * \param dist   The dist string provided with a service logon
  * \return True if successful, false otherwise (which means we're out of memory)
  */
-bool irc_set_service_dist(irc *hnd, const char *dist);
+bool irc_set_service_dist(irc *ctx, const char *dist);
 
 /** \brief Set the "service type" for service log on
  * \param type   The service type identifier provided with a service logon
  * \return True.
  */
-bool irc_set_service_type(irc *hnd, long type);
+bool irc_set_service_type(irc *ctx, long type);
 
 /** \brief Set the "service info" string for service log on
  * \param info   The info string provided with a service logon
  * \return True if successful, false otherwise (which means we're out of memory)
  */
-bool irc_set_service_info(irc *hnd, const char *info);
+bool irc_set_service_info(irc *ctx, const char *info);
 
 /** \brief Enable or disable channel- and user tracking
  *
@@ -319,71 +319,71 @@ bool irc_set_service_info(irc *hnd, const char *info);
  *
  * This setting will take effect not before the next call to irc_connect().
  */
-bool irc_set_track(irc *hnd, bool on);
+bool irc_set_track(irc *ctx, bool on);
 
 /** \brief Tell the name or address of the IRC server we use or intend to use
  * \return The hostname-part of what was set using irc_set_server() */
-const char *irc_get_host(irc *hnd);
+const char *irc_get_host(irc *ctx);
 
 /** \brief Tell the port of the IRC server we use or intend to use
  * \return The port-part of what was set using irc_set_server() */
-uint16_t irc_get_port(irc *hnd);
+uint16_t irc_get_port(irc *ctx);
 
 /** \brief Tell the host of the proxy we use or intend to use
  * \return The hostname-part of what was set using irc_set_px() */
-const char *irc_get_px_host(irc *hnd);
+const char *irc_get_px_host(irc *ctx);
 
 /** \brief Tell the port of the proxy we use or intend to use
  * \return The port-part of what was set using irc_set_px() */
-uint16_t irc_get_px_port(irc *hnd);
+uint16_t irc_get_px_port(irc *ctx);
 
 /** \brief Tell the type of the proxy we use or intend to use
  *
  * \return The type-part of what was set using irc_set_px(),
  *         i.e. one of IRCPX_HTTP, IRCPX_SOCKS4, IRCPX_SOCKS5 or -1 for no
  *         proxy */
-int irc_get_px_type(irc *hnd);
+int irc_get_px_type(irc *ctx);
 
 /** \brief Tell the password we may have set earlier by irc_set_pass()
  * \return The server password set by irc_set_pass(), or NULL if none */
-const char *irc_get_pass(irc *hnd);
+const char *irc_get_pass(irc *ctx);
 
 /** \brief Tell the 'user name' we will use on the next log on
  * \return The username set by irc_set_uname() */
-const char *irc_get_uname(irc *hnd);
+const char *irc_get_uname(irc *ctx);
 
 /** \brief Tell the 'full name' we will use on the next log on
  * \return The full name set by irc_set_fname() */
-const char *irc_get_fname(irc *hnd);
+const char *irc_get_fname(irc *ctx);
 
 /** \brief Tell the USER flags we will use on the next log on
  * \return The flags set by irc_set_conflags() */
-uint8_t irc_get_conflags(irc *hnd);
+uint8_t irc_get_conflags(irc *ctx);
 
 /** \brief Tell the nick we will use on the next log on
  * \return The nickname set by irc_set_nick().  *Not* necessarily the last
  *         nick we had before disconnecting, use irc_mynick() for that. */
-const char *irc_get_nick(irc *hnd);
+const char *irc_get_nick(irc *ctx);
 
 /** \brief Tell whether or not we will use SSL for the next connection
  * \return True if we are going to use SSL on the next connection */
-bool irc_get_ssl(irc *hnd);
+bool irc_get_ssl(irc *ctx);
 
 /** \brief Tell whether we'll next connect as a service
  * \return The value set by irc_set_service_connect() */
-bool irc_get_service_connect(irc *hnd);
+bool irc_get_service_connect(irc *ctx);
 
 /** \brief Tell the 'dist' string we're going to use for the next service logon
  * \return The value set by irc_set_service_dist() */
-const char *irc_get_service_dist(irc *hnd);
+const char *irc_get_service_dist(irc *ctx);
 
 /** \brief Tell the type we're going to use for the next service logon
  * \return The value set by irc_set_service_type() */
-long irc_get_service_type(irc *hnd);
+long irc_get_service_type(irc *ctx);
 
 /** \brief Tell the 'info' string we're going to use for the next service logon
  * \return The value set by irc_set_service_info() */
-const char *irc_get_service_info(irc *hnd);
+const char *irc_get_service_info(irc *ctx);
 
 
 /** \brief Tell if channel- and user tracking is active.
@@ -394,7 +394,7 @@ const char *irc_get_service_info(irc *hnd);
  * start returning true to reflect that, provided that tracking was set to be
  * used by irc_set_track() *before* calling irc_connect().
  * \return True if tracking is enabled and active */
-bool irc_tracking_enab(irc *hnd); //tell if tracking is (actually) enabled
+bool irc_tracking_enab(irc *ctx); //tell if tracking is (actually) enabled
 
 /** brief Set or clear "dumb mode"
  *
@@ -405,13 +405,13 @@ bool irc_tracking_enab(irc *hnd); //tell if tracking is (actually) enabled
  * This setting will take effect not before the next call to irc_connect().
  *
  */ //XXX is at least the nickname tracked?
-void irc_set_dumb(irc *hnd, bool dumbmode);
+void irc_set_dumb(irc *ctx, bool dumbmode);
 
 /** brief Tell whether we're operating in "dumb mode"
  *
  * \return true if we're in dumb mode (see irc_set_dumb())
  */ //XXX is at least the nickname tracked?
-bool irc_get_dumb(irc *hnd);
+bool irc_get_dumb(irc *ctx);
 
 /** brief Tell whether our next attempt to irc_read() a message would block
  *
@@ -425,7 +425,7 @@ bool irc_get_dumb(irc *hnd);
  * \return true if the next call to irc_read() can give us a message without
  *         waiting.
  */
-bool irc_can_read(irc *hnd);
+bool irc_can_read(irc *ctx);
 
 /** \brief Register a protocol message handler
  *
@@ -447,7 +447,7 @@ bool irc_can_read(irc *hnd);
  *              then.
  * \sa uhnd_fn
  */
-bool irc_reg_msghnd(irc *hnd, const char *cmd, uhnd_fn hndfn, bool pre);
+bool irc_reg_msghnd(irc *ctx, const char *cmd, uhnd_fn hndfn, bool pre);
 
 /** \brief Tell whether the connection was closed gracefully
  *
@@ -456,7 +456,7 @@ bool irc_reg_msghnd(irc *hnd, const char *cmd, uhnd_fn hndfn, bool pre);
  *
  * \return true if the connection was closed gracefully.
  */
-bool irc_eof(irc *hnd);
+bool irc_eof(irc *ctx);
 
 /** @} */
 

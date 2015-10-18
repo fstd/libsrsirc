@@ -1,1 +1,1 @@
-{ T("hnd=%p, dist='%s'", (void *)hnd, dist);
+{ T("ctx=%p, dist='%s'", (void *)ctx, dist);

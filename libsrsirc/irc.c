@@ -31,7 +31,7 @@
 #include <libsrsirc/util.h>
 
 
-static bool send_logon(irc *hnd);
+static bool send_logon(irc *ctx);
 
 irc *
 irc_init(void)
@@ -135,7 +135,7 @@ irc_init(void)
 	return r;
 
 irc_init_fail:
-	EE("failed to initialize IRC handle");
+	EE("failed to initialize IRC context");
 	if (r) {
 		free(r->pass);
 		free(r->nick);
@@ -160,79 +160,79 @@ irc_init_fail:
 }
 
 void
-irc_reset(irc *hnd)
+irc_reset(irc *ctx)
 {
-	lsi_conn_reset(hnd->con);
+	lsi_conn_reset(ctx->con);
 }
 
 void
-irc_dispose(irc *hnd)
+irc_dispose(irc *ctx)
 {
-	lsi_trk_deinit(hnd);
-	lsi_conn_dispose(hnd->con);
-	free(hnd->lasterr);
-	free(hnd->banmsg);
-	free(hnd->pass);
-	free(hnd->nick);
-	free(hnd->uname);
-	free(hnd->fname);
-	free(hnd->serv_dist);
-	free(hnd->serv_info);
-	free(hnd->msghnds);
-	free(hnd->uprehnds);
-	free(hnd->uposthnds);
+	lsi_trk_deinit(ctx);
+	lsi_conn_dispose(ctx->con);
+	free(ctx->lasterr);
+	free(ctx->banmsg);
+	free(ctx->pass);
+	free(ctx->nick);
+	free(ctx->uname);
+	free(ctx->fname);
+	free(ctx->serv_dist);
+	free(ctx->serv_info);
+	free(ctx->msghnds);
+	free(ctx->uprehnds);
+	free(ctx->uposthnds);
 
-	for (size_t i = 0; i < COUNTOF(hnd->logonconv); i++)
-		lsi_ut_freearr(hnd->logonconv[i]);
+	for (size_t i = 0; i < COUNTOF(ctx->logonconv); i++)
+		lsi_ut_freearr(ctx->logonconv[i]);
 
-	free(hnd->m005chantypes);
+	free(ctx->m005chantypes);
 
-	for (size_t i = 0; i < COUNTOF(hnd->m005chanmodes); i++)
-		free(hnd->m005chanmodes[i]);
+	for (size_t i = 0; i < COUNTOF(ctx->m005chanmodes); i++)
+		free(ctx->m005chanmodes[i]);
 
-	for (size_t i = 0; i < COUNTOF(hnd->m005modepfx); i++)
-		free(hnd->m005modepfx[i]);
+	for (size_t i = 0; i < COUNTOF(ctx->m005modepfx); i++)
+		free(ctx->m005modepfx[i]);
 
-	D("(%p) disposed", (void *)hnd);
-	free(hnd);
+	D("(%p) disposed", (void *)ctx);
+	free(ctx);
 }
 
 bool
-irc_connect(irc *hnd)
+irc_connect(irc *ctx)
 {
-	uint64_t tsend = hnd->hcto_us ?
-	    lsi_b_tstamp_us() + hnd->hcto_us : 0;
+	uint64_t tsend = ctx->hcto_us ?
+	    lsi_b_tstamp_us() + ctx->hcto_us : 0;
 
-	lsi_trk_deinit(hnd);
-	hnd->tracking_enab = false;
+	lsi_trk_deinit(ctx);
+	ctx->tracking_enab = false;
 
-	lsi_imh_unregall(hnd);
-	if (!lsi_imh_regall(hnd, hnd->dumb))
+	lsi_imh_unregall(ctx);
+	if (!lsi_imh_regall(ctx, ctx->dumb))
 		return false;
 
-	lsi_com_update_strprop(&hnd->lasterr, NULL);
-	lsi_com_update_strprop(&hnd->banmsg, NULL);
-	hnd->banned = false;
+	lsi_com_update_strprop(&ctx->lasterr, NULL);
+	lsi_com_update_strprop(&ctx->banmsg, NULL);
+	ctx->banned = false;
 
-	for (size_t i = 0; i < COUNTOF(hnd->logonconv); i++) {
-		lsi_ut_freearr(hnd->logonconv[i]);
-		hnd->logonconv[i] = NULL;
+	for (size_t i = 0; i < COUNTOF(ctx->logonconv); i++) {
+		lsi_ut_freearr(ctx->logonconv[i]);
+		ctx->logonconv[i] = NULL;
 	}
 
-	if (!lsi_conn_connect(hnd->con, hnd->scto_us, hnd->hcto_us))
+	if (!lsi_conn_connect(ctx->con, ctx->scto_us, ctx->hcto_us))
 		return false;
 
-	I("(%p) connection established", (void *)hnd);
+	I("(%p) connection established", (void *)ctx);
 
-	if (hnd->dumb)
+	if (ctx->dumb)
 		return true;
 
-	if (!send_logon(hnd))
+	if (!send_logon(ctx))
 		goto irc_connect_fail;
 
-	I("(%p) IRC logon sequence sent", (void *)hnd);
+	I("(%p) IRC logon sequence sent", (void *)ctx);
 
-	lsi_com_strNcpy(hnd->mynick, hnd->nick, sizeof hnd->mynick);
+	lsi_com_strNcpy(ctx->mynick, ctx->nick, sizeof ctx->mynick);
 	tokarr msg;
 
 	bool success = false;
@@ -240,19 +240,19 @@ irc_connect(irc *hnd)
 	int r;
 	do {
 		if (lsi_com_check_timeout(tsend, &trem)) {
-			W("(%p) timeout waiting for 004", (void *)hnd);
+			W("(%p) timeout waiting for 004", (void *)ctx);
 			goto irc_connect_fail;
 		}
 
-		if ((r = lsi_conn_read(hnd->con, &msg, trem)) < 0)
+		if ((r = lsi_conn_read(ctx->con, &msg, trem)) < 0)
 			goto irc_connect_fail;
 
 		if (r == 0)
 			continue;
 
-		if (hnd->cb_con_read &&
-		    !hnd->cb_con_read(&msg, hnd->tag_con_read)) {
-			W("(%p) logon prohibited by conread", (void *)hnd);
+		if (ctx->cb_con_read &&
+		    !ctx->cb_con_read(&msg, ctx->tag_con_read)) {
+			W("(%p) logon prohibited by conread", (void *)ctx);
 			goto irc_connect_fail;
 		}
 
@@ -264,7 +264,7 @@ irc_connect(irc *hnd)
 		 * seeing 004 or 383 makes us consider ourselves logged on
 		 * note that we do not wait for 005, but we will later
 		 * parse it as we ran across it. */
-		uint8_t flags = lsi_msg_handle(hnd, &msg, true);
+		uint8_t flags = lsi_msg_handle(ctx, &msg, true);
 
 		if (flags & CANT_PROCEED)
 			goto irc_connect_fail;
@@ -274,28 +274,28 @@ irc_connect(irc *hnd)
 
 	} while (!success);
 
-	N("(%p) logged on to IRC", (void *)hnd);
+	N("(%p) logged on to IRC", (void *)ctx);
 	return true;
 
 irc_connect_fail:
-	irc_reset(hnd);
+	irc_reset(ctx);
 	return false;
 }
 
 int
-irc_read(irc *hnd, tokarr *tok, uint64_t to_us)
+irc_read(irc *ctx, tokarr *tok, uint64_t to_us)
 {
 	/* Allow to be called with tok == NULL if we don't need the result */
 	tokarr dummy;
 	if (!tok)
 		tok = &dummy;
 
-	int r = lsi_conn_read(hnd->con, tok, to_us);
+	int r = lsi_conn_read(ctx->con, tok, to_us);
 	if (r == 0)
 		return 0;
 
-	if (r < 0 || lsi_msg_handle(hnd, tok, false) & CANT_PROCEED) {
-		irc_reset(hnd);
+	if (r < 0 || lsi_msg_handle(ctx, tok, false) & CANT_PROCEED) {
+		irc_reset(ctx);
 		return -1;
 	}
 
@@ -303,31 +303,31 @@ irc_read(irc *hnd, tokarr *tok, uint64_t to_us)
 }
 
 bool
-irc_eof(irc *hnd)
+irc_eof(irc *ctx)
 {
-	return lsi_conn_eof(hnd->con);
+	return lsi_conn_eof(ctx->con);
 }
 
 /* this is ugly and insane and BTW: it won't work */
 bool
-irc_can_read(irc *hnd)
+irc_can_read(irc *ctx)
 {
-	return hnd->con->rctx.eptr - hnd->con->rctx.wptr >= 3;
+	return ctx->con->rctx.eptr - ctx->con->rctx.wptr >= 3;
 }
 
 bool
-irc_write(irc *hnd, const char *line)
+irc_write(irc *ctx, const char *line)
 {
-	bool r = lsi_conn_write(hnd->con, line);
+	bool r = lsi_conn_write(ctx->con, line);
 
 	if (!r)
-		irc_reset(hnd);
+		irc_reset(ctx);
 
 	return r;
 }
 
 bool
-irc_printf(irc *hnd, const char *fmt, ...)
+irc_printf(irc *ctx, const char *fmt, ...)
 {
 	char buf[1024];
 
@@ -336,14 +336,14 @@ irc_printf(irc *hnd, const char *fmt, ...)
 	vsnprintf(buf, sizeof buf, fmt, vl);
 	va_end(vl);
 
-	return irc_write(hnd, buf);
+	return irc_write(ctx, buf);
 }
 
 
 static bool
-send_logon(irc *hnd)
+send_logon(irc *ctx)
 {
-	if (!lsi_conn_online(hnd->con))
+	if (!lsi_conn_online(ctx->con))
 		return false;
 	char aBuf[256];
 	char *pBuf = aBuf;
@@ -351,8 +351,8 @@ send_logon(irc *hnd)
 	size_t rem = sizeof aBuf;
 	int r;
 
-	if (hnd->pass && strlen(hnd->pass) > 0) {
-		r = snprintf(pBuf, rem, "PASS :%s\r\n", hnd->pass);
+	if (ctx->pass && strlen(ctx->pass) > 0) {
+		r = snprintf(pBuf, rem, "PASS :%s\r\n", ctx->pass);
 		if (r > (int)rem)
 			r = rem;
 
@@ -363,13 +363,13 @@ send_logon(irc *hnd)
 	if (!rem)
 		return false;
 
-	if (hnd->service) {
+	if (ctx->service) {
 		r = snprintf(pBuf, rem, "SERVICE %s 0 %s %ld 0 :%s\r\n",
-		    hnd->nick, hnd->serv_dist, hnd->serv_type,
-		    hnd->serv_info);
+		    ctx->nick, ctx->serv_dist, ctx->serv_type,
+		    ctx->serv_info);
 	} else {
 		r = snprintf(pBuf, rem, "NICK %s\r\nUSER %s %u * :%s\r\n",
-		    hnd->nick, hnd->uname, hnd->conflags, hnd->fname);
+		    ctx->nick, ctx->uname, ctx->conflags, ctx->fname);
 	}
 
 	if (r > (int)rem) {
@@ -380,26 +380,26 @@ send_logon(irc *hnd)
 	rem -= r;
 	pBuf += r;
 
-	return irc_write(hnd, aBuf);
+	return irc_write(ctx, aBuf);
 }
 
 void
-irc_regcb_conread(irc *hnd, fp_con_read cb, void *tag)
+irc_regcb_conread(irc *ctx, fp_con_read cb, void *tag)
 {
-	hnd->cb_con_read = cb;
-	hnd->tag_con_read = tag;
+	ctx->cb_con_read = cb;
+	ctx->tag_con_read = tag;
 }
 
 void
-irc_regcb_mutnick(irc *hnd, fp_mut_nick cb)
+irc_regcb_mutnick(irc *ctx, fp_mut_nick cb)
 {
-	hnd->cb_mut_nick = cb;
+	ctx->cb_mut_nick = cb;
 }
 
 void
 irc_dump(irc *h)
 {
-	N("--- irc object %p dump---", (void *)h);
+	N("--- IRC context %p dump---", (void *)h);
 	N("mynick: '%s'", h->mynick);
 	N("myhost: '%s'", h->myhost);
 	N("service: %d", h->service);

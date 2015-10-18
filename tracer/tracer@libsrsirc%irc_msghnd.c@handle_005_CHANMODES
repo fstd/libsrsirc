@@ -1,1 +1,1 @@
-{ T("hnd=%p, val='%s'", (void *)hnd, val);
+{ T("ctx=%p, val='%s'", (void *)ctx, val);

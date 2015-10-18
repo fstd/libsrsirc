@@ -23,15 +23,15 @@
 # define USER_ERR      (CANT_PROCEED|(1<<6)) // user msg handler failed
 #define LOGON_COMPLETE (1<<7) // we now consider ourselves logged on
 
-bool lsi_msg_reghnd(irc *hnd, const char *cmd, hnd_fn hndfn, const char *module);
-void lsi_msg_unregall(irc *hnd, const char *module);
+bool lsi_msg_reghnd(irc *ctx, const char *cmd, hnd_fn hndfn, const char *module);
+void lsi_msg_unregall(irc *ctx, const char *module);
 
-bool lsi_msg_reguhnd(irc *hnd, const char *cmd, uhnd_fn hndfn, bool pre);
+bool lsi_msg_reguhnd(irc *ctx, const char *cmd, uhnd_fn hndfn, bool pre);
 
 
 /* returns the bitwise OR of one or more of the above
  * bitmasks, or 0 for nothing special */
-uint8_t lsi_msg_handle(irc *hnd, tokarr *msg, bool logon);
+uint8_t lsi_msg_handle(irc *ctx, tokarr *msg, bool logon);
 
 
 #endif /* LIBSRSIRC_IMSG_H */

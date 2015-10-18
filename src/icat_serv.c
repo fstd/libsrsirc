@@ -61,7 +61,7 @@ lsi_serv_init(void)
 	D("Initializing");
 
 	if (!(s_irc = irc_init()))
-		C("Failed to initialize irc object");
+		C("Failed to initialize IRC context");
 
 	irc_set_nick(s_irc, g_sett.nick);
 	irc_set_uname(s_irc, g_sett.uname);
@@ -90,7 +90,7 @@ lsi_serv_destroy(void)
 {
 	I("Destroying");
 	if (s_irc) {
-		D("Disposing of the irc object");
+		D("Disposing of the IRC context");
 		irc_reset(s_irc);
 		irc_dispose(s_irc);
 		s_irc = NULL;

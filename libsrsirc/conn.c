@@ -82,66 +82,66 @@ conn_init_fail:
 }
 
 void
-lsi_conn_reset(iconn *hnd)
+lsi_conn_reset(iconn *ctx)
 {
-	D("(%p) resetting", (void *)hnd);
+	D("(%p) resetting", (void *)ctx);
 
-	if (hnd->ssl && hnd->sh.shnd) {
-		D("(%p) shutting down ssl", (void *)hnd);
-		lsi_b_sslfin(hnd->sh.shnd);
-		hnd->sh.shnd = NULL;
+	if (ctx->ssl && ctx->sh.shnd) {
+		D("(%p) shutting down ssl", (void *)ctx);
+		lsi_b_sslfin(ctx->sh.shnd);
+		ctx->sh.shnd = NULL;
 	}
 
-	if (hnd->sh.sck != -1) {
-		D("(%p) closing socket %d", (void *)hnd, hnd->sh.sck);
-		lsi_b_close(hnd->sh.sck);
+	if (ctx->sh.sck != -1) {
+		D("(%p) closing socket %d", (void *)ctx, ctx->sh.sck);
+		lsi_b_close(ctx->sh.sck);
 	}
 
-	hnd->sh.sck = -1;
-	hnd->state = OFF;
-	hnd->rctx.wptr = hnd->rctx.eptr = hnd->rctx.workbuf;
+	ctx->sh.sck = -1;
+	ctx->state = OFF;
+	ctx->rctx.wptr = ctx->rctx.eptr = ctx->rctx.workbuf;
 }
 
 void
-lsi_conn_dispose(iconn *hnd)
+lsi_conn_dispose(iconn *ctx)
 {
-	lsi_conn_reset(hnd);
+	lsi_conn_reset(ctx);
 
-	lsi_conn_set_ssl(hnd, false); //dispose ssl context if existing
+	lsi_conn_set_ssl(ctx, false); //dispose ssl context if existing
 
-	free(hnd->host);
-	free(hnd->phost);
-	hnd->state = INV;
+	free(ctx->host);
+	free(ctx->phost);
+	ctx->state = INV;
 
-	D("(%p) disposed", (void *)hnd);
-	free(hnd);
+	D("(%p) disposed", (void *)ctx);
+	free(ctx);
 }
 
 bool
-lsi_conn_connect(iconn *hnd, uint64_t softto_us, uint64_t hardto_us)
+lsi_conn_connect(iconn *ctx, uint64_t softto_us, uint64_t hardto_us)
 {
-	if (!hnd || hnd->state != OFF)
+	if (!ctx || ctx->state != OFF)
 		return false;
 
 	uint64_t tsend = hardto_us ? lsi_b_tstamp_us() + hardto_us : 0;
 
-	uint16_t realport = hnd->port;
+	uint16_t realport = ctx->port;
 	if (!realport)
-		realport = hnd->ssl ? DEF_PORT_SSL : DEF_PORT_PLAIN;
+		realport = ctx->ssl ? DEF_PORT_SSL : DEF_PORT_PLAIN;
 
-	char *host = hnd->ptype != -1 ? hnd->phost : hnd->host;
-	uint16_t port = hnd->ptype != -1 ? hnd->pport : realport;
+	char *host = ctx->ptype != -1 ? ctx->phost : ctx->host;
+	uint16_t port = ctx->ptype != -1 ? ctx->pport : realport;
 
 	{
 		char ps[64];
 		ps[0] = '\0';
-		if (hnd->ptype != -1)
+		if (ctx->ptype != -1)
 			snprintf(ps, sizeof ps, " via %s:%s:%" PRIu16,
-			    lsi_px_typestr(hnd->ptype), hnd->phost, hnd->pport);
+			    lsi_px_typestr(ctx->ptype), ctx->phost, ctx->pport);
 
 		I("(%p) wanna connect to %s:%"PRIu16"%s, "
 		    "sto: %"PRIu64"us, hto: %"PRIu64"us",
-		    (void *)hnd, hnd->host, realport, ps, softto_us, hardto_us);
+		    (void *)ctx, ctx->host, realport, ps, softto_us, hardto_us);
 	}
 
 	char peerhost[256];
@@ -154,90 +154,90 @@ lsi_conn_connect(iconn *hnd, uint64_t softto_us, uint64_t hardto_us)
 
 	if (sh.sck < 0) {
 		W("(%p) lsi_com_consocket failed for %s:%"PRIu16"",
-		    (void *)hnd, host, port);
+		    (void *)ctx, host, port);
 		return false;
 	}
 
 	D("(%p) connected socket %d for %s:%"PRIu16"",
-	    (void *)hnd, sh.sck, host, port);
+	    (void *)ctx, sh.sck, host, port);
 
-	hnd->sh = sh; //must be set here for px_logon
+	ctx->sh = sh; //must be set here for px_logon
 
 	uint64_t trem = 0;
-	if (hnd->ptype != -1) {
+	if (ctx->ptype != -1) {
 		if (lsi_com_check_timeout(tsend, &trem)) {
-			W("(%p) timeout", (void *)hnd);
+			W("(%p) timeout", (void *)ctx);
 			lsi_b_close(sh.sck);
-			hnd->sh.sck = -1;
+			ctx->sh.sck = -1;
 			return false;
 		}
 
 		if (!lsi_b_blocking(sh.sck, false)) {
-			WE("(%p) failed to set nonblocking mode", (void *)hnd);
+			WE("(%p) failed to set nonblocking mode", (void *)ctx);
 			lsi_b_close(sh.sck);
-			hnd->sh.sck = -1;
+			ctx->sh.sck = -1;
 			return false;
 		}
 
 		bool ok = false;
-		D("(%p) logging on to proxy", (void *)hnd);
-		if (hnd->ptype == IRCPX_HTTP)
-			ok = lsi_px_logon_http(hnd->sh.sck, hnd->host,
+		D("(%p) logging on to proxy", (void *)ctx);
+		if (ctx->ptype == IRCPX_HTTP)
+			ok = lsi_px_logon_http(ctx->sh.sck, ctx->host,
 			    realport, trem);
-		else if (hnd->ptype == IRCPX_SOCKS4)
-			ok = lsi_px_logon_socks4(hnd->sh.sck, hnd->host,
+		else if (ctx->ptype == IRCPX_SOCKS4)
+			ok = lsi_px_logon_socks4(ctx->sh.sck, ctx->host,
 			    realport, trem);
-		else if (hnd->ptype == IRCPX_SOCKS5)
-			ok = lsi_px_logon_socks5(hnd->sh.sck, hnd->host,
+		else if (ctx->ptype == IRCPX_SOCKS5)
+			ok = lsi_px_logon_socks5(ctx->sh.sck, ctx->host,
 			    realport, trem);
 
 		if (!ok) {
-			W("(%p) proxy logon failed", (void *)hnd);
+			W("(%p) proxy logon failed", (void *)ctx);
 			lsi_b_close(sh.sck);
-			hnd->sh.sck = -1;
+			ctx->sh.sck = -1;
 			return false;
 		}
-		D("(%p) sent proxy logon sequence", (void *)hnd);
+		D("(%p) sent proxy logon sequence", (void *)ctx);
 
-		D("(%p) setting to blocking mode", (void *)hnd);
+		D("(%p) setting to blocking mode", (void *)ctx);
 
 		if (!lsi_b_blocking(sh.sck, true)) {
-			WE("(%p) failed to set blocking mode", (void *)hnd);
+			WE("(%p) failed to set blocking mode", (void *)ctx);
 			lsi_b_close(sh.sck);
-			hnd->sh.sck = -1;
+			ctx->sh.sck = -1;
 			return false;
 		}
 	}
 
-	if (hnd->ssl && !(hnd->sh.shnd = lsi_b_sslize(sh.sck, hnd->sctx))) {
+	if (ctx->ssl && !(ctx->sh.shnd = lsi_b_sslize(sh.sck, ctx->sctx))) {
 		lsi_b_close(sh.sck);
-		hnd->sh.sck = -1;
+		ctx->sh.sck = -1;
 		W("connect bailing out; couldn't initiate ssl");
 		return false;
 	}
 
-	hnd->state = ON;
+	ctx->state = ON;
 
 	D("(%p) %s connection to ircd established",
-	    (void *)hnd, hnd->ptype == -1?"TCP":"proxy");
+	    (void *)ctx, ctx->ptype == -1?"TCP":"proxy");
 
 	return true;
 }
 
 int
-lsi_conn_read(iconn *hnd, tokarr *tok, uint64_t to_us)
+lsi_conn_read(iconn *ctx, tokarr *tok, uint64_t to_us)
 {
-	if (!hnd || hnd->state != ON)
+	if (!ctx || ctx->state != ON)
 		return -1;
 
 	int n;
-	if (!(n = lsi_io_read(hnd->sh, &hnd->rctx, tok, to_us)))
+	if (!(n = lsi_io_read(ctx->sh, &ctx->rctx, tok, to_us)))
 		return 0; /* timeout */
 
 	if (n < 0) {
-		W("(%p) lsi_io_read %s", (void *)hnd, n == -1 ? "failed":"EOF");
-		lsi_conn_reset(hnd);
-		hnd->eof = n == -2;
+		W("(%p) lsi_io_read %s", (void *)ctx, n == -1 ? "failed":"EOF");
+		lsi_conn_reset(ctx);
+		ctx->eof = n == -2;
 		return -1;
 	}
 
@@ -245,55 +245,55 @@ lsi_conn_read(iconn *hnd, tokarr *tok, uint64_t to_us)
 	for (; last < COUNTOF(*tok) && (*tok)[last]; last++);
 
 	if (last > 2)
-		hnd->colon_trail = (*tok)[last-1][-1] == ':';
+		ctx->colon_trail = (*tok)[last-1][-1] == ':';
 
-	D("(%p) got a msg ('%s', %zu args)", (void *)hnd, (*tok)[1], last);
+	D("(%p) got a msg ('%s', %zu args)", (void *)ctx, (*tok)[1], last);
 
 	return 1;
 }
 
 bool
-lsi_conn_write(iconn *hnd, const char *line)
+lsi_conn_write(iconn *ctx, const char *line)
 {
-	if (!hnd || hnd->state != ON || !line)
+	if (!ctx || ctx->state != ON || !line)
 		return false;
 
 
-	if (!lsi_io_write(hnd->sh, line)) {
-		W("(%p) failed to write '%s'", (void *)hnd, line);
-		lsi_conn_reset(hnd);
-		hnd->eof = false;
+	if (!lsi_io_write(ctx->sh, line)) {
+		W("(%p) failed to write '%s'", (void *)ctx, line);
+		lsi_conn_reset(ctx);
+		ctx->eof = false;
 		return false;
 	}
 
-	D("(%p) wrote: '%s'", (void *)hnd, line);
+	D("(%p) wrote: '%s'", (void *)ctx, line);
 	return true;
 
 }
 
 bool
-lsi_conn_online(iconn *hnd)
+lsi_conn_online(iconn *ctx)
 {
-	return hnd->state == ON;
+	return ctx->state == ON;
 }
 
 bool
-lsi_conn_eof(iconn *hnd)
+lsi_conn_eof(iconn *ctx)
 {
-	return hnd->eof;
+	return ctx->eof;
 }
 
 bool
-lsi_conn_colon_trail(iconn *hnd)
+lsi_conn_colon_trail(iconn *ctx)
 {
-	if (!hnd || hnd->state != ON)
+	if (!ctx || ctx->state != ON)
 		return false;
 
-	return hnd->colon_trail;
+	return ctx->colon_trail;
 }
 
 bool
-lsi_conn_set_px(iconn *hnd, const char *host, uint16_t port, int ptype)
+lsi_conn_set_px(iconn *ctx, const char *host, uint16_t port, int ptype)
 {
 	char *n = NULL;
 	switch (ptype) {
@@ -306,12 +306,12 @@ lsi_conn_set_px(iconn *hnd, const char *host, uint16_t port, int ptype)
 		if (!(n = lsi_b_strdup(host)))
 			return false;
 
-		hnd->pport = port;
-		hnd->ptype = ptype;
-		free(hnd->phost);
-		hnd->phost = n;
+		ctx->pport = port;
+		ctx->ptype = ptype;
+		free(ctx->phost);
+		ctx->phost = n;
 		I("set proxy to %s:%s:%"PRIu16,
-		    lsi_px_typestr(hnd->ptype), n, port);
+		    lsi_px_typestr(ctx->ptype), n, port);
 		break;
 	default:
 		E("illegal proxy type %d", ptype);
@@ -322,81 +322,81 @@ lsi_conn_set_px(iconn *hnd, const char *host, uint16_t port, int ptype)
 }
 
 bool
-lsi_conn_set_server(iconn *hnd, const char *host, uint16_t port)
+lsi_conn_set_server(iconn *ctx, const char *host, uint16_t port)
 {
 	char *n;
 	if (!(n = lsi_b_strdup(host?host:DEF_HOST)))
 		return false;
 
-	free(hnd->host);
-	hnd->host = n;
-	hnd->port = port;
+	free(ctx->host);
+	ctx->host = n;
+	ctx->port = port;
 	I("set server to %s:%"PRIu16, n, port);
 	return true;
 }
 
 bool
-lsi_conn_set_ssl(iconn *hnd, bool on)
+lsi_conn_set_ssl(iconn *ctx, bool on)
 {
-	if (on && !hnd->sctx) {
-		if (!(hnd->sctx = lsi_b_mksslctx())) {
+	if (on && !ctx->sctx) {
+		if (!(ctx->sctx = lsi_b_mksslctx())) {
 			E("could not create ssl context, ssl not enabled!");
 			return false;
 		}
-	} else if (!on && hnd->sctx) {
-		lsi_b_freesslctx(hnd->sctx);
-		hnd->sctx = NULL;
+	} else if (!on && ctx->sctx) {
+		lsi_b_freesslctx(ctx->sctx);
+		ctx->sctx = NULL;
 	}
 
-	if (hnd->ssl != on)
+	if (ctx->ssl != on)
 		N("ssl %sabled", on ? "en" : "dis");
 
-	hnd->ssl = on;
+	ctx->ssl = on;
 
 	return true;
 }
 
 const char *
-lsi_conn_get_px_host(iconn *hnd)
+lsi_conn_get_px_host(iconn *ctx)
 {
-	return hnd->phost;
+	return ctx->phost;
 }
 
 uint16_t
-lsi_conn_get_px_port(iconn *hnd)
+lsi_conn_get_px_port(iconn *ctx)
 {
-	return hnd->pport;
+	return ctx->pport;
 }
 
 int
-lsi_conn_get_px_type(iconn *hnd)
+lsi_conn_get_px_type(iconn *ctx)
 {
-	return hnd->ptype;
+	return ctx->ptype;
 }
 
 const char *
-lsi_conn_get_host(iconn *hnd)
+lsi_conn_get_host(iconn *ctx)
 {
-	return hnd->host;
+	return ctx->host;
 }
 
 uint16_t
-lsi_conn_get_port(iconn *hnd)
+lsi_conn_get_port(iconn *ctx)
 {
-	return hnd->port;
+	return ctx->port;
 }
 
 bool
-lsi_conn_get_ssl(iconn *hnd)
+lsi_conn_get_ssl(iconn *ctx)
 {
-	return hnd->ssl;
+	return ctx->ssl;
 }
 
 int
-lsi_conn_sockfd(iconn *hnd)
+lsi_conn_sockfd(iconn *ctx)
 {
-	if (!hnd || hnd->state != ON)
+	if (!ctx || ctx->state != ON)
 		return -1;
 
-	return hnd->sh.sck;
+	return ctx->sh.sck;
 }

@@ -1,1 +1,1 @@
-{ T("hnd=%p, host='%s' port=%"PRIu16, (void *)hnd, host, port);
+{ T("ctx=%p, host='%s' port=%"PRIu16, (void *)ctx, host, port);

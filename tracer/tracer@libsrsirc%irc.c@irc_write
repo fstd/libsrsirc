@@ -1,1 +1,1 @@
-{ T("hnd=%p, line='%s'", (void *)hnd, line);
+{ T("ctx=%p, line='%s'", (void *)ctx, line);

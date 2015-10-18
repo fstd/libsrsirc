@@ -182,11 +182,11 @@ userrep *irc_member(irc *h, userrep *dest, const char *chnam, const char *ident)
 /** \brief Dump tracking state for debugging purposes
  *
  * This function is intended for debugging and will puke out a dump of all
- * tracking-related state associated with the given handle
+ * tracking-related state associated with the given context
  *
  * \param full   Do a full dump
  */
-void lsi_trk_dump(irc *hnd, bool full);
+void lsi_trk_dump(irc *ctx, bool full);
 
 /** @} */
 

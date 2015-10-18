@@ -136,10 +136,10 @@
  */
 #define CHANMODE_CLASS_D 4
 
-/** \brief IRC object; pointers to this are our IRC handle type.
+/** \brief IRC context; pointers to this are our IRC context handle type.
  *
  * Pointers to this type are what irc_init() returns. It is necessary to
- * supply the handle to most libsrsirc calls.  Behind the scenes, struct irc_s
+ * supply the pointer to most libsrsirc calls.  Behind the scenes, struct irc_s
  * holds the complete context and state associated with an IRC connection. */
 typedef struct irc_s irc;
 
@@ -196,7 +196,7 @@ typedef char *tokarr[17];
  * \return If the callback returns false, the attempt to logon is aborted.
  *
  * \sa irc_regcb_conread()
- */ //XXX why no handle param?
+ */ //XXX why no ctx param?
 typedef bool (*fp_con_read)(tokarr *msg, void *tag);
 
 /** \brief Logon-time callback type for nickname problems
@@ -220,7 +220,7 @@ typedef void (*fp_mut_nick)(char *nick, size_t nick_sz);
  * can register callback functions that are automatically invoked for matching
  * incoming protocol messages.  This is the type of such callbacks.
  *
- * \param hnd   The IRC handle of the instance that read the protocol message
+ * \param ctx   The IRC context of the instance that read the protocol message
  * \param msg   Pointer to a tokarr that contains the message that was read
  * \param nargs    Number of non-NULL elements in `*msg`
  * \param pre   True if this callback was invoked BEFORE any changes to the
@@ -237,7 +237,7 @@ typedef void (*fp_mut_nick)(char *nick, size_t nick_sz);
  *
  * \sa irc_reg_msghnd()
  */
-typedef bool (*uhnd_fn)(irc *hnd, tokarr *msg, size_t nargs, bool pre);
+typedef bool (*uhnd_fn)(irc *ctx, tokarr *msg, size_t nargs, bool pre);
 
 /** @} */
 

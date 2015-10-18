@@ -1,1 +1,1 @@
-{ T("hnd=%p, srvpass='%s'", (void *)hnd, srvpass);
+{ T("ctx=%p, srvpass='%s'", (void *)ctx, srvpass);

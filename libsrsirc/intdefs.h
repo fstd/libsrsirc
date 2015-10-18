@@ -53,7 +53,7 @@ struct readctx {
 
 
 /* protocol message handler function pointers */
-typedef uint8_t (*hnd_fn)(irc *hnd, tokarr *msg, size_t nargs, bool logon);
+typedef uint8_t (*hnd_fn)(irc *ctx, tokarr *msg, size_t nargs, bool logon);
 struct msghnd {
 	char cmd[32];
 	hnd_fn hndfn;
@@ -86,7 +86,7 @@ struct iconn_s {
 	SSLCTXTYPE sctx;
 };
 
-/* this is our main IRC object context structure (typedef'd as `irc') */
+/* this is our main IRC context context structure (typedef'd as `irc') */
 struct irc_s {
 	/* These are kept up to date as the pertinent messages are seen */
 	char mynick[MAX_NICK_LEN];     // Hold our current nickname

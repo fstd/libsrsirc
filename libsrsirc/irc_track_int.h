@@ -6,8 +6,8 @@
 #define LIBSRSIRC_IRC_TRACK_INT_H 1
 
 
-bool lsi_trk_init(irc *hnd);
-void lsi_trk_deinit(irc *hnd);
+bool lsi_trk_init(irc *ctx);
+void lsi_trk_deinit(irc *ctx);
 
 
 #endif /* LIBSRSIRC_IRC_TRACK_INT_H */
