@@ -250,12 +250,16 @@ const char *irc_mynick(irc *ctx);
  */
 bool irc_set_server(irc *ctx, const char *host, uint16_t port);
 
-/** \brief Set server password (NULL means no password)
+/** \brief Set server password (NULL means no password).
  *
  * This setting will take effect not before the next call to irc_connect()
  *
  * \param ctx   IRC context as obtained by irc_init()
- * \param srvpass   Server password for the next IRC connection
+ * \param srvpass   Server password for the next IRC connection.  Passing
+ *                  NULL or a pointer to an empty string means not to use
+ *                  any server password whatsoever.
+ *                  We do *not* depend on this pointer to remain valid after
+ *                  we return, i.e. we do make a copy.
  *
  * \return true on success, false on failure (which means we're out of memory)
  *
