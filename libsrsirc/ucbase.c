@@ -26,23 +26,23 @@
 #include <libsrsirc/util.h>
 
 
-static int compare_modepfx(irc *h, char c1, char c2);
+static int compare_modepfx(irc *ctx, char c1, char c2);
 
 
 bool
-lsi_ucb_init(irc *h)
+lsi_ucb_init(irc *ctx)
 {
-	if (!(h->chans = lsi_skmap_init(256, h->casemap)))
+	if (!(ctx->chans = lsi_skmap_init(256, ctx->casemap)))
 		return false;
 
-	if (!(h->users = lsi_skmap_init(4096, h->casemap)))
-		return lsi_skmap_dispose(h->chans), false;
+	if (!(ctx->users = lsi_skmap_init(4096, ctx->casemap)))
+		return lsi_skmap_dispose(ctx->chans), false;
 
 	return true;
 }
 
 chan *
-lsi_add_chan(irc *h, const char *name)
+lsi_add_chan(irc *ctx, const char *name)
 {
 	chan *c = lsi_com_malloc(sizeof *c);
 	if (!c)
@@ -56,7 +56,7 @@ lsi_add_chan(irc *h, const char *name)
 	c->tag = NULL;
 	c->freetag = false;
 
-	if (!(c->memb = lsi_skmap_init(256, h->casemap)))
+	if (!(c->memb = lsi_skmap_init(256, ctx->casemap)))
 		goto add_chan_fail;
 
 	c->modes_sz = 16; //grows
@@ -66,7 +66,7 @@ lsi_add_chan(irc *h, const char *name)
 	for (size_t i = 0; i < c->modes_sz; i++)
 		c->modes[i] = NULL;
 
-	if (!lsi_skmap_put(h->chans, name, c))
+	if (!lsi_skmap_put(ctx->chans, name, c))
 		goto add_chan_fail;
 
 	D("added chan '%s'", c->name);
@@ -87,9 +87,9 @@ add_chan_fail:
 }
 
 bool
-lsi_drop_chan(irc *h, chan *c)
+lsi_drop_chan(irc *ctx, chan *c)
 {
-	if (!lsi_skmap_del(h->chans, c->name)) {
+	if (!lsi_skmap_del(ctx->chans, c->name)) {
 		W("channel '%s' not in channel map", c->name);
 		return false;
 	}
@@ -99,7 +99,7 @@ lsi_drop_chan(irc *h, chan *c)
 		do {
 			memb *m = e;
 			if (--m->u->nchans == 0) {
-				if (!lsi_skmap_del(h->users, m->u->nick))
+				if (!lsi_skmap_del(ctx->users, m->u->nick))
 					W("user '%s' not in umap", m->u->nick);
 				D("implicitly dropped user '%s'", m->u->nick);
 				free(m->u->nick);
@@ -130,22 +130,22 @@ lsi_drop_chan(irc *h, chan *c)
 }
 
 size_t
-lsi_num_chans(irc *h)
+lsi_num_chans(irc *ctx)
 {
-	return lsi_skmap_count(h->chans);
+	return lsi_skmap_count(ctx->chans);
 }
 
 chan *
-lsi_get_chan(irc *h, const char *name, bool complain)
+lsi_get_chan(irc *ctx, const char *name, bool complain)
 {
-	chan *c = lsi_skmap_get(h->chans, name);
+	chan *c = lsi_skmap_get(ctx->chans, name);
 	if (!c && complain)
 		W("no such channel '%s' in chanmap", name);
 	return c;
 }
 
 memb *
-lsi_get_memb(irc *h, chan *c, const char *nick, bool complain)
+lsi_get_memb(irc *ctx, chan *c, const char *nick, bool complain)
 {
 	memb *m = lsi_skmap_get(c->memb, nick);
 	if (!m && complain)
@@ -154,15 +154,15 @@ lsi_get_memb(irc *h, chan *c, const char *nick, bool complain)
 }
 
 size_t
-lsi_num_memb(irc *h, chan *c)
+lsi_num_memb(irc *ctx, chan *c)
 {
 	return lsi_skmap_count(c->memb);
 }
 
 bool
-lsi_add_memb(irc *h, chan *c, user *u, const char *mpfxstr)
+lsi_add_memb(irc *ctx, chan *c, user *u, const char *mpfxstr)
 {
-	memb *m = lsi_alloc_memb(h, u, mpfxstr);
+	memb *m = lsi_alloc_memb(ctx, u, mpfxstr);
 	if (!m || !lsi_skmap_put(c->memb, u->nick, m)) {
 		free(m);
 		return false;
@@ -174,13 +174,13 @@ lsi_add_memb(irc *h, chan *c, user *u, const char *mpfxstr)
 }
 
 bool
-lsi_drop_memb(irc *h, chan *c, user *u, bool purge, bool complain)
+lsi_drop_memb(irc *ctx, chan *c, user *u, bool purge, bool complain)
 {
 	memb *m = lsi_skmap_del(c->memb, u->nick);
 	if (m) {
 		D("dropped '%s' from '%s'", m->u->nick, c->name);
 		if (--m->u->nchans == 0 && purge) {
-			if (!lsi_skmap_del(h->users, m->u->nick))
+			if (!lsi_skmap_del(ctx->users, m->u->nick))
 				W("user '%s' not in user map", m->u->nick);
 			D("implicitly dropped user '%s'", m->u->nick);
 			free(m->u->nick);
@@ -199,7 +199,7 @@ lsi_drop_memb(irc *h, chan *c, user *u, bool purge, bool complain)
 }
 
 void
-lsi_clear_memb(irc *h, chan *c)
+lsi_clear_memb(irc *ctx, chan *c)
 {
 	void *e;
 	if (!lsi_skmap_first(c->memb, NULL, &e))
@@ -208,7 +208,7 @@ lsi_clear_memb(irc *h, chan *c)
 	do {
 		memb *m = e;
 		if (--m->u->nchans== 0) {
-			if (!lsi_skmap_del(h->users, m->u->nick))
+			if (!lsi_skmap_del(ctx->users, m->u->nick))
 				W("user '%s' not in user map", m->u->nick);
 			D("implicitly dropped user '%s'", m->u->nick);
 			free(m->u->nick);
@@ -226,7 +226,7 @@ lsi_clear_memb(irc *h, chan *c)
 }
 
 memb *
-lsi_alloc_memb(irc *h, user *u, const char *mpfxstr)
+lsi_alloc_memb(irc *ctx, user *u, const char *mpfxstr)
 {
 	memb *m = lsi_com_malloc(sizeof *m);
 	if (!m)
@@ -243,9 +243,9 @@ alloc_memb_fail:
 }
 
 bool
-lsi_update_modepfx(irc *h, chan *c, const char *nick, char mpfxsym, bool enab)
+lsi_update_modepfx(irc *ctx, chan *c, const char *nick, char mpfxsym, bool enab)
 {
-	memb *m = lsi_get_memb(h, c, nick, true);
+	memb *m = lsi_get_memb(ctx, c, nick, true);
 	if (!m)
 		return false;
 
@@ -269,7 +269,7 @@ lsi_update_modepfx(irc *h, chan *c, const char *nick, char mpfxsym, bool enab)
 			return false;
 		}
 		p = m->modepfx;
-		while (*p && compare_modepfx(h, *p, mpfxsym) > 0)
+		while (*p && compare_modepfx(ctx, *p, mpfxsym) > 0)
 			p++;
 
 		char *o = p + strlen(p);
@@ -287,26 +287,26 @@ lsi_update_modepfx(irc *h, chan *c, const char *nick, char mpfxsym, bool enab)
 /* returns positive if c1 is stronger than c2.  be sure only to call
  * for valid arguments (modepfx symbols like '@') */
 static int
-compare_modepfx(irc *h, char c1, char c2)
+compare_modepfx(irc *ctx, char c1, char c2)
 {
-	const char *p1 = strchr(h->m005modepfx[1], c1);
-	const char *p2 = strchr(h->m005modepfx[1], c2);
+	const char *p1 = strchr(ctx->m005modepfx[1], c1);
+	const char *p2 = strchr(ctx->m005modepfx[1], c2);
 
-	ptrdiff_t o1 = p1 - h->m005modepfx[1];
-	ptrdiff_t o2 = p2 - h->m005modepfx[1];
+	ptrdiff_t o1 = p1 - ctx->m005modepfx[1];
+	ptrdiff_t o2 = p2 - ctx->m005modepfx[1];
 
 	return o1 < o2 ? 1 : o1 > o2 ? -1 : 0;
 }
 
 void
-lsi_clear_chanmodes(irc *h, chan *c)
+lsi_clear_chanmodes(irc *ctx, chan *c)
 {
 	for (size_t i = 0; i < c->modes_sz; i++)
 		free(c->modes[i]), c->modes[i] = NULL;
 }
 
 bool
-lsi_add_chanmode(irc *h, chan *c, const char *modestr)
+lsi_add_chanmode(irc *ctx, chan *c, const char *modestr)
 {
 	size_t ind = 0;
 	for (; ind < c->modes_sz; ind++)
@@ -335,10 +335,10 @@ lsi_add_chanmode(irc *h, chan *c, const char *modestr)
 }
 
 bool
-lsi_drop_chanmode(irc *h, chan *c, const char *modestr)
+lsi_drop_chanmode(irc *ctx, chan *c, const char *modestr)
 {
 	size_t i;
-	int cls = lsi_ut_classify_chanmode(h, modestr[0]);
+	int cls = lsi_ut_classify_chanmode(ctx, modestr[0]);
 	switch (cls) {
 	case CHANMODE_CLASS_A: //always has an argument (list-modes)
 		for (i = 0; i < c->modes_sz; i++)
@@ -395,9 +395,9 @@ lsi_touch_user_int(user *u, const char *ident)
 }
 
 user *
-lsi_touch_user(irc *h, const char *ident, bool complain)
+lsi_touch_user(irc *ctx, const char *ident, bool complain)
 {
-	user *u = lsi_get_user(h, ident, complain);
+	user *u = lsi_get_user(ctx, ident, complain);
 	if (u)
 		lsi_touch_user_int(u, ident);
 	return u;
@@ -405,7 +405,7 @@ lsi_touch_user(irc *h, const char *ident, bool complain)
 
 
 user *
-lsi_add_user(irc *h, const char *ident) //ident may be a nick, or nick!uname@host
+lsi_add_user(irc *ctx, const char *ident) //ident may be a nick, or nick!uname@host
 {
 	char nick[MAX_NICK_LEN];
 	lsi_ut_ident2nick(nick, sizeof nick, ident);
@@ -422,7 +422,7 @@ lsi_add_user(irc *h, const char *ident) //ident may be a nick, or nick!uname@hos
 	if (!(u->nick = lsi_b_strdup(nick)))
 		goto add_user_fail;
 
-	if (!lsi_skmap_put(h->users, nick, u))
+	if (!lsi_skmap_put(ctx->users, nick, u))
 		goto add_user_fail;
 
 	lsi_touch_user_int(u, ident);
@@ -443,18 +443,18 @@ add_user_fail:
 }
 
 bool
-lsi_drop_user(irc *h, user *u)
+lsi_drop_user(irc *ctx, user *u)
 {
-	if (!lsi_skmap_del(h->users, u->nick)) {
+	if (!lsi_skmap_del(ctx->users, u->nick)) {
 		W("no such user '%s' to drop", u->nick);
 		return false;
 	}
 
 	void *e;
-	if (lsi_skmap_first(h->chans, NULL, &e))
+	if (lsi_skmap_first(ctx->chans, NULL, &e))
 		do {
-			lsi_drop_memb(h, e, u, false, false);
-		} while (lsi_skmap_next(h->chans, NULL, &e));
+			lsi_drop_memb(ctx, e, u, false, false);
+		} while (lsi_skmap_next(ctx->chans, NULL, &e));
 	else
 		W("dropping dangling user '%s'", u->nick);
 
@@ -472,25 +472,25 @@ lsi_drop_user(irc *h, user *u)
 }
 
 void
-lsi_ucb_deinit(irc *h)
+lsi_ucb_deinit(irc *ctx)
 {
-	lsi_ucb_clear(h);
-	lsi_skmap_dispose(h->chans);
-	lsi_skmap_dispose(h->users);
-	h->chans = h->users = NULL;
+	lsi_ucb_clear(ctx);
+	lsi_skmap_dispose(ctx->chans);
+	lsi_skmap_dispose(ctx->users);
+	ctx->chans = ctx->users = NULL;
 }
 
 void
-lsi_ucb_clear(irc *h)
+lsi_ucb_clear(irc *ctx)
 {
 	void *e;
-	if (h->chans) {
-		if (!lsi_skmap_first(h->chans, NULL, &e))
+	if (ctx->chans) {
+		if (!lsi_skmap_first(ctx->chans, NULL, &e))
 			return;
 
 		do {
 			chan *c = e;
-			lsi_clear_memb(h, c);
+			lsi_clear_memb(ctx, c);
 			lsi_skmap_dispose(c->memb);
 			free(c->topicnick);
 			free(c->topic);
@@ -498,12 +498,12 @@ lsi_ucb_clear(irc *h)
 				free(c->modes[i]);
 			free(c->modes);
 			free(c);
-		} while (lsi_skmap_next(h->chans, NULL, &e));
-		lsi_skmap_clear(h->chans);
+		} while (lsi_skmap_next(ctx->chans, NULL, &e));
+		lsi_skmap_clear(ctx->chans);
 	}
 
-	if (h->users) {
-		if (!lsi_skmap_first(h->users, NULL, &e))
+	if (ctx->users) {
+		if (!lsi_skmap_first(ctx->users, NULL, &e))
 			return;
 
 		do {
@@ -513,35 +513,35 @@ lsi_ucb_clear(irc *h)
 			free(u->host);
 			free(u->fname);
 			free(u);
-		} while (lsi_skmap_next(h->users, NULL, &e));
-		lsi_skmap_clear(h->users);
+		} while (lsi_skmap_next(ctx->users, NULL, &e));
+		lsi_skmap_clear(ctx->users);
 	}
 }
 
 void
-lsi_ucb_dump(irc *h, bool full)
+lsi_ucb_dump(irc *ctx, bool full)
 {
-	lsi_skmap_dumpstat(h->chans, "channels");
-	lsi_skmap_dumpstat(h->users, "global users");
+	lsi_skmap_dumpstat(ctx->chans, "channels");
+	lsi_skmap_dumpstat(ctx->users, "global users");
 
 	char *key;
 	void *e1, *e2;
-	if (lsi_skmap_first(h->chans, NULL, &e1))
+	if (lsi_skmap_first(ctx->chans, NULL, &e1))
 		do {
 			chan *c = e1;
 			lsi_skmap_dumpstat(c->memb, c->name);
-		} while (lsi_skmap_next(h->chans, NULL, &e1));
+		} while (lsi_skmap_next(ctx->chans, NULL, &e1));
 
 	if (!full)
 		return;
 
-	if (lsi_skmap_first(h->users, &key, &e1))
+	if (lsi_skmap_first(ctx->users, &key, &e1))
 		do {
 			user *u = e1;
 			u->dangling = true;
-		} while (lsi_skmap_next(h->users, &key, &e1));
+		} while (lsi_skmap_next(ctx->users, &key, &e1));
 
-	if (lsi_skmap_first(h->chans, &key, &e1))
+	if (lsi_skmap_first(ctx->chans, &key, &e1))
 		do {
 			chan *c = e1;
 			A("channel '%s' (%zu membs) [topic: '%s' (by %s)"
@@ -567,44 +567,44 @@ lsi_ucb_dump(irc *h, bool full)
 
 				m->u->dangling = false;
 			} while (lsi_skmap_next(c->memb, &k, &e2));
-		} while (lsi_skmap_next(h->chans, &key, &e1));
+		} while (lsi_skmap_next(ctx->chans, &key, &e1));
 
-	if (lsi_skmap_first(h->users, &key, &e1))
+	if (lsi_skmap_first(ctx->users, &key, &e1))
 		do {
 			user *u = e1;
 			if (u->dangling)
 				A("dangling user '%s!%s@%s'",
 				    u->nick, u->uname, u->host);
-		} while (lsi_skmap_next(h->users, &key, &e1));
+		} while (lsi_skmap_next(ctx->users, &key, &e1));
 }
 
 user *
-lsi_get_user(irc *h, const char *ident, bool complain)
+lsi_get_user(irc *ctx, const char *ident, bool complain)
 {
-	user *u = lsi_skmap_get(h->users, ident);
+	user *u = lsi_skmap_get(ctx->users, ident);
 	if (!u && complain)
 		W("no such user '%s'", ident);
 	return u;
 }
 
 size_t
-lsi_num_users(irc *h)
+lsi_num_users(irc *ctx)
 {
-	return lsi_skmap_count(h->users);
+	return lsi_skmap_count(ctx->users);
 }
 
 bool
-lsi_rename_user(irc *h, const char *ident, const char *newnick, bool *allocerr)
+lsi_rename_user(irc *ctx, const char *ident, const char *newnick, bool *allocerr)
 {
 	char nick[MAX_NICK_LEN];
 	lsi_ut_ident2nick(nick, sizeof nick, ident);
 
-	bool justcase = lsi_ut_istrcmp(nick, newnick, h->casemap) == 0;
+	bool justcase = lsi_ut_istrcmp(nick, newnick, ctx->casemap) == 0;
 
 	if (allocerr)
 		*allocerr = false;
 
-	user *u = lsi_get_user(h, ident, true);
+	user *u = lsi_get_user(ctx, ident, true);
 	if (!u)
 		return false;
 
@@ -619,16 +619,16 @@ lsi_rename_user(irc *h, const char *ident, const char *newnick, bool *allocerr)
 		u->nick = nn;
 	}
 
-	if (!lsi_skmap_put(h->users, newnick, u)) {
+	if (!lsi_skmap_put(ctx->users, newnick, u)) {
 		if (allocerr)
 			*allocerr = true;
 		return false;
 	}
 
-	lsi_skmap_del(h->users, ident);
+	lsi_skmap_del(ctx->users, ident);
 
 	void *e;
-	if (lsi_skmap_first(h->chans, NULL, &e))
+	if (lsi_skmap_first(ctx->chans, NULL, &e))
 		do {
 			chan *c = e;
 			memb *m = lsi_skmap_get(c->memb, ident);
@@ -642,49 +642,49 @@ lsi_rename_user(irc *h, const char *ident, const char *newnick, bool *allocerr)
 			}
 
 			lsi_skmap_del(c->memb, ident);
-		} while (lsi_skmap_next(h->chans, NULL, &e));
+		} while (lsi_skmap_next(ctx->chans, NULL, &e));
 
 	return true;
 }
 
 chan *
-lsi_first_chan(irc *h)
+lsi_first_chan(irc *ctx)
 {
 	void *e;
-	if (!lsi_skmap_first(h->chans, NULL, &e))
+	if (!lsi_skmap_first(ctx->chans, NULL, &e))
 		return NULL;
 	return e;
 }
 
 chan *
-lsi_next_chan(irc *h)
+lsi_next_chan(irc *ctx)
 {
 	void *e;
-	if (!lsi_skmap_next(h->chans, NULL, &e))
+	if (!lsi_skmap_next(ctx->chans, NULL, &e))
 		return NULL;
 	return e;
 }
 
 user *
-lsi_first_user(irc *h)
+lsi_first_user(irc *ctx)
 {
 	void *e;
-	if (!lsi_skmap_next(h->users, NULL, &e))
+	if (!lsi_skmap_next(ctx->users, NULL, &e))
 		return NULL;
 	return e;
 }
 
 user *
-lsi_next_user(irc *h)
+lsi_next_user(irc *ctx)
 {
 	void *e;
-	if (!lsi_skmap_next(h->users, NULL, &e))
+	if (!lsi_skmap_next(ctx->users, NULL, &e))
 		return NULL;
 	return e;
 }
 
 memb *
-lsi_first_memb(irc *h, chan *c)
+lsi_first_memb(irc *ctx, chan *c)
 {
 	void *e;
 	if (!lsi_skmap_next(c->memb, NULL, &e))
@@ -693,7 +693,7 @@ lsi_first_memb(irc *h, chan *c)
 }
 
 memb *
-lsi_next_memb(irc *h, chan *c)
+lsi_next_memb(irc *ctx, chan *c)
 {
 	void *e;
 	if (!lsi_skmap_next(c->memb, NULL, &e))

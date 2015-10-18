@@ -397,48 +397,48 @@ irc_regcb_mutnick(irc *ctx, fp_mut_nick cb)
 }
 
 void
-irc_dump(irc *h)
+irc_dump(irc *ctx)
 {
-	N("--- IRC context %p dump---", (void *)h);
-	N("mynick: '%s'", h->mynick);
-	N("myhost: '%s'", h->myhost);
-	N("service: %d", h->service);
-	N("cmodes: '%s'", h->cmodes);
-	N("umodes: '%s'", h->umodes);
-	N("myumodes: '%s'", h->myumodes);
-	N("ver: '%s'", h->ver);
-	N("lasterr: '%s'", h->lasterr);
-	N("hcto_us: %"PRIu64, h->hcto_us);
-	N("scto_us: %"PRIu64, h->scto_us);
-	N("restricted: %d", h->restricted);
-	N("banned: %d", h->banned);
-	N("banmsg: '%s'", h->banmsg);
-	N("casemap: %d", h->casemap);
-	N("pass: '%s'", h->pass);
-	N("nick: '%s'", h->nick);
-	N("uname: '%s'", h->uname);
-	N("fname: '%s'", h->fname);
-	N("conflags: %"PRIu8, h->conflags);
-	N("serv_con: %d", h->serv_con);
-	N("serv_dist: '%s'", h->serv_dist);
-	N("serv_type: %ld", h->serv_type);
-	N("serv_info: '%s'", h->serv_info);
-	N("m005chanmodes[0]: '%s'", h->m005chanmodes[0]);
-	N("m005chanmodes[1]: '%s'", h->m005chanmodes[1]);
-	N("m005chanmodes[2]: '%s'", h->m005chanmodes[2]);
-	N("m005chanmodes[3]: '%s'", h->m005chanmodes[3]);
-	N("m005modepfx[0]: '%s'", h->m005modepfx[0]);
-	N("m005modepfx[1]: '%s'", h->m005modepfx[1]);
-	N("m005chantypes: '%s'", h->m005chantypes);
-	N("tag_con_read: %p", (void *)h->tag_con_read);
-	N("tracking: %d", h->tracking);
-	N("tracking_enab: %d", h->tracking_enab);
-	N("endofnames: %d", h->endofnames);
-	for (size_t i = 0; i < COUNTOF(h->logonconv); i++) {
-		if (!h->logonconv[i])
+	N("--- IRC context %p dump---", (void *)ctx);
+	N("mynick: '%s'", ctx->mynick);
+	N("myhost: '%s'", ctx->myhost);
+	N("service: %d", ctx->service);
+	N("cmodes: '%s'", ctx->cmodes);
+	N("umodes: '%s'", ctx->umodes);
+	N("myumodes: '%s'", ctx->myumodes);
+	N("ver: '%s'", ctx->ver);
+	N("lasterr: '%s'", ctx->lasterr);
+	N("hcto_us: %"PRIu64, ctx->hcto_us);
+	N("scto_us: %"PRIu64, ctx->scto_us);
+	N("restricted: %d", ctx->restricted);
+	N("banned: %d", ctx->banned);
+	N("banmsg: '%s'", ctx->banmsg);
+	N("casemap: %d", ctx->casemap);
+	N("pass: '%s'", ctx->pass);
+	N("nick: '%s'", ctx->nick);
+	N("uname: '%s'", ctx->uname);
+	N("fname: '%s'", ctx->fname);
+	N("conflags: %"PRIu8, ctx->conflags);
+	N("serv_con: %d", ctx->serv_con);
+	N("serv_dist: '%s'", ctx->serv_dist);
+	N("serv_type: %ld", ctx->serv_type);
+	N("serv_info: '%s'", ctx->serv_info);
+	N("m005chanmodes[0]: '%s'", ctx->m005chanmodes[0]);
+	N("m005chanmodes[1]: '%s'", ctx->m005chanmodes[1]);
+	N("m005chanmodes[2]: '%s'", ctx->m005chanmodes[2]);
+	N("m005chanmodes[3]: '%s'", ctx->m005chanmodes[3]);
+	N("m005modepfx[0]: '%s'", ctx->m005modepfx[0]);
+	N("m005modepfx[1]: '%s'", ctx->m005modepfx[1]);
+	N("m005chantypes: '%s'", ctx->m005chantypes);
+	N("tag_con_read: %p", (void *)ctx->tag_con_read);
+	N("tracking: %d", ctx->tracking);
+	N("tracking_enab: %d", ctx->tracking_enab);
+	N("endofnames: %d", ctx->endofnames);
+	for (size_t i = 0; i < COUNTOF(ctx->logonconv); i++) {
+		if (!ctx->logonconv[i])
 			continue;
 		char line[1024];
-		lsi_ut_sndumpmsg(line, sizeof line, NULL, h->logonconv[i]),
+		lsi_ut_sndumpmsg(line, sizeof line, NULL, ctx->logonconv[i]),
 		N("logonconv[%zu]: '%s'", i, line);
 	}
 	//skmap *chans

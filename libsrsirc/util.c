@@ -266,7 +266,7 @@ lsi_ut_conread(tokarr *msg, void *tag)
 }
 
 char **
-lsi_ut_parse_MODE(irc *h, tokarr *msg, size_t *num, bool is324)
+lsi_ut_parse_MODE(irc *ctx, tokarr *msg, size_t *num, bool is324)
 {
 	size_t ac = 2;
 	while (ac < COUNTOF(*msg) && (*msg)[ac])
@@ -292,7 +292,7 @@ lsi_ut_parse_MODE(irc *h, tokarr *msg, size_t *num, bool is324)
 	char *ptr = modes;
 	int enable = 1;
 	D("modes: '%s', nummodes: %zu, m005modepfx: '%s'",
-	    modes, nummodes, h->m005modepfx[0]);
+	    modes, nummodes, ctx->m005modepfx[0]);
 	while (*ptr) {
 		char c = *ptr;
 		D("next modechar is '%c', enable ATM: %d", c, enable);
@@ -307,7 +307,7 @@ lsi_ut_parse_MODE(irc *h, tokarr *msg, size_t *num, bool is324)
 			ptr++;
 			continue;
 		default:
-			cl = lsi_ut_classify_chanmode(h, c);
+			cl = lsi_ut_classify_chanmode(ctx, c);
 			D("classified mode '%c' to class %d", c, cl);
 			switch (cl) {
 			case CHANMODE_CLASS_A:
@@ -323,7 +323,7 @@ lsi_ut_parse_MODE(irc *h, tokarr *msg, size_t *num, bool is324)
 			case CHANMODE_CLASS_D:
 				break;
 			default:/*error?*/
-				if (strchr(h->m005modepfx[0], c))
+				if (strchr(ctx->m005modepfx[0], c))
 					arg = i >= ac ? "*" : (*msg)[i++];
 				else {
 					W("unknown chanmode '%c'", c);
@@ -369,10 +369,10 @@ ut_parse_005_cmodes_fail:
 }
 
 int
-lsi_ut_classify_chanmode(irc *h, char c)
+lsi_ut_classify_chanmode(irc *ctx, char c)
 {
 	for (int z = 0; z < 4; ++z) {
-		if (h->m005chanmodes[z] && strchr(h->m005chanmodes[z], c))
+		if (ctx->m005chanmodes[z] && strchr(ctx->m005chanmodes[z], c))
 			/*XXX this locks the chantype class constants */
 			return z+1;
 	}

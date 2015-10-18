@@ -165,13 +165,13 @@ bool irc_online(irc *ctx);
  *
  * \param ctx   IRC context as obtained by irc_init()
  * \param tok   Pointer to the result array, where pointers to the identified
- *              fields tokens are stored in.
+ *              fields are stored in. \n
  *                  (*tok)[0] will point to the "prefix" (not including the
  *                      leading colon), or NULL if the message did not
- *                      contain a prefix (see also doc/terminology.txt)
- *                  (*tok)[1] will point to the (mandatory) "command"
+ *                      contain a prefix (see also doc/terminology.txt). \n
+ *                  (*tok)[1] will point to the (mandatory) "command" \n
  *                  (*tok)[2+n] will point to the n-th "argument", if it
- *                      exists; NULL otherwise
+ *                      exists; NULL otherwise \n
  * \param to_us   Read timeout in microseconds (0 = no timeout)
  *
  * \return 1 on success; 0 on timeout; -1 on failure
