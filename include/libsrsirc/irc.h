@@ -97,23 +97,31 @@ void irc_dispose(irc *ctx);
 
 /** \brief Connect and log on to IRC
  *
- * Attempts to connect/log on to the IRC server specified by irc_set_server().
+ * Attempts to connect/log on to the IRC server specified earlier using
+ * irc_set_server().
+ *
  * Connecting will involve, if applicable, resolving a DNS name and attempting
- *     to connect to each of the resulting A- or AAAA records.
+ * to establish a TCP connection to each of the resulting A- or AAAA records
+ * (until one works for us).
  *
- * Behavior is affected by two timeouts (a "hard" and a "soft" timeout), which
- *     can be set via irc_set_connect_timeout().  The "hard" timeout limits the
- *     overall time trying to get an IRC connection going, while the "soft"
- *     timeout applies each time anew for each attempt to establish a TCP
- *     connection (so that we can be sure all A- or AAAA records are tried).
+ * Behavior is affected by two timeouts (a "hard" and a "soft" timeout)
+ * The "hard" timeout limits the overall time we try to get an IRC connection
+ * going, while the "soft" timeout applies each time anew for each attempt to
+ * establish a TCP connection (so that we can be sure all A- or AAAA records
+ * are tried) (see irc_set_connect_timeout() for further information regarding
+ * the soft timeout)
  *
- * We consider ourselves logged on once we see the "004" message
- *     (or 383 if we're a service).  If of interest, the "log on conversation"
- *     i.e. 001, 002, 003 and 004 can be retrieved by irc_logonconv().
+ * We consider ourselves logged on once the IRC server sends us a "004" message
+ * (or 383 if we're a service).  If of interest, the "log on conversation"
+ * i.e. 001, 002, 003 and 004 can be retrieved by irc_logonconv() if there is
+ * a need to see them (there usually isn't).
  *
  * \param ctx   IRC context as obtained by irc_init()
  *
  * \return true if successfully logged on, false on failure
+ *
+ * \sa irc_set_server(), irc_set_pass(), irc_set_connect_timeout(),
+ *     irc_logonconv()
  */
 bool irc_connect(irc *ctx);
 
