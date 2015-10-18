@@ -396,7 +396,7 @@ long
 lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, bool *tryagain)
 {
 #ifdef WITH_SSL
-	V("SSL_read()ing from ssl hnd %p (bufsz: %zu)", (void *)ssl, sz);
+	V("SSL_read()ing from ssl socket %p (bufsz: %zu)", (void *)ssl, sz);
 	int r = SSL_read(ssl, buf, sz);
 	if (r < 0) {
 		int errc = SSL_get_error(ssl, r);
@@ -406,7 +406,7 @@ lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, bool *tryagain)
 			E("SSL_read() returned %d, error code %d", r, errc);
 		r = -1;
 	} else
-		V("SSL_read(): %d (ssl hnd %p)", r, (void *)ssl);
+		V("SSL_read(): %d (ssl socket %p)", r, (void *)ssl);
 
 	return r;
 #else
@@ -420,7 +420,7 @@ long
 lsi_b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
 {
 #ifdef WITH_SSL
-	V("send()ing %zu bytes over ssl hnd %p", len, (void *)ssl);
+	V("send()ing %zu bytes over ssl socket %p", len, (void *)ssl);
 	int r = SSL_write(ssl, buf, len);
 
 	if (r < 0) {
@@ -431,7 +431,7 @@ lsi_b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
 			E("SSL_write() returned %d, error code %d", r, errc);
 		r = -1;
 	} else
-		V("SSL_write(): %d (ssl hnd %p)", r, (void *)ssl);
+		V("SSL_write(): %d (ssl socket %p)", r, (void *)ssl);
 
 	return r;
 #else
