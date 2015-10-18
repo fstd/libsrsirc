@@ -185,16 +185,18 @@ bool irc_online(irc *ctx);
  */
 int irc_read(irc *ctx, tokarr *tok, uint64_t to_us);
 
-/** \brief Send a message to the IRC server
+/** \brief Send a protocol message to the IRC server
  *
  * \param ctx   IRC context as obtained by irc_init()
  * \param line   Data to send, typically a single IRC protocol line (but may
  *               be multiple if properly separated by \\r\\n).
- *               If the line does not end in \\r\\n, it will be appended.
+ *               If the (last or only) line does not end in \\r\\n, it will be
+ *               appended.
  *
  * \return true on success, false on failure
  *
  * In the case of failure, an implicit call to irc_reset() is performed.
+ * \sa irc_printf(), irc_read(), irc_reset()
  */
 bool irc_write(irc *ctx, const char *line);
 
