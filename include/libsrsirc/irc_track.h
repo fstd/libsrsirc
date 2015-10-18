@@ -64,7 +64,7 @@ typedef struct userrep userrep;
 
 /** \brief Count the channels we are currently in
  * \return The number of channels we are currently in.  */
-size_t irc_num_chans(irc *h);
+size_t irc_num_chans(irc *ctx);
 
 /** \brief Retrieve representations of all channels we're currently in
  *
@@ -76,7 +76,7 @@ size_t irc_num_chans(irc *h);
  *
  * *NOTE:* The information contained in the retrieved chanrep structures is
  *         only valid until the next call to irc_read() */
-size_t irc_all_chans(irc *h, chanrep *chanarr, size_t chanarr_cnt);
+size_t irc_all_chans(irc *ctx, chanrep *chanarr, size_t chanarr_cnt);
 
 /** \brief Retrieve one channel representation by channel name
  * \param dest   Pointer to a chanrep where we put the result
@@ -85,7 +85,7 @@ size_t irc_all_chans(irc *h, chanrep *chanarr, size_t chanarr_cnt);
  *
  * *NOTE:* The information contained in the retrieved chanrep structure is
  *         only valid until the next call to irc_read() */
-chanrep *irc_chan(irc *h, chanrep *dest, const char *name);
+chanrep *irc_chan(irc *ctx, chanrep *dest, const char *name);
 
 /** \brief Associate opaque user data with a channel
  *
@@ -100,11 +100,11 @@ chanrep *irc_chan(irc *h, chanrep *dest, const char *name);
  *
  * \return True if the channel was tagged (false if we don't know that channel)
  */
-bool irc_tag_chan(irc *h, const char *chnam, void *tag, bool autofree);
+bool irc_tag_chan(irc *ctx, const char *chnam, void *tag, bool autofree);
 
 /** \brief Count the users we are currently seeing
  * \return The number of users we are currently seeing.  */
-size_t irc_num_users(irc *h);
+size_t irc_num_users(irc *ctx);
 
 /** \brief Retrieve representations of all users we're currently seeing
  *
@@ -116,7 +116,7 @@ size_t irc_num_users(irc *h);
  *
  * *NOTE:* The information contained in the retrieved userrep structures is
  *         only valid until the next call to irc_read() */
-size_t irc_all_users(irc *h, userrep *userarr, size_t userarr_cnt);
+size_t irc_all_users(irc *ctx, userrep *userarr, size_t userarr_cnt);
 
 /** \brief Retrieve one user representation by nickname
  * \param dest   Pointer to a userrep where we put the result
@@ -126,7 +126,7 @@ size_t irc_all_users(irc *h, userrep *userarr, size_t userarr_cnt);
  *
  * *NOTE:* The information contained in the retrieved userrep structure is
  *         only valid until the next call to irc_read() */
-userrep *irc_user(irc *h, userrep *dest, const char *ident);
+userrep *irc_user(irc *ctx, userrep *dest, const char *ident);
 
 /** \brief Associate opaque user data with a user
  *
@@ -142,13 +142,13 @@ userrep *irc_user(irc *h, userrep *dest, const char *ident);
  *
  * \return True if the user was tagged (false if we don't know that user)
  */
-bool irc_tag_user(irc *h, const char *ident, void *tag, bool autofree);
+bool irc_tag_user(irc *ctx, const char *ident, void *tag, bool autofree);
 
 
 /** \brief Count number of users in a given channel
  * \param chnam   Name of the channel
  * \return The number of users in channel `chnam` */
-size_t irc_num_members(irc *h, const char *chnam);
+size_t irc_num_members(irc *ctx, const char *chnam);
 
 /** \brief Retrieve representations of all members of a channel
  *
@@ -161,7 +161,7 @@ size_t irc_num_members(irc *h, const char *chnam);
  *
  * *NOTE:* The information contained in the retrieved userrep structures is
  *         only valid until the next call to irc_read() */
-size_t irc_all_members(irc *h, const char *chnam, userrep *userarr,
+size_t irc_all_members(irc *ctx, const char *chnam, userrep *userarr,
     size_t userarr_cnt);
 
 
@@ -175,7 +175,7 @@ size_t irc_all_members(irc *h, const char *chnam, userrep *userarr,
  *
  * *NOTE:* The information contained in the retrieved userrep structure is
  *         only valid until the next call to irc_read() */
-userrep *irc_member(irc *h, userrep *dest, const char *chnam, const char *ident);
+userrep *irc_member(irc *ctx, userrep *dest, const char *chnam, const char *ident);
 
 /* for debugging */
 
