@@ -288,18 +288,23 @@ bool irc_set_pass(irc *ctx, const char *srvpass);
  */
 bool irc_set_uname(irc *ctx, const char *uname);
 
-/** \brief set IRC 'full name' (which appears e.g. in WHOIS)
+/** \brief set IRC 'full name' for the next connection.
  *
  * The 'full name' is typically shown in responses to the WHOIS IRC command.
  *
  * This setting will take effect not before the next call to irc_connect()
  *
  * \param ctx   IRC context as obtained by irc_init()
- * \param fname   Desired full name for the next IRC connection
+ * \param fname   Desired full name for the next IRC connection. It is an error
+ *                to pass NULL, but there is a default full name in case this
+ *                function is not used at all.
+ *                We do *not* depend on this pointer to remain valid after
+ *                we return, i.e. we do make a copy.
  *
  * \return true on success, false on failure (which means we're out of memory)
  *
  * In case of failure, the old value is left unchanged.
+ * \sa DEF_FNAME
  */
 bool irc_set_fname(irc *ctx, const char *fname);
 
