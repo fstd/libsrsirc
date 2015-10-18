@@ -130,9 +130,14 @@ bool irc_connect(irc *ctx);
  * Of course, we can't /really/ know unless we attempt to do I/O with the
  * server by calling irc_read() (or perhaps irc_write())
  *
+ * The following functions have the ability to change our idea of whether or
+ * not we're connected: irc_connect(), irc_read(), irc_write(), irc_printf(),
+ * irc_reset().
+ *
  * \param ctx   IRC context as obtained by irc_init()
  *
  * \return true if we still appear to be connected
+ * \sa irc_connect(), irc_read(), irc_write(), irc_printf(), irc_reset()
  */
 bool irc_online(irc *ctx);
 
