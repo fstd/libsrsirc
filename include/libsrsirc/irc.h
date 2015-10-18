@@ -38,15 +38,31 @@
  *  @{
  */
 
-/** \brief Produce a handle to a newly allocated and initialized IRC context.
+/** \brief Allocate and initialize a new IRC context.
  *
- * This function is used to create a new IRC context; the pointer returned
- * by it must be supplied to most other library calls in order to distinguish
- * this session from others.  Most programs will probably need only one context,
- * but it enables to open an arbitrary number of independent IRC connections
- * should the need arise.
+ * This is the function you will typically use before calling any other
+ * libsrsirc function.  It allocates and initializes a new IRC context that is
+ * used internally to hold all the state associated with this IRC connection,
+ * as well as to distinguish it from other, unrelated IRC connections made
+ * using libsrsirc.
  *
- * \return a pointer to the new IRC context, or NULL if out of memory.
+ * An opaque pointer (i.e. a handle) to the new IRC context is returned to the
+ * user and will remain valid until irc_dispose() is called for that pointer.
+ * The user will generally need to supply this pointer as the first argument
+ * to most libsrsirc functions, but will never dereference it themselves.
+ * (This is analoguous to how FILE * works in standard C.)
+ *
+ * This function can be called an arbitrary number of times, if there is a need
+ * for many independent IRC connections using libsrsirc.  However, most programs
+ * will probably need only one IRC connection and therefore call this function
+ * only once.
+ *
+ * If the IRC context is no longer required, call irc_dispose() on it to
+ * release the associated state and resources.
+ *
+ * \return A pointer to the new IRC context, or NULL if we are out of memory.
+ *         This pointer will remain valid until it is given to irc_dispose().
+ * \sa irc, irc_dispose()
  */
 irc *irc_init(void);
 
