@@ -81,13 +81,17 @@ irc *irc_init(void);
  */
 void irc_reset(irc *ctx);
 
-/** \brief Destroy an IRC context, invalidating the provided context
+/** \brief Destroy an IRC context, invalidating the provided pointer
  *
  * This is the counterpart to irc_init().  Calling this function will, after an
  * implicit call to irc_reset(), deallocate all resources associated with the
  * provided context, invalidating it in the process.
  *
+ * Use this function when you don't need your IRC context anymore, maybe as
+ * part of other cleanup your program does when terminating.
+ *
  * \param ctx   IRC context as obtained by irc_init()
+ * \sa irc_reset(), irc_init()
  */
 void irc_dispose(irc *ctx);
 
