@@ -215,14 +215,21 @@ bool irc_write(irc *ctx, const char *line);
  */
 bool irc_printf(irc *ctx, const char *fmt, ...);
 
-/** \brief Tell what our current nickname is
+/** \brief Tell what our nickname is or was.
  *
  * We keep track of changes to our own nickname, this function can be used
- * to tell what our current nick is.
+ * to tell what our current nick is, or what our last nickname was before we
+ * (got) disconnected.
  *
  * \param ctx   IRC context as obtained by irc_init()
  *
- * \return A pointer to our current nickname
+ * \return A pointer to our current nickname.  The pointer is guaranteed to be
+ *         valid only until the next call to irc_read() or irc_connect().
+ *
+ * When used before the *first* call to irc_connect(), the returned pointer
+ * will point to an empty string.
+ *
+ * \sa irc_set_nick()
  */
 const char *irc_mynick(irc *ctx);
 
