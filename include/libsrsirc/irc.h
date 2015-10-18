@@ -18,9 +18,8 @@
  *
  * \brief This is the basic interface to the core facilities of libsrsirc.
  *
- * This is the basic interface to the core facilities of libsrsirc.  Everything
- * needed to get an IRC connection going and do simple IRC operations is
- * provided by this header.
+ * Everything needed to get an IRC connection going and do simple IRC operations
+ * is provided by this header.
  *
  * Usage example for a simple ECHO-like IRC bot (receives messages and sends
  * them back to the channel it saw them on):
