@@ -267,18 +267,24 @@ bool irc_set_server(irc *ctx, const char *host, uint16_t port);
  */
 bool irc_set_pass(irc *ctx, const char *srvpass);
 
-/** \brief set IRC 'user name' (not the same as nickname)
+/** \brief set IRC 'user name' (not the same as nickname).
  *
- * The 'username' is the middle part of an IRC identity (nickname!username\@host)
+ * The 'username' is the middle part of an IRC identity
+ * (nickname!username\@host) (see also doc/terminology.txt)
  *
  * This setting will take effect not before the next call to irc_connect()
  *
  * \param ctx   IRC context as obtained by irc_init()
- * \param uname   Desired username for the next IRC connection
+ * \param uname   Desired username for the next IRC connection. It is an error
+ *                to pass NULL, but there is a default username in case this
+ *                function is not used at all.
+ *                We do *not* depend on this pointer to remain valid after
+ *                we return, i.e. we do make a copy.
  *
  * \return true on success, false on failure (which means we're out of memory)
  *
  * In case of failure, the old value is left unchanged.
+ * \sa DEF_UNAME
  */
 bool irc_set_uname(irc *ctx, const char *uname);
 
