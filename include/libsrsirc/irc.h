@@ -334,7 +334,7 @@ bool irc_set_nick(irc *ctx, const char *nick);
 /** \brief Dump state for debugging purposes
  *
  * This function is intended for debugging and will puke out a dump of all
- * state associated with the given context
+ * state associated with the given context to stderr
  *
  * \param ctx   IRC context as obtained by irc_init()
  */
