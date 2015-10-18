@@ -308,18 +308,26 @@ bool irc_set_uname(irc *ctx, const char *uname);
  */
 bool irc_set_fname(irc *ctx, const char *fname);
 
-/** \brief set IRC 'nickname'
+/** \brief set IRC 'nickname' for the next connection.
+ *
+ * The nickname is the primary means to identify users on IRC.
  *
  * This setting will take effect not before the next call to irc_connect(),
  * i.e. it does *not* cause an on-line nick change.
  * (To do that, send a NICK message)
  *
  * \param ctx   IRC context as obtained by irc_init()
- * \param nick   Desired nickname for the next IRC connection
+ * \param nick   Desired nickname for the next IRC connection.  It is an error
+ *               to pass NULL, but there is a default nickname in case this
+ *               function is not used at all.
+ *               We do *not* depend on this pointer to remain valid after
+ *               we return, i.e. we do make a copy.
  *
  * \return true on success, false on failure (which means we're out of memory)
  *
  * In case of failure, the old value is left unchanged.
+ *
+ * \sa DEF_NICK
  */
 bool irc_set_nick(irc *ctx, const char *nick);
 
