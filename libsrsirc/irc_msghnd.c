@@ -37,16 +37,25 @@ handle_001(irc *hnd, tokarr *msg, size_t nargs, bool logon)
 
 	lsi_ut_freearr(hnd->logonconv[0]);
 	hnd->logonconv[0] = lsi_ut_clonearr(msg);
-	lsi_com_strNcpy(hnd->mynick, (*msg)[2],sizeof hnd->mynick);
+	lsi_com_strNcpy(hnd->mynick, (*msg)[2], sizeof hnd->mynick);
+
+
+	// XXX this shouldn't be required.  Isn't the first argument of a
+	// numeric message *always* just our nick anyway?
 	char *tmp;
 	if ((tmp = strchr(hnd->mynick, '@')))
 		*tmp = '\0';
 	if ((tmp = strchr(hnd->mynick, '!')))
 		*tmp = '\0';
 
+	// XXX this is probably not required either because
+	// we do this for 004 already, and if we don't see any 004 (does any
+	// server actually do this?) irc_connect() will fail in the first place.
+	// and what about `myhost`, anyway?
 	lsi_com_strNcpy(hnd->umodes, DEF_UMODES, sizeof hnd->umodes);
 	lsi_com_strNcpy(hnd->cmodes, DEF_CMODES, sizeof hnd->cmodes);
 	hnd->ver[0] = '\0';
+
 	hnd->service = false;
 
 	return 0;
@@ -78,6 +87,7 @@ handle_004(irc *hnd, tokarr *msg, size_t nargs, bool logon)
 
 	lsi_ut_freearr(hnd->logonconv[3]);
 	hnd->logonconv[3] = lsi_ut_clonearr(msg);
+
 	lsi_com_strNcpy(hnd->myhost, (*msg)[3],sizeof hnd->myhost);
 	lsi_com_strNcpy(hnd->umodes, (*msg)[5], sizeof hnd->umodes);
 	lsi_com_strNcpy(hnd->cmodes, (*msg)[6], sizeof hnd->cmodes);
@@ -92,14 +102,18 @@ handle_PING(irc *hnd, tokarr *msg, size_t nargs, bool logon)
 	if (nargs < 3)
 		return PROTO_ERR;
 
+	/* We only handle PINGs at logon. It's the user's job afterwards. */
 	if (!logon)
 		return 0;
 
 	char buf[256];
 	snprintf(buf, sizeof buf, "PONG :%s\r\n", (*msg)[2]);
+
 	return lsi_conn_write(hnd->con, buf) ? 0 : IO_ERR;
 }
 
+/* This handles 432, 433, 436 and 437 all of which signal us that
+ * we can't have the nickname we wanted */
 static uint8_t
 handle_XXX(irc *hnd, tokarr *msg, size_t nargs, bool logon)
 {
@@ -126,6 +140,8 @@ handle_464(irc *hnd, tokarr *msg, size_t nargs, bool logon)
 	return AUTH_ERR;
 }
 
+/* Successful service logon.  I guess we don't get to see a 004, but haven't
+ * really tried this yet */
 static uint8_t
 handle_383(irc *hnd, tokarr *msg, size_t nargs, bool logon)
 {
@@ -184,7 +200,8 @@ handle_ERROR(irc *hnd, tokarr *msg, size_t nargs, bool logon)
 	free(hnd->lasterr);
 	hnd->lasterr = lsi_b_strdup((*msg)[2] ? (*msg)[2] : "");
 	W("sever said ERROR: '%s'", (*msg)[2]);
-	return 0; /* not strictly a case for CANT_PROCEED */
+	return 0; /* not strictly a case for CANT_PROCEED.  We certainly could
+	           * proceed, it's the server that doesn't seem willing to */
 }
 
 static uint8_t
@@ -301,7 +318,10 @@ handle_005(irc *hnd, tokarr *msg, size_t nargs, bool logon)
 			return ret;
 	}
 
-	if (hnd->tracking && !hnd->tracking_enab && have_casemap) {
+	if (have_casemap && hnd->tracking && !hnd->tracking_enab) {
+		/* Now that we know the casemapping used by the server, we
+		 * can enable tracking if it was originally (before connecting)
+		 * asked for */
 		if (!lsi_trk_init(hnd))
 			E("failed to enable tracking");
 		else {
@@ -319,6 +339,10 @@ lsi_imh_regall(irc *hnd, bool dumb)
 {
 	bool fail = false;
 	if (!dumb) {
+		/* In dumb mode, we don't care about the numerics telling us
+		 * that we can't have the nick we wanted; we don't reply to
+		 * PING and we also don't pay attention to 464 (Wrong server
+		 * password).  This is all left to the user */
 		fail = fail || !lsi_msg_reghnd(hnd, "PING", handle_PING, "irc");
 		fail = fail || !lsi_msg_reghnd(hnd, "432", handle_XXX, "irc");
 		fail = fail || !lsi_msg_reghnd(hnd, "433", handle_XXX, "irc");
