@@ -181,7 +181,7 @@ void lsi_ut_mut_nick(char *nick, size_t nick_sz);
  *          addition of channel tracking, since that can be used to keep
  *          track of the mode changes for us.
  */
-char **lsi_ut_parse_MODE(irc *h, tokarr *msg, size_t *num, bool is324);
+char **lsi_ut_parse_MODE(irc *ctx, tokarr *msg, size_t *num, bool is324);
 
 /** \brief Determine class of a channel mode
  * \param c   The channel mode letter (b, n, etc) to classify
@@ -190,7 +190,7 @@ char **lsi_ut_parse_MODE(irc *h, tokarr *msg, size_t *num, bool is324);
 	      CHANMODE_CLASS_C, CHANMODE_CLASS_D constants is returned.
 	      Otherwise, we return 0.
  */
-int lsi_ut_classify_chanmode(irc *h, char c);
+int lsi_ut_classify_chanmode(irc *ctx, char c);
 
 /** \brief deep-copy a tokarr (usually containing a tokenized irc msg)
  * \param arr   pointer to the tokarr to clone
