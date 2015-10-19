@@ -16,57 +16,165 @@
 
 /** @file
  * \defgroup extif Extended interface provided by irc_ext.h
+ *
+ * \brief This is the extended interface complementing the basic one
+ *        to make accessible the rest of libsrsirc's core functionality.
  * \addtogroup extif
  *  @{
  */
 
 
-/** \brief Tell who the ircd claimed to be in the 004 message.
- * \return Whoever the server pretends to be in 004.  Typically, a FQDN. */
+/** \brief Tell who the IRC server claims to be.
+ *
+ * The IRC server advertises its own hostname (or is supposed to, anyway)
+ * as part of the 004 message, which is a part of the logon conversation. \n
+ * This function can be used to retrieve that information.  Note that servers
+ * might lie about it; it need not be the hostname set with irc_set_server(),
+ * so don't rely on this information.
+ *
+ * \param ctx   IRC context as obtained by irc_init()
+ *
+ * \return A pointer to the server's self-advertised hostname. \n
+ *         The pointer is guaranteed to be valid until the next time
+ *         irc_connect() is called.\n
+ *         This function can be called even after we disconnected; it will then
+ *         return whatever it would have returned while the connection was still
+ *         alive.
+ *
+ * When used before the *first* call to irc_connect(), the returned pointer
+ * will point to an empty string.
+ *
+ * \sa irc_set_server(), irc_logonconv()
+ */
 const char *irc_myhost(irc *ctx);
 
-/** \brief Tell what "case mapping" the server advertised in 005
- * \return One of CMAP_* constants; CMAP_RFC1459 if there was no 005
+/** \brief Tell how the IRC server maps lowercase to uppercase characters and
+ *         vice-versa.
  *
- * \sa CMAP_ASCII, CMAP_RFC1459, CMAP_STRICT_RFC1459
+ * Different IRC servers may have different ideas about what characters are
+ * considered alternative-case variants of other characters.
+ *
+ * In particular, there are three different conventions, all of which have
+ * in common that `a-z` are considered the lowercase equivalents of `A-Z`. \n
+ * -- The convention called `RFC1459` additionally specifies that
+ * the characters `]` and `[` and `\` are the lowercase equivalents of `}` and
+ * `{` and `|`, respectively. \n
+ * -- The convention called `STRICT_RFC1459` additionally specifies that
+ * the characters `]` and `[` and `\` and `~` are the lowercase equivalents of
+ * `}` and `{` and `|` and `^`, respectively. \n
+ * -- The convention called ASCII, does not specify any additional nonsense.
+ *
+ * This information is supplied by the server as part of the (non-standard but
+ * almost universally implemented) 005 ISUPPORT message, which libsrsirc does
+ * NOT consider part of the logon conversation.  As long as no 005 message was
+ * seen, this function will return CMAP_RFC1459.  As soon as the 005 is
+ * encountered, the return value of this function will change to reflect the
+ * information provided therein.
+ *
+ * Casemapping information is required to reliably ascertain equivalence of
+ * non-identical nicknames.  A number of utility functions will depend on
+ * being told the correct case mapping.
+ *
+ * \return One of CMAP_* constants; CMAP_RFC1459 if there was no 005 (yet)
+ *
+ * \sa CMAP_ASCII, CMAP_RFC1459, CMAP_STRICT_RFC1459, lsi_ut_istrcmp(),
+ * lsi_ut_tolower(), lsi_ut_casemap_nam()
  */
 int irc_casemap(irc *ctx);
 
-/** \brief Tell whether or not we're a service
- * \return True if we are a service, false if we are a normal client */
+/** \brief Tell whether or not we're a service (as opposed to a user).
+ *
+ * IRC connections come in two flavors -- services and users.
+ * If irc_set_service_connect() was used to express the wish to connect as a
+ * service rather than as a user, a successful logon will (behind the scenes)
+ * involve a 383 message that tells us that we are, in fact, a service.
+ *
+ * This function determines whether or not that happened.
+ *
+ * \return true if we are a service, false if we are a user.
+ */
 bool irc_service(irc *ctx);
 
-/** \brief Tell the (as per 004) supported user modes
- * \return A string of supported mode chars, e.g. "iswo". */
+/** \brief Determine the available user modes.
+ *
+ * Different IRC servers may support different user modes. The 004 message,
+ * which is part of the logon conversation, includes a field that enumerates the
+ * available user modes. \n
+ * This function can be used to retrieve that information.
+ *
+ * \return A string of supported mode chars, e.g. "iswo".
+ */
 const char *irc_umodes(irc *ctx);
 
-/** \brief Tell the (as per 004) supported channel modes
+/** \brief Lie about the available channel modes
  *
- * As of widespread adoption of the 005 message, the information returned
- * by this function is likely *wrong*.  Use irc_005chanmodes().
+ * Different IRC servers may support different channel modes modes. \n
+ * Historically, the 004 message was used to specify the channel modes
+ * available, however, this feature has been de-facto obsoleted by the
+ * `CHANMODE`-attribute of the 005 ISUPPORT message. \n
  *
- * \return A string similar to irc_umodes() (but see also irc_005chanmodes()) */
+ * For completeness, and to deal with the handfull of servers that still don't
+ * use 005 ISUPPORT, this function is provided to retrieve the per-004 available
+ * channel modes. \n
+ *
+ * On servers that do support 005, the string returned by this function ranges
+ * from "reasonably accurate" to "complete bullshit".
+ *
+ * Tl;DR: Do not use this function. Use irc_005chanmodes() instead.
+ *
+ * \return A string of channel modes that may or may not exist (e.g. "bnlkt")
+ * \sa irc_005chanmodes()
+ */
 const char *irc_cmodes(irc *ctx);
 
-/** \brief Tell what ircd version the ircd advertised in 004
- * \return A ircd-specific version string from the 004 message */
+/** \brief Tell what ircd version the IRC server claims to run.
+ *
+ * The 004 message, which is part of the logon conversation, includes a field
+ * that describes the ircd software running the server.
+ *
+ * This function can be used to retrieve that information.
+ * \return A ircd-specific version string (e.g. "u2.10.12.10+snircd(1.3.4a)")
+ */
 const char *irc_version(irc *ctx);
 
-/** \brief Tell the last received ERROR message
- * \return The argument of the last received ERROR message, or NULL if there
- *         was none so far. */
+/** \brief Tell what the last received ERROR message said.
+ *
+ * When an IRC server has a problem with us, it will typically send an ERROR
+ * message describing what's going on, before disconnecting us.
+ *
+ * Whenever we receive an ERROR message, we store its argument and make it
+ * available through this function for the user to inspect.
+ *
+ * \return The argument of the last received ERROR message, or NULL if we
+ *         haven't received any since the last call to irc_connect().
+ */
 const char *irc_lasterror(irc *ctx);
 
-/** \brief Tell the 'ban reason' the server MIGHT have told us w/ 465
+/** \brief Tell why we are banned, if the server was polite enough to let us
+ *         know.
  *
- * Sometimes, ircds tell us why/that we are banned using the 465 message.
+ * Sometimes, ircds tell us why/that we are banned using the 465 message, before
+ * getting rid of us.  If we see such a message, we store its argument and make
+ * it available through this function for the user to inspect.
  *
- * \return The argument of the last received 465 message, or NULL if there was
- *         none so far. */
+ * \return The argument of the last received 465 message, or NULL if we haven't
+ *         received any since the last call to irc_connect().
+ * \sa irc_banned()
+ */
 const char *irc_banmsg(irc *ctx);
 
-/** \brief Tell whether the server told us w/ a 465 that we're banned
- * \return true if a 465 has been seen. */
+/** \brief Determine whether we are banned, if the server was polite enough to
+ *         let us know.
+ *
+ * Sometimes, ircds tell us why/that we are banned using the 465 message, before
+ * getting rid of us.  Seeing such a message will cause this function to start
+ * returning true.
+ *
+ * \return true if we have seen a 465 message telling us that we're banned,
+ *         false otherwise (which need not mean that we are *not* banned; many
+ *         servers don't bother sending 465.
+ * \sa irc_banmsg()
+ */
 bool irc_banned(irc *ctx);
 
 /** \brief Deprecated.  Please disregard.
