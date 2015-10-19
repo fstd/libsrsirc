@@ -340,7 +340,7 @@ bool irc_set_pass(irc *ctx, const char *srvpass);
 /** \brief set IRC 'user name' (not the same as nickname).
  *
  * The 'username' is the middle part of an IRC identity
- * (`nickname!username\@host`) (see also doc/terminology.txt).
+ * (`nickname!username@host`) (see also doc/terminology.txt).
  *
  * This setting will take effect not before the next call to irc_connect().
  *
@@ -396,7 +396,6 @@ bool irc_set_fname(irc *ctx, const char *fname);
  * \return true on success, false on failure (which means we're out of memory)
  *
  * In case of failure, the old value is left unchanged.
- *
  * \sa DEF_NICK
  */
 bool irc_set_nick(irc *ctx, const char *nick);

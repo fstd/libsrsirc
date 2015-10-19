@@ -14,60 +14,6 @@
 #include <libsrsirc/irc.h>
 
 
-/* Overview:
- *
- * const char *irc_myhost(irc *ctx);
- * int irc_casemap(irc *ctx);
- * bool irc_service(irc *ctx);
- * const char *irc_umodes(irc *ctx);
- * const char *irc_cmodes(irc *ctx);
- * const char *irc_version(irc *ctx);
- * const char *irc_lasterror(irc *ctx);
- * const char *irc_banmsg(irc *ctx);
- * bool irc_banned(irc *ctx);
- * bool irc_colon_trail(irc *ctx);
- * int irc_sockfd(irc *ctx);
- * tokarr *(*irc_logonconv(irc *ctx))[4];
- * const char *irc_005chanmodes(irc *ctx, size_t mclass);
- * const char *irc_005modepfx(irc *ctx, bool symbols);
- *
- * void irc_regcb_conread(irc *ctx, fp_con_read cb, void *tag);
- * void irc_regcb_mutnick(irc *ctx, fp_mut_nick mn);
- *
- * bool irc_set_ssl(irc *ctx, bool on);
- * void irc_set_connect_timeout(irc *ctx, uint64_t soft, uint64_t hard);
- * bool irc_set_px(irc *ctx, const char *host, uint16_t port, int ptype);
- * void irc_set_conflags(irc *ctx, uint8_t flags);
- * void irc_set_service_connect(irc *ctx, bool enabled);
- * bool irc_set_service_dist(irc *ctx, const char *dist);
- * bool irc_set_service_type(irc *ctx, long type);
- * bool irc_set_service_info(irc *ctx, const char *info);
- * bool irc_set_track(irc *ctx, bool on);
- *
- * const char *irc_get_host(irc *ctx);
- * uint16_t irc_get_port(irc *ctx);
- * const char *irc_get_px_host(irc *ctx);
- * uint16_t irc_get_px_port(irc *ctx);
- * int irc_get_px_type(irc *ctx);
- * const char *irc_get_pass(irc *ctx);
- * const char *irc_get_uname(irc *ctx);
- * const char *irc_get_fname(irc *ctx);
- * uint8_t irc_get_conflags(irc *ctx);
- * const char *irc_get_nick(irc *ctx);
- * bool irc_get_ssl(irc *ctx);
- * bool irc_get_service_connect(irc *ctx);
- * const char *irc_get_service_dist(irc *ctx);
- * long irc_get_service_type(irc *ctx);
- * const char *irc_get_service_info(irc *ctx);
- * bool irc_tracking_enab(irc *ctx); //tell if tracking is (actually) enabled
- * bool irc_get_dumb(irc *ctx);
- * void irc_set_dumb(irc *ctx, bool dumbmode);
- * bool irc_can_read(irc *ctx);
- * bool irc_reg_msghnd(irc *ctx, const char *cmd, uhnd_fn hndfn, bool pre);
- * bool irc_eof(irc *ctx);
- */
-
-
 /** @file
  * \defgroup extif Extended interface provided by irc_ext.h
  * \addtogroup extif
