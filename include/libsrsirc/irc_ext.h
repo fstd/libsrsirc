@@ -198,27 +198,34 @@ bool irc_colon_trail(irc *ctx);
  */
 int irc_sockfd(irc *ctx);
 
-/** \brief Give access to the "log on conversation" (messages 001-004)
+/** \brief Give access to the "logon conversation" (see doc/terminology.txt).
  *
- * The messages 001-004 are consumed in the process of logging on to IRC;
- * this function provides access to them after logon is complete, should the
- * need arise.
+ * On a successful logon to IRC, the server is required to send the 001, 002,
+ * 003 and 004 message.  Since libsrsirc handles the logon itself, those
+ * messages are consumed before irc_connect() even returns, and hence will never
+ * be returned by irc_read().
  *
- * For a live view on the logon conversation, register a `conread`-handler
- * instead using irc_regcb_conread().
+ * This function provides access to those messages after logon is complete,
+ * should the need arise.
+ *
+ * Note that a typical logon conversation might include other non-standard
+ * messages in addition to 001-004, these are *not* accessible through this
+ * function. If you need those, use irc_regcb_conread() to register a `conread`
+ * handler.
  *
  * The return type `tokarr *(*)[4]` is a bit twisted (see below).
  *
- * \return A pointer to an array of 4 elements, each pointing to a tokarr.
+ * \return A pointer to an array of 4 pointers, each pointing to a tokarr.
  *         (i.e. one for each of 001, 002, 003, 004).
  * \sa tokarr, irc_regcb_conread(), fp_con_read
  */
 tokarr *(*irc_logonconv(irc *ctx))[4];
 
-/** \brief Tell what channel modes the ircd claims to support as per 005
+/** \brief Tell what channel modes the ircd claims to support.
  *
- * 005 is a non-standard but almost universally implemented message through
- * which and ircd advertises features it supports or characteristics it has.
+ * 005 ISUPPORT is a non-standard but almost universally implemented message
+ * through which an ircd advertises features it supports or characteristics it
+ * has.
  *
  * 005 specifies four classes of channel modes (see description of
  * CHANMODE_CLASS_A, CHANMODE_CLASS_B, CHANMODE_CLASS_C, CHANMODE_CLASS_D).
@@ -226,44 +233,71 @@ tokarr *(*irc_logonconv(irc *ctx))[4];
  * This function can be used to query the supported channel modes of a given
  * class
  *
+ * For the rare case that an IRC server does *not* implement the 005 ISUPPORT,
+ * use irc_cmodes() instead.
+ *
+ * Before the 005 message is seen (not part of the logon conversation, but
+ * typically sent as the first message after a successful logon), this function
+ * will return the default channel modes for a given class.
+ *
  * \param mclass: class of channel modes to return (see above)
  * \return A pointer to a string consisting of the supported channel modes
  *     for the given class
- * \sa CHANMODE_CLASS_A, CHANMODE_CLASS_B, CHANMODE_CLASS_C, CHANMODE_CLASS_D */
+ * \sa CHANMODE_CLASS_A, CHANMODE_CLASS_B, CHANMODE_CLASS_C, CHANMODE_CLASS_D,
+ *     irc_cmodes()
+ */
 const char *irc_005chanmodes(irc *ctx, size_t mclass);
 
-/** \brief Tell what channel mode prefixes the ircd claims to support as per 005
+/** \brief Tell what channel mode prefixes the ircd claims to support.
  *
  * 005 is a non-standard but almost universally implemented message through
  * which and ircd advertises features it supports or characteristics it has.
  *
  * Channel mode prefixes come in two flavors, letters (o, v) and symbols (@, +)
- * (for the default ops and voice, respectively.)
+ * (for the default ops and voice, respectively).
  *
  * This function can be used to determine what channel mode prefixes the
  * ircd supports.
  *
- * \param symbols   If true, use symbols, otherwise use letters
+ * For the rare case that an IRC server does *not* implement the 005 ISUPPORT,
+ * as well as before the 005 message is seen firstly, the default mode prefixes
+ * are assumed to be "ov" (letters) and "@+" (symbols), respectively.
+ *
+ * \param symbols   If true, return symbols, otherwise return letters
  * \return A string of available mode symbols or letters, in descending order
- *         of power.  For example, "@+" or "ov". */
+ *         of power.  For example, "@+" or "ov".
+ */
 const char *irc_005modepfx(irc *ctx, bool symbols);
 
 /** \brief Register callback for protocol messages that are read at logon time
  *
+ * If for some reason the messages received at logon time (while irc_connect()
+ * is executing) are of interest to the user, a callback can be registered using
+ * this function. It will be called for every incoming protocol message received
+ * while logging on.
+ *
  * \param cb   Function pointer to the callback function to be registered
  * \param tag   Arbitrary userdata that is passed back to the callback as-is
  *
- * \sa uhnd_fn for semantics of the callback. */
+ * \sa fp_con_read for semantics of the callback.
+ */
 void irc_regcb_conread(irc *ctx, fp_con_read cb, void *tag);
 
 /** \brief Register a function to come up with an alternative nickname at logon
  *         time
  *
+ * If while logging on we realize that we cannot have the nickname we wanted,
+ * the callback registered through this function is called to come up with
+ * an alternative nickname.
+ *
+ * A default callback is provided which is probably okay for most cases.
+ *
  * \param mn   Function pointer to the callback function to be registered.
  *             If NULL, the attempt to logon will be aborted if we can't have
  *             the nickname we want.
  *
- * A default callback is provided which is probably okay for most cases. */
+ * \sa fp_mut_nick for semantics of the callback.
+ */
 void irc_regcb_mutnick(irc *ctx, fp_mut_nick mn);
 
 /** \brief Enable or disable SSL
@@ -276,7 +310,8 @@ void irc_regcb_mutnick(irc *ctx, fp_mut_nick mn);
  * This setting will take effect not before the next call to irc_connect().
  *
  * \return true if the request could be fulfilled. *Be sure to check this*,
- *         to avoid accidentally doing plaintext when you meant to use SSL */
+ *         to avoid accidentally doing plaintext when you meant to use SSL
+ */
 bool irc_set_ssl(irc *ctx, bool on);
 
 /** \brief Set timeout(s) for irc_connect()
@@ -302,9 +337,8 @@ bool irc_set_ssl(irc *ctx, bool on);
  * addresses to be tried is known.
  *
  * For example, suppose the hard timeout is *10* seconds, the soft timeout is
- * *1* second, and our irc server resolved to *4* addresses.
- *
- * This will cause the soft timeout to be raised to 2.5 seconds, so that
+ * *1* second, and our irc server resolved to *4* addresses: \n
+ * This would cause the soft timeout to be raised to 2.5 seconds, so that
  * each of the 4 addresses is given the maximum possible time to react while
  * staying within the bounds of the hard limit.
  *
@@ -312,7 +346,8 @@ bool irc_set_ssl(irc *ctx, bool on);
  * \param hard   The hard limit, in microseconds (see above)
  *
  * A timeout of 0 means no timeout (but still, a hard timeout >0 overrules
- * a soft timeout of 0) */
+ * a soft timeout of 0)
+ */
 void irc_set_connect_timeout(irc *ctx, uint64_t soft, uint64_t hard);
 
 /** \brief Set proxy server to use
@@ -324,7 +359,9 @@ void irc_set_connect_timeout(irc *ctx, uint64_t soft, uint64_t hard);
  * \param host   Proxy host, may be an IPv4 or IPv6 address or a DNS name
  * \param port   Proxy port (1 <= `port' <= 65535)
  * \param ptype   Proxy type, one of IRCPX_HTTP, IRCPX_SOCKS4, IRCPX_SOCKS5.
- * \return true on success, false on failure (out of memory, illegal args) */
+ * \return true on success, false on failure (out of memory, illegal args)
+ * \sa IRCPX_HTTP, IRCPX_SOCKS4, IRCPX_SOCKS5
+ */
 bool irc_set_px(irc *ctx, const char *host, uint16_t port, int ptype);
 
 /** \brief Set flags for the USER message at log on time.
