@@ -216,9 +216,9 @@ bool irc_online(irc *ctx);
  *
  * Usage example:
  * \code
- *   tokarr tok;
+ *   tokarr msg;
  *
- *   int r = irc_read(ctx, &tok, 1000000); // 1 second timeout
+ *   int r = irc_read(ctx, &msg, 1000000); // 1 second timeout
  *
  *   if (r == -1) {
  *       // ...read failure, we're now disconnected...
@@ -226,8 +226,8 @@ bool irc_online(irc *ctx);
  *       // ...timeout, nothing to read...
  *   } else {
  *       // Okay, we have read a message.  If it is a PING, respond with a PONG.
- *       if (strcmp(tok[1], "PING") == 0)        // tok[1] is always the command
- *           irc_printf(ctx, "PONG %s", tok[2]); // tok[2] is the first argument
+ *       if (strcmp(msg[1], "PING") == 0)        // msg[1] is always the command
+ *           irc_printf(ctx, "PONG %s", msg[2]); // msg[2] is the first argument
  *   }
  * \endcode
  *
