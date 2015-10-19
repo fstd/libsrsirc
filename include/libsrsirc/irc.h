@@ -66,8 +66,15 @@
  *
  *         if (strcmp(msg[1], "PING") == 0)         // msg[1] is always the cmd
  *             irc_printf(ictx, "PONG %s", msg[2]); // msg[2] is the first arg
- *         else if (strcmp(msg[1], "PRIVMSG") == 0)
+ *         else if (strcmp(msg[1], "PRIVMSG") == 0 && msg[2][0] == '#') // (*)
  *             irc_printf(ictx, "PRIVMSG %s :%s", msg[2], msg[3]);
+ *
+ *         // (*) Note that the line marked with (*) is NOT the right way to
+ *         //     check whether the target is a channel (as opposed to a
+ *         //     nickname - ours - in which case this would be a PM.
+ *         //     However, it should suffice for the purposes of this example.
+ *         //     The correct way would be to use irc_005chanmodes() to figure
+ *         //     out whether tok[2][0] is a known channel type.
  *     }
  *
  *     fprintf(stderr, "Our connection is rekt.\n");
