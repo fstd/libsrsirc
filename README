@@ -4,38 +4,62 @@ Written in portable standard C (C99)
 
 Interface documentation: http://penenen.de/libsrsirc/doxygen/modules.html
 
+
 Some highlights:
-  - Lightweight: libsrsirc is small and uses very little resources; most of the
-                 protcol handling is essentially zero-copy.  It does not try to
-		 offer every conceivable feature an IRC lib could possibly have,
-		 if the costs would outweight the gains.
-                 This allows creating thousands of independent instances.
+----------------
+  - Lightweight:  libsrsirc is small and uses very little resources; most of
+                  the protcol handling is essentially zero-copy.  It does not
+                  try to offer every conceivable feature an IRC lib could
+                  possibly have, if the costs would outweight the gains.
+                  This allows creating thousands of independent instances.
 
-  - Portable:    libsrsirc is written in portable standard C, with all
-                 platform-specifics cleanly separated from the core library.
-                 It compiles and works on *BSD, Linux, Mac OS and even Windows.
-		 Porting it to new platforms is relatively straightforward.
+  - Portable:     libsrsirc is written in portable standard C, with all
+                  platform-specifics cleanly separated from the core library.
+                  It compiles and works on BSD, Linux, Mac OS and even Windows.
+                  Porting it to new platforms is relatively straightforward.
 
-  - Robust:      libsrsirc is tested against a huge variety of different IRC
-                 networks, and while it is certainly possible for a malicious
-		 IRC server to thoroughly confuse the lib, it will not cause
-		 crashes or security problems.  If it does, file a bug report
-		 which will be dealt with promptly.
-		 It will even handle out-of-memory situations gracefully.
+  - Robust:       libsrsirc is tested against a huge variety of different IRC
+                  networks, and while it is certainly possible for a malicious
+                  IRC server to thoroughly confuse the lib, it will not cause
+                  crashes or security problems.  If it does, file a bug report
+                  which will be dealt with promptly.
+                  It will even handle out-of-memory situations gracefully.
 
-  - Debuggable:  libsrsirc comes with a lot of built-in debug statements, which
-                 can be controlled using an environment variable.
-		 This allows troubleshooting even if using a dedicated debugger
-		 isn't feasible for some reason.
+  - Debuggable:   libsrsirc comes with a lot of built-in debug statements,
+                  which can be controlled using an environment variable.
+                  This allows troubleshooting even if using a dedicated
+                  debugger isn't feasible for some reason.
 
-  - Useful:      libsrsirc should be a decent foundation to build all sort of
-                 IRC-related software upon, from IRC support for a specific
-		 use case in a specific application, to dedicated IRC software
-		 like bots, bouncers, clients.
-		 It comes with 'icat', which implements a netcat-like utility
-		 for writing and reading messages to/from IRC channels.
+  - Useful:       libsrsirc should be a decent foundation to build all sort of
+                  IRC-related software upon, from IRC support for a specific
+                  use case in a specific application, to dedicated IRC software
+                  like bots, bouncers, clients.
+                  It comes with 'icat', which implements a netcat-like utility
+                  for writing and reading messages to/from IRC channels.
+
+
+What libsrsirc does NOT do:
+---------------------------
+  - Servers:      libsrsirc can NOT act as an IRC server (currently, anyway,
+                  but it will probably stay that way).  While certain functions
+                  might still be useful to help implementing IRC servers
+                  (for example the protocol parser, the casemapping-aware
+                  string comparison and the user and channel maps), the
+                  overall design is clearly that of a client library.
+
+  - Transactions: libsrsirc will NOT attempt to keep track of what
+                  client-issued command a given server response refers to.
+                  Doing this involves heuristical approaches because most ircds
+                  aren't exactly pedantic about following the standard -- and
+                  even if they are, there's two standards.
+                  Since libsrsirc cannot possibly know what non-standard
+                  response codes a server could return, it will leave
+                  correlating commands and responses - fortunately rarely
+                  needed for IRC software - to the user.
+
 
 Quickstart for libsrsirc users:
+-------------------------------
   - Get a release tarball off the "tar" branch, DO NOT use the
     github-internal "release" feature.
     I.e. use https://github.com/fstd/libsrsirc/tree/tar
@@ -47,6 +71,7 @@ Quickstart for libsrsirc users:
 
 
 Quickstart for libsrsirc developers:
+------------------------------------
   - Clone the repo
 
   - Run ./autogen.sh to setup the autohell.
