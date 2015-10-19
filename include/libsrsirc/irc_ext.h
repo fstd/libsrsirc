@@ -269,7 +269,7 @@ const char *irc_005chanmodes(irc *ctx, size_t mclass);
  */
 const char *irc_005modepfx(irc *ctx, bool symbols);
 
-/** \brief Register callback for protocol messages that are read at logon time
+/** \brief Register callback for protocol messages that are read at logon time.
  *
  * If for some reason the messages received at logon time (while irc_connect()
  * is executing) are of interest to the user, a callback can be registered using
@@ -284,7 +284,7 @@ const char *irc_005modepfx(irc *ctx, bool symbols);
 void irc_regcb_conread(irc *ctx, fp_con_read cb, void *tag);
 
 /** \brief Register a function to come up with an alternative nickname at logon
- *         time
+ *         time.
  *
  * If while logging on we realize that we cannot have the nickname we wanted,
  * the callback registered through this function is called to come up with
