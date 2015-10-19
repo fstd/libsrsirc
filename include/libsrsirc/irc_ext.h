@@ -204,10 +204,15 @@ int irc_sockfd(irc *ctx);
  * this function provides access to them after logon is complete, should the
  * need arise.
  *
- * The return type is a bit twisted.
+ * For a live view on the logon conversation, register a `conread`-handler
+ * instead using irc_regcb_conread().
+ *
+ * The return type `tokarr *(*)[4]` is a bit twisted (see below).
  *
  * \return A pointer to an array of 4 elements, each pointing to a tokarr.
- *         (i.e. one for each of 001, 002, 003, 004). */
+ *         (i.e. one for each of 001, 002, 003, 004).
+ * \sa tokarr, irc_regcb_conread(), fp_con_read
+ */
 tokarr *(*irc_logonconv(irc *ctx))[4];
 
 /** \brief Tell what channel modes the ircd claims to support as per 005
@@ -450,7 +455,7 @@ const char *irc_get_service_info(irc *ctx);
  * \return True if tracking is enabled and active */
 bool irc_tracking_enab(irc *ctx); //tell if tracking is (actually) enabled
 
-/** brief Set or clear "dumb mode"
+/** \brief Set or clear "dumb mode"
  *
  * In dumb mode, we pretty much leave everything apart from the protocol
  * parsing to the user.  That is, irc_connect() will return once the TCP
@@ -461,13 +466,13 @@ bool irc_tracking_enab(irc *ctx); //tell if tracking is (actually) enabled
  */ //XXX is at least the nickname tracked?
 void irc_set_dumb(irc *ctx, bool dumbmode);
 
-/** brief Tell whether we're operating in "dumb mode"
+/** \brief Tell whether we're operating in "dumb mode"
  *
  * \return true if we're in dumb mode (see irc_set_dumb())
  */ //XXX is at least the nickname tracked?
 bool irc_get_dumb(irc *ctx);
 
-/** brief Tell whether our next attempt to irc_read() a message would block
+/** \brief Tell whether our next attempt to irc_read() a message would block
  *
  * This relies on the fact that ircds only ever send full lines, because the
  * assumption this function makes is that /if/ there is *some* data available
