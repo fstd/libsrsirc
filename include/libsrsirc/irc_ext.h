@@ -185,7 +185,8 @@ bool irc_banned(irc *ctx);
  * \return true if so.
  *
  * This is as useless as it sounds, don't use.  It was a hack, and it will
- * be removed in the near future. */
+ * be removed in the near future.
+ */
 bool irc_colon_trail(irc *ctx);
 
 /** \brief Deprecated.  Please disregard.
@@ -418,67 +419,83 @@ bool irc_set_service_info(irc *ctx, const char *info);
 bool irc_set_track(irc *ctx, bool on);
 
 /** \brief Tell the name or address of the IRC server we use or intend to use
- * \return The hostname-part of what was set using irc_set_server() */
+ * \return The hostname-part of what was set using irc_set_server()
+ * \sa irc_set_server()
+ */
 const char *irc_get_host(irc *ctx);
 
 /** \brief Tell the port of the IRC server we use or intend to use
- * \return The port-part of what was set using irc_set_server() */
+ * \return The port-part of what was set using irc_set_server()
+ */
 uint16_t irc_get_port(irc *ctx);
 
 /** \brief Tell the host of the proxy we use or intend to use
- * \return The hostname-part of what was set using irc_set_px() */
+ * \return The hostname-part of what was set using irc_set_px()
+ */
 const char *irc_get_px_host(irc *ctx);
 
 /** \brief Tell the port of the proxy we use or intend to use
- * \return The port-part of what was set using irc_set_px() */
+ * \return The port-part of what was set using irc_set_px()
+ */
 uint16_t irc_get_px_port(irc *ctx);
 
 /** \brief Tell the type of the proxy we use or intend to use
  *
  * \return The type-part of what was set using irc_set_px(),
  *         i.e. one of IRCPX_HTTP, IRCPX_SOCKS4, IRCPX_SOCKS5 or -1 for no
- *         proxy */
+ *         proxy
+ */
 int irc_get_px_type(irc *ctx);
 
 /** \brief Tell the password we may have set earlier by irc_set_pass()
- * \return The server password set by irc_set_pass(), or NULL if none */
+ * \return The server password set by irc_set_pass(), or NULL if none
+ */
 const char *irc_get_pass(irc *ctx);
 
 /** \brief Tell the 'user name' we will use on the next log on
- * \return The username set by irc_set_uname() */
+ * \return The username set by irc_set_uname()
+ */
 const char *irc_get_uname(irc *ctx);
 
 /** \brief Tell the 'full name' we will use on the next log on
- * \return The full name set by irc_set_fname() */
+ * \return The full name set by irc_set_fname()
+ */
 const char *irc_get_fname(irc *ctx);
 
 /** \brief Tell the USER flags we will use on the next log on
- * \return The flags set by irc_set_conflags() */
+ * \return The flags set by irc_set_conflags()
+ */
 uint8_t irc_get_conflags(irc *ctx);
 
 /** \brief Tell the nick we will use on the next log on
  * \return The nickname set by irc_set_nick().  *Not* necessarily the last
- *         nick we had before disconnecting, use irc_mynick() for that. */
+ *         nick we had before disconnecting, use irc_mynick() for that.
+ */
 const char *irc_get_nick(irc *ctx);
 
 /** \brief Tell whether or not we will use SSL for the next connection
- * \return True if we are going to use SSL on the next connection */
+ * \return True if we are going to use SSL on the next connection
+ */
 bool irc_get_ssl(irc *ctx);
 
 /** \brief Tell whether we'll next connect as a service
- * \return The value set by irc_set_service_connect() */
+ * \return The value set by irc_set_service_connect()
+ */
 bool irc_get_service_connect(irc *ctx);
 
 /** \brief Tell the 'dist' string we're going to use for the next service logon
- * \return The value set by irc_set_service_dist() */
+ * \return The value set by irc_set_service_dist()
+ */
 const char *irc_get_service_dist(irc *ctx);
 
 /** \brief Tell the type we're going to use for the next service logon
- * \return The value set by irc_set_service_type() */
+ * \return The value set by irc_set_service_type()
+ */
 long irc_get_service_type(irc *ctx);
 
 /** \brief Tell the 'info' string we're going to use for the next service logon
- * \return The value set by irc_set_service_info() */
+ * \return The value set by irc_set_service_info()
+ */
 const char *irc_get_service_info(irc *ctx);
 
 
@@ -489,7 +506,8 @@ const char *irc_get_service_info(irc *ctx);
  * messages received).  As soon as 005 CASEMAPPING is seen, this function will
  * start returning true to reflect that, provided that tracking was set to be
  * used by irc_set_track() *before* calling irc_connect().
- * \return True if tracking is enabled and active */
+ * \return True if tracking is enabled and active
+ */
 bool irc_tracking_enab(irc *ctx); //tell if tracking is (actually) enabled
 
 /** \brief Set or clear "dumb mode"
