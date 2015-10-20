@@ -36,10 +36,10 @@
  *
  * \return A pointer to the server's self-advertised hostname. \n
  *         The pointer is guaranteed to be valid until the next time
- *         irc_connect() is called.\n
- *         This function can be called even after we disconnected; it will then
- *         return whatever it would have returned while the connection was still
- *         alive.
+ *         irc_connect() is called.
+ *
+ * This function can be called even after we disconnected; it will then return
+ * whatever it would have returned while the connection was still alive.
  *
  * When used before the *first* call to irc_connect(), the returned pointer
  * will point to an empty string.
@@ -353,11 +353,13 @@ void irc_set_connect_timeout(irc *ctx, uint64_t soft, uint64_t hard);
 
 /** \brief Set proxy server to use
  *
- * libsrsirc supports redirecting the IRC connection through a proxy server
+ * libsrsirc supports redirecting the IRC connection through a proxy server.
  *
  * Supported proxy types are HTTP CONNECT, SOCKS4 and SOCKS5.
  *
- * \param host   Proxy host, may be an IPv4 or IPv6 address or a DNS name
+ * \param host   Proxy host, may be an IPv4 or IPv6 address or a DNS name. \n
+ *               Passing NULL will cause no proxy to be used.
+ *
  * \param port   Proxy port (1 <= `port' <= 65535)
  * \param ptype   Proxy type, one of IRCPX_HTTP, IRCPX_SOCKS4, IRCPX_SOCKS5.
  * \return true on success, false on failure (out of memory, illegal args)
@@ -375,29 +377,38 @@ bool irc_set_px(irc *ctx, const char *host, uint16_t port, int ptype);
  */
 void irc_set_conflags(irc *ctx, uint8_t flags);
 
-/** \brief Log on as service? if not, we're a normal client
+/** \brief Log on as service? if not, we're a normal client.
  *
  * This function can be used to tell libsrsirc that our next attempt to
- * irc_connect() should do a service logon, rather than a user logon.
+ * irc_connect() should perform a service logon, rather than a user logon.
  * This is pretty much untested.
  *
  * \param enabled   If true, we're trying to be a service.  If not, we're a user.
  */
 void irc_set_service_connect(irc *ctx, bool enabled);
 
-/** \brief Set the "distribution" string for service log on
+/** \brief Set the "distribution" string for service log on.
+ *
+ * The distribution is a wildcarded host mask that determines on which servers
+ * the service will be available.
+ *
  * \param dist   The dist string provided with a service logon
  * \return True if successful, false otherwise (which means we're out of memory)
  */
 bool irc_set_service_dist(irc *ctx, const char *dist);
 
-/** \brief Set the "service type" for service log on
+/** \brief Set the "service type" for service log on.
+ *
+ * According to RFC2812, this is currently reserved for future usage.
  * \param type   The service type identifier provided with a service logon
  * \return True.
  */
 bool irc_set_service_type(irc *ctx, long type);
 
-/** \brief Set the "service info" string for service log on
+/** \brief Set the "service info" string for service log on.
+ *
+ * This is a freetext string that describes the service.
+ *
  * \param info   The info string provided with a service logon
  * \return True if successful, false otherwise (which means we're out of memory)
  */
@@ -412,9 +423,19 @@ bool irc_set_service_info(irc *ctx, const char *info);
  * Therefore, tracking is disabled by default.  This function can be used to
  * enable it.
  *
+ * When tracking is enabled, the functions in the tracking interface
+ * (irc_track.h) are available to query information about channels and users.
+ *
+ * Note that tracking currently depends on the presence of a 005 ISUPPORT
+ * message. If irc_set_track() was used *before* connecting, tracking will
+ * be activated as soon as an 005 message (with a CASEMAPPING attribute) is
+ * encountered. irc_tracking_enab() can be used to tell whether tracking
+ * is actually active.
+ *
  * \param on   True to enable tracking, false to disable
  *
  * This setting will take effect not before the next call to irc_connect().
+ * \sa irc_tracking_enab(), irc_casemap(), irc_track.h
  */
 bool irc_set_track(irc *ctx, bool on);
 

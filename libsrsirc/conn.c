@@ -296,6 +296,15 @@ bool
 lsi_conn_set_px(iconn *ctx, const char *host, uint16_t port, int ptype)
 {
 	char *n = NULL;
+	if (!host) {
+		free(ctx->phost);
+		ctx->phost = NULL;
+		ctx->ptype = ptype;
+		ctx->pport = 0;
+		I("proxy disabled");
+		return true;
+	}
+
 	switch (ptype) {
 	case IRCPX_HTTP:
 	case IRCPX_SOCKS4:
