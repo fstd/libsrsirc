@@ -25,6 +25,11 @@ Some highlights:
                   which will be dealt with promptly.
                   It will even handle out-of-memory situations gracefully.
 
+  - Flexible:     libsrsirc supports IPv4 and IPv6.  It can optionally link
+                  against OpenSSL for secure IRC connections.
+                  Apart from that, support for connecting to IRC through
+                  HTTP (CONNECT), SOCKS4 and SOCKS5 proxy servers is provided.
+
   - Debuggable:   libsrsirc comes with a lot of built-in debug statements,
                   which can be controlled using an environment variable.
                   This allows troubleshooting even if using a dedicated
