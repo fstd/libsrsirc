@@ -1,15 +1,16 @@
 do libsrsirc's and icat's debug mechanisms collide/overlap?
 
-theres a bug (might be a security loophole) in ircio_read() in irc_io.c
-  this should be fuzz-tested
-
-a general code cleanup is overdue
-
-revise the autohell, i'm new to it and probably messed up
-  also config.h isn't used anywhere lol
-
 in dumb mode, should we handle 001-004 etc anyway?
 
 tracking only works with servers that use 005 CASEMAPPING.
 if skmap could rehash, tracking could be enabled
 before connecting and hence we wouldn't depend on 005
+
+accessor for all 005 attributes
+
+irc_cmodes -> irc_004chanmodes; then irc_cmodes dispatches to 004 or
+005 depending on whether 005 was there.  how to handle classes tho?
+
+mention SSL, proxies, ipv6 in README
+
+Convenience functions for the typical client-issued commands
