@@ -225,6 +225,46 @@ handle_NICK(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 }
 
 static uint8_t
+handle_MODE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
+{
+	if (nargs < 4)
+		return PROTO_ERR;
+
+	if (lsi_ut_istrcmp((*msg)[2], ctx->mynick, ctx->casemap) != 0)
+		return 0; // We track channel modes elsewhere
+
+	const char *p = (*msg)[3];
+	bool enab = true;
+	char c;
+	while ((c = *p++)) {
+		if (c == '+' || c == '-') {
+			enab = c == '+';
+			continue;
+		}
+		char *m = strchr(ctx->myumodes, c);
+		if (enab == !!m) {
+			W("user mode '%c' %s set ('%s')", c,
+			    enab?"already":"not", ctx->myumodes);
+			continue;
+		}
+
+		if (!enab) {
+			*m++ = '\0';
+			while (*m) {
+				m[-1] = *m;
+				*m++ = '\0';
+			}
+		} else {
+			char mch[] = {c, '\0'};
+			lsi_com_strNcat(ctx->myumodes, mch, sizeof ctx->myumodes);
+		}
+	}
+
+	return 0;
+}
+
+
+static uint8_t
 handle_005_CASEMAPPING(irc *ctx, const char *val)
 {
 	if (lsi_b_strcasecmp(val, "ascii") == 0)
@@ -353,6 +393,7 @@ lsi_imh_regall(irc *ctx, bool dumb)
 
 	fail = fail || !lsi_msg_reghnd(ctx, "NICK", handle_NICK, "irc");
 	fail = fail || !lsi_msg_reghnd(ctx, "ERROR", handle_ERROR, "irc");
+	fail = fail || !lsi_msg_reghnd(ctx, "MODE", handle_MODE, "irc");
 	fail = fail || !lsi_msg_reghnd(ctx, "001", handle_001, "irc");
 	fail = fail || !lsi_msg_reghnd(ctx, "002", handle_002, "irc");
 	fail = fail || !lsi_msg_reghnd(ctx, "003", handle_003, "irc");

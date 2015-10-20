@@ -445,42 +445,6 @@ h_MODE_chanmode(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 }
 
 static uint8_t
-h_MODE_usermode(irc *ctx, tokarr *msg, size_t nargs, bool logon)
-{
-	if (nargs < 4)
-		return PROTO_ERR;
-
-	const char *p = (*msg)[3];
-	bool enab = true;
-	char c;
-	while ((c = *p++)) {
-		if (c == '+' || c == '-') {
-			enab = c == '+';
-			continue;
-		}
-		char *m = strchr(ctx->myumodes, c);
-		if (enab == !!m) {
-			W("user mode '%c' %s set ('%s')", c,
-			    enab?"already":"not", ctx->myumodes);
-			continue;
-		}
-
-		if (!enab) {
-			*m++ = '\0';
-			while (*m) {
-				m[-1] = *m;
-				*m++ = '\0';
-			}
-		} else {
-			char mch[] = {c, '\0'};
-			lsi_com_strNcat(ctx->myumodes, mch, sizeof ctx->myumodes);
-		}
-	}
-
-	return 0;
-}
-
-static uint8_t
 h_MODE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 4)
@@ -488,8 +452,10 @@ h_MODE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 
 	if (strchr(ctx->m005chantypes, (*msg)[2][0]))
 		return h_MODE_chanmode(ctx, msg, nargs, logon);
-	else
-		return h_MODE_usermode(ctx, msg, nargs, logon);
+
+	/* user modes are already tracked */
+
+	return 0;
 }
 
 static uint8_t
