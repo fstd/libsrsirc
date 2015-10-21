@@ -36,5 +36,6 @@ bool lsi_conn_get_ssl(iconn *ctx);
 bool lsi_conn_colon_trail(iconn *ctx);
 int lsi_conn_sockfd(iconn *ctx);
 
+void irc_conn_dump(iconn *ctx);
 
 #endif /* LIBSRSIRC_ICONN_H */

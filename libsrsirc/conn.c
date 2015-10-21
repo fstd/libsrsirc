@@ -409,3 +409,22 @@ lsi_conn_sockfd(iconn *ctx)
 
 	return ctx->sh.sck;
 }
+
+void
+irc_conn_dump(iconn *ctx)
+{
+	N("--- connection context %p dump---", (void *)ctx);
+	N("host: '%s'", ctx->host);
+	N("port: %"PRIu16, ctx->port);
+	N("phost: '%s'", ctx->phost);
+	N("pport: %"PRIu16, ctx->pport);
+	N("ptype: %d (%s)", ctx->ptype, ctx->ptype == -1 ? "NONE" : lsi_px_typestr(ctx->ptype));
+	N("sh.sck: %d", ctx->sh.sck);
+	N("sh.shnd: %p", (void *)ctx->sh.shnd);
+	N("state: %d", ctx->state);
+	N("eof: %d", ctx->eof);
+	N("colon_trail: %d", ctx->colon_trail);
+	N("ssl: %d", ctx->ssl);
+	N("read buffer: %zu bytes in use", (size_t)(ctx->rctx.eptr - ctx->rctx.wptr));
+	N("--- end of connection context dump ---");
+}

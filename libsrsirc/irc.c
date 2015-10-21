@@ -400,6 +400,7 @@ void
 irc_dump(irc *ctx)
 {
 	N("--- IRC context %p dump---", (void *)ctx);
+	irc_conn_dump(ctx->con);
 	N("mynick: '%s'", ctx->mynick);
 	N("myhost: '%s'", ctx->myhost);
 	N("service: %d", ctx->service);
@@ -441,11 +442,12 @@ irc_dump(irc *ctx)
 		lsi_ut_sndumpmsg(line, sizeof line, NULL, ctx->logonconv[i]),
 		N("logonconv[%zu]: '%s'", i, line);
 	}
+	lsi_skmap_dump(ctx->m005attrs, printstr);
 	//skmap *chans
 	//skmap *users
 	//fp_con_read cb_con_read
 	//fp_mut_nick cb_mut_nick
 	//struct msghnd msghnds[64]
 	//struct iconn_s *con
-	N("--- end of dump ---");
+	N("--- end of IRC context dump ---");
 }
