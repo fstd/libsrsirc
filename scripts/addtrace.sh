@@ -14,7 +14,10 @@ find tracer -name 'tracer@*' | while read -r f; do
 
 	lno="$(grep -nh -A4 "^$func(" "$file" | grep '^[0-9][0-9]*-{' | cut -d - -f 1)"
 
-	[ -z "$lno" ] && break
+	if [ -z "$lno" ]; then
+		echo "Not found: '$func' in '$file'" >&2
+		continue
+	fi
 
 	echo "File: '$file', Func: '$func', Line: $lno" >&2
 	cat "$file" | sed -e "${lno}q" | sed '$d' >$tmp
