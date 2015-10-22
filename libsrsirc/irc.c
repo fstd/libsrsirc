@@ -32,6 +32,7 @@
 
 
 static bool send_logon(irc *ctx);
+static void printstr(const char *arg); // valop for lsi_skmap_dump()
 
 irc *
 irc_init(void)
@@ -53,6 +54,7 @@ irc_init(void)
 	r->uprehnds = r->uposthnds = NULL;
 	r->chans = r->users = NULL;
 	r->m005chantypes = NULL;
+	r->m005attrs = NULL;
 
 	for (size_t i = 0; i < COUNTOF(r->m005chanmodes); i++)
 		r->m005chanmodes[i] = NULL;
@@ -70,6 +72,9 @@ irc_init(void)
 	for (size_t i = 0; i < COUNTOF(r->m005modepfx); i++)
 		if (!(r->m005modepfx[i] = lsi_com_malloc(MAX_005_MDPFX)))
 			goto irc_init_fail;
+
+	if (!(r->m005attrs = lsi_skmap_init(256, CMAP_ASCII)))
+		goto irc_init_fail;
 
 	lsi_com_strNcpy(r->m005chantypes, "#&", MAX_005_CHTYP);
 	lsi_com_strNcpy(r->m005chanmodes[0], "b", MAX_005_CHMD);
@@ -151,6 +156,7 @@ irc_init_fail:
 			free(r->m005chanmodes[i]);
 		for (size_t i = 0; i < COUNTOF(r->m005modepfx); i++)
 			free(r->m005modepfx[i]);
+		lsi_skmap_dispose(r->m005attrs);
 	}
 
 	if (con)
@@ -193,6 +199,8 @@ irc_dispose(irc *ctx)
 	for (size_t i = 0; i < COUNTOF(ctx->m005modepfx); i++)
 		free(ctx->m005modepfx[i]);
 
+	lsi_skmap_dispose(ctx->m005attrs);
+
 	D("(%p) disposed", (void *)ctx);
 	free(ctx);
 }
@@ -218,6 +226,11 @@ irc_connect(irc *ctx)
 		lsi_ut_freearr(ctx->logonconv[i]);
 		ctx->logonconv[i] = NULL;
 	}
+
+	void *v;
+	if (lsi_skmap_first(ctx->m005attrs, NULL, &v))
+		do free(v); while (lsi_skmap_next(ctx->m005attrs, NULL, &v));
+	lsi_skmap_clear(ctx->m005attrs);
 
 	if (!lsi_conn_connect(ctx->con, ctx->scto_us, ctx->hcto_us))
 		return false;
@@ -450,4 +463,11 @@ irc_dump(irc *ctx)
 	//struct msghnd msghnds[64]
 	//struct iconn_s *con
 	N("--- end of IRC context dump ---");
+}
+
+static void
+printstr(const char *arg)
+{
+	fprintf(stderr, "'%s'", arg);
+
 }

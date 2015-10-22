@@ -343,16 +343,35 @@ handle_005(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	uint8_t ret = 0;
 	bool have_casemap = false;
 
-	for (size_t z = 3; z < nargs; ++z) {
-		if (lsi_b_strncasecmp((*msg)[z], "CASEMAPPING=", 12) == 0) {
-			ret |= handle_005_CASEMAPPING(ctx, (*msg)[z] + 12);
+	/* last are is "are supported by this server" or equivalent */
+	for (size_t z = 3; z < nargs - 1; ++z) {
+		char *nam = (*msg)[z];
+		char *val;
+		char *tmp = strchr(nam, '=');
+		if (tmp) {
+			*tmp = '\0';
+			val = lsi_b_strdup(tmp + 1);
+		} else
+			val = lsi_b_strdup("");
+
+		free(lsi_skmap_get(ctx->m005attrs, nam));
+		lsi_skmap_del(ctx->m005attrs, nam);
+
+		if (!val || !lsi_skmap_put(ctx->m005attrs, nam, val))
+			E("Out of memory, m005attrs will be incomplete");
+
+		if (tmp)
+			*tmp = '='; // Others might want to handle this tokarr
+
+		if (lsi_b_strcasecmp((*msg)[z], "CASEMAPPING") == 0) {
+			ret |= handle_005_CASEMAPPING(ctx, val);
 			have_casemap = true;
-		} else if (lsi_b_strncasecmp((*msg)[z], "PREFIX=", 7) == 0)
-			ret |= handle_005_PREFIX(ctx, (*msg)[z] + 7);
-		else if (lsi_b_strncasecmp((*msg)[z], "CHANMODES=", 10) == 0)
-			ret |= handle_005_CHANMODES(ctx, (*msg)[z] + 10);
-		else if (lsi_b_strncasecmp((*msg)[z], "CHANTYPES=", 10) == 0)
-			ret |= handle_005_CHANTYPES(ctx, (*msg)[z] + 10);
+		} else if (lsi_b_strcasecmp((*msg)[z], "PREFIX") == 0)
+			ret |= handle_005_PREFIX(ctx, val);
+		else if (lsi_b_strcasecmp((*msg)[z], "CHANMODES") == 0)
+			ret |= handle_005_CHANMODES(ctx, val);
+		else if (lsi_b_strcasecmp((*msg)[z], "CHANTYPES") == 0)
+			ret |= handle_005_CHANTYPES(ctx, val);
 
 		if (ret & CANT_PROCEED)
 			return ret;

@@ -107,6 +107,7 @@ struct irc_s {
 	char *m005chanmodes[4]; // Supported channel modes as per 005
 	char *m005modepfx[2];   // Supported channel mode prefixes as per 005
 	char *m005chantypes;    // Supported channel types as per 005
+	skmap *m005attrs;       // Stores all seen 005 attributes
 
 
 

@@ -270,6 +270,22 @@ const char *irc_005chanmodes(irc *ctx, size_t mclass);
  */
 const char *irc_005modepfx(irc *ctx, bool symbols);
 
+/** \brief Tell the value of a given 005 attribute.
+ *
+ * 005 is a non-standard but almost universally implemented message through
+ * which and ircd advertises features it supports or characteristics it has.
+ *
+ * It consists of a list of `key[=value]` pairs, where `key` is generally an
+ * uppercase ascii string.  We record this information when 005 is encountered;
+ * this function can be used to obtain the `value` of a given `key`.
+ *
+ * \param name The key.
+ * \return A string corresponding to the value of the 005 attribute `name`. If
+ *         the attribute `name` was never seen, NULL is returned.  If `name` was
+ *         present, but did not have a value, an empty string is returned.
+ */
+const char *irc_005attr(irc *ctx, const char *name);
+
 /** \brief Register callback for protocol messages that are read at logon time.
  *
  * If for some reason the messages received at logon time (while irc_connect()

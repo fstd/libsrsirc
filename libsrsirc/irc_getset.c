@@ -17,6 +17,7 @@
 #include "common.h"
 #include "conn.h"
 #include "msg.h"
+#include "skmap.h"
 
 
 /* Determiners - read-only access to information we keep track of */
@@ -119,6 +120,11 @@ irc_005modepfx(irc *ctx, bool symbols)
 	return ctx->m005modepfx[symbols];
 }
 
+const char *
+irc_005attr(irc *ctx, const char *name)
+{
+	return lsi_skmap_get(ctx->m005attrs, name);
+}
 
 bool
 irc_tracking_enab(irc *ctx)
