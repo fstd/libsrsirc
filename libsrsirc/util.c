@@ -505,3 +505,12 @@ lsi_ut_casemap_nam(int cm)
 			return "UNKNOWN";
 	}
 }
+
+bool
+lsi_ut_ischan(irc *ctx, const char *str)
+{
+	if (!str)
+		return false;
+
+	return strchr(ctx->m005chantypes, str[0]);
+}

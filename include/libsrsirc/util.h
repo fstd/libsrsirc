@@ -242,6 +242,24 @@ bool lsi_ut_tokenize(char *buf, tokarr *tok);
  */
 const char *lsi_ut_casemap_nam(int cm);
 
+/** \brief Determine whether a given string is a channel
+ *
+ * This is a convenience function that tries to find the first character of the
+ * given string in the 005 CHANTYPES entry, in order to guess whether it is a
+ * channel name.
+ *
+ * \param str An arbitrary string that may or may not be a channel name
+ * \return true if `str` starts with one of the channel types that were
+ * advertised in the 005 ISUPPORT message, or with either '#' or '&' if no 005
+ * message was seen.
+ *
+ * Note that this function returning true does NOT mean the given string is
+ * necessarily a *valid* channel name (i.e. it might contain blanks or TABs,
+ * both of which cannot appear in valid channel names). All we check is *just*
+ * whether it begins with a character that is a known channel type.
+ */
+bool lsi_ut_ischan(irc *ctx, const char *str);
+
 /** @} */
 
 #endif /* LIBSRSIRC_IRC_UTIL_H */
