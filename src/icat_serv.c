@@ -333,7 +333,7 @@ tryconnect(struct srvlist_s *s)
 
 			s_nexthb = lsi_b_tstamp_us() + g_sett.hbeat_us;
 
-			if (!g_sett.nojoin) {
+			if (!g_sett.nojoin && g_sett.chanlist[0]) {
 				char jmsg[512];
 				snprintf(jmsg, sizeof jmsg, "JOIN %s %s\r\n",
 				    g_sett.chanlist, g_sett.keylist);
