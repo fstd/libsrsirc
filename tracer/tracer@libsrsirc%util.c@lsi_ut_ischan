@@ -1,0 +1,1 @@
+{ T("ctx=%p, str='%s'", (void *)ctx, str);
