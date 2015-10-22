@@ -8,6 +8,7 @@
 # include <config.h>
 #endif
 
+#define PING_ATTEMPTS 3
 
 #include "icat_serv.h"
 
@@ -43,9 +44,11 @@ static struct outline_s *s_outQ;
 static uint64_t s_nexthb;
 static uint64_t s_quitat;
 static int s_casemap = CMAP_RFC1459;
+static int s_pingsent;
 
 
 static bool handle_PING(irc *irchnd, tokarr *tok, size_t nargs, bool pre);
+static bool handle_PONG(irc *irchnd, tokarr *tok, size_t nargs, bool pre);
 static bool handle_005(irc *irchnd, tokarr *tok, size_t nargs, bool pre);
 static int process_sendq(void);
 static bool do_heartbeat(void);
@@ -75,6 +78,7 @@ lsi_serv_init(void)
 
 	irc_regcb_conread(s_irc, conread, 0);
 	irc_reg_msghnd(s_irc, "PING", handle_PING, true);
+	irc_reg_msghnd(s_irc, "PONG", handle_PONG, true);
 	irc_reg_msghnd(s_irc, "005", handle_005, false);
 
 	if (!first_connect())
@@ -128,6 +132,13 @@ lsi_serv_operate(void)
 
 	if (!do_heartbeat()) {
 		E("do_heartbeat() failed");
+		return false;
+	}
+
+	if (!s_pingsent >= PING_ATTEMPTS) {
+		W("Received no PONG after %d attempts to PING", s_pingsent);
+		irc_reset(s_irc);
+		s_on = false;
 		return false;
 	}
 
@@ -240,6 +251,13 @@ handle_PING(irc *irchnd, tokarr *tok, size_t nargs, bool pre)
 }
 
 static bool
+handle_PONG(irc *irchnd, tokarr *tok, size_t nargs, bool pre)
+{
+	s_pingsent = 0;
+	return true;
+}
+
+static bool
 handle_005(irc *irchnd, tokarr *tok, size_t nargs, bool pre)
 {
 	int cm = irc_casemap(s_irc);
@@ -288,6 +306,7 @@ static bool
 do_heartbeat(void)
 {
 	if (g_sett.hbeat_us && s_nexthb <= lsi_b_tstamp_us()) {
+		s_pingsent++;
 		D("Heartbeat time");
 		char buf[512];
 		snprintf(buf, sizeof buf, "PING %s\r\n", irc_myhost(s_irc));
@@ -332,6 +351,7 @@ tryconnect(struct srvlist_s *s)
 			    g_sett.nojoin?"NOT ":"");
 
 			s_nexthb = lsi_b_tstamp_us() + g_sett.hbeat_us;
+			s_pingsent = 0;
 
 			if (!g_sett.nojoin && g_sett.chanlist[0]) {
 				char jmsg[512];
