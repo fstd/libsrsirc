@@ -12,7 +12,7 @@
 
 
 typedef size_t (*skmap_hash_fn)(const char *elem, const uint8_t *cmap);
-typedef void (*skmap_op_fn)(const char *elem);
+typedef void (*skmap_op_fn)(const void *elem);
 typedef void *(*skmap_keydup_fn)(const char *key);
 typedef bool (*skmap_eq_fn)(const void *elem1, const void *elem2);
 typedef struct skmap skmap;
