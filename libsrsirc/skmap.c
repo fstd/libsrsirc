@@ -260,8 +260,9 @@ lsi_skmap_dump(skmap *h, skmap_op_fn valop)
 					fprintf(stderr, "'%s' --> ", key);
 					if (valop)
 						valop(val);
+					fputs(", ", stderr);
 				} while (lsi_bucklist_next(kl, &key, &val));
-			fprintf(stderr, "\n");
+			fputc('\n', stderr);
 		}
 	}
 	M("===end of hashmap dump===\n");
