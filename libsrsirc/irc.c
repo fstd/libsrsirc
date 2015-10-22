@@ -32,7 +32,7 @@
 
 
 static bool send_logon(irc *ctx);
-static void printstr(const char *arg); // valop for lsi_skmap_dump()
+static void printstr(const void *arg); // valop for lsi_skmap_dump()
 
 irc *
 irc_init(void)
@@ -466,8 +466,8 @@ irc_dump(irc *ctx)
 }
 
 static void
-printstr(const char *arg)
+printstr(const void *arg)
 {
-	fprintf(stderr, "'%s'", arg);
+	fprintf(stderr, "'%s'", (const char *)arg);
 
 }
