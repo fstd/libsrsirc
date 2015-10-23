@@ -253,6 +253,15 @@ lsi_conn_read(iconn *ctx, tokarr *tok, uint64_t to_us)
 }
 
 bool
+lsi_conn_can_read(iconn *ctx)
+{
+	if (!ctx || ctx->state != ON)
+		return false;
+
+	return lsi_io_can_read(ctx->sh, &ctx->rctx);
+}
+
+bool
 lsi_conn_write(iconn *ctx, const char *line)
 {
 	if (!ctx || ctx->state != ON || !line)

@@ -321,11 +321,10 @@ irc_eof(irc *ctx)
 	return lsi_conn_eof(ctx->con);
 }
 
-/* this is ugly and insane and BTW: it won't work */
 bool
 irc_can_read(irc *ctx)
 {
-	return ctx->con->rctx.eptr - ctx->con->rctx.wptr >= 3;
+	return lsi_conn_can_read(ctx->con);
 }
 
 bool

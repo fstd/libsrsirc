@@ -151,20 +151,7 @@ lsi_serv_canread(void)
 	if (!s_on)
 		return false;
 
-	if (irc_can_read(s_irc))
-		return true;
-
-	int r = lsi_b_select(irc_sockfd(s_irc), true, 1);
-
-	if (r == -1)
-		return false;
-
-	V("Is %sreadable", r?"":"not ");
-
-	if (r == 0)
-		return false;
-
-	return true;
+	return irc_can_read(s_irc);
 }
 
 int

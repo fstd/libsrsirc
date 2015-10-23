@@ -77,6 +77,33 @@ lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok, uint64_t to_us)
 	return lsi_ut_tokenize(linestart, tok) ? 1 : -1;
 }
 
+bool
+lsi_io_can_read(sckhld sh, struct readctx *rctx)
+{
+	while (rctx->wptr < rctx->eptr && ISDELIM(*rctx->wptr))
+		rctx->wptr++; /* skip leading line delimiters */
+
+	if (rctx->wptr == rctx->eptr) /* empty buffer, use the opportunity.. */
+		rctx->wptr = rctx->eptr = rctx->workbuf;
+
+	if (find_delim(rctx))
+		return true;
+	
+	if (sh.shnd) {
+		E("we cannot reliably tell whether we can read ssl data");
+		/* return true so the user does read.  it might
+		 * block, cause drama and tears, but is better than
+		 * them never reading at all.  this will be fixed
+		 * when we're either nonblocking or have found a way
+		 * to reliably select() an ssl socket.. XXX */
+		return true;
+	}
+
+	int r = lsi_b_select(sh.sck, true, 1);
+
+	return r == 1;
+}
+
 /* Documented in io.h */
 bool
 lsi_io_write(sckhld sh, const char *line)

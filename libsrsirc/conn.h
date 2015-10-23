@@ -18,6 +18,7 @@ void lsi_conn_reset(iconn *ctx);
 void lsi_conn_dispose(iconn *ctx);
 bool lsi_conn_connect(iconn *ctx, uint64_t softto_us, uint64_t hardto_us);
 int lsi_conn_read(iconn *ctx, tokarr *tok, uint64_t to_us);
+bool lsi_conn_can_read(iconn *ctx);
 bool lsi_conn_write(iconn *ctx, const char *line);
 bool lsi_conn_online(iconn *ctx);
 bool lsi_conn_eof(iconn *ctx);
