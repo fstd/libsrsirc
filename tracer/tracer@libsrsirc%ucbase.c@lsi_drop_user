@@ -1,1 +1,1 @@
-{ T("h=%p, u=%p (%s)", (void *)h, (void *)u, u->nick);
+{ T("ctx=%p, u=%p (%s)", (void *)ctx, (void *)u, u->nick);

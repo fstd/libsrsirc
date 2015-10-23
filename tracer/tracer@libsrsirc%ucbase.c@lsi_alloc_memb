@@ -1,1 +1,1 @@
-{ T("h=%p, u=%p (%s), mpfxstr='%s'", (void *)h, (void *)u, u->nick, mpfxstr);
+{ T("ctx=%p, u=%p (%s), mpfxstr='%s'", (void *)ctx, (void *)u, u->nick, mpfxstr);
