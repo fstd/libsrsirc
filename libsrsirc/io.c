@@ -99,7 +99,7 @@ lsi_io_can_read(sckhld sh, struct readctx *rctx)
 		return true;
 	}
 
-	int r = lsi_b_select(sh.sck, true, 1);
+	int r = lsi_b_select(&sh.sck, 1, true, true, 1);
 
 	return r == 1;
 }
@@ -149,7 +149,7 @@ read_more(sckhld sh, struct readctx *rctx, uint64_t to_us)
 		remain = sizeof rctx->workbuf - (rctx->eptr - rctx->workbuf);
 	}
 
-	int r = lsi_b_select(sh.sck, true, to_us);
+	int r = lsi_b_select(&sh.sck, 1, true, true, to_us);
 	if (r != 1)
 		return r;
 

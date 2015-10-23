@@ -38,7 +38,9 @@ typedef void *SSLCTXTYPE;
 int lsi_b_socket(bool ipv6);
 int lsi_b_connect(int sck, const struct addrlist *srv);
 int lsi_b_close(int sck);
-int lsi_b_select(int sck, bool rdbl, uint64_t to_us);
+int lsi_b_select(int *fds, size_t nfds, bool noresult, bool rdbl,
+    uint64_t to_us);
+
 bool lsi_b_blocking(int sck, bool blocking);
 bool lsi_b_sock_ok(int sck);
 

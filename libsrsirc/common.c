@@ -123,7 +123,7 @@ tryhost(struct addrlist *ai, char *remaddr, size_t remaddr_sz,
 	else if (r == -1)
 		goto tryhost_fail;
 
-	r = lsi_b_select(sck, false, to_us);
+	r = lsi_b_select(&sck, 1, true, false, to_us);
 
 	if (r == 1) {
 		if (!lsi_b_blocking(sck, true))

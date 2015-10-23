@@ -202,18 +202,27 @@ lsi_b_close(int sck)
 
 
 int
-lsi_b_select(int sck, bool rdbl, uint64_t to_us)
+lsi_b_select(int *fds, size_t nfds, bool noresult, bool rdbl, uint64_t to_us)
 {
 	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 	bool dopoll = to_us == 1; //mhhh.
 
 #if HAVE_SELECT || HAVE_LIBWS2_32
 	struct timeval tout = {0, 0};
+	char dbgstr[32] = {0};
+	char dbgtmp[10] = {0};
 
 	for (;;) {
-		fd_set fds;
-		FD_ZERO(&fds);
-		FD_SET(sck, &fds);
+		fd_set fdset;
+		FD_ZERO(&fdset);
+		int maxfd = -1;
+		for (size_t i = 0; i < nfds; i++) {
+			FD_SET(fds[i], &fdset);
+			if (fds[i] > maxfd)
+				maxfd = fds[i];
+			snprintf(dbgtmp, sizeof dbgtmp, " %d", fds[i]);
+			lsi_b_strNcat(dbgstr, dbgtmp, sizeof dbgstr);
+		}
 		uint64_t trem = 0;
 
 		if (!dopoll && tsend) {
@@ -227,21 +236,27 @@ lsi_b_select(int sck, bool rdbl, uint64_t to_us)
 			tout.tv_usec = trem % 1000000;
 		}
 
-		V("select()ing fd %d for %sability (to: %"PRIu64"us)",
-		    sck, rdbl?"read":"writ", trem);
+		V("select()ing fd(s)%s for %sability (to: %"PRIu64"us)",
+		    dbgstr, rdbl?"read":"writ", trem);
 
-		int r = select(sck+1, rdbl ? &fds : NULL, rdbl ? NULL : &fds,
-		    NULL, (tsend || dopoll) ? &tout : NULL);
+		int r = select(maxfd+1, rdbl ? &fdset : NULL,
+		    rdbl ? NULL : &fdset, NULL,
+		    (tsend || dopoll) ? &tout : NULL);
 
 		if (r < 0) {
 			int e = errno;
-			EE("select() fd %d for %c", sck, rdbl?'r':'w');
+			EE("select() fd(s)%s for %c", dbgstr, rdbl?'r':'w');
 			return e == EINTR ? 0 : -1;
 		}
 
-		if (r == 1) {
-			V("Selected!");
-			return 1;
+		if (r >= 1) {
+			if (!noresult)
+				for (size_t i = 0; i < nfds; i++)
+					if (!FD_ISSET(fds[i], &fdset))
+						fds[i] = -1;
+			
+			V("Selected (%d)!", r);
+			return r;
 		}
 
 		if (dopoll)
