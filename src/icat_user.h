@@ -14,6 +14,7 @@
 bool lsi_user_canread(void);
 size_t lsi_user_readline(char *dest, size_t destsz);
 int lsi_user_printf(const char *fmt, ...);
+int lsi_user_fd(void);
 
 bool lsi_user_eof(void);
 

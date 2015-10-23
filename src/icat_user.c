@@ -89,6 +89,12 @@ lsi_user_canread(void)
 	return strchr(s_bufhead, '\n');
 }
 
+int
+lsi_user_fd(void)
+{
+	return lsi_b_stdin_fd();
+}
+
 size_t
 lsi_user_readline(char *dest, size_t destsz)
 {

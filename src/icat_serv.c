@@ -155,6 +155,12 @@ lsi_serv_canread(void)
 }
 
 int
+lsi_serv_fd(void)
+{
+	return irc_sockfd(s_irc);
+}
+
+int
 lsi_serv_read(tokarr *t)
 {
 	if (!s_on)

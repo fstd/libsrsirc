@@ -11,6 +11,7 @@
 
 long lsi_b_stdin_read(void *buf, size_t nbytes);
 int lsi_b_stdin_canread(void);
+int lsi_b_stdin_fd(void);
 
 
 #endif /* LIBSRSIRC_BASE_IO_H */

@@ -21,6 +21,7 @@ bool lsi_serv_operate(void);
 bool lsi_serv_canread(void);
 int lsi_serv_read(tokarr *t);
 int lsi_serv_printf(const char *fmt, ...);
+int lsi_serv_fd(void);
 
 bool lsi_serv_online(void);
 int lsi_serv_casemap(void);

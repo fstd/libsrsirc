@@ -56,6 +56,17 @@ lsi_b_stdin_read(void *buf, size_t nbytes)
 #endif
 }
 
+int
+lsi_b_stdin_fd(void)
+{
+#if HAVE_FILENO
+	int fd = fileno(stdin);
+#else
+	W("assuming stdin to be fd 0...");
+	int fd = 0;
+#endif
+	return fd;
+}
 
 int
 lsi_b_stdin_canread(void)
