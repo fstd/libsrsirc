@@ -205,9 +205,10 @@ int
 lsi_b_select(int sck, bool rdbl, uint64_t to_us)
 {
 	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
+	bool dopoll = to_us == 1; //mhhh.
 
 #if HAVE_SELECT || HAVE_LIBWS2_32
-	struct timeval tout;
+	struct timeval tout = {0, 0};
 
 	for (;;) {
 		fd_set fds;
@@ -215,7 +216,7 @@ lsi_b_select(int sck, bool rdbl, uint64_t to_us)
 		FD_SET(sck, &fds);
 		uint64_t trem = 0;
 
-		if (tsend) {
+		if (!dopoll && tsend) {
 			uint64_t now = lsi_b_tstamp_us();
 			if (now >= tsend)
 				return 0;
@@ -230,7 +231,7 @@ lsi_b_select(int sck, bool rdbl, uint64_t to_us)
 		    sck, rdbl?"read":"writ", trem);
 
 		int r = select(sck+1, rdbl ? &fds : NULL, rdbl ? NULL : &fds,
-		    NULL, tsend ? &tout : NULL);
+		    NULL, (tsend || dopoll) ? &tout : NULL);
 
 		if (r < 0) {
 			int e = errno;
@@ -242,6 +243,9 @@ lsi_b_select(int sck, bool rdbl, uint64_t to_us)
 			V("Selected!");
 			return 1;
 		}
+
+		if (dopoll)
+			return 0;
 
 		V("Nothing selected");
 	}
