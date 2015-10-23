@@ -25,6 +25,7 @@
 
 #include <platform/base_time.h>
 #include <platform/base_misc.h>
+#include <platform/base_net.h>
 
 #include <libsrsirc/defs.h>
 #include <libsrsirc/irc_ext.h>
@@ -138,8 +139,37 @@ lsi_core_run(void)
 				}
 			}
 		}
-		if (idle)
+
+		if (idle) {
+#ifdef __unix__
+			size_t fdc = 1;
+			int fds[2];
+			fds[0] = lsi_serv_fd();
+			if (!ignoreuser) {
+				fds[1] = lsi_user_fd();
+				fdc++;
+			}
+
+			uint64_t to;
+			uint64_t now = lsi_b_tstamp_us();
+			if (tquit)
+				to = tquit + g_sett.waitquit_us;
+			else
+				to = lsi_serv_attention_at();
+
+			if (to && now >= to)
+				continue; //need immediate attention?
+
+			if (to)
+				to -= now;
+
+			D("idle-select %zd fds with timeout %"PRIu64, fdc, to);
+
+			lsi_b_select(fds, fdc, false, true, to);
+#else
 			lsi_b_usleep(100000L);
+#endif
+		}
 	}
 
 	if (g_interrupted)

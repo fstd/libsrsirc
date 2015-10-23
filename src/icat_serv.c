@@ -42,6 +42,7 @@ static irc *s_irc;
 static bool s_on;
 static struct outline_s *s_outQ;
 static uint64_t s_nexthb;
+static uint64_t s_nextsend;
 static uint64_t s_quitat;
 static int s_casemap = CMAP_RFC1459;
 static int s_pingsent;
@@ -231,6 +232,20 @@ lsi_serv_sentquit(void)
 }
 
 
+/* When will we next need attention? */
+uint64_t
+lsi_serv_attention_at(void)
+{
+	uint64_t attat = 0;
+	if (g_sett.hbeat_us)
+		attat = s_nexthb;
+	
+	if (s_outQ && (!attat || s_nextsend < attat))
+		attat = s_nextsend;
+
+	return attat;
+}
+
 static bool
 handle_PING(irc *irchnd, tokarr *tok, size_t nargs, bool pre)
 {
@@ -265,11 +280,10 @@ handle_005(irc *irchnd, tokarr *tok, size_t nargs, bool pre)
 static int
 process_sendq(void)
 {
-	static uint64_t nextsend = 0;
 	if (!s_outQ)
 		return 0;
 
-	if (g_sett.freelines > 0 || nextsend <= lsi_b_tstamp_us()) {
+	if (g_sett.freelines > 0 || s_nextsend <= lsi_b_tstamp_us()) {
 		D("SendQ time");
 		struct outline_s *ptr = s_outQ;
 		if (!to_srv(ptr->line)) {
@@ -287,7 +301,7 @@ process_sendq(void)
 		free(ptr);
 		if (g_sett.freelines)
 			g_sett.freelines--;
-		nextsend = lsi_b_tstamp_us() + g_sett.linedelay;
+		s_nextsend = lsi_b_tstamp_us() + g_sett.linedelay;
 
 		return 1;
 	}

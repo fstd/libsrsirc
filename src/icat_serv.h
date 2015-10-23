@@ -26,6 +26,7 @@ int lsi_serv_fd(void);
 bool lsi_serv_online(void);
 int lsi_serv_casemap(void);
 uint64_t lsi_serv_sentquit(void);
+uint64_t lsi_serv_attention_at(void);
 
 
 #endif /* LIBSRSIRC_ICAT_SERV_H */
