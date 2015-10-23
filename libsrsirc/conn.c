@@ -416,6 +416,11 @@ lsi_conn_sockfd(iconn *ctx)
 	if (!ctx || ctx->state != ON)
 		return -1;
 
+	if (ctx->sh.shnd) {
+		E("cannot do anything meaningful with an ssl sockfd");
+		return -1;
+	}
+
 	return ctx->sh.sck;
 }
 
