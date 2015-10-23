@@ -8,8 +8,6 @@
 # include <config.h>
 #endif
 
-#define PING_ATTEMPTS 3
-
 #include "icat_serv.h"
 
 #include <inttypes.h>
