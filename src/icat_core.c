@@ -131,6 +131,7 @@ lsi_core_run(void)
 
 		if (nextop <= lsi_b_tstamp_us()) {
 			if (!lsi_serv_operate()) {
+				idle = false;
 				E("lsi_serv_operate() failed");
 				if (!on) {
 					N("Delaying next connection attempt");

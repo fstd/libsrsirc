@@ -45,7 +45,7 @@ static uint64_t s_nexthb;
 static uint64_t s_nextsend;
 static uint64_t s_quitat;
 static int s_casemap = CMAP_RFC1459;
-static int s_pingsent;
+static bool s_gotpong;
 
 
 static bool handle_PING(irc *irchnd, tokarr *tok, size_t nargs, bool pre);
@@ -133,13 +133,6 @@ lsi_serv_operate(void)
 
 	if (!do_heartbeat()) {
 		E("do_heartbeat() failed");
-		return false;
-	}
-
-	if (!s_pingsent >= PING_ATTEMPTS) {
-		W("Received no PONG after %d attempts to PING", s_pingsent);
-		irc_reset(s_irc);
-		s_on = false;
 		return false;
 	}
 
@@ -261,7 +254,7 @@ handle_PING(irc *irchnd, tokarr *tok, size_t nargs, bool pre)
 static bool
 handle_PONG(irc *irchnd, tokarr *tok, size_t nargs, bool pre)
 {
-	s_pingsent = 0;
+	s_gotpong = true;
 	return true;
 }
 
@@ -313,8 +306,14 @@ static bool
 do_heartbeat(void)
 {
 	if (g_sett.hbeat_us && s_nexthb <= lsi_b_tstamp_us()) {
-		s_pingsent++;
 		D("Heartbeat time");
+		if (!s_gotpong) {
+			E("Heartbeat timeout, disconnecting");
+			irc_reset(s_irc);
+			return s_on = false;
+		}
+
+		s_gotpong = false;
 		char buf[512];
 		snprintf(buf, sizeof buf, "PING %s\r\n", irc_myhost(s_irc));
 		s_nexthb = lsi_b_tstamp_us() + g_sett.hbeat_us;
@@ -358,7 +357,7 @@ tryconnect(struct srvlist_s *s)
 			    g_sett.nojoin?"NOT ":"");
 
 			s_nexthb = lsi_b_tstamp_us() + g_sett.hbeat_us;
-			s_pingsent = 0;
+			s_gotpong = true;
 
 			if (!g_sett.nojoin && g_sett.chanlist[0]) {
 				char jmsg[512];
