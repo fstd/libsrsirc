@@ -52,12 +52,14 @@ void
 lsi_core_init(void)
 {
 	lsi_serv_init();
+	return;
 }
 
 void
 lsi_core_destroy(void)
 {
 	lsi_serv_destroy();
+	return;
 }
 
 int

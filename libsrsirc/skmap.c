@@ -93,6 +93,7 @@ lsi_skmap_clear(skmap *h)
 	}
 
 	h->count = 0;
+	return;
 }
 
 void
@@ -105,6 +106,7 @@ lsi_skmap_dispose(skmap *h)
 
 	free(h->buck);
 	free(h);
+	return;
 }
 
 bool
@@ -239,6 +241,7 @@ lsi_skmap_del_iter(skmap *h)
 {
 	if (h->iterating)
 		lsi_bucklist_del_iter(h->buck[h->bit]);
+	return;
 }
 
 void
@@ -267,6 +270,7 @@ lsi_skmap_dump(skmap *h, skmap_op_fn valop)
 	}
 	M("===end of hashmap dump===\n");
 	#undef M
+	return;
 }
 
 void
@@ -299,6 +303,7 @@ lsi_skmap_stat(skmap *h, size_t *nbuck, size_t *nbuckused, size_t *nitems,
 	else
 		*avglistlen = 0;
 	*maxlistlen = maxlen;
+	return;
 }
 
 void
@@ -318,6 +323,7 @@ lsi_skmap_dumpstat(skmap *h, const char *dbgname)
 	    "loadfac: %f, avg listlen: %f, max listlen: %zu",
 	    dbgname, nbuck, nbuckused, 100.0*nbuckused/nbuck, nitems,
 	    loadfac, avglistlen, maxlistlen);
+	return;
 }
 
 

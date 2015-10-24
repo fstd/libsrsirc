@@ -223,6 +223,7 @@ lsi_clear_memb(irc *ctx, chan *c)
 	} while (lsi_skmap_next(c->memb, NULL, &e));
 	lsi_skmap_clear(c->memb);
 	D("cleared members of channel '%s'", c->name);
+	return;
 }
 
 memb *
@@ -303,6 +304,7 @@ lsi_clear_chanmodes(irc *ctx, chan *c)
 {
 	for (size_t i = 0; i < c->modes_sz; i++)
 		free(c->modes[i]), c->modes[i] = NULL;
+	return;
 }
 
 bool
@@ -392,6 +394,7 @@ lsi_touch_user_int(user *u, const char *ident)
 		lsi_ut_ident2host(host, sizeof host, ident);
 		u->host = lsi_b_strdup(host); //pointless to check
 	}
+	return;
 }
 
 user *
@@ -478,6 +481,7 @@ lsi_ucb_deinit(irc *ctx)
 	lsi_skmap_dispose(ctx->chans);
 	lsi_skmap_dispose(ctx->users);
 	ctx->chans = ctx->users = NULL;
+	return;
 }
 
 void
@@ -516,6 +520,7 @@ lsi_ucb_clear(irc *ctx)
 		} while (lsi_skmap_next(ctx->users, NULL, &e));
 		lsi_skmap_clear(ctx->users);
 	}
+	return;
 }
 
 void
@@ -576,6 +581,7 @@ lsi_ucb_dump(irc *ctx, bool full)
 				A("dangling user '%s!%s@%s'",
 				    u->nick, u->uname, u->host);
 		} while (lsi_skmap_next(ctx->users, &key, &e1));
+	return;
 }
 
 user *
@@ -708,6 +714,7 @@ lsi_tag_chan(chan *c, void *tag, bool autofree)
 		free(c->tag);
 	c->tag = tag;
 	c->freetag = autofree;
+	return;
 }
 
 
@@ -718,4 +725,5 @@ lsi_tag_user(user *u, void *tag, bool autofree)
 		free(u->tag);
 	u->tag = tag;
 	u->freetag = autofree;
+	return;
 }

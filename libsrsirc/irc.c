@@ -169,6 +169,7 @@ void
 irc_reset(irc *ctx)
 {
 	lsi_conn_reset(ctx->con);
+	return;
 }
 
 void
@@ -203,6 +204,7 @@ irc_dispose(irc *ctx)
 
 	D("(%p) disposed", (void *)ctx);
 	free(ctx);
+	return;
 }
 
 bool
@@ -400,12 +402,14 @@ irc_regcb_conread(irc *ctx, fp_con_read cb, void *tag)
 {
 	ctx->cb_con_read = cb;
 	ctx->tag_con_read = tag;
+	return;
 }
 
 void
 irc_regcb_mutnick(irc *ctx, fp_mut_nick cb)
 {
 	ctx->cb_mut_nick = cb;
+	return;
 }
 
 void
@@ -462,6 +466,7 @@ irc_dump(irc *ctx)
 	//struct msghnd msghnds[64]
 	//struct iconn_s *con
 	N("--- end of IRC context dump ---");
+	return;
 }
 
 static void

@@ -104,6 +104,7 @@ lsi_msg_unregall(irc *ctx, const char *module)
 		if (ctx->msghnds[i].cmd[0]
 		    && strcmp(ctx->msghnds[i].module, module) == 0)
 			ctx->msghnds[i].cmd[0] = '\0';
+	return;
 }
 
 static bool

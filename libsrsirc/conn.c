@@ -100,6 +100,7 @@ lsi_conn_reset(iconn *ctx)
 	ctx->sh.sck = -1;
 	ctx->state = OFF;
 	ctx->rctx.wptr = ctx->rctx.eptr = ctx->rctx.workbuf;
+	return;
 }
 
 void
@@ -115,6 +116,7 @@ lsi_conn_dispose(iconn *ctx)
 
 	D("(%p) disposed", (void *)ctx);
 	free(ctx);
+	return;
 }
 
 bool
@@ -441,4 +443,5 @@ irc_conn_dump(iconn *ctx)
 	N("ssl: %d", ctx->ssl);
 	N("read buffer: %zu bytes in use", (size_t)(ctx->rctx.eptr - ctx->rctx.wptr));
 	N("--- end of connection context dump ---");
+	return;
 }

@@ -86,6 +86,7 @@ lsi_serv_init(void)
 	s_on = true;
 
 	I("Initialized");
+	return;
 }
 
 void
@@ -103,6 +104,7 @@ lsi_serv_destroy(void)
 	s_nexthb = 0;
 	s_on = false;
 	s_casemap = CMAP_RFC1459;
+	return;
 }
 
 bool

@@ -603,6 +603,7 @@ lsi_b_freeaddrlist(struct addrlist *al)
 		free(al);
 		al = tmp;
 	}
+	return;
 }
 
 
@@ -633,6 +634,7 @@ lsi_b_freesslctx(SSLCTXTYPE sslctx)
 #else
 	E("no ssl support compiled in");
 #endif
+	return;
 }
 
 
@@ -683,6 +685,7 @@ lsi_b_sslfin(SSLTYPE shnd)
 	E("no ssl support compiled in");
 #endif
 
+	return;
 }
 
 

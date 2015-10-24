@@ -270,12 +270,14 @@ void
 irc_set_conflags(irc *ctx, uint8_t flags)
 {
 	ctx->conflags = flags;
+	return;
 }
 
 void
 irc_set_service_connect(irc *ctx, bool enabled)
 {
 	ctx->serv_con = enabled;
+	return;
 }
 
 bool
@@ -301,6 +303,7 @@ void
 irc_set_track(irc *ctx, bool on)
 {
 	ctx->tracking = on;
+	return;
 }
 
 void
@@ -308,6 +311,7 @@ irc_set_connect_timeout(irc *ctx, uint64_t soft, uint64_t hard)
 {
 	ctx->hcto_us = hard;
 	ctx->scto_us = soft;
+	return;
 }
 
 bool
@@ -326,6 +330,7 @@ void
 irc_set_dumb(irc *ctx, bool dumbmode)
 {
 	ctx->dumb = dumbmode;
+	return;
 }
 
 bool

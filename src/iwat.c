@@ -308,12 +308,14 @@ lsi_cleanup(void)
 		n = next;
 	}
 
+	return;
 }
 
 void
 lsi_infohnd(int s)
 {
 	g_dumpplx = true;
+	return;
 }
 
 int

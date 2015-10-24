@@ -45,6 +45,7 @@ lsi_ut_ident2nick(char *dest, size_t dest_sz, const char *pfx)
 	ptr = strchr(dest, '!');
 	if (ptr)
 		*ptr = '\0';
+	return;
 }
 
 void
@@ -64,6 +65,7 @@ lsi_ut_ident2uname(char *dest, size_t dest_sz, const char *pfx)
 		memmove(dest, ptr+1, strlen(ptr+1)+1);
 	else
 		*dest = '\0';
+	return;
 }
 
 void
@@ -79,6 +81,7 @@ lsi_ut_ident2host(char *dest, size_t dest_sz, const char *pfx)
 		memmove(dest, ptr+1, strlen(ptr+1)+1);
 	else
 		*dest = '\0';
+	return;
 }
 
 int
@@ -149,6 +152,7 @@ lsi_ut_strtolower(char *dest, size_t destsz, const char *str, int casemap)
 	}
 
 	dest[destsz-1] = '\0';
+	return;
 }
 
 bool
@@ -210,6 +214,7 @@ lsi_ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
 		*ptr = '\0';
 	} else
 		*port = 0;
+	return;
 }
 
 char *
@@ -256,6 +261,7 @@ lsi_ut_dumpmsg(void *tag, tokarr *msg)
 	char buf[1024];
 	lsi_ut_sndumpmsg(buf, sizeof buf, tag, msg);
 	fprintf(stderr, "%s\n", buf);
+	return;
 }
 
 
@@ -396,6 +402,7 @@ lsi_ut_mut_nick(char *nick, size_t nick_sz)
 		else
 			nick[len - 1] = '0';
 	}
+	return;
 }
 
 tokarr *
@@ -429,6 +436,7 @@ lsi_ut_freearr(tokarr *arr)
 			free((*arr)[i]);
 		free(arr);
 	}
+	return;
 }
 
 

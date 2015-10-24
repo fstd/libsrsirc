@@ -35,6 +35,7 @@ lsi_b_usleep(uint64_t us)
 #else
 # error "We need something like nanosleep() (or usleep()-ish)"
 #endif
+	return;
 }
 
 int
@@ -82,4 +83,5 @@ lsi_b_regsig(int sig, void (*sigfn)(int))
 #else
 	W("No signal support; use a real OS for that");
 #endif
+	return;
 }

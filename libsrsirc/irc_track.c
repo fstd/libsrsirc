@@ -81,6 +81,7 @@ lsi_trk_deinit(irc *ctx)
 {
 	lsi_ucb_deinit(ctx);
 	lsi_msg_unregall(ctx, "track");
+	return;
 }
 
 
@@ -577,6 +578,7 @@ void
 lsi_trk_dump(irc *ctx, bool full)
 {
 	lsi_ucb_dump(ctx, full);
+	return;
 }
 
 // JOIN #srsbsns redacted

@@ -44,6 +44,7 @@ lsi_com_strNcat(char *dest, const char *src, size_t destsz)
 		*ptr++ = *src++;
 	}
 	*ptr = '\0';
+	return;
 }
 
 size_t

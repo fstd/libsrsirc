@@ -34,6 +34,7 @@ lsi_b_strNcat(char *dest, const char *src, size_t destsz)
 		*ptr++ = *src++;
 	}
 	*ptr = '\0';
+	return;
 }
 
 void
@@ -46,6 +47,7 @@ lsi_b_strNcpy(char *dest, const char *src, size_t destsz)
 		;
 
 	dest[-!destsz] = '\0';
+	return;
 }
 
 int

@@ -56,6 +56,7 @@ lsi_bucklist_dispose(bucklist *l)
 {
 	lsi_bucklist_clear(l);
 	free(l);
+	return;
 }
 
 size_t
@@ -93,6 +94,7 @@ lsi_bucklist_clear(bucklist *l)
 	}
 
 	l->head = NULL;
+	return;
 }
 
 bool
@@ -258,6 +260,7 @@ lsi_bucklist_del_iter(bucklist *l)
 
 	free(l->iter);
 	l->iter = l->previter;
+	return;
 }
 
 void
@@ -295,4 +298,5 @@ lsi_pfxeq(const char *n1, const char *n2, const uint8_t *cmap)
 	}
 
 	return c1 == c2;
+	return;
 }

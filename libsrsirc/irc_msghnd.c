@@ -431,4 +431,5 @@ void
 lsi_imh_unregall(irc *ctx)
 {
 	lsi_msg_unregall(ctx, "irc");
+	return;
 }
