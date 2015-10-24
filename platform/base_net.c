@@ -617,6 +617,7 @@ lsi_b_mksslctx(void)
 	sslctx = SSL_CTX_new(SSLv23_client_method());
 	if (!sslctx)
 		E("SSL_CTX_new failed");
+	SSL_CTX_set_mode(sslctx, SSL_MODE_AUTO_RETRY); /*XXX blocking IO only*/
 #else
 	E("no ssl support compiled in");
 #endif
