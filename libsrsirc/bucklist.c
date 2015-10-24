@@ -298,5 +298,4 @@ lsi_pfxeq(const char *n1, const char *n2, const uint8_t *cmap)
 	}
 
 	return c1 == c2;
-	return;
 }
