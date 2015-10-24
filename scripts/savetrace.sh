@@ -15,7 +15,6 @@ rm ./tracer/*
 
 find libsrsirc src platform -name '*.c' | while read -r f; do
 	echo "Processing $f" >&2
-	cat "$f" >$tmp
 	sed 's/^/x/' "$f" >$tmp4
 
 	fnn="$(printf '%s\n' "$f" | tr '/' '%')"
@@ -36,10 +35,7 @@ find libsrsirc src platform -name '*.c' | while read -r f; do
 		fi
 
 		case "$ln" in
-			"{ T("*) sed -n ${lno}p $tmp >"tracer/tracer@${fnn}@${lastfunc}"
-			         cat "$tmp" | awk "NR == $lno { print \"{\"; } NR != $lno { print;}" >$tmp2; cat $tmp2 >$tmp ;;
+			"{ T("*) sed -n ${lno}p $f >"tracer/tracer@${fnn}@${lastfunc}" ;;
 		esac
 	done
-
-	cat $tmp >"$f"
 done
