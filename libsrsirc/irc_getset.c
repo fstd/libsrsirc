@@ -100,7 +100,8 @@ irc_sockfd(irc *ctx)
 	return lsi_conn_sockfd(ctx->con);
 }
 
-tokarr *(* /* ew.  returns pointer to array of 4 pointers to tokarr */
+/* ew.  returns pointer to array of 4 pointers to tokarr */
+tokarr *(*
 irc_logonconv(irc *ctx))[4]
 {
 	return &ctx->logonconv;
