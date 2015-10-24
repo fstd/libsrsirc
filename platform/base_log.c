@@ -9,6 +9,7 @@
 
 #include "base_log.h"
 
+#include <inttypes.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>

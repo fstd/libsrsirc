@@ -9,6 +9,7 @@
 #endif
 
 
+#include <inttypes.h>
 #include <string.h>
 
 #if HAVE_STRINGS_H

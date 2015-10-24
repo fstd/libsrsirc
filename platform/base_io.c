@@ -11,6 +11,7 @@
 
 #include "base_io.h"
 
+#include <inttypes.h>
 #include <limits.h>
 #include <stdio.h>
 #include <time.h>

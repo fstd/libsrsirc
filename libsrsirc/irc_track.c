@@ -12,6 +12,7 @@
 #include <libsrsirc/irc_track.h>
 
 
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 
