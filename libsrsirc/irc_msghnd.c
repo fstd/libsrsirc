@@ -40,7 +40,6 @@ handle_001(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	ctx->logonconv[0] = lsi_ut_clonearr(msg);
 	lsi_com_strNcpy(ctx->mynick, (*msg)[2], sizeof ctx->mynick);
 
-
 	// XXX this shouldn't be required.  Isn't the first argument of a
 	// numeric message *always* just our nick anyway?
 	char *tmp;
@@ -48,16 +47,6 @@ handle_001(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 		*tmp = '\0';
 	if ((tmp = strchr(ctx->mynick, '!')))
 		*tmp = '\0';
-
-	// XXX this is probably not required either because
-	// we do this for 004 already, and if we don't see any 004 (does any
-	// server actually do this?) irc_connect() will fail in the first place.
-	// and what about `myhost`, anyway?
-	lsi_com_strNcpy(ctx->umodes, DEF_UMODES, sizeof ctx->umodes);
-	lsi_com_strNcpy(ctx->cmodes, DEF_CMODES, sizeof ctx->cmodes);
-	ctx->ver[0] = '\0';
-
-	ctx->service = false;
 
 	return 0;
 }

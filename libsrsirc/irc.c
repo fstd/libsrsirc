@@ -33,6 +33,7 @@
 
 static bool send_logon(irc *ctx);
 static void printstr(const void *arg); // valop for lsi_skmap_dump()
+static void reset_state(irc *ctx);
 
 irc *
 irc_init(void)
@@ -117,14 +118,13 @@ irc_init(void)
 	errno = preverrno;
 
 	r->con = con;
-	/* persistent after reset */
-	r->mynick[0] = r->myhost[0] = r->umodes[0] = r->myumodes[0]
-	    = r->cmodes[0] = r->ver[0] = '\0';
 
-	r->service = r->restricted = r->banned = r->serv_con = false;
+	for (size_t i = 0; i < COUNTOF(r->logonconv); i++)
+		r->logonconv[i] = NULL;
+
+	r->serv_con = false;
 	r->cb_con_read = NULL;
 	r->cb_mut_nick = lsi_ut_mut_nick;
-	r->casemap = CMAP_RFC1459;
 	r->conflags = DEF_CONFLAGS;
 	r->serv_type = DEF_SERV_TYPE;
 	r->scto_us = DEF_SCTO_US;
@@ -132,9 +132,7 @@ irc_init(void)
 	r->dumb = false;
 	r->tracking_enab = r->tracking = false;
 
-	for (size_t i = 0; i < COUNTOF(r->logonconv); i++)
-		r->logonconv[i] = NULL;
-
+	reset_state(r);
 
 	D("(%p) irc_bas initialized (backend: %p)", (void *)r, (void *)r->con);
 	return r;
@@ -220,9 +218,7 @@ irc_connect(irc *ctx)
 	if (!lsi_imh_regall(ctx, ctx->dumb))
 		return false;
 
-	lsi_com_update_strprop(&ctx->lasterr, NULL);
-	lsi_com_update_strprop(&ctx->banmsg, NULL);
-	ctx->banned = false;
+	reset_state(ctx);
 
 	for (size_t i = 0; i < COUNTOF(ctx->logonconv); i++) {
 		lsi_ut_freearr(ctx->logonconv[i]);
@@ -467,6 +463,25 @@ irc_dump(irc *ctx)
 	//struct iconn_s *con
 	N("--- end of IRC context dump ---");
 	return;
+}
+
+static void
+reset_state(irc *ctx)
+{
+	ctx->mynick[0] = ctx->myhost[0] = ctx->myumodes[0] = ctx->ver[0] = '\0';
+	ctx->restricted = ctx->banned = ctx->service = false;
+	ctx->casemap = CMAP_RFC1459;
+	lsi_com_update_strprop(&ctx->lasterr, NULL);
+	lsi_com_update_strprop(&ctx->banmsg, NULL);
+	lsi_com_strNcpy(ctx->umodes, DEF_UMODES, sizeof ctx->umodes);
+	lsi_com_strNcpy(ctx->cmodes, DEF_CMODES, sizeof ctx->cmodes);
+	lsi_com_strNcpy(ctx->m005chantypes, "#&", MAX_005_CHTYP);
+	lsi_com_strNcpy(ctx->m005chanmodes[0], "b", MAX_005_CHMD);
+	lsi_com_strNcpy(ctx->m005chanmodes[1], "k", MAX_005_CHMD);
+	lsi_com_strNcpy(ctx->m005chanmodes[2], "l", MAX_005_CHMD);
+	lsi_com_strNcpy(ctx->m005chanmodes[3], "psitnm", MAX_005_CHMD);
+	lsi_com_strNcpy(ctx->m005modepfx[0], "ov", MAX_005_MDPFX);
+	lsi_com_strNcpy(ctx->m005modepfx[1], "@+", MAX_005_MDPFX);
 }
 
 static void
