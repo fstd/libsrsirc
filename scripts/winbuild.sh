@@ -91,7 +91,7 @@ for f in ../src/*.exe; do
 	cp "$f" "stripped_$(basename $f)"
 done
 cp ../src/.libs/*.exe ./
-cp ../libsrsirc/.libs/*.dll ./
+cp ../libsrsirc/.libs/*.dll $mingwroot/bin/libgcc_s_dw2-1.dll ./
 
 tar -czf ../libsrsirc-$VERSION-winbin.tarbomb.gz *
 cd ..

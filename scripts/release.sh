@@ -51,7 +51,7 @@ cd dist/
 tar -xzpf ../libsrsirc-$newver.tar.gz
 cd ../windist/
 tar -xzf ../libsrsirc-$newver-winbin.tarbomb.gz
-cp *.exe libsrsirc-0.dll ../dist/libsrsirc-$newver/
+cp *.exe libsrsirc-0.dll libgcc*.dll ../dist/libsrsirc-$newver/
 cd ../dist/
 zip -r libsrsirc-$newver-win.zip libsrsirc-$newver
 mv libsrsirc-$newver-win.zip ..
