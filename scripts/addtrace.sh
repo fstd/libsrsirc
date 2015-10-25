@@ -33,7 +33,7 @@ find tracer -name 'tracer@*' | while read -r f; do
 	cat $tmp >$file
 done
 
-find libsrsirc platform src -name '*.c' | grep -vF -e 'base_log.c' -e 'helloworld.c' | while read -r f; do
+find libsrsirc platform src -name '*.c' | grep -vF -e 'base_log.c' -e 'helloworld.c' -e 'base_time.c' | while read -r f; do
 	echo "doing returns for $f" >&2
 	scripts/replret.sh "$f"
 done

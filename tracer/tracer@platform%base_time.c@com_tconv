@@ -1,1 +1,0 @@
-{ T("tv=%p, ts=%p, tv_to_ts=%d", (void *)tv, (void *)ts, tv_to_ts);
