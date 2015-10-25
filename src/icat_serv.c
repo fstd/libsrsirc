@@ -145,6 +145,12 @@ icat_serv_fd(void)
 	return irc_sockfd(s_irc);
 }
 
+bool
+icat_serv_ssl(void)
+{
+	return irc_get_ssl(s_irc);
+}
+
 int
 icat_serv_read(tokarr *t, uint64_t to_us)
 {

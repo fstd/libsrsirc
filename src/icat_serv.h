@@ -21,6 +21,7 @@ bool icat_serv_operate(void);
 int icat_serv_read(tokarr *t, uint64_t to_us);
 int icat_serv_printf(const char *fmt, ...);
 int icat_serv_fd(void);
+bool icat_serv_ssl(void);
 
 bool icat_serv_online(void);
 int icat_serv_casemap(void);

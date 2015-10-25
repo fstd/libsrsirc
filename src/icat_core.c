@@ -158,7 +158,8 @@ icat_core_run(void)
 		 * We might theoretically get stuck if a WANT_WRITE condition
 		 * appears after the last call to icat_serv_read() and before
 		 * this. But I think that can't happen (can it? We're not doing
-		 * any I/O in the meantime)
+		 * any I/O in the meantime). Still, to be completely sure,
+		 * we will never use a timeout longer than 10 seconds for SSL
 		 */
 		if (idle && icat_serv_online()) {
 			size_t fdc = 1;
@@ -182,6 +183,9 @@ icat_core_run(void)
 
 			if (to)
 				to -= now;
+
+			if (icat_serv_ssl() && to > 10000000u)
+				to = 10000000u; //see comment above
 
 			D("idle-select %zd fds with timeout %"PRIu64, fdc, to);
 
