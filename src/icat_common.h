@@ -28,7 +28,7 @@
 #define DEF_IGNORE_PM true
 #define DEF_IGNORE_CHANSERV true
 #define DEF_VERB 1
-#define DEF_QMSG "IRC netcat - http://github.com/srsbsns/libsrsirc"
+#define DEF_QMSG "IRC netcat - http://github.com/fstd/libsrsirc"
 
 
 struct srvlist_s {
