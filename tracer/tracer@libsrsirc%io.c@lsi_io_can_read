@@ -1,0 +1,1 @@
+{ T("sh={.sck=%d, .shnd=%p}, rctx=%p", sh.sck, (void *)sh.shnd, (void *)rctx);
