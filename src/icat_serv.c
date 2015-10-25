@@ -160,9 +160,6 @@ lsi_serv_read(tokarr *t)
 	if (!s_on)
 		return -1;
 
-	if (!lsi_serv_canread())
-		return 0;
-
 	int r = irc_read(s_irc, t, 1000000u);
 	if (r == -1) {
 		if (s_quitat && irc_eof(s_irc))
