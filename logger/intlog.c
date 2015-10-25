@@ -72,6 +72,8 @@ static int s_w_file = 0;
 static int s_w_line = 0;
 static int s_w_func = 0;
 
+static int s_calldepth = 0;
+
 static const char *lvlnam(int lvl);
 static const char *lvlcol(int lvl);
 static int getenv_m(const char *nam, char *dest, size_t destsz);
@@ -177,6 +179,16 @@ ircdbg_log(int mod, int lvl, int errn, const char *file, int line,
 			fputs(payload, stderr);
 			fputs("\n", stderr);
 		} else {
+			char pad[256];
+			if (lvl == LOG_TRACE) {
+				size_t d = s_calldepth * 2;
+				if (d > sizeof pad)
+					d = sizeof pad - 1;
+				memset(pad, ' ', d);
+				pad[d] = '\0';
+			} else
+				pad[0] = '\0';
+
 			char timebuf[27];
 			time_t t = time(NULL);
 			if (!lsi_b_ctime(&t, timebuf))
@@ -186,10 +198,17 @@ ircdbg_log(int mod, int lvl, int errn, const char *file, int line,
 				*ptr = '\0';
 
 			snprintf(resmsg, sizeof resmsg, "%s%s: %*s: "
-			    "%s: %*s:%*d:%*s(): %s%s%s\n",
-			    s_fancy ? lvlcol(lvl) : "", timebuf, s_w_modnam,
-			    modnames[mod], lvlnam(lvl), s_w_file, file,
-			    s_w_line, line, s_w_func, func, payload, errmsg,
+			    "%s: %s%*s:%*d:%*s(): %s%s%s\n",
+			    s_fancy ? lvlcol(lvl) : "",
+			    timebuf,
+			    s_w_modnam, modnames[mod],
+			    lvlnam(lvl),
+			    pad,
+			    s_w_file, file,
+			    s_w_line, line,
+			    s_w_func, func,
+			    payload,
+			    errmsg,
 			    s_fancy ? COL_RST : "");
 
 			fputs(resmsg, stderr);
@@ -282,6 +301,20 @@ ircdbg_init(void)
 	s_init = true;
 }
 
+void
+ircdbg_tret(void)
+{
+	if (s_calldepth == 0) {
+		fprintf(stderr, "call depth would be <0\n");
+		return;
+	}
+	s_calldepth--;
+}
+
+void
+ircdbg_tcall(void) {
+	s_calldepth++;
+}
 
 // ---- local helpers ----
 

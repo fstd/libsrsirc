@@ -55,12 +55,19 @@
 
 #if NOTRACE
 # define T(...) do{}while(0)
-# define TE(...) do{}while(0)
+# define TR(...) do{}while(0)
 #else
 # define T(...)                                                                \
- ircdbg_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
-# define TE(...)                                                               \
- ircdbg_log(LOG_MODULE,LOG_TRACE,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
+ do{ \
+ ircdbg_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,__VA_ARGS__); \
+ ircdbg_tcall(); \
+ } while (0)
+
+# define TR(...)                                                                \
+ do{ \
+ ircdbg_tret(); \
+ ircdbg_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,__VA_ARGS__); \
+ } while (0)
 #endif
 
 #define V(...)                                                                 \
@@ -122,6 +129,8 @@ int ircdbg_getlvl(int mod);
 void ircdbg_setfancy(bool fancy);
 bool ircdbg_getfancy(void);
 
+void ircdbg_tret(void);
+void ircdbg_tcall(void);
 
 // ----- backend -----
 void ircdbg_log(int mod, int lvl, int errn, const char *file, int line,

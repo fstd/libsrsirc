@@ -73,8 +73,8 @@ grep -whn "^[ $TAB]*return" "$file" | while read -r ln; do
 done
 
 cat >$tmp  <<'EOF'
-#define TRCRETURN(TYPE, FMTSPEC, CASTTO, EXPR) do { TYPE _ret = (EXPR); T("RET: " FMTSPEC, (CASTTO)_ret); return _ret; } while(0)
-#define TRCRETURNVOID do { T("RET: (void)"); return; } while(0)
+#define TRCRETURN(TYPE, FMTSPEC, CASTTO, EXPR) do { TYPE _ret = (EXPR); TR("RET: " FMTSPEC, (CASTTO)_ret); return _ret; } while(0)
+#define TRCRETURNVOID do { TR("RET: (void)"); return; } while(0)
 EOF
 
 cat $work >>$tmp
