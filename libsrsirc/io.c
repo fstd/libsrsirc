@@ -122,6 +122,7 @@ lsi_io_write(sckhld sh, const char *line)
 static char *
 find_delim(struct readctx *rctx)
 {
+	*rctx->eptr = '\0'; // for tracing
 	for (char *ptr = rctx->wptr; ptr < rctx->eptr; ptr++)
 		if (ISDELIM(*ptr))
 			return ptr;

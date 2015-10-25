@@ -61,11 +61,12 @@ lsi_com_strCchr(const char *str, char c)
 char *
 lsi_com_strNcpy(char *dst, const char *src, size_t dst_sz)
 {
+	char *orig = dst;
 	dst[dst_sz-1] = '\0';
 	while (--dst_sz)
 		if (!(*dst++ = *src++))
 			break;
-	return dst;
+	return orig;
 }
 
 int
