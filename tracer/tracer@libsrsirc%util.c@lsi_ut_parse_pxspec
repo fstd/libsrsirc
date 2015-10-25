@@ -1,1 +1,1 @@
-{ T("ptype=%p, hoststr=%p, hoststr_sz=%zu, port=%p, pxspec='%s'", (void *)ptype, (void *)hoststr, hoststr_sz, (void *)port, pxspec);
+{ TC("ptype=%p, hoststr=%p, hoststr_sz=%zu, port=%p, pxspec='%s'", (void *)ptype, (void *)hoststr, hoststr_sz, (void *)port, pxspec);

@@ -1,1 +1,1 @@
-{ T("ctx=%p, ident='%s', tag=%p, autofree=%d", (void *)ctx, ident, tag, autofree);
+{ TC("ctx=%p, ident='%s', tag=%p, autofree=%d", (void *)ctx, ident, tag, autofree);

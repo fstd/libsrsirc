@@ -1,1 +1,1 @@
-{ T("sck=%d, host='%s', port=%"PRIu16", to_us=%"PRIu64, sck, host, port, to_us);
+{ TC("sck=%d, host='%s', port=%"PRIu16", to_us=%"PRIu64, sck, host, port, to_us);

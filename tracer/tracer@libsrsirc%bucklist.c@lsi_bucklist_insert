@@ -1,1 +1,1 @@
-{ T("l=%p, i=%zu, key='%s', val=%p", (void *)l, i, key, val);
+{ TC("l=%p, i=%zu, key='%s', val=%p", (void *)l, i, key, val);

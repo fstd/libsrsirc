@@ -1,1 +1,1 @@
-{ T("ctx=%p, dist='%s'", (void *)ctx, dist);
+{ TC("ctx=%p, dist='%s'", (void *)ctx, dist);

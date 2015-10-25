@@ -1,1 +1,1 @@
-{ T("c=%p (%s), tag=%p, autofree=%d", (void *)c, c->name, tag, autofree);
+{ TC("c=%p (%s), tag=%p, autofree=%d", (void *)c, c->name, tag, autofree);

@@ -1,1 +1,1 @@
-{ T("ctx=%p, full=%d", (void *)ctx, full);
+{ TC("ctx=%p, full=%d", (void *)ctx, full);

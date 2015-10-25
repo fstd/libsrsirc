@@ -1,1 +1,1 @@
-{ T("h=%p, dbgname='%s'", (void *)h, dbgname);
+{ TC("h=%p, dbgname='%s'", (void *)h, dbgname);

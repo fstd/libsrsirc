@@ -1,1 +1,1 @@
-{ T("sck=%d, buf=%p, len=%zu", sck, buf, len);
+{ TC("sck=%d, buf=%p, len=%zu", sck, buf, len);

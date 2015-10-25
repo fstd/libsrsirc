@@ -1,1 +1,1 @@
-{ T("ctx=%p, ident='%s', newnick='%s', allocerr=%p", (void *)ctx, ident, newnick, (void *)allocerr);
+{ TC("ctx=%p, ident='%s', newnick='%s', allocerr=%p", (void *)ctx, ident, newnick, (void *)allocerr);

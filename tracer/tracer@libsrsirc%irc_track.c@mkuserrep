@@ -1,1 +1,1 @@
-{ T("dest=%p, u=%p (%s), modepfx='%s'", (void *)dest, (void *)u, u->nick, modepfx);
+{ TC("dest=%p, u=%p (%s), modepfx='%s'", (void *)dest, (void *)u, u->nick, modepfx);

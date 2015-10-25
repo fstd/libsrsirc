@@ -1,1 +1,1 @@
-{ T("sh={.sck=%d, .shnd=%p}, rctx=%p, tok=%p, to_us=%"PRIu64, sh.sck, (void *)sh.shnd, (void *)rctx, (void *)tok, to_us);
+{ TC("sh={.sck=%d, .shnd=%p}, rctx=%p, tok=%p, to_us=%"PRIu64, sh.sck, (void *)sh.shnd, (void *)rctx, (void *)tok, to_us);

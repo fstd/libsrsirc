@@ -1,1 +1,1 @@
-{ T("ctx=%p, dest=%p, chname='%s', ident='%s'", (void *)ctx, (void *)dest, chname, ident);
+{ TC("ctx=%p, dest=%p, chname='%s', ident='%s'", (void *)ctx, (void *)dest, chname, ident);

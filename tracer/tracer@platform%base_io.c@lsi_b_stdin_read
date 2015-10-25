@@ -1,1 +1,1 @@
-{ T("buf=%p, nbytes=%zu", buf, nbytes);
+{ TC("buf=%p, nbytes=%zu", buf, nbytes);

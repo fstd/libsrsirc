@@ -1,1 +1,1 @@
-{ T("ctx=%p, chanarr=%p, chanarr_cnt=%zu", (void *)ctx, (void *)chanarr, chanarr_cnt);
+{ TC("ctx=%p, chanarr=%p, chanarr_cnt=%zu", (void *)ctx, (void *)chanarr, chanarr_cnt);

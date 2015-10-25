@@ -1,1 +1,1 @@
-{ T("chan='%s'", chan);
+{ TC("chan='%s'", chan);

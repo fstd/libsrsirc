@@ -1,1 +1,1 @@
-{ T("ctx=%p, dumbmode=%d", (void *)ctx, dumbmode);
+{ TC("ctx=%p, dumbmode=%d", (void *)ctx, dumbmode);

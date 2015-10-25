@@ -1,1 +1,1 @@
-{ T("line='%s'", line);
+{ TC("line='%s'", line);

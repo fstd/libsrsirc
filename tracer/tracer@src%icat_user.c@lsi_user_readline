@@ -1,1 +1,1 @@
-{ T("dest=%p, destsz=%zu", (void *)dest, destsz);
+{ TC("dest=%p, destsz=%zu", (void *)dest, destsz);

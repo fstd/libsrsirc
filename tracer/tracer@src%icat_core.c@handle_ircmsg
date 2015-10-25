@@ -1,1 +1,1 @@
-{ T("tok=%p", (void *)tok);
+{ TC("tok=%p", (void *)tok);

@@ -1,1 +1,1 @@
-{ T("argc=%p (%d), argv=%p, sett=%p", (void *)argc, *argc, (void *)argv, (void *)sett);
+{ TC("argc=%p (%d), argv=%p, sett=%p", (void *)argc, *argc, (void *)argv, (void *)sett);

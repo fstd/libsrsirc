@@ -1,1 +1,1 @@
-{ T("dest=%p, addr='%s'", (void *)dest, addr);
+{ TC("dest=%p, addr='%s'", (void *)dest, addr);

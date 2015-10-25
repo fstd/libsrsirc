@@ -1,1 +1,1 @@
-{ T("ctx=%p, tokarr=%p, to_us=%"PRIu64, (void *)ctx, (void *)tok, to_us);
+{ TC("ctx=%p, tokarr=%p, to_us=%"PRIu64, (void *)ctx, (void *)tok, to_us);

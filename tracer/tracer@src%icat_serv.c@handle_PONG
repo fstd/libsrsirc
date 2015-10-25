@@ -1,1 +1,1 @@
-{ T("irchnd=%p, tok=%p, nargs=%zu, pre=%d", (void *)irchnd, (void *)tok, nargs, pre);
+{ TC("irchnd=%p, tok=%p, nargs=%zu, pre=%d", (void *)irchnd, (void *)tok, nargs, pre);

@@ -1,1 +1,1 @@
-{ T("ctx=%p, c=%p (%s), modestr='%s'", (void *)ctx, (void *)c, c->name, modestr);
+{ TC("ctx=%p, c=%p (%s), modestr='%s'", (void *)ctx, (void *)c, c->name, modestr);

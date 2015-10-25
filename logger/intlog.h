@@ -55,9 +55,12 @@
 
 #if NOTRACE
 # define T(...) do{}while(0)
+# define TC(...) do{}while(0)
 # define TR(...) do{}while(0)
 #else
 # define T(...)                                                                \
+ ircdbg_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
+# define TC(...)                                                                \
  do{ \
  ircdbg_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,__VA_ARGS__); \
  ircdbg_tcall(); \

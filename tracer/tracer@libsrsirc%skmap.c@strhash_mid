@@ -1,1 +1,1 @@
-{ T("s='%s', cmap=%p", s, (void *)cmap);
+{ TC("s='%s', cmap=%p", s, (void *)cmap);

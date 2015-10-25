@@ -1,1 +1,1 @@
-{ T("typestr='%s'", typestr);
+{ TC("typestr='%s'", typestr);

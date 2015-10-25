@@ -1,1 +1,1 @@
-{ T("dest=%p, destsz=%zu, ip4str='%s'", (void *)dest, destsz, ip4str);
+{ TC("dest=%p, destsz=%zu, ip4str='%s'", (void *)dest, destsz, ip4str);

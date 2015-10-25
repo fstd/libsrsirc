@@ -1,1 +1,1 @@
-{ T("fds=%p, nfds=%zu, noresult=%d, rdbl=%d, to_us=%"PRIu64, (void *)fds, nfds, noresult, rdbl, to_us);
+{ TC("fds=%p, nfds=%zu, noresult=%d, rdbl=%d, to_us=%"PRIu64, (void *)fds, nfds, noresult, rdbl, to_us);

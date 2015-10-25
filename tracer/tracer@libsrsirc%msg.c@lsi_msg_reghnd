@@ -1,1 +1,1 @@
-{ T("ctx=%p, cmd='%s', hndfn=(fp), module='%s'", (void *)ctx, cmd, module);
+{ TC("ctx=%p, cmd='%s', hndfn=(fp), module='%s'", (void *)ctx, cmd, module);

@@ -1,1 +1,1 @@
-{ T("n1='%s', n2='%s', casemap=%d", n1, n2, casemap);
+{ TC("n1='%s', n2='%s', casemap=%d", n1, n2, casemap);

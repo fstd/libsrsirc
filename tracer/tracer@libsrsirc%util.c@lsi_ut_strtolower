@@ -1,1 +1,1 @@
-{ T("dest=%p, destsz=%zu, str='%s', casemap=%d", (void *)dest, destsz, str, casemap);
+{ TC("dest=%p, destsz=%zu, str='%s', casemap=%d", (void *)dest, destsz, str, casemap);

@@ -1,1 +1,1 @@
-{ T("us=%"PRIu64, us);
+{ TC("us=%"PRIu64, us);

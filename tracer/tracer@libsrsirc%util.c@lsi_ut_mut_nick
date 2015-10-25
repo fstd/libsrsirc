@@ -1,1 +1,1 @@
-{ T("nick='%s', nick_sz=%zu", nick, nick_sz);
+{ TC("nick='%s', nick_sz=%zu", nick, nick_sz);

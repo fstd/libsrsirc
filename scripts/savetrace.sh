@@ -35,7 +35,7 @@ find libsrsirc src platform -name '*.c' | while read -r f; do
 		fi
 
 		case "$ln" in
-			"{ T("*) sed -n ${lno}p $f >"tracer/tracer@${fnn}@${lastfunc}" ;;
+			"{ TC("*) sed -n ${lno}p $f >"tracer/tracer@${fnn}@${lastfunc}" ;;
 		esac
 	done
 done

@@ -1,1 +1,1 @@
-{ T("sz=%zu", sz);
+{ TC("sz=%zu", sz);

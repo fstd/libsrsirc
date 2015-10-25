@@ -1,1 +1,1 @@
-{ T("lnbuf='%s'", lnbuf);
+{ TC("lnbuf='%s'", lnbuf);

@@ -1,1 +1,1 @@
-{ T("ip4str='%s'", ip4str);
+{ TC("ip4str='%s'", ip4str);

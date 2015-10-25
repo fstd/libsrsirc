@@ -1,1 +1,1 @@
-{ T("buf='%s', tok=%p", buf, (void *)tok);
+{ TC("buf='%s', tok=%p", buf, (void *)tok);

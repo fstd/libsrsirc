@@ -1,1 +1,1 @@
-{ T("sig=%d, sigfn=(fp)", sig);
+{ TC("sig=%d, sigfn=(fp)", sig);

@@ -1,1 +1,1 @@
-{ T("ctx=%p, uname='%s'", (void *)ctx, uname);
+{ TC("ctx=%p, uname='%s'", (void *)ctx, uname);

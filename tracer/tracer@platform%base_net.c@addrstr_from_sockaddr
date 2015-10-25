@@ -1,1 +1,1 @@
-{ T("addr=%p, addrsz=%zu, port=%p, ai=%p", addr, addrsz, (void *)port, (void *)ai);
+{ TC("addr=%p, addrsz=%zu, port=%p, ai=%p", addr, addrsz, (void *)port, (void *)ai);

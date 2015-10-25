@@ -1,1 +1,1 @@
-{ T("arg=%p (%s)", arg, (const char *)arg);
+{ TC("arg=%p (%s)", arg, (const char *)arg);

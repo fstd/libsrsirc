@@ -1,1 +1,1 @@
-{ T("typenum=%d", typenum);
+{ TC("typenum=%d", typenum);

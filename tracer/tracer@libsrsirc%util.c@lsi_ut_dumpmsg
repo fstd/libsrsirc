@@ -1,1 +1,1 @@
-{ T("tag=%p, msg=%p", tag, (void *)msg);
+{ TC("tag=%p, msg=%p", tag, (void *)msg);

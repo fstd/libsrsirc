@@ -1,1 +1,1 @@
-{ T("str='%s'", str);
+{ TC("str='%s'", str);

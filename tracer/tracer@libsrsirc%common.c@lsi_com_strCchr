@@ -1,1 +1,1 @@
-{ T("str='%s', c=0x%"PRIx8, str, (uint8_t)c);
+{ TC("str='%s', c=0x%"PRIx8, str, (uint8_t)c);

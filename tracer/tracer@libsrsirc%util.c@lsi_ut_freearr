@@ -1,1 +1,1 @@
-{ T("arr=%p", (void *)arr);
+{ TC("arr=%p", (void *)arr);
