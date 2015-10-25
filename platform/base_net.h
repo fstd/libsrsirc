@@ -44,10 +44,10 @@ int lsi_b_select(int *fds, size_t nfds, bool noresult, bool rdbl,
 bool lsi_b_blocking(int sck, bool blocking);
 bool lsi_b_sock_ok(int sck);
 
-long lsi_b_read(int sck, void *buf, size_t sz, bool *tryagain);
+long lsi_b_read(int sck, void *buf, size_t sz, uint64_t to_us);
 long lsi_b_write(int sck, const void *buf, size_t len);
 
-long lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, bool *tryagain);
+long lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, uint64_t to_us);
 long lsi_b_write_ssl(SSLTYPE ssl, const void *buf, size_t len);
 
 int lsi_b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res);

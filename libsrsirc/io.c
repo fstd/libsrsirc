@@ -35,7 +35,7 @@
 static char *find_delim(struct readctx *rctx);
 static int read_more(sckhld sh, struct readctx *rctx, uint64_t to_us);
 static bool write_str(sckhld sh, const char *str);
-static long read_wrap(sckhld sh, void *buf, size_t sz, bool *tryagain);
+static long read_wrap(sckhld sh, void *buf, size_t sz, uint64_t to_us);
 static long send_wrap(sckhld sh, const void *buf, size_t len);
 
 
@@ -152,17 +152,16 @@ read_more(sckhld sh, struct readctx *rctx, uint64_t to_us)
 		remain = WORKBUF_SZ - (rctx->eptr - rctx->workbuf);
 	}
 
-	int r = lsi_b_select(&sh.sck, 1, true, true, to_us);
-	if (r != 1)
-		return r;
 
-	bool tryagain = false;
-	long n = read_wrap(sh, rctx->eptr, remain, &tryagain);
+	long n = read_wrap(sh, rctx->eptr, remain, to_us);
+	// >0: Amount of bytes read
+	// 0: timeout
+	// -1: Failure
+	// -2: EOF
 	if (n <= 0) {
-		if (tryagain)
-			return 0;
-		n == 0 ?  W("read: EOF") : WE("read failed");
-		return n == 0 ? -2 : -1; // FIXME: magic numbers
+		if (n < 0)
+			n == -2 ?  W("read: EOF") : WE("read failed");
+		return n;
 	}
 
 	rctx->eptr += n;
@@ -189,11 +188,11 @@ write_str(sckhld sh, const char *str)
 /* wrap around either read() or SSL_read(), depending on whether
  * or not SSL is compiled-in and enabled (or not) */
 static long
-read_wrap(sckhld sh, void *buf, size_t sz, bool *tryagain)
+read_wrap(sckhld sh, void *buf, size_t sz, uint64_t to_us)
 {
 	if (sh.shnd)
-		return lsi_b_read_ssl(sh.shnd, buf, sz, tryagain);
-	return lsi_b_read(sh.sck, buf, sz, tryagain);
+		return lsi_b_read_ssl(sh.shnd, buf, sz, to_us);
+	return lsi_b_read(sh.sck, buf, sz, to_us);
 }
 
 /* likewise for send()/SSL_write() */

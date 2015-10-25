@@ -64,21 +64,15 @@ lsi_px_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 	while (c < sizeof buf && (c < 4 || buf[c-4] != '\r' ||
 	    buf[c-3] != '\n' || buf[c-2] != '\r' || buf[c-1] != '\n')) {
 		errno = 0;
-		bool tryagain = false;
-		n = lsi_b_read(sck, &buf[c], 1, &tryagain);
+		uint64_t tnow = lsi_b_tstamp_us();
+		uint64_t trem = tnow > tsend ? 1 : tsend - tnow;
+		n = lsi_b_read(sck, &buf[c], 1, trem);
 		if (n <= 0) {
 			if (n == 0)
-				W(DBGSPEC" unexpected EOF",
-				    sck, host, port);
-			else if (tryagain) {
-				if (!lsi_com_check_timeout(tsend, NULL)) {
-					lsi_b_usleep(10000);
-					continue;
-				}
-				W(DBGSPEC" timeout hit",
-				    sck, host, port);
-			} else
-				WE(DBGSPEC" read failed",
+				W(DBGSPEC" timeout hit", sck, host, port);
+			else if (n == -2)
+				W(DBGSPEC" unexpected EOF", sck, host, port);
+			else WE(DBGSPEC" read failed",
 				    sck, host, port);
 			return false;
 		}
@@ -137,19 +131,16 @@ lsi_px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 	char resp[8];
 	c = 0;
 	while (c < 8) {
+		uint64_t tnow = lsi_b_tstamp_us();
+		uint64_t trem = tnow > tsend ? 1 : tsend - tnow;
 		errno = 0;
-		bool tryagain = false;
-		n = lsi_b_read(sck, &resp+c, 8-c, &tryagain);
+		n = lsi_b_read(sck, &resp+c, 8-c, trem);
 		if (n <= 0) {
-			if (tryagain) {
-				if (!lsi_com_check_timeout(tsend, NULL)) {
-					lsi_b_usleep(10000);
-					continue;
-				}
+			if (n == 0)
 				W(DBGSPEC" timeout hit", sck, host, port);
-			} else if (n == 0) {
-				W(DBGSPEC" unexpected EOF", sck, host, port);
-			} else
+			else if (n == -2)
+			      W(DBGSPEC" unexpected EOF", sck, host, port);
+			else
 				WE(DBGSPEC" read failed", sck, host, port);
 			return false;
 		}
@@ -163,9 +154,9 @@ lsi_px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 bool
 lsi_px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 {
-	E("proxu support currently commented out, it's horrible. plx fix.");
-	return false;
+	// This is horrible.  sanitize!
 	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
+	uint64_t tnow, trem;
 	unsigned char logon[14];
 
 	if (!port) {
@@ -197,22 +188,16 @@ lsi_px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	c = 0;
 	while (c < 2) {
 		errno = 0;
-		bool tryagain = false;
-		n = lsi_b_read(sck, &resp+c, 2-c, &tryagain);
+		tnow = lsi_b_tstamp_us();
+		trem = tnow > tsend ? 1 : tsend - tnow;
+		n = lsi_b_read(sck, &resp+c, 2-c, trem);
 		if (n <= 0) {
-			if (tryagain) {
-				if (!lsi_com_check_timeout(tsend, NULL)) {
-					lsi_b_usleep(10000);
-					continue;
-				}
-				W(DBGSPEC" timeout 1 hit",
-				    sck, host, port);
-			} else if (n == 0) {
-				W(DBGSPEC" unexpected EOF",
-				    sck, host, port);
-			} else
-				WE(DBGSPEC" read failed",
-				    sck, host, port);
+			if (n == 0)
+				W(DBGSPEC" timeout 1 hit", sck, host, port);
+			else if (n == -2)
+				W(DBGSPEC" unexpected EOF", sck, host, port);
+			else
+				WE(DBGSPEC" read failed", sck, host, port);
 			return false;
 		}
 		c += n;
@@ -275,22 +260,16 @@ lsi_px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	c = 0;
 	while (c < l) {
 		errno = 0;
-		bool tryagain = false;
-		n = lsi_b_read(sck, resp + c, l - c, &tryagain);
+		tnow = lsi_b_tstamp_us();
+		trem = tnow > tsend ? 1 : tsend - tnow;
+		n = lsi_b_read(sck, resp + c, l - c, trem);
 		if (n <= 0) {
-			if (tryagain) {
-				if (!lsi_com_check_timeout(tsend, NULL)) {
-					lsi_b_usleep(10000);
-					continue;
-				}
-				W(DBGSPEC" timeout 2 hit",
-				    sck, host, port);
-			} else if (n == 0) {
-				W(DBGSPEC" unexpected EOF",
-				    sck, host, port);
-			} else
-				WE(DBGSPEC" read failed",
-				    sck, host, port);
+			if (n == 0)
+				W(DBGSPEC" timeout 2 hit", sck, host, port);
+			else if (n == -2)
+				W(DBGSPEC" unexpected EOF", sck, host, port);
+			else
+				WE(DBGSPEC" read failed", sck, host, port);
 			return false;
 		}
 		c += n;
@@ -325,22 +304,16 @@ lsi_px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	while (c < l) {
 		errno = 0;
 		/* read the very first byte seperately */
-		bool tryagain = false;
-		n = lsi_b_read(sck, resp + c, c ? l - c : 1, &tryagain);
+		tnow = lsi_b_tstamp_us();
+		trem = tnow > tsend ? 1 : tsend - tnow;
+		n = lsi_b_read(sck, resp + c, c ? l - c : 1, trem);
 		if (n <= 0) {
-			if (tryagain) {
-				if (!lsi_com_check_timeout(tsend, NULL)) {
-					lsi_b_usleep(10000);
-					continue;
-				}
-				W(DBGSPEC" timeout 2 hit",
-				    sck, host, port);
-			} else if (n == 0) {
-				W(DBGSPEC" unexpected EOF",
-				    sck, host, port);
-			} else
-				WE(DBGSPEC" read failed",
-				    sck, host, port);
+			if (n == 0)
+				W(DBGSPEC" timeout 2 hit", sck, host, port);
+			else if (n == 0)
+				W(DBGSPEC" unexpected EOF", sck, host, port);
+			else
+				WE(DBGSPEC" read failed", sck, host, port);
 			return false;
 		}
 		if (!c && dns)

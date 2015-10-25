@@ -342,38 +342,30 @@ lsi_b_sock_ok(int sck)
 
 
 long
-lsi_b_read(int sck, void *buf, size_t sz, bool *tryagain)
+lsi_b_read(int sck, void *buf, size_t sz, uint64_t to_us)
 {
 	V("read()ing from sck %d (bufsz: %zu)", sck, sz);
+	int s;
+	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
+
+	while ((!tsend || lsi_b_tstamp_us() < tsend) &&
+	    (s = lsi_b_select(&sck, 1, true, true, to_us)) == 0)
+			;
+	if (s <= 0)
+		return s;
+
 #if HAVE_LIBWS2_32
 	int r = recv(sck, buf, sz, 0);
 	if (r == SOCKET_ERROR) {
-		bool wb = WSAGetLastError() == WSAEWOULDBLOCK
-		       || WSAGetLastError() == WSAEINPROGRESS;
 
 #elif HAVE_READ
 	ssize_t r = read(sck, buf, sz);
 	if (r == -1) {
-		bool wb =
-# if HAVE_EWOULDBLOCK
-		    errno == EWOULDBLOCK ||
-# endif
-# if HAVE_EAGAIN
-		    errno == EAGAIN ||
-# endif
-		    false;
 #else
 # error "We need something like read()"
 #endif
 
-		if (tryagain)
-			*tryagain = wb;
-
-		if (wb)
-			V("read() would block...");
-		else
-			EE("read() from sck %d (bufsz: %zu)", sck, sz);
-
+		EE("read/recv() from sck %d (bufsz: %zu)", sck, sz);
 	} else if (r > LONG_MAX) {
 		W("read too long, capping return value");
 		r = LONG_MAX;
