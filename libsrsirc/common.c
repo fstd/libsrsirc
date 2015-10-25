@@ -128,8 +128,8 @@ tryhost(struct addrlist *ai, char *remaddr, size_t remaddr_sz,
 	r = lsi_b_select(&sck, 1, true, false, to_us);
 
 	if (r == 1) {
-		if (!lsi_b_blocking(sck, true))
-			W("failed to clear socket non-blocking mode");
+		//if (!lsi_b_blocking(sck, true))
+		//	W("failed to clear socket non-blocking mode");
 
 		if (lsi_b_sock_ok(sck)) {
 			if (remaddr && remaddr_sz)

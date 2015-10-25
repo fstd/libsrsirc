@@ -391,20 +391,54 @@ lsi_b_write(int sck, const void *buf, size_t len)
 # if HAVE_MSG_NOSIGNAL
 	flags = MSG_NOSIGNAL;
 # endif
+	size_t bc = 0;
 	V("send()ing %zu bytes over sck %d", len, sck);
-	ssize_t r = send(sck, buf, len, flags);
-	if (r == -1)
-		EE("send() (sck %d, len %zu)", sck, len);
-	else
-		V("sent %zu bytes over sck %d", (size_t)r, sck);
+	while (bc < len) {
+		int s;
+		while ((s = lsi_b_select(&sck, 1, true, false, 10000)) == 0)
+			;
 
-	if (r > LONG_MAX) {
-		W("write too long, capping return value from %zu to %ld",
-		    (size_t)r, LONG_MAX);
-		r = LONG_MAX;
+		if (s == -1)
+			return -1;
+
+# if HAVE_LIBWS2_32
+		int r = send(sck, (unsigned char *)buf + bc, (int)(len - bc), flags);
+		if (r == SOCKET_ERROR) {
+			bool wb = WSAGetLastError() == WSAEWOULDBLOCK
+			       || WSAGetLastError() == WSAEINPROGRESS;
+# else
+		ssize_t r = send(sck, (unsigned char *)buf + bc, len - bc, flags);
+		if (r == -1) {
+			bool wb =
+#  if HAVE_EWOULDBLOCK
+			    errno == EWOULDBLOCK ||
+#  endif
+#  if HAVE_EAGAIN
+			    errno == EAGAIN ||
+#  endif
+			    false;
+# endif
+
+			if (wb) {
+				V("send() would block...");
+				continue;
+			}
+
+			EE("send() (sck %d, len %zu)", sck, len);
+			return -1;
+		}
+
+		V("sent %zu bytes over sck %d", (size_t)r, sck);
+		bc += (size_t)r;
 	}
 
-	return (long)r;
+	if (bc > LONG_MAX) {
+		W("write too long, capping return value from %zu to %ld",
+		    (size_t)bc, LONG_MAX);
+		bc = LONG_MAX;
+	}
+
+	return (long)bc;
 #else
 # error "We need something like send()"
 #endif
