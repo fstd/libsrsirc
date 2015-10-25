@@ -1,1 +1,1 @@
-{ TC("ssl=%p, buf=%p, sz=%zu, tryagain=%p", (void *)ssl, buf, sz, (void *)tryagain);
+{ TC("ssl=%p, buf=%p, sz=%zu, to_us=%"PRIu64, (void *)ssl, buf, sz, to_us);

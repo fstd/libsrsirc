@@ -1,1 +1,0 @@
-{ TC("ctx=%p", (void *)ctx);

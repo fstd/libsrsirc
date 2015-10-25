@@ -1,1 +1,1 @@
-{ TC("sck=%d, buf=%p, sz=%zu, tryagain=%p", sck, buf, sz, (void *)tryagain);
+{ TC("sck=%d, buf=%p, sz=%zu, to_us=%"PRIu64, sck, buf, sz, to_us);
