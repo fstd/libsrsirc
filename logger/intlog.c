@@ -67,7 +67,7 @@ static bool s_fancy;
 static bool s_init;
 static int s_lvlarr[NUM_MODS];
 
-static int s_w_modnam = 0;
+static int s_w_modnam = 20;
 static int s_w_file = 0;
 static int s_w_line = 0;
 static int s_w_func = 0;

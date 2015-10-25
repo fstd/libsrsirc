@@ -408,7 +408,7 @@ init_logger(void)
 	ircdbg_setlvl(MOD_ICATSERV, DEF_LOGLVL);
 	ircdbg_setlvl(MOD_ICATUSER, DEF_LOGLVL);
 	ircdbg_setlvl(MOD_ICATMISC, DEF_LOGLVL);
-	return;
+	/* no return; here, we're not tracing this */
 }
 
 static void
