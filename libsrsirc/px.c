@@ -41,6 +41,7 @@ bool
 lsi_px_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 {
 	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
+	uint64_t tnow, trem = 0;
 	char buf[256];
 	snprintf(buf, sizeof buf, "CONNECT %s:%d HTTP/1.0\r\nHost: %s:%d"
 	    "\r\n\r\n", host, port, host, port);
@@ -64,8 +65,10 @@ lsi_px_logon_http(int sck, const char *host, uint16_t port, uint64_t to_us)
 	while (c < sizeof buf && (c < 4 || buf[c-4] != '\r' ||
 	    buf[c-3] != '\n' || buf[c-2] != '\r' || buf[c-1] != '\n')) {
 		errno = 0;
-		uint64_t tnow = lsi_b_tstamp_us();
-		uint64_t trem = tnow > tsend ? 1 : tsend - tnow;
+		if (tsend) {
+			tnow = lsi_b_tstamp_us();
+			trem = tnow >= tsend ? 1 : tsend - tnow;
+		}
 		n = lsi_b_read(sck, &buf[c], 1, trem);
 		if (n <= 0) {
 			if (n == 0)
@@ -95,6 +98,7 @@ bool
 lsi_px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 {
 	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
+	uint64_t tnow, trem = 0;
 	unsigned char logon[14];
 	uint16_t nport = lsi_b_htons(port);
 
@@ -131,8 +135,10 @@ lsi_px_logon_socks4(int sck, const char *host, uint16_t port, uint64_t to_us)
 	char resp[8];
 	c = 0;
 	while (c < 8) {
-		uint64_t tnow = lsi_b_tstamp_us();
-		uint64_t trem = tnow > tsend ? 1 : tsend - tnow;
+		if (tsend) {
+			tnow = lsi_b_tstamp_us();
+			trem = tnow >= tsend ? 1 : tsend - tnow;
+		}
 		errno = 0;
 		n = lsi_b_read(sck, &resp+c, 8-c, trem);
 		if (n <= 0) {
@@ -156,7 +162,7 @@ lsi_px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 {
 	// This is horrible.  sanitize!
 	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
-	uint64_t tnow, trem;
+	uint64_t tnow, trem = 0;
 	unsigned char logon[14];
 
 	if (!port) {
@@ -188,8 +194,10 @@ lsi_px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	c = 0;
 	while (c < 2) {
 		errno = 0;
-		tnow = lsi_b_tstamp_us();
-		trem = tnow > tsend ? 1 : tsend - tnow;
+		if (tsend) {
+			tnow = lsi_b_tstamp_us();
+			trem = tnow >= tsend ? 1 : tsend - tnow;
+		}
 		n = lsi_b_read(sck, &resp+c, 2-c, trem);
 		if (n <= 0) {
 			if (n == 0)
@@ -260,8 +268,10 @@ lsi_px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	c = 0;
 	while (c < l) {
 		errno = 0;
-		tnow = lsi_b_tstamp_us();
-		trem = tnow > tsend ? 1 : tsend - tnow;
+		if (tsend) {
+			tnow = lsi_b_tstamp_us();
+			trem = tnow >= tsend ? 1 : tsend - tnow;
+		}
 		n = lsi_b_read(sck, resp + c, l - c, trem);
 		if (n <= 0) {
 			if (n == 0)
@@ -304,8 +314,10 @@ lsi_px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	while (c < l) {
 		errno = 0;
 		/* read the very first byte seperately */
-		tnow = lsi_b_tstamp_us();
-		trem = tnow > tsend ? 1 : tsend - tnow;
+		if (tsend) {
+			tnow = lsi_b_tstamp_us();
+			trem = tnow >= tsend ? 1 : tsend - tnow;
+		}
 		n = lsi_b_read(sck, resp + c, c ? l - c : 1, trem);
 		if (n <= 0) {
 			if (n == 0)
