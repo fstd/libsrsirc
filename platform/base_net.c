@@ -443,22 +443,56 @@ long
 lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, uint64_t to_us)
 {
 #ifdef WITH_SSL
-	V("SSL_read()ing from ssl socket %p (bufsz: %zu)", (void *)ssl, sz);
-	int r = SSL_read(ssl, buf, sz);
-	if (r < 0) {
-		int errc = SSL_get_error(ssl, r);
-		if (errc == SSL_ERROR_SYSCALL)
-			EE("SSL_read() failed");
-		else
-			E("SSL_read() returned %d, error code %d", r, errc);
-		r = -1;
-	} else
-		V("SSL_read(): %d (ssl socket %p)", r, (void *)ssl);
+	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 
-	return r;
+	V("Wanna read from ssl socket %p (bufsz: %zu)", (void *)ssl, sz);
+	int r;
+	do {
+		V("SSL_read()ing from ssl socket %p (bufsz: %zu)", (void *)ssl, sz);
+		r = SSL_read(ssl, buf, sz);
+		if (r < 0) {
+			int errc = SSL_get_error(ssl, r);
+			V("Error: %d (errc: %d)", r, errc); 
+			if (errc == SSL_ERROR_WANT_READ
+			    || errc == SSL_ERROR_WANT_WRITE) {
+				bool rdbl = errc == SSL_ERROR_WANT_READ;
+				W("SSL WANT %s", rdbl ? "READ" : "WRITE");
+				int sck = SSL_get_fd(ssl);
+
+				uint64_t tnow = lsi_b_tstamp_us();
+				uint64_t trem = tnow > tsend ? 1 : tsend - tnow;
+
+				V("selecting the ssl sockfd for that (trem: %"PRIu64
+				")", trem);
+				r = lsi_b_select(&sck, 1, true, rdbl, trem);
+				if (r <= 0) {
+					V("select: %d", r);
+					break;
+				}
+
+				continue;
+			}
+
+			if (errc == SSL_ERROR_SYSCALL)
+				EE("SSL_read() failed");
+			else
+				E("SSL_read() returned %d, error code %d", r, errc);
+
+			r = -1;
+		} else if (r == 0) {
+			W("SSL_read(): EOF");
+			r = -2;
+		} else
+			V("SSL_read(): %d (ssl socket %p)", r, (void *)ssl);
+
+		break;
+	} while (lsi_b_tstamp_us() < tsend);
+
+	V("ssl read overall result: %d", r);
+	return (long)r;
 #else
 	E("SSL read attempted, but we haven't been compiled with SSL support");
-	return -1;
+	return -1L;
 #endif
 }
 
@@ -467,20 +501,44 @@ long
 lsi_b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
 {
 #ifdef WITH_SSL
-	V("send()ing %zu bytes over ssl socket %p", len, (void *)ssl);
-	int r = SSL_write(ssl, buf, len);
+	size_t bc = 0;
+	while (bc < len) {
+		V("send()ing %zu bytes over ssl socket %p", len, (void *)ssl);
+		int r = SSL_write(ssl, (const unsigned char *)buf + bc, len - bc);
 
-	if (r < 0) {
-		int errc = SSL_get_error(ssl, r);
-		if (errc == SSL_ERROR_SYSCALL)
-			EE("SSL_write() failed");
-		else
-			E("SSL_write() returned %d, error code %d", r, errc);
-		r = -1;
-	} else
+		if (r <= 0) {
+			int errc = SSL_get_error(ssl, r);
+			if (errc == SSL_ERROR_WANT_READ
+			    || errc == SSL_ERROR_WANT_WRITE) {
+				bool rdbl = errc == SSL_ERROR_WANT_READ;
+				int sck = SSL_get_fd(ssl);
+
+				r = lsi_b_select(&sck, 1, true, rdbl, 0);
+				if (r <= 0)
+					break;
+
+				continue;
+			}
+
+			if (errc == SSL_ERROR_SYSCALL)
+				EE("SSL_write() failed");
+			else
+				E("SSL_write() returned %d, error code %d", r, errc);
+			r = -1;
+
+			break;
+		}
+
+		bc += r;
 		V("SSL_write(): %d (ssl socket %p)", r, (void *)ssl);
+	}
 
-	return r;
+	if (bc > LONG_MAX) {
+		W("write too long, capping return value");
+		bc = LONG_MAX;
+	}
+
+	return (long)bc;
 #else
 	E("SSL write attempted, but we haven't been compiled with SSL support");
 	return -1;
