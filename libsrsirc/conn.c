@@ -201,21 +201,33 @@ lsi_conn_connect(iconn *ctx, uint64_t softto_us, uint64_t hardto_us)
 		}
 		D("(%p) sent proxy logon sequence", (void *)ctx);
 
-		//D("(%p) setting to blocking mode", (void *)ctx);
-
-		//if (!lsi_b_blocking(sh.sck, true)) {
-		//	WE("(%p) failed to set blocking mode", (void *)ctx);
-		//	lsi_b_close(sh.sck);
-		//	ctx->sh.sck = -1;
-		//	return false;
-		//}
 	}
+	
+	if (ctx->ssl) {
+		D("(%p) setting to blocking mode for ssl connect", (void *)ctx);
 
-	if (ctx->ssl && !(ctx->sh.shnd = lsi_b_sslize(sh.sck, ctx->sctx))) {
-		lsi_b_close(sh.sck);
-		ctx->sh.sck = -1;
-		W("connect bailing out; couldn't initiate ssl");
-		return false;
+		if (!lsi_b_blocking(sh.sck, true)) {
+			WE("(%p) failed to set blocking mode", (void *)ctx);
+			lsi_b_close(sh.sck);
+			ctx->sh.sck = -1;
+			return false;
+		}
+
+		if (!(ctx->sh.shnd = lsi_b_sslize(sh.sck, ctx->sctx))) {
+			lsi_b_close(sh.sck);
+			ctx->sh.sck = -1;
+			W("connect bailing out; couldn't initiate ssl");
+			return false;
+		}
+
+		D("(%p) setting to nonblocking mode after ssl connect", (void *)ctx);
+
+		if (!lsi_b_blocking(sh.sck, false)) {
+			WE("(%p) failed to clear blocking mode", (void *)ctx);
+			lsi_b_close(sh.sck);
+			ctx->sh.sck = -1;
+			return false;
+		}
 	}
 
 	ctx->state = ON;
