@@ -1,0 +1,28 @@
+SSLCTXTYPE:%p:void *
+SSLTYPE:%p:void *
+bool:%d:int
+bucklist *:%p:void *
+chan *:%p:void *
+chanrep *:%p:void *
+char:%d:int
+char *:'%s':char *
+char **:%p:void *
+const char *:'%s':const char *
+enum hosttypes:%d:int
+iconn *:%p:void *
+int:%d:int
+irc *:%p:void *
+long:%ld:long
+memb *:%p:void *
+size_t:%zu:size_t
+skmap *:%p:void *
+tokarr *:%p:void *
+tokarr *(*:%p:void *
+uint16_t:%"PRIu16":uint16_t
+uint32_t:%"PRIu32":uint32_t
+uint64_t:%"PRIu64":uint64_t
+uint8_t:%"PRIu8":uint8_t
+user *:%p:void *
+userrep *:%p:void *
+void *:%p:void *
+void:(void):void
