@@ -80,19 +80,21 @@ icat_core_run(void)
 			g_inforequest = false;
 		}
 
-		if (icat_serv_canread()) {
-			int r = icat_serv_read(&tok);
-			if (r <= 0)
+		if (icat_serv_online()) {
+			int r = icat_serv_read(&tok, 1);
+			if (r < 0)
 				continue;
+			
+			if (r == 1) {
+				lsi_ut_sndumpmsg(ln, sizeof ln, NULL, &tok);
 
-			lsi_ut_sndumpmsg(ln, sizeof ln, NULL, &tok);
+				I("From server: '%s'", ln);
 
-			I("From server: '%s'", ln);
+				if (strcmp(tok[1], "PRIVMSG") == 0)
+					handle_ircmsg(&tok);
 
-			if (strcmp(tok[1], "PRIVMSG") == 0)
-				handle_ircmsg(&tok);
-
-			idle = false;
+				idle = false;
+			}
 		}
 
 		if (!ignoreuser) {

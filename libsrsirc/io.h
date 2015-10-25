@@ -31,8 +31,6 @@
  */
 int lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok, uint64_t to_us);
 
-bool lsi_io_can_read(sckhld sh, struct readctx *rctx);
-
 /* lsi_io_write
  * Send a message to the ircd
  *

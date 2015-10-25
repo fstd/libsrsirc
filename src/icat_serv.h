@@ -18,8 +18,7 @@ void icat_serv_destroy(void);
 
 bool icat_serv_operate(void);
 
-bool icat_serv_canread(void);
-int icat_serv_read(tokarr *t);
+int icat_serv_read(tokarr *t, uint64_t to_us);
 int icat_serv_printf(const char *fmt, ...);
 int icat_serv_fd(void);
 

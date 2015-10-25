@@ -139,15 +139,6 @@ icat_serv_operate(void)
 	return true;
 }
 
-bool
-icat_serv_canread(void)
-{
-	if (!s_on)
-		return false;
-
-	return irc_can_read(s_irc);
-}
-
 int
 icat_serv_fd(void)
 {
@@ -155,12 +146,12 @@ icat_serv_fd(void)
 }
 
 int
-icat_serv_read(tokarr *t)
+icat_serv_read(tokarr *t, uint64_t to_us)
 {
 	if (!s_on)
 		return -1;
 
-	int r = irc_read(s_irc, t, 1000000u);
+	int r = irc_read(s_irc, t, to_us);
 	if (r == -1) {
 		if (s_quitat && irc_eof(s_irc))
 			N("Connection closed");

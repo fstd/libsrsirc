@@ -320,12 +320,6 @@ irc_eof(irc *ctx)
 }
 
 bool
-irc_can_read(irc *ctx)
-{
-	return lsi_conn_can_read(ctx->con);
-}
-
-bool
 irc_write(irc *ctx, const char *line)
 {
 	bool r = lsi_conn_write(ctx->con, line);

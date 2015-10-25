@@ -564,20 +564,6 @@ void irc_set_dumb(irc *ctx, bool dumbmode);
  */ //XXX is at least the nickname tracked?
 bool irc_get_dumb(irc *ctx);
 
-/** \brief Tell whether our next attempt to irc_read() a message would block
- *
- * This relies on the fact that ircds only ever send full lines, because the
- * assumption this function makes is that /if/ there is *some* data available
- * to read from the socket (as determined by, say, select()), then a there's
- * a whole line available t be read.  Needless to point out, a broken/malicious
- * ircd could trick us into blocking in irc_read() anyway, at least until the
- * timeout expires.
- *
- * \return true if the next call to irc_read() can give us a message without
- *         waiting.
- */
-bool irc_can_read(irc *ctx);
-
 /** \brief Register a protocol message handler
  *
  * This function can be used to register user-defined protocol message handlers
