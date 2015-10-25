@@ -134,7 +134,9 @@ find_delim(struct readctx *rctx)
 static int
 read_more(sckhld sh, struct readctx *rctx, uint64_t to_us)
 {
-	size_t remain = sizeof rctx->workbuf - (rctx->eptr - rctx->workbuf);
+	/* no sizeof rctx->workbuf here because it's one bigger than WORKBUF_SZ
+	 * and we don't want to fill the last byte with data; it's a dummy */
+	size_t remain = WORKBUF_SZ - (rctx->eptr - rctx->workbuf);
 	if (!remain) { /* no more space left in receive buffer */
 		if (rctx->wptr == rctx->workbuf) { /* completely full */
 			E("input too long");
@@ -147,7 +149,7 @@ read_more(sckhld sh, struct readctx *rctx, uint64_t to_us)
 		rctx->wptr = rctx->workbuf;
 		rctx->eptr = &rctx->workbuf[datalen];
 
-		remain = sizeof rctx->workbuf - (rctx->eptr - rctx->workbuf);
+		remain = WORKBUF_SZ - (rctx->eptr - rctx->workbuf);
 	}
 
 	int r = lsi_b_select(&sh.sck, 1, true, true, to_us);

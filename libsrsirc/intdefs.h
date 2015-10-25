@@ -14,7 +14,7 @@
 #include "skmap.h"
 
 /* receive buffer size */
-#define WORKBUF_SZ 4096
+#define WORKBUF_SZ 4095
 
 /* default supported user modes (as per the RFC noone cares about...) */
 #define DEF_UMODES "iswo"
@@ -46,7 +46,7 @@ typedef struct sckhld {
 
 /* read context structure - holds the receive buffer, primarily*/
 struct readctx {
-	char workbuf[WORKBUF_SZ];
+	char workbuf[WORKBUF_SZ + 1];
 	char *wptr; /* pointer to begin of current valid data */
 	char *eptr; /* pointer to one after end of current valid data */
 };
