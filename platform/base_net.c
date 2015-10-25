@@ -341,6 +341,7 @@ lsi_b_sock_ok(int sck)
 }
 
 
+/* returns: >0 on success, 0 on timeout, -1 on failure, -2 on EOF */
 long
 lsi_b_read(int sck, void *buf, size_t sz, uint64_t to_us)
 {
@@ -371,7 +372,7 @@ lsi_b_read(int sck, void *buf, size_t sz, uint64_t to_us)
 		r = LONG_MAX;
 	}
 
-	return (long)r;
+	return r == 0 ? -2L : (long)r;
 }
 
 
@@ -438,7 +439,7 @@ lsi_b_write(int sck, const void *buf, size_t len)
 
 
 long
-lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, bool *tryagain)
+lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, uint64_t to_us)
 {
 #ifdef WITH_SSL
 	V("SSL_read()ing from ssl socket %p (bufsz: %zu)", (void *)ssl, sz);
