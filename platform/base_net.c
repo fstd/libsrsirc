@@ -456,7 +456,7 @@ lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, uint64_t to_us)
 			if (errc == SSL_ERROR_WANT_READ
 			    || errc == SSL_ERROR_WANT_WRITE) {
 				bool rdbl = errc == SSL_ERROR_WANT_READ;
-				W("SSL WANT %s", rdbl ? "READ" : "WRITE");
+				I("SSL WANT %s", rdbl ? "READ" : "WRITE");
 				int sck = SSL_get_fd(ssl);
 
 				uint64_t tnow = lsi_b_tstamp_us();
