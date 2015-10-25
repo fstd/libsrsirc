@@ -55,9 +55,8 @@ lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok, uint64_t to_us)
 	char *linestart;
 	do {
 		while (!(delim = find_delim(rctx))) {
-			uint64_t trem = 0;
-			if (lsi_com_check_timeout(tsend, &trem))
-				return 0;
+			uint64_t tnow = lsi_b_tstamp_us();
+			uint64_t trem = tnow > tsend ? 1 : tsend - tnow;
 
 			int r = read_more(sh, rctx, trem);
 			if (r <= 0)
