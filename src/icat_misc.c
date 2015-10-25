@@ -27,19 +27,19 @@
 
 
 uint8_t
-lsi_strtou8(const char *nptr, char **endptr, int base)
+icat_strtou8(const char *nptr, char **endptr, int base)
 {
 	return (uint8_t)strtoul(nptr, endptr, base);
 }
 
 uint64_t
-lsi_strtou64(const char *nptr, char **endptr, int base)
+icat_strtou64(const char *nptr, char **endptr, int base)
 {
 	return (uint64_t)strtoull(nptr, endptr, base);
 }
 
 bool
-lsi_ismychan(const char *chan)
+icat_ismychan(const char *chan)
 {
 	char chans[512];
 	char search[512];
@@ -50,7 +50,7 @@ lsi_ismychan(const char *chan)
 }
 
 bool
-lsi_isdigitstr(const char *str)
+icat_isdigitstr(const char *str)
 {
 	while (*str)
 		if (!isdigit((unsigned char)*str++))

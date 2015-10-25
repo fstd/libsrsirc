@@ -49,21 +49,21 @@ static void dump_info(void);
 
 
 void
-lsi_core_init(void)
+icat_core_init(void)
 {
-	lsi_serv_init();
+	icat_serv_init();
 	return;
 }
 
 void
-lsi_core_destroy(void)
+icat_core_destroy(void)
 {
-	lsi_serv_destroy();
+	icat_serv_destroy();
 	return;
 }
 
 int
-lsi_core_run(void)
+icat_core_run(void)
 {
 	tokarr tok;
 	char ln[1024];
@@ -80,8 +80,8 @@ lsi_core_run(void)
 			g_inforequest = false;
 		}
 
-		if (lsi_serv_canread()) {
-			int r = lsi_serv_read(&tok);
+		if (icat_serv_canread()) {
+			int r = icat_serv_read(&tok);
 			if (r <= 0)
 				continue;
 
@@ -96,8 +96,8 @@ lsi_core_run(void)
 		}
 
 		if (!ignoreuser) {
-			if (lsi_user_canread()) {
-				size_t olen = lsi_user_readline(ln, sizeof ln);
+			if (icat_user_canread()) {
+				size_t olen = icat_user_readline(ln, sizeof ln);
 				I("From user: '%s'", ln);
 				if (olen >= sizeof ln)
 					W("Line was too long -- truncated!");
@@ -105,15 +105,15 @@ lsi_core_run(void)
 				handle_usermsg(ln);
 
 				idle = false;
-			} else if (lsi_user_eof()) {
+			} else if (icat_user_eof()) {
 				N("EOF on the user end, queuing a QUIT");
-				lsi_serv_printf("QUIT :%s\r\n", g_sett.qmsg);
+				icat_serv_printf("QUIT :%s\r\n", g_sett.qmsg);
 				ignoreuser = true;
 			}
 		}
 
-		uint64_t tquit = lsi_serv_sentquit();
-		bool on = lsi_serv_online();
+		uint64_t tquit = icat_serv_sentquit();
+		bool on = icat_serv_online();
 
 		if (tquit) {
 			if (!on)
@@ -125,16 +125,16 @@ lsi_core_run(void)
 			}
 		}
 
-		if (!on && (!g_sett.reconnect || lsi_user_eof())) {
+		if (!on && (!g_sett.reconnect || icat_user_eof())) {
 			N("IRC offline, not going to reconnect%s.",
 			    g_sett.reconnect?" (because EOF on stdin)":"");
 			break;
 		}
 
 		if (nextop <= lsi_b_tstamp_us()) {
-			if (!lsi_serv_operate()) {
+			if (!icat_serv_operate()) {
 				idle = false;
-				E("lsi_serv_operate() failed");
+				E("icat_serv_operate() failed");
 				if (!on) {
 					N("Delaying next connection attempt");
 					nextop = lsi_b_tstamp_us()
@@ -147,9 +147,9 @@ lsi_core_run(void)
 #ifdef __unix__
 			size_t fdc = 1;
 			int fds[2];
-			fds[0] = lsi_serv_fd();
+			fds[0] = icat_serv_fd();
 			if (!ignoreuser) {
-				fds[1] = lsi_user_fd();
+				fds[1] = icat_user_fd();
 				fdc++;
 			}
 
@@ -158,7 +158,7 @@ lsi_core_run(void)
 			if (tquit)
 				to = tquit + g_sett.waitquit_us;
 			else
-				to = lsi_serv_attention_at();
+				to = icat_serv_attention_at();
 
 			if (to && now >= to)
 				continue; //need immediate attention?
@@ -194,14 +194,14 @@ handle_ircmsg(tokarr *tok)
 	lsi_ut_ident2nick(nick, sizeof nick, (*tok)[0]);
 
 	if (g_sett.ignore_cs
-	    && !lsi_ut_istrcmp(nick, "ChanServ", lsi_serv_casemap()))
+	    && !lsi_ut_istrcmp(nick, "ChanServ", icat_serv_casemap()))
 		return;
 
 	if (g_sett.trgmode)
-		lsi_user_printf("%s %s %s %s\n",
+		icat_user_printf("%s %s %s %s\n",
 		    nick, (*tok)[0], (*tok)[2], (*tok)[3]);
-	else if (lsi_ismychan((*tok)[2]) || !g_sett.ignore_pm)
-		lsi_user_printf("%s\n", (*tok)[3]);
+	else if (icat_ismychan((*tok)[2]) || !g_sett.ignore_pm)
+		icat_user_printf("%s\n", (*tok)[3]);
 	return;
 }
 
@@ -219,7 +219,7 @@ handle_usermsg(char *lnbuf)
 
 	/* protocol escape */
 	if (g_sett.esc && !strncmp(lnbuf, g_sett.esc, strlen(g_sett.esc))) {
-		lsi_serv_printf("%s", lnbuf += strlen(g_sett.esc));
+		icat_serv_printf("%s", lnbuf += strlen(g_sett.esc));
 		return;
 	}
 
@@ -231,7 +231,7 @@ handle_usermsg(char *lnbuf)
 		lnbuf = tok + strlen(tok) + 1;
 	}
 
-	lsi_serv_printf("%s %s :%s",
+	icat_serv_printf("%s %s :%s",
 	    g_sett.notices?"NOTICE":"PRIVMSG", dst, lnbuf);
 	return;
 }
@@ -240,6 +240,6 @@ static void
 dump_info(void)
 {
 	fprintf(stderr, "icat: %sline; read %uln wrote %uln\n",
-	    lsi_serv_online()?"on":"off", s_readcnt, s_writecnt);
+	    icat_serv_online()?"on":"off", s_readcnt, s_writecnt);
 	return;
 }

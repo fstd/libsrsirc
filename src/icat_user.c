@@ -37,7 +37,7 @@ static size_t buf_rem(void);
 
 
 bool
-lsi_user_canread(void)
+icat_user_canread(void)
 {
 	if (buf_cnt()) {
 		*s_buftail = '\0';
@@ -91,15 +91,15 @@ lsi_user_canread(void)
 }
 
 int
-lsi_user_fd(void)
+icat_user_fd(void)
 {
 	return lsi_b_stdin_fd();
 }
 
 size_t
-lsi_user_readline(char *dest, size_t destsz)
+icat_user_readline(char *dest, size_t destsz)
 {
-	if (!lsi_user_canread())
+	if (!icat_user_canread())
 		return 0;
 
 	*s_buftail = '\0';
@@ -120,7 +120,7 @@ lsi_user_readline(char *dest, size_t destsz)
 }
 
 int
-lsi_user_printf(const char *fmt, ...)
+icat_user_printf(const char *fmt, ...)
 {
 	char buf[1024];
 	va_list l;
@@ -135,7 +135,7 @@ lsi_user_printf(const char *fmt, ...)
 }
 
 bool
-lsi_user_eof(void)
+icat_user_eof(void)
 {
 	return s_eof;
 }

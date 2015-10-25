@@ -58,7 +58,7 @@ static bool conread(tokarr *msg, void *tag);
 
 
 void
-lsi_serv_init(void)
+icat_serv_init(void)
 {
 	D("Initializing");
 
@@ -90,7 +90,7 @@ lsi_serv_init(void)
 }
 
 void
-lsi_serv_destroy(void)
+icat_serv_destroy(void)
 {
 	I("Destroying");
 	if (s_irc) {
@@ -108,7 +108,7 @@ lsi_serv_destroy(void)
 }
 
 bool
-lsi_serv_operate(void)
+icat_serv_operate(void)
 {
 	if (!s_on) {
 		D("We're not online");
@@ -140,7 +140,7 @@ lsi_serv_operate(void)
 }
 
 bool
-lsi_serv_canread(void)
+icat_serv_canread(void)
 {
 	if (!s_on)
 		return false;
@@ -149,13 +149,13 @@ lsi_serv_canread(void)
 }
 
 int
-lsi_serv_fd(void)
+icat_serv_fd(void)
 {
 	return irc_sockfd(s_irc);
 }
 
 int
-lsi_serv_read(tokarr *t)
+icat_serv_read(tokarr *t)
 {
 	if (!s_on)
 		return -1;
@@ -174,7 +174,7 @@ lsi_serv_read(tokarr *t)
 }
 
 int
-lsi_serv_printf(const char *fmt, ...)
+icat_serv_printf(const char *fmt, ...)
 {
 	char buf[1024];
 	va_list l;
@@ -204,19 +204,19 @@ lsi_serv_printf(const char *fmt, ...)
 }
 
 bool
-lsi_serv_online(void)
+icat_serv_online(void)
 {
 	return s_on;
 }
 
 int
-lsi_serv_casemap(void)
+icat_serv_casemap(void)
 {
 	return s_casemap;
 }
 
 uint64_t
-lsi_serv_sentquit(void)
+icat_serv_sentquit(void)
 {
 	return s_quitat;
 }
@@ -224,7 +224,7 @@ lsi_serv_sentquit(void)
 
 /* When will we next need attention? */
 uint64_t
-lsi_serv_attention_at(void)
+icat_serv_attention_at(void)
 {
 	uint64_t attat = 0;
 	if (g_sett.hbeat_us)

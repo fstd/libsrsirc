@@ -11,12 +11,12 @@
 #include <stddef.h>
 
 
-bool lsi_user_canread(void);
-size_t lsi_user_readline(char *dest, size_t destsz);
-int lsi_user_printf(const char *fmt, ...);
-int lsi_user_fd(void);
+bool icat_user_canread(void);
+size_t icat_user_readline(char *dest, size_t destsz);
+int icat_user_printf(const char *fmt, ...);
+int icat_user_fd(void);
 
-bool lsi_user_eof(void);
+bool icat_user_eof(void);
 
 
 #endif /* LIBSRSIRC_ICAT_USER_H */

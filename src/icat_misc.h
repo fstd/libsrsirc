@@ -12,11 +12,11 @@
 
 
 
-uint8_t lsi_strtou8(const char *nptr, char **endptr, int base);
-uint64_t lsi_strtou64(const char *nptr, char **endptr, int base);
+uint8_t icat_strtou8(const char *nptr, char **endptr, int base);
+uint64_t icat_strtou64(const char *nptr, char **endptr, int base);
 
-bool lsi_ismychan(const char *chan);
-bool lsi_isdigitstr(const char *str);
+bool icat_ismychan(const char *chan);
+bool icat_isdigitstr(const char *str);
 
 
 
