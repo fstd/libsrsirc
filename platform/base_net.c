@@ -349,9 +349,10 @@ lsi_b_read(int sck, void *buf, size_t sz, uint64_t to_us)
 	int s;
 	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 
-	while ((!tsend || lsi_b_tstamp_us() < tsend) &&
-	    (s = lsi_b_select(&sck, 1, true, true, to_us)) == 0)
-			;
+	do
+	    s = lsi_b_select(&sck, 1, true, true, to_us);
+	while (s == 0 && (!tsend || lsi_b_tstamp_us() < tsend));
+
 	if (s <= 0)
 		return s;
 
@@ -395,12 +396,12 @@ lsi_b_write(int sck, const void *buf, size_t len)
 			return -1;
 
 # if HAVE_LIBWS2_32
-		int r = send(sck, (unsigned char *)buf + bc, (int)(len - bc), flags);
+		int r = send(sck, (const unsigned char *)buf + bc, (int)(len - bc), flags);
 		if (r == SOCKET_ERROR) {
 			bool wb = WSAGetLastError() == WSAEWOULDBLOCK
 			       || WSAGetLastError() == WSAEINPROGRESS;
 # else
-		ssize_t r = send(sck, (unsigned char *)buf + bc, len - bc, flags);
+		ssize_t r = send(sck, (const unsigned char *)buf + bc, len - bc, flags);
 		if (r == -1) {
 			bool wb =
 #  if HAVE_EWOULDBLOCK

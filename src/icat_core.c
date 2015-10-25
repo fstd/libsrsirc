@@ -145,8 +145,22 @@ icat_core_run(void)
 			}
 		}
 
-		if (idle) {
 #ifdef __unix__
+		/* on unix, we can greatly reduce system call overhead
+		 * by select()ing the irc connection and stdin at the same
+		 * time, with exactly the right timeout (that is, infinite
+		 * or else the time until icat_serv needs attention.
+		 * I'm not 100% sure that this is a legtitimate thing to do
+		 * on SSL connections, but it Should Work(TM) because if
+		 * we enter this branch, we have already tried to SSL_read()
+		 * above (as part of irc_read()), which should have dealt
+		 * with SSL's WANT_WRITE/WANT_READ twist.
+		 * We might theoretically get stuck if a WANT_WRITE condition
+		 * appears after the last call to icat_serv_read() and before
+		 * this. But I think that can't happen (can it? We're not doing
+		 * any I/O in the meantime)
+		 */
+		if (idle && icat_serv_online()) {
 			size_t fdc = 1;
 			int fds[2];
 			fds[0] = icat_serv_fd();
@@ -162,18 +176,22 @@ icat_core_run(void)
 			else
 				to = icat_serv_attention_at();
 
-			if (to && now >= to)
+			if (to && now >= to) {
 				continue; //need immediate attention?
+			}
 
 			if (to)
 				to -= now;
 
 			D("idle-select %zd fds with timeout %"PRIu64, fdc, to);
 
-			lsi_b_select(fds, fdc, false, true, to);
-#else
-			lsi_b_usleep(100000L);
+			if (lsi_b_select(fds, fdc, false, true, to) >= 0)
+				continue;
+		}
 #endif
+
+		if (idle) {
+			lsi_b_usleep(100000L);
 		}
 	}
 
