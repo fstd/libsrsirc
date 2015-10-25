@@ -112,5 +112,4 @@ lsi_b_stdin_canread(void)
 #endif
 
 	return r;
-
 }

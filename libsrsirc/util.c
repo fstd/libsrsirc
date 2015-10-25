@@ -180,7 +180,6 @@ lsi_ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz,
 
 	lsi_ut_parse_hostspec(hoststr, hoststr_sz, port, NULL, ptr + 1);
 	return true;
-
 }
 
 void

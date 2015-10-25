@@ -766,7 +766,6 @@ lsi_b_win_inet_pton(int af, const char *src, void *dst)
 	}
 
 	return -1;
-
 }
 
 /* turn a possibly abbreviated ipv6 address into its full form
@@ -833,6 +832,8 @@ filladdr(char *dest, const char *addr)
 	} while (!done);
 
 	*dest = '\0';
+
+	return;
 }
 #endif
 
@@ -860,7 +861,6 @@ lsi_b_inet4_addr(unsigned char *dest, size_t destsz, const char *ip4str)
 		destsz = 4;
 	memcpy(dest, &ia4.s_addr, destsz);
 	return true;
-
 }
 
 
@@ -968,6 +968,8 @@ addrstr_from_sockaddr(char *addr, size_t addrsz, uint16_t *port,
 		if (port)
 			*port = 0;
 	}
+
+	return;
 }
 #endif
 
@@ -984,4 +986,5 @@ sslinit(void)
 #else
 	E("no ssl support compiled in");
 #endif
+	return;
 }

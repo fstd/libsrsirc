@@ -248,7 +248,6 @@ handle_PING(irc *irchnd, tokarr *tok, size_t nargs, bool pre)
 		return s_on = false;
 
 	return true;
-
 }
 
 static bool

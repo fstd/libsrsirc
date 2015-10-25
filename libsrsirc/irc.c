@@ -473,5 +473,5 @@ static void
 printstr(const void *arg)
 {
 	fprintf(stderr, "'%s'", (const char *)arg);
-
+	return;
 }

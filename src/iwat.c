@@ -167,6 +167,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 	}
 	*argc -= lsi_b_optind();
 	*argv += lsi_b_optind();
+	return;
 }
 
 static void
@@ -229,6 +230,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	irc_set_connect_timeout(g_irc, g_sett.scto_us, g_sett.hcto_us);
 
 	D("initialized");
+	return;
 }
 
 

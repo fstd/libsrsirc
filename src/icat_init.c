@@ -285,6 +285,7 @@ process_args(int *argc, char ***argv)
 			n->next = node;
 		}
 	}
+	return;
 }
 
 static void
@@ -316,6 +317,7 @@ set_defaults(void)
 	g_sett.keylist[0] = '\0';
 	g_sett.esc = NULL;
 	STRACPY(g_sett.qmsg, DEF_QMSG);
+	return;
 }
 
 static void
@@ -353,6 +355,7 @@ dump_settings(void)
 		    s->host, s->port, s->ssl?"":"no ");
 		s = s->next;
 	}
+	return;
 }
 
 static void
@@ -370,6 +373,7 @@ lsi_cleanup(void)
 		n = next;
 	}
 	I("Cleanup done");
+	return;
 }
 
 static void
@@ -392,6 +396,7 @@ sighnd(int s)
 		break;
 #endif
 	}
+	return;
 }
 
 static void
@@ -403,6 +408,7 @@ init_logger(void)
 	ircdbg_setlvl(MOD_ICATSERV, DEF_LOGLVL);
 	ircdbg_setlvl(MOD_ICATUSER, DEF_LOGLVL);
 	ircdbg_setlvl(MOD_ICATMISC, DEF_LOGLVL);
+	return;
 }
 
 static void
@@ -423,6 +429,7 @@ update_logger(int verb, int fancy)
 	ircdbg_setlvl(MOD_ICATUSER, v);
 	ircdbg_setlvl(MOD_ICATMISC, v);
 
+	return;
 }
 
 int

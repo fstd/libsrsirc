@@ -192,5 +192,4 @@ msg_handle_fail:
 	}
 
 	return res;
-
 }

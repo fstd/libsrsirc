@@ -279,7 +279,6 @@ lsi_conn_write(iconn *ctx, const char *line)
 
 	D("(%p) wrote: '%s'", (void *)ctx, line);
 	return true;
-
 }
 
 bool

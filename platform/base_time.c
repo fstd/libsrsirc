@@ -52,5 +52,6 @@ com_tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts)
 		tv->tv_sec = *ts / 1000000;
 		tv->tv_usec = *ts % 1000000;
 	}
+	return;
 }
 #endif

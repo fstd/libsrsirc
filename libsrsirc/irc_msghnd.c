@@ -201,8 +201,9 @@ handle_ERROR(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	free(ctx->lasterr);
 	ctx->lasterr = lsi_b_strdup((*msg)[2] ? (*msg)[2] : "");
 	W("sever said ERROR: '%s'", (*msg)[2]);
-	return 0; /* not strictly a case for CANT_PROCEED.  We certainly could
-	           * proceed, it's the server that doesn't seem willing to */
+	/* not strictly a case for CANT_PROCEED.  We certainly could
+	 * proceed, it's the server that doesn't seem willing to */
+	return 0;
 }
 
 static uint8_t

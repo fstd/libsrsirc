@@ -202,6 +202,7 @@ handle_ircmsg(tokarr *tok)
 		    nick, (*tok)[0], (*tok)[2], (*tok)[3]);
 	else if (lsi_ismychan((*tok)[2]) || !g_sett.ignore_pm)
 		lsi_user_printf("%s\n", (*tok)[3]);
+	return;
 }
 
 static void
@@ -232,6 +233,7 @@ handle_usermsg(char *lnbuf)
 
 	lsi_serv_printf("%s %s :%s",
 	    g_sett.notices?"NOTICE":"PRIVMSG", dst, lnbuf);
+	return;
 }
 
 static void
@@ -239,4 +241,5 @@ dump_info(void)
 {
 	fprintf(stderr, "icat: %sline; read %uln wrote %uln\n",
 	    lsi_serv_online()?"on":"off", s_readcnt, s_writecnt);
+	return;
 }

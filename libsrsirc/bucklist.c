@@ -282,6 +282,7 @@ lsi_bucklist_dump(bucklist *l, bucklist_op_fn op)
 
 	M("]\n");
 	#undef M
+	return;
 }
 
 
