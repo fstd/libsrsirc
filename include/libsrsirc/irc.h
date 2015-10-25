@@ -240,7 +240,14 @@ bool irc_online(irc *ctx);
  *                  (*tok)[1] will point to the (mandatory) "command" \n
  *                  (*tok)[2+n] will point to the n-th "argument", if it
  *                      exists; NULL otherwise \n
- * \param to_us   Read timeout in microseconds (0 = no timeout)
+ * \param to_us   Read timeout in microseconds.\n
+ *                0 means no timeout,\n
+ *                1 is special in that it will effectively case a poll (return
+ *                immediately when there's nothing to read yet).\n
+ *                Note that *very* small timeouts >1 will likely NOT cause
+ *                satisfactory results, depending on system speed, because
+ *                the timeout might expire before the first actual call to
+ *                select(2) (or equivalent).
  *
  * \return 1 on success; 0 on timeout; -1 on failure.
  *
