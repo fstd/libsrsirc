@@ -519,7 +519,7 @@ lsi_b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
 
 				r = lsi_b_select(&sck, 1, true, rdbl, 0);
 				if (r <= 0)
-					break;
+					return -1;
 
 				continue;
 			}
@@ -528,9 +528,8 @@ lsi_b_write_ssl(SSLTYPE ssl, const void *buf, size_t len)
 				EE("SSL_write() failed");
 			else
 				E("SSL_write() returned %d, error code %d", r, errc);
-			r = -1;
 
-			break;
+			return -1;
 		}
 
 		bc += r;
