@@ -272,7 +272,6 @@ lsi_conn_write(iconn *ctx, const char *line)
 	if (!ctx || ctx->state != ON || !line)
 		return false;
 
-
 	if (!lsi_io_write(ctx->sh, line)) {
 		W("(%p) failed to write '%s'", (void *)ctx, line);
 		lsi_conn_reset(ctx);

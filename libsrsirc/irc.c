@@ -134,7 +134,7 @@ irc_init(void)
 
 	reset_state(r);
 
-	D("(%p) irc_bas initialized (backend: %p)", (void *)r, (void *)r->con);
+	D("(%p) IRC context initialized (backend: %p)", (void *)r, (void *)r->con);
 	return r;
 
 irc_init_fail:
@@ -448,7 +448,7 @@ irc_dump(irc *ctx)
 		lsi_ut_sndumpmsg(line, sizeof line, NULL, ctx->logonconv[i]),
 		N("logonconv[%zu]: '%s'", i, line);
 	}
-	lsi_skmap_dump(ctx->m005attrs, printstr);
+	//lsi_skmap_dump(ctx->m005attrs, printstr);
 	//skmap *chans
 	//skmap *users
 	//fp_con_read cb_con_read

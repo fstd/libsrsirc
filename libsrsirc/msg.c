@@ -162,33 +162,26 @@ lsi_msg_handle(irc *ctx, tokarr *msg, bool logon)
 
 	return res;
 
-msg_handle_fail:
-	res &= ~CANT_PROCEED;
+msg_handle_fail:;
+	uint8_t r = res & ~CANT_PROCEED;
 
-	if (res & USER_ERR) {
+	if (r & USER_ERR) {
 		E("user-registered message handler denied proceeding");
-		res |= CANT_PROCEED;
-	} else if (res & AUTH_ERR) {
+	} else if (r & AUTH_ERR) {
 		E("failed to authenticate");
-		res |= CANT_PROCEED;
-	} else if (res & IO_ERR) {
+	} else if (r & IO_ERR) {
 		E("i/o error");
-		res |= CANT_PROCEED;
-	} else if (res & ALLOC_ERR) {
+	} else if (r & ALLOC_ERR) {
 		E("memory allocation failed");
-		/* we do proceed for now */
-	} else if (res & OUT_OF_NICKS) {
+	} else if (r & OUT_OF_NICKS) {
 		E("out of nicks");
-		res |= CANT_PROCEED;
-	} else if (res & PROTO_ERR) {
+	} else if (r & PROTO_ERR) {
 		char line[1024];
 		E("proto error on '%s' (ct:%d)",
 		    lsi_ut_sndumpmsg(line, sizeof line, NULL, msg),
 		    lsi_conn_colon_trail(ctx->con));
-		/* we do proceed for now */
 	} else {
 		E("can't proceed for unknown reasons");
-		/* we do proceed for now */
 	}
 
 	return res;
