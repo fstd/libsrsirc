@@ -125,7 +125,7 @@ lsi_conn_connect(iconn *ctx, uint64_t softto_us, uint64_t hardto_us)
 		return false;
 	}
 
-	uint64_t tsend = hardto_us ? lsi_b_tstamp_us() + hardto_us : 0;
+	uint64_t tend = hardto_us ? lsi_b_tstamp_us() + hardto_us : 0;
 
 	uint16_t realport = ctx->port;
 	if (!realport)
@@ -167,7 +167,7 @@ lsi_conn_connect(iconn *ctx, uint64_t softto_us, uint64_t hardto_us)
 
 	uint64_t trem = 0;
 	if (ctx->ptype != -1) {
-		if (lsi_com_check_timeout(tsend, &trem)) {
+		if (lsi_com_check_timeout(tend, &trem)) {
 			W("(%p) timeout", (void *)ctx);
 			lsi_b_close(sh.sck);
 			ctx->sh.sck = -1;

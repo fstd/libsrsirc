@@ -208,7 +208,7 @@ irc_dispose(irc *ctx)
 bool
 irc_connect(irc *ctx)
 {
-	uint64_t tsend = ctx->hcto_us ?
+	uint64_t tend = ctx->hcto_us ?
 	    lsi_b_tstamp_us() + ctx->hcto_us : 0;
 
 	lsi_trk_deinit(ctx);
@@ -250,7 +250,7 @@ irc_connect(irc *ctx)
 	uint64_t trem = 0;
 	int r;
 	do {
-		if (lsi_com_check_timeout(tsend, &trem)) {
+		if (lsi_com_check_timeout(tend, &trem)) {
 			W("(%p) timeout waiting for 004", (void *)ctx);
 			goto irc_connect_fail;
 		}

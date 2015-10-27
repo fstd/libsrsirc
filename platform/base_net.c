@@ -204,7 +204,7 @@ lsi_b_close(int sck)
 int
 lsi_b_select(int *fds, size_t nfds, bool noresult, bool rdbl, uint64_t to_us)
 {
-	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
+	uint64_t tend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 	bool dopoll = to_us == 1; //mhhh.
 
 #if HAVE_SELECT || HAVE_LIBWS2_32
@@ -225,12 +225,12 @@ lsi_b_select(int *fds, size_t nfds, bool noresult, bool rdbl, uint64_t to_us)
 		}
 		uint64_t trem = 0;
 
-		if (!dopoll && tsend) {
+		if (!dopoll && tend) {
 			uint64_t now = lsi_b_tstamp_us();
-			if (now >= tsend)
+			if (now >= tend)
 				return 0;
 			else
-				trem = tsend - now;
+				trem = tend - now;
 
 			tout.tv_sec = trem / 1000000;
 			tout.tv_usec = trem % 1000000;
@@ -241,7 +241,7 @@ lsi_b_select(int *fds, size_t nfds, bool noresult, bool rdbl, uint64_t to_us)
 
 		int r = select(maxfd+1, rdbl ? &fdset : NULL,
 		    rdbl ? NULL : &fdset, NULL,
-		    (tsend || dopoll) ? &tout : NULL);
+		    (tend || dopoll) ? &tout : NULL);
 
 		if (r < 0) {
 			int e = errno;
@@ -347,11 +347,11 @@ lsi_b_read(int sck, void *buf, size_t sz, uint64_t to_us)
 {
 	V("read()ing from sck %d (bufsz: %zu)", sck, sz);
 	int s;
-	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
+	uint64_t tend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 
 	do
 	    s = lsi_b_select(&sck, 1, true, true, to_us);
-	while (s == 0 && (!tsend || lsi_b_tstamp_us() < tsend));
+	while (s == 0 && (!tend || lsi_b_tstamp_us() < tend));
 
 	if (s <= 0)
 		return s;
@@ -443,7 +443,7 @@ long
 lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, uint64_t to_us)
 {
 #ifdef WITH_SSL
-	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
+	uint64_t tend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 	uint64_t tnow, trem = 0;
 
 	V("Wanna read from ssl socket %p (bufsz: %zu)", (void *)ssl, sz);
@@ -460,9 +460,9 @@ lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, uint64_t to_us)
 				D("SSL WANT %s", rdbl ? "READ" : "WRITE");
 				int sck = SSL_get_fd(ssl);
 
-				if (tsend) {
+				if (tend) {
 					tnow = lsi_b_tstamp_us();
-					trem = tnow >= tsend ? 1 : tsend - tnow;
+					trem = tnow >= tend ? 1 : tend - tnow;
 				}
 
 				V("selecting the ssl sockfd for that (trem: %"PRIu64
@@ -489,7 +489,7 @@ lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, uint64_t to_us)
 			V("SSL_read(): %d (ssl socket %p)", r, (void *)ssl);
 
 		break;
-	} while (lsi_b_tstamp_us() < tsend);
+	} while (lsi_b_tstamp_us() < tend);
 
 	V("ssl read overall result: %d", r);
 	return (long)r;

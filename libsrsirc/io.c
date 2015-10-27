@@ -43,11 +43,11 @@ static long send_wrap(sckhld sh, const void *buf, size_t len);
 int
 lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok, uint64_t to_us)
 {
-	uint64_t tsend = to_us ? lsi_b_tstamp_us() + to_us : 0;
+	uint64_t tend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 	uint64_t tnow, trem = 0;
 
 	V("Wanna read with%s timeout (%"PRIu64"). %zu bytes in buffer: '%.*s'",
-	    tsend?"":" no", tsend, rctx->eptr - rctx->wptr,
+	    tend?"":" no", tend, rctx->eptr - rctx->wptr,
 	    (int)(rctx->eptr - rctx->wptr), rctx->wptr);
 
 	while (rctx->wptr < rctx->eptr && ISDELIM(*rctx->wptr))
@@ -62,9 +62,9 @@ lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok, uint64_t to_us)
 	char *linestart;
 	do {
 		while (!(delim = find_delim(rctx))) {
-			if (tsend) {
+			if (tend) {
 				tnow = lsi_b_tstamp_us();
-				trem = tnow >= tsend ? 1 : tsend - tnow;
+				trem = tnow >= tend ? 1 : tend - tnow;
 			}
 
 			int r = read_more(sh, rctx, trem);

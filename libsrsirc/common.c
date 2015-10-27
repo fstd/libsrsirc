@@ -73,7 +73,7 @@ int
 lsi_com_consocket(const char *host, uint16_t port, char *remaddr,
     size_t remaddr_sz, uint16_t *peerport, uint64_t softto, uint64_t hardto)
 {
-	uint64_t hardtsend = hardto ? lsi_b_tstamp_us() + hardto : 0;
+	uint64_t hardtend = hardto ? lsi_b_tstamp_us() + hardto : 0;
 
 	struct addrlist *alist;
 	int count = lsi_b_mkaddrlist(host, port, &alist);
@@ -87,7 +87,7 @@ lsi_com_consocket(const char *host, uint16_t port, char *remaddr,
 	for (struct addrlist *ai = alist; ai; ai = ai->next) {
 		uint64_t trem = 0;
 
-		if (lsi_com_check_timeout(hardtsend, &trem)) {
+		if (lsi_com_check_timeout(hardtend, &trem)) {
 			W("hard timeout");
 			return false;
 		}
@@ -165,23 +165,23 @@ lsi_com_update_strprop(char **field, const char *val)
 }
 
 bool
-lsi_com_check_timeout(uint64_t tsend, uint64_t *trem)
+lsi_com_check_timeout(uint64_t tend, uint64_t *trem)
 {
-	if (!tsend) {
+	if (!tend) {
 		if (trem)
 			*trem = 0;
 		return false;
 	}
 
 	uint64_t now = lsi_b_tstamp_us();
-	if (now >= tsend) {
+	if (now >= tend) {
 		if (trem)
 			*trem = 0;
 		return true;
 	}
 
 	if (trem)
-		*trem = tsend - now;
+		*trem = tend - now;
 
 	return false;
 }
