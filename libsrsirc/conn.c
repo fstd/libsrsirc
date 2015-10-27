@@ -33,7 +33,6 @@
 #include <libsrsirc/util.h>
 
 
-#define INV -1
 #define OFF 0
 #define ON 1
 
@@ -59,7 +58,7 @@ lsi_conn_init(void)
 	r->phost = NULL;
 	r->pport = 0;
 	r->ptype = -1;
-	r->state = OFF;
+	r->online = false;
 	r->eof = false;
 	r->colon_trail = false;
 	r->ssl = false;
@@ -98,7 +97,7 @@ lsi_conn_reset(iconn *ctx)
 	}
 
 	ctx->sh.sck = -1;
-	ctx->state = OFF;
+	ctx->online = false;
 	ctx->rctx.wptr = ctx->rctx.eptr = ctx->rctx.workbuf;
 	return;
 }
@@ -112,7 +111,6 @@ lsi_conn_dispose(iconn *ctx)
 
 	free(ctx->host);
 	free(ctx->phost);
-	ctx->state = INV;
 
 	D("(%p) disposed", (void *)ctx);
 	free(ctx);
@@ -122,8 +120,10 @@ lsi_conn_dispose(iconn *ctx)
 bool
 lsi_conn_connect(iconn *ctx, uint64_t softto_us, uint64_t hardto_us)
 {
-	if (!ctx || ctx->state != OFF)
+	if (ctx->online) {
+		E("Can't connect when already online");
 		return false;
+	}
 
 	uint64_t tsend = hardto_us ? lsi_b_tstamp_us() + hardto_us : 0;
 
@@ -230,7 +230,7 @@ lsi_conn_connect(iconn *ctx, uint64_t softto_us, uint64_t hardto_us)
 		}
 	}
 
-	ctx->state = ON;
+	ctx->online = true;
 
 	D("(%p) %s connection to ircd established",
 	    (void *)ctx, ctx->ptype == -1?"TCP":"proxy");
@@ -241,8 +241,10 @@ lsi_conn_connect(iconn *ctx, uint64_t softto_us, uint64_t hardto_us)
 int
 lsi_conn_read(iconn *ctx, tokarr *tok, uint64_t to_us)
 {
-	if (!ctx || ctx->state != ON)
+	if (!ctx->online) {
+		E("Can't read while offline");
 		return -1;
+	}
 
 	int n;
 	if (!(n = lsi_io_read(ctx->sh, &ctx->rctx, tok, to_us)))
@@ -269,8 +271,10 @@ lsi_conn_read(iconn *ctx, tokarr *tok, uint64_t to_us)
 bool
 lsi_conn_write(iconn *ctx, const char *line)
 {
-	if (!ctx || ctx->state != ON || !line)
+	if (!ctx->online) {
+		E("Can't write while offline");
 		return false;
+	}
 
 	if (!lsi_io_write(ctx->sh, line)) {
 		W("(%p) failed to write '%s'", (void *)ctx, line);
@@ -286,7 +290,7 @@ lsi_conn_write(iconn *ctx, const char *line)
 bool
 lsi_conn_online(iconn *ctx)
 {
-	return ctx->state == ON;
+	return ctx->online;
 }
 
 bool
@@ -298,9 +302,6 @@ lsi_conn_eof(iconn *ctx)
 bool
 lsi_conn_colon_trail(iconn *ctx)
 {
-	if (!ctx || ctx->state != ON)
-		return false;
-
 	return ctx->colon_trail;
 }
 
@@ -416,9 +417,6 @@ lsi_conn_get_ssl(iconn *ctx)
 int
 lsi_conn_sockfd(iconn *ctx)
 {
-	if (!ctx || ctx->state != ON)
-		return -1;
-
 	return ctx->sh.sck;
 }
 
@@ -433,7 +431,7 @@ irc_conn_dump(iconn *ctx)
 	N("ptype: %d (%s)", ctx->ptype, ctx->ptype == -1 ? "NONE" : lsi_px_typestr(ctx->ptype));
 	N("sh.sck: %d", ctx->sh.sck);
 	N("sh.shnd: %p", (void *)ctx->sh.shnd);
-	N("state: %d", ctx->state);
+	N("online: %d", ctx->online);
 	N("eof: %d", ctx->eof);
 	N("colon_trail: %d", ctx->colon_trail);
 	N("ssl: %d", ctx->ssl);

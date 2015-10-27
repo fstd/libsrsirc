@@ -77,7 +77,7 @@ struct iconn_s {
 	int ptype;
 
 	sckhld sh;
-	int state;
+	bool online;
 	bool eof;
 
 	struct readctx rctx;
