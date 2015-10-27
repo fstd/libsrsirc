@@ -322,8 +322,10 @@ lsi_conn_set_px(iconn *ctx, const char *host, uint16_t port, int ptype)
 	case IRCPX_HTTP:
 	case IRCPX_SOCKS4:
 	case IRCPX_SOCKS5:
-		if (!host || !port) //XXX `most' default port per type?
+		if (!host || !port) { //XXX `most' default port per type?
+			E("Missing host or port for proxy");
 			return false;
+		}
 
 		if (!(n = lsi_b_strdup(host)))
 			return false;
