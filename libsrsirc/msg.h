@@ -1,4 +1,4 @@
-/* msg.h - protocol message handlers
+/* msg.h - protocol message handler mechanism and dispatch
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 

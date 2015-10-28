@@ -1,4 +1,4 @@
-/* irc_msghnd.h - handles the raw TCP (or proxy) connection
+/* irc_msghnd.h - core message handlers (see irc_msghnd.c for actual handlers)
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 

@@ -1,1 +1,0 @@
-{ TC("arg=%p (%s)", arg, (const char *)arg);

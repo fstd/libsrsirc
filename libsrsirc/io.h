@@ -2,8 +2,8 @@
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
-#ifndef LIBSRSIRC_IIO_H
-#define LIBSRSIRC_IIO_H 1
+#ifndef LIBSRSIRC_IO_H
+#define LIBSRSIRC_IO_H 1
 
 
 #include <stdbool.h>
@@ -44,4 +44,4 @@ int lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok, uint64_t to_us);
 bool lsi_io_write(sckhld sh, const char *line);
 
 
-#endif /* LIBSRSIRC_IIO_H */
+#endif /* LIBSRSIRC_IO_H */

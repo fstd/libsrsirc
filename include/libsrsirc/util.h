@@ -211,9 +211,9 @@ void lsi_ut_freearr(tokarr *arr);
  * \param msg   Pointer to a tokarr (as obtained from irc_read() or
  *              lsi_ut_clonearr()
  * \param coltr   If the last field in `msg` does not contain spaces,
- *                this flag determines whether ot not to prefix it with
+ *                this flag determines whether or not to prefix it with
  *                a colon anyway (this is normally done as a syntactic
- *                trick to allow space in the last argument
+ *                trick to allow space in the last argument)
  * \return `dest` */
 char *lsi_ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr);
 

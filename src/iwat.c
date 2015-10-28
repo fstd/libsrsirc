@@ -64,7 +64,7 @@ static void process_args(int *argc, char ***argv, struct settings_s *sett);
 static void init(int *argc, char ***argv, struct settings_s *sett);
 static bool conread(tokarr *msg, void *tag);
 static void usage(FILE *str, const char *a0, int ec);
-void lsi_cleanup(void);
+static void cleanup(void);
 int main(int argc, char **argv);
 
 
@@ -295,8 +295,8 @@ usage(FILE *str, const char *a0, int ec)
 	exit(ec);
 }
 
-void
-lsi_cleanup(void)
+static void
+cleanup(void)
 {
 	if (g_irc)
 		irc_dispose(g_irc);
@@ -313,8 +313,8 @@ lsi_cleanup(void)
 	return;
 }
 
-void
-lsi_infohnd(int s)
+static void
+infohnd(int s)
 {
 	g_dumpplx = true;
 	return;
@@ -324,11 +324,11 @@ int
 main(int argc, char **argv)
 {
 	init(&argc, &argv, &g_sett);
-	atexit(lsi_cleanup);
+	atexit(cleanup);
 #if HAVE_SIGINFO
-	lsi_b_regsig(SIGINFO, lsi_infohnd);
+	lsi_b_regsig(SIGINFO, infohnd);
 #elif HAVE_SIGUSR1
-	lsi_b_regsig(SIGUSR1, lsi_infohnd);
+	lsi_b_regsig(SIGUSR1, infohnd);
 #endif
 	bool failure = true;
 

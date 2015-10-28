@@ -1,4 +1,4 @@
-/* irc_ext.c - some more IRC functionality (see also irc.c)
+/* irc_ext.c - core message handlers (uses msg.[ch])
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
@@ -33,20 +33,19 @@
 static uint8_t
 handle_001(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	if (nargs < 3)
+	if (nargs < 3 || !logon)
 		return PROTO_ERR;
+
+	V("Handling a 001 (%s, '%s')", (*msg)[2], (*msg)[3]);
 
 	lsi_ut_freearr(ctx->logonconv[0]);
 	ctx->logonconv[0] = lsi_ut_clonearr(msg);
-	lsi_com_strNcpy(ctx->mynick, (*msg)[2], sizeof ctx->mynick);
 
-	// XXX this shouldn't be required.  Isn't the first argument of a
-	// numeric message *always* just our nick anyway?
-	char *tmp;
-	if ((tmp = strchr(ctx->mynick, '@')))
-		*tmp = '\0';
-	if ((tmp = strchr(ctx->mynick, '!')))
-		*tmp = '\0';
+	/* 001 is the first (guaranteed) numeric we'll see, and numerics have
+	 * our nickname as the first argument.  We use this to determine what
+	 * our nickname ended up as. */
+	lsi_com_strNcpy(ctx->mynick, (*msg)[2], sizeof ctx->mynick);
+	D("Our nickname is '%s', it's official!", ctx->mynick);
 
 	return 0;
 }
@@ -54,6 +53,11 @@ handle_001(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_002(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
+	if (!logon)
+		return PROTO_ERR;
+
+	V("Handling a 002");
+
 	lsi_ut_freearr(ctx->logonconv[1]);
 	ctx->logonconv[1] = lsi_ut_clonearr(msg);
 
@@ -63,6 +67,11 @@ handle_002(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_003(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
+	if (!logon)
+		return PROTO_ERR;
+
+	V("Handling a 003");
+
 	lsi_ut_freearr(ctx->logonconv[2]);
 	ctx->logonconv[2] = lsi_ut_clonearr(msg);
 
@@ -72,16 +81,20 @@ handle_003(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_004(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	if (nargs < 7)
+	if (nargs < 7 || !logon)
 		return PROTO_ERR;
+
+	V("Handling a 004");
 
 	lsi_ut_freearr(ctx->logonconv[3]);
 	ctx->logonconv[3] = lsi_ut_clonearr(msg);
 
-	lsi_com_strNcpy(ctx->myhost, (*msg)[3],sizeof ctx->myhost);
+	lsi_com_strNcpy(ctx->myhost, (*msg)[3], sizeof ctx->myhost);
 	lsi_com_strNcpy(ctx->umodes, (*msg)[5], sizeof ctx->umodes);
 	lsi_com_strNcpy(ctx->cmodes, (*msg)[6], sizeof ctx->cmodes);
 	lsi_com_strNcpy(ctx->ver, (*msg)[4], sizeof ctx->ver);
+	D("004 seen! myhost: '%s', umodes: '%s', cmodes '%s', ver: '%s'",
+	    ctx->myhost, ctx->umodes, ctx->cmodes, ctx->ver);
 
 	return LOGON_COMPLETE;
 }
@@ -89,15 +102,16 @@ handle_004(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_PING(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	if (nargs < 3)
-		return PROTO_ERR;
-
 	/* We only handle PINGs at logon. It's the user's job afterwards. */
 	if (!logon)
 		return 0;
 
+	if (nargs < 3)
+		return PROTO_ERR;
+
 	char buf[256];
 	snprintf(buf, sizeof buf, "PONG :%s\r\n", (*msg)[2]);
+	D("Replying to a logon-time PING (%s)", (*msg)[2]);
 
 	return lsi_conn_write(ctx->con, buf) ? 0 : IO_ERR;
 }
@@ -105,10 +119,12 @@ handle_PING(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 /* This handles 432, 433, 436 and 437 all of which signal us that
  * we can't have the nickname we wanted */
 static uint8_t
-handle_XXX(irc *ctx, tokarr *msg, size_t nargs, bool logon)
+handle_bad_nick(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!logon)
 		return 0;
+
+	W("Cannot take nickname '%s'", ctx->mynick);
 
 	if (!ctx->cb_mut_nick)
 		return OUT_OF_NICKS;
@@ -118,6 +134,8 @@ handle_XXX(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	if (!ctx->mynick[0])
 		return OUT_OF_NICKS;
 
+	N("Mutilated nick to '%s'", ctx->mynick);
+
 	char buf[MAX_NICK_LEN];
 	snprintf(buf, sizeof buf, "NICK %s\r\n", ctx->mynick);
 	return lsi_conn_write(ctx->con, buf) ? 0 : IO_ERR;
@@ -126,7 +144,10 @@ handle_XXX(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_464(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	W("(%p) wrong server password", (void *)ctx);
+	if (!logon)
+		return PROTO_ERR;
+
+	W("wrong server password");
 	return AUTH_ERR;
 }
 
@@ -135,24 +156,21 @@ handle_464(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_383(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	if (nargs < 3)
+	if (nargs < 3 || !logon)
 		return PROTO_ERR;
 
 	lsi_com_strNcpy(ctx->mynick, (*msg)[2],sizeof ctx->mynick);
-	char *tmp;
-	if ((tmp = strchr(ctx->mynick, '@')))
-		*tmp = '\0';
-	if ((tmp = strchr(ctx->mynick, '!')))
-		*tmp = '\0';
+	D("Our nickname is '%s', it's official!", ctx->mynick);
 
 	lsi_com_strNcpy(ctx->myhost, (*msg)[0] ? (*msg)[0] : ctx->con->host,
 	    sizeof ctx->myhost);
+	W("Obtained myhost from prefix '%s'", ctx->myhost);
 
 	lsi_com_strNcpy(ctx->umodes, DEF_UMODES, sizeof ctx->umodes);
 	lsi_com_strNcpy(ctx->cmodes, DEF_CMODES, sizeof ctx->cmodes);
 	ctx->ver[0] = '\0';
 	ctx->service = true;
-	D("(%p) got beloved 383", (void *)ctx);
+	D("got beloved 383");
 
 	return LOGON_COMPLETE;
 }
@@ -161,17 +179,18 @@ static uint8_t
 handle_484(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	ctx->restricted = true;
-	I("(%p) we're 'restricted'", (void *)ctx);
+	N("we're 'restricted'");
 	return 0;
 }
 
 static uint8_t
 handle_465(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	W("(%p) we're banned", (void *)ctx);
 	ctx->banned = true;
 	free(ctx->banmsg);
 	ctx->banmsg = lsi_b_strdup((*msg)[3] ? (*msg)[3] : "");
+
+	W("we're banned (%s)", ctx->banmsg);
 
 	return 0; /* well if we are, the server will sure disconnect us */
 }
@@ -179,7 +198,7 @@ handle_465(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_466(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	W("(%p) we will be banned", (void *)ctx);
+	W("we will be banned");
 
 	return 0; /* so what, bitch? */
 }
@@ -189,7 +208,7 @@ handle_ERROR(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	free(ctx->lasterr);
 	ctx->lasterr = lsi_b_strdup((*msg)[2] ? (*msg)[2] : "");
-	W("sever said ERROR: '%s'", (*msg)[2]);
+	W("sever said ERROR: '%s'", ctx->lasterr);
 	/* not strictly a case for CANT_PROCEED.  We certainly could
 	 * proceed, it's the server that doesn't seem willing to */
 	return 0;
@@ -198,23 +217,21 @@ handle_ERROR(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_NICK(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	if (nargs < 3)
+	if (nargs < 3 || !(*msg)[0])
 		return PROTO_ERR;
 
 	char nick[128];
-	if (!(*msg)[0])
-		return PROTO_ERR;
-
 	lsi_ut_ident2nick(nick, sizeof nick, (*msg)[0]);
 
 	if (!lsi_ut_istrcmp(nick, ctx->mynick, ctx->casemap)) {
 		lsi_com_strNcpy(ctx->mynick, (*msg)[2], sizeof ctx->mynick);
-		I("my nick is now '%s'", ctx->mynick);
+		N("Our nickname is now '%s'", ctx->mynick);
 	}
 
 	return 0;
 }
 
+/* Deals only wih user modes */
 static uint8_t
 handle_MODE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
@@ -271,7 +288,6 @@ handle_005_CASEMAPPING(irc *ctx, const char *val)
 	return 0;
 }
 
-/* XXX not robust enough */
 static uint8_t
 handle_005_PREFIX(irc *ctx, const char *val)
 {
@@ -315,8 +331,7 @@ handle_005_CHANMODES(irc *ctx, const char *val)
 	}
 
 	if (c != 4)
-		W("005 chanmodes: expected 4 params, got %i. arg: \"%s\"",
-		    c, val);
+		W("005 chanmodes: want 4 params, got %d. arg: \"%s\"", c, val);
 
 	return 0;
 }
@@ -334,7 +349,7 @@ handle_005(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	uint8_t ret = 0;
 	bool have_casemap = false;
 
-	/* last are is "are supported by this server" or equivalent */
+	/* last arg is "are supported by this server" or equivalent */
 	for (size_t z = 3; z < nargs - 1; ++z) {
 		char *nam = (*msg)[z];
 		char *val;
@@ -393,26 +408,26 @@ lsi_imh_regall(irc *ctx, bool dumb)
 		 * that we can't have the nick we wanted; we don't reply to
 		 * PING and we also don't pay attention to 464 (Wrong server
 		 * password).  This is all left to the user */
-		fail = fail || !lsi_msg_reghnd(ctx, "PING", handle_PING, "irc");
-		fail = fail || !lsi_msg_reghnd(ctx, "432", handle_XXX, "irc");
-		fail = fail || !lsi_msg_reghnd(ctx, "433", handle_XXX, "irc");
-		fail = fail || !lsi_msg_reghnd(ctx, "436", handle_XXX, "irc");
-		fail = fail || !lsi_msg_reghnd(ctx, "437", handle_XXX, "irc");
-		fail = fail || !lsi_msg_reghnd(ctx, "464", handle_464, "irc");
+		fail = fail || !lsi_msg_reghnd(ctx, "PING", handle_PING, "core");
+		fail = fail || !lsi_msg_reghnd(ctx, "432", handle_bad_nick, "core");
+		fail = fail || !lsi_msg_reghnd(ctx, "433", handle_bad_nick, "core");
+		fail = fail || !lsi_msg_reghnd(ctx, "436", handle_bad_nick, "core");
+		fail = fail || !lsi_msg_reghnd(ctx, "437", handle_bad_nick, "core");
+		fail = fail || !lsi_msg_reghnd(ctx, "464", handle_464, "core");
 	}
 
-	fail = fail || !lsi_msg_reghnd(ctx, "NICK", handle_NICK, "irc");
-	fail = fail || !lsi_msg_reghnd(ctx, "ERROR", handle_ERROR, "irc");
-	fail = fail || !lsi_msg_reghnd(ctx, "MODE", handle_MODE, "irc");
-	fail = fail || !lsi_msg_reghnd(ctx, "001", handle_001, "irc");
-	fail = fail || !lsi_msg_reghnd(ctx, "002", handle_002, "irc");
-	fail = fail || !lsi_msg_reghnd(ctx, "003", handle_003, "irc");
-	fail = fail || !lsi_msg_reghnd(ctx, "004", handle_004, "irc");
-	fail = fail || !lsi_msg_reghnd(ctx, "383", handle_383, "irc");
-	fail = fail || !lsi_msg_reghnd(ctx, "484", handle_484, "irc");
-	fail = fail || !lsi_msg_reghnd(ctx, "465", handle_465, "irc");
-	fail = fail || !lsi_msg_reghnd(ctx, "466", handle_466, "irc");
-	fail = fail || !lsi_msg_reghnd(ctx, "005", handle_005, "irc");
+	fail = fail || !lsi_msg_reghnd(ctx, "NICK", handle_NICK, "core");
+	fail = fail || !lsi_msg_reghnd(ctx, "ERROR", handle_ERROR, "core");
+	fail = fail || !lsi_msg_reghnd(ctx, "MODE", handle_MODE, "core");
+	fail = fail || !lsi_msg_reghnd(ctx, "001", handle_001, "core");
+	fail = fail || !lsi_msg_reghnd(ctx, "002", handle_002, "core");
+	fail = fail || !lsi_msg_reghnd(ctx, "003", handle_003, "core");
+	fail = fail || !lsi_msg_reghnd(ctx, "004", handle_004, "core");
+	fail = fail || !lsi_msg_reghnd(ctx, "383", handle_383, "core");
+	fail = fail || !lsi_msg_reghnd(ctx, "484", handle_484, "core");
+	fail = fail || !lsi_msg_reghnd(ctx, "465", handle_465, "core");
+	fail = fail || !lsi_msg_reghnd(ctx, "466", handle_466, "core");
+	fail = fail || !lsi_msg_reghnd(ctx, "005", handle_005, "core");
 
 	return !fail;
 }
@@ -420,6 +435,6 @@ lsi_imh_regall(irc *ctx, bool dumb)
 void
 lsi_imh_unregall(irc *ctx)
 {
-	lsi_msg_unregall(ctx, "irc");
+	lsi_msg_unregall(ctx, "core");
 	return;
 }

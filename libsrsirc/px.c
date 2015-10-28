@@ -228,7 +228,7 @@ lsi_px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 	conbuf[c++] = 5;
 	conbuf[c++] = 1;
 	conbuf[c++] = 0;
-	int type = lsi_guess_hosttype(host);
+	int type = lsi_com_guess_hosttype(host);
 	switch (type) {
 	case HOST_IPV4:
 		conbuf[c++] = 1;

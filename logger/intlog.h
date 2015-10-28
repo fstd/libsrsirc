@@ -53,97 +53,99 @@
 
 // ----- logging interface -----
 
+#define V(...)                                                                 \
+ lsi_log_log(LOG_MODULE,LOG_VIVI,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
+
+#define VE(...)                                                                \
+ lsi_log_log(LOG_MODULE,LOG_VIVI,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
+
+#define D( ...)                                                                \
+ lsi_log_log(LOG_MODULE,LOG_DEBUG,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
+
+#define DE(...)                                                                \
+ lsi_log_log(LOG_MODULE,LOG_DEBUG,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
+
+#define I(...)                                                                 \
+ lsi_log_log(LOG_MODULE,LOG_INFO,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
+
+#define IE(...)                                                                \
+ lsi_log_log(LOG_MODULE,LOG_INFO,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
+
+#define N(...)                                                                 \
+ lsi_log_log(LOG_MODULE,LOG_NOTICE,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
+
+#define NE(...)                                                                \
+ lsi_log_log(LOG_MODULE,LOG_NOTICE,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
+
+#define W(...)                                                                 \
+ lsi_log_log(LOG_MODULE,LOG_WARNING,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
+
+#define WE(...)                                                                \
+ lsi_log_log(LOG_MODULE,LOG_WARNING,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
+
+#define E(...)                                                                 \
+ lsi_log_log(LOG_MODULE,LOG_ERR,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
+
+#define EE(...)                                                                \
+ lsi_log_log(LOG_MODULE,LOG_ERR,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
+
+#define C(...) do {                                                            \
+ lsi_log_log(LOG_MODULE,LOG_CRIT,-1,__FILE__,__LINE__,__func__,__VA_ARGS__);   \
+ exit(EXIT_FAILURE); } while (0)
+
+#define CE(...) do {                                                           \
+ lsi_log_log(LOG_MODULE,LOG_CRIT,errno,__FILE__,__LINE__,__func__,__VA_ARGS__);\
+ exit(EXIT_FAILURE); } while (0)
+
+/* special: always printed, never decorated */
+#define A(...)                                                                 \
+    lsi_log_log(-1,INT_MIN,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
+
+/* tracing */
 #if NOTRACE
 # define T(...) do{}while(0)
 # define TC(...) do{}while(0)
 # define TR(...) do{}while(0)
 #else
 # define T(...)                                                                \
- ircdbg_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
-# define TC(...)                                                                \
- do{ \
- ircdbg_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,__VA_ARGS__); \
- ircdbg_tcall(); \
+ lsi_log_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
+
+# define TC(...)                                                               \
+ do{                                                                           \
+ lsi_log_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,__VA_ARGS__);  \
+ lsi_log_tcall();                                                              \
  } while (0)
 
-# define TR(...)                                                                \
- do{ \
- ircdbg_tret(); \
- ircdbg_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,__VA_ARGS__); \
+# define TR(...)                                                               \
+ do{                                                                           \
+ lsi_log_tret();                                                               \
+ lsi_log_log(LOG_MODULE,LOG_TRACE,-1,__FILE__,__LINE__,__func__,__VA_ARGS__);  \
  } while (0)
 #endif
 
-#define V(...)                                                                 \
- ircdbg_log(LOG_MODULE,LOG_VIVI,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
-
-#define VE(...)                                                                \
- ircdbg_log(LOG_MODULE,LOG_VIVI,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
-
-#define D( ...)                                                                \
- ircdbg_log(LOG_MODULE,LOG_DEBUG,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
-
-#define DE(...)                                                                \
- ircdbg_log(LOG_MODULE,LOG_DEBUG,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
-
-#define I(...)                                                                 \
- ircdbg_log(LOG_MODULE,LOG_INFO,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
-
-#define IE(...)                                                                \
- ircdbg_log(LOG_MODULE,LOG_INFO,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
-
-#define N(...)                                                                 \
- ircdbg_log(LOG_MODULE,LOG_NOTICE,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
-
-#define NE(...)                                                                \
- ircdbg_log(LOG_MODULE,LOG_NOTICE,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
-
-#define W(...)                                                                 \
- ircdbg_log(LOG_MODULE,LOG_WARNING,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
-
-#define WE(...)                                                                \
- ircdbg_log(LOG_MODULE,LOG_WARNING,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
-
-#define E(...)                                                                 \
- ircdbg_log(LOG_MODULE,LOG_ERR,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
-
-#define EE(...)                                                                \
- ircdbg_log(LOG_MODULE,LOG_ERR,errno,__FILE__,__LINE__,__func__,__VA_ARGS__)
-
-#define C(...) do {                                                            \
- ircdbg_log(LOG_MODULE,LOG_CRIT,-1,__FILE__,__LINE__,__func__,__VA_ARGS__);    \
- exit(EXIT_FAILURE); } while (0)
-
-#define CE(...) do {                                                           \
- ircdbg_log(LOG_MODULE,LOG_CRIT,errno,__FILE__,__LINE__,__func__,__VA_ARGS__); \
- exit(EXIT_FAILURE); } while (0)
-
-/* special: always printed, never decorated */
-#define A(...)                                                                 \
-    ircdbg_log(-1,INT_MIN,-1,__FILE__,__LINE__,__func__,__VA_ARGS__)
-
 // ----- logger control interface -----
 
-void ircdbg_stderr(void);
-void ircdbg_syslog(const char *ident);
+void lsi_log_stderr(void);
+void lsi_log_syslog(const char *ident);
 
-void ircdbg_setlvl(int mod, int lvl);
-int ircdbg_getlvl(int mod);
+void lsi_log_setlvl(int mod, int lvl);
+int  lsi_log_getlvl(int mod);
 
-void ircdbg_setfancy(bool fancy);
-bool ircdbg_getfancy(void);
+void lsi_log_setfancy(bool fancy);
+bool lsi_log_getfancy(void);
 
-void ircdbg_tret(void);
-void ircdbg_tcall(void);
+void lsi_log_tret(void);
+void lsi_log_tcall(void);
 
 // ----- backend -----
-void ircdbg_log(int mod, int lvl, int errn, const char *file, int line,
+void lsi_log_log(int mod, int lvl, int errn, const char *file, int line,
     const char *func, const char *fmt, ...)
 #ifdef __GNUC__
     __attribute__ ((format (printf, 7, 8)))
 #endif
     ;
 
-void ircdbg_init(void);
+void lsi_log_init(void);
 
 
 #endif /* LIBSRSIRC_INTLOG_H */

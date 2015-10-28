@@ -362,7 +362,7 @@ lsi_b_read(int sck, void *buf, size_t sz, uint64_t to_us)
 
 #elif HAVE_READ
 	ssize_t r = read(sck, buf, sz);
-	if (r == -1) {
+	if (r < 0) {
 #else
 # error "We need something like read()"
 #endif
@@ -371,7 +371,10 @@ lsi_b_read(int sck, void *buf, size_t sz, uint64_t to_us)
 	} else if (r > LONG_MAX) {
 		W("read too long, capping return value");
 		r = LONG_MAX;
-	}
+	} else if (r == 0) {
+		W("read: EOF");
+	} else
+		V("Read %zu bytes", (size_t)r);
 
 	return r == 0 ? -2L : (long)r;
 }

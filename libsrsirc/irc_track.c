@@ -95,10 +95,10 @@ h_JOIN(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	lsi_ut_ident2nick(nick, sizeof nick, (*msg)[0]);
 
 	bool me = lsi_ut_istrcmp(nick, ctx->mynick, ctx->casemap) == 0;
-	chan *c = lsi_get_chan(ctx, (*msg)[2], !me);
+	chan *c = lsi_ucb_get_chan(ctx, (*msg)[2], !me);
 
 	if (me) {
-		if (!c && !lsi_add_chan(ctx, (*msg)[2])) {
+		if (!c && !lsi_ucb_add_chan(ctx, (*msg)[2])) {
 			E("not tracking chan '%s'", (*msg)[2]);
 			return ALLOC_ERR;
 		}
@@ -108,18 +108,18 @@ h_JOIN(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 			return 0;
 		}
 
-		user *u = lsi_get_user(ctx, (*msg)[0], false);
+		user *u = lsi_ucb_get_user(ctx, (*msg)[0], false);
 		bool uadd = false;
 		if (!u) {
 			uadd = true;
-			if (!(u = lsi_add_user(ctx, (*msg)[0])))
+			if (!(u = lsi_ucb_add_user(ctx, (*msg)[0])))
 				return ALLOC_ERR;
 		}
 
-		if (!lsi_add_memb(ctx, c, u, "")) {
+		if (!lsi_ucb_add_memb(ctx, c, u, "")) {
 			E("chan '%s' desynced", c->name);
 			if (uadd)
-				lsi_drop_user(ctx, u);
+				lsi_ucb_drop_user(ctx, u);
 			return ALLOC_ERR;
 		}
 	}
@@ -139,7 +139,7 @@ h_352(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0] || nargs < 10)
 		return PROTO_ERR;
 
-	user *u = lsi_get_user(ctx, (*msg)[7], true);
+	user *u = lsi_ucb_get_user(ctx, (*msg)[7], true);
 	if (!u)
 		return 0;
 
@@ -184,7 +184,7 @@ h_332(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0] || nargs < 5)
 		return PROTO_ERR;
 
-	chan *c = lsi_get_chan(ctx, (*msg)[3], true);
+	chan *c = lsi_ucb_get_chan(ctx, (*msg)[3], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[3]);
 		return 0;
@@ -202,7 +202,7 @@ h_333(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0] || nargs < 6)
 		return PROTO_ERR;
 
-	chan *c = lsi_get_chan(ctx, (*msg)[3], true);
+	chan *c = lsi_ucb_get_chan(ctx, (*msg)[3], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[3]);
 		return 0;
@@ -222,14 +222,14 @@ h_353(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0] || nargs < 6)
 		return PROTO_ERR;
 
-	chan *c = lsi_get_chan(ctx, (*msg)[4], true);
+	chan *c = lsi_ucb_get_chan(ctx, (*msg)[4], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[4]);
 		return 0;
 	}
 
 	if (ctx->endofnames) {
-		lsi_clear_memb(ctx, c);
+		lsi_ucb_clear_memb(ctx, c);
 		ctx->endofnames = false;
 	}
 
@@ -251,17 +251,17 @@ h_353(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 
 		lsi_com_strNcpy(nick, p, len + 1);
 
-		user *u = lsi_get_user(ctx, nick, false);
+		user *u = lsi_ucb_get_user(ctx, nick, false);
 		bool uadd = false;
 		if (!u) {
 			uadd = true;
-			if (!(u = lsi_add_user(ctx, nick)))
+			if (!(u = lsi_ucb_add_user(ctx, nick)))
 				return ALLOC_ERR;
 		}
 
-		if (!lsi_add_memb(ctx, c, u, mpfx)) {
+		if (!lsi_ucb_add_memb(ctx, c, u, mpfx)) {
 			if (uadd)
-				lsi_drop_user(ctx, u);
+				lsi_ucb_drop_user(ctx, u);
 			return ALLOC_ERR;
 		}
 
@@ -281,7 +281,7 @@ h_366(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 
 	ctx->endofnames = true;
 
-	chan *c = lsi_get_chan(ctx, (*msg)[3], true);
+	chan *c = lsi_ucb_get_chan(ctx, (*msg)[3], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[3]);
 		return 0;
@@ -299,20 +299,20 @@ h_PART(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 
 	char nick[MAX_NICK_LEN];
 	lsi_ut_ident2nick(nick, sizeof nick, (*msg)[0]);
-	lsi_touch_user(ctx, (*msg)[0], true);
+	lsi_ucb_touch_user(ctx, (*msg)[0], true);
 
-	chan *c = lsi_get_chan(ctx, (*msg)[2], true);
+	chan *c = lsi_ucb_get_chan(ctx, (*msg)[2], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[2]);
 		return 0;
 	}
 
 	if (lsi_ut_istrcmp(nick, ctx->mynick, ctx->casemap) == 0)
-		lsi_drop_chan(ctx, c);
+		lsi_ucb_drop_chan(ctx, c);
 	else {
-		user *u = lsi_get_user(ctx, (*msg)[0], true);
+		user *u = lsi_ucb_get_user(ctx, (*msg)[0], true);
 		if (u)
-			lsi_drop_memb(ctx, c, u, true, true);
+			lsi_ucb_drop_memb(ctx, c, u, true, true);
 	}
 
 	return 0;
@@ -324,11 +324,11 @@ h_QUIT(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0])
 		return PROTO_ERR;
 
-	lsi_touch_user(ctx, (*msg)[0], true);
+	lsi_ucb_touch_user(ctx, (*msg)[0], true);
 
-	user *u = lsi_get_user(ctx, (*msg)[0], true);
+	user *u = lsi_ucb_get_user(ctx, (*msg)[0], true);
 	if (u)
-		lsi_drop_user(ctx, u);
+		lsi_ucb_drop_user(ctx, u);
 
 	return 0;
 }
@@ -339,19 +339,19 @@ h_KICK(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 
-	lsi_touch_user(ctx, (*msg)[0], true);
-	chan *c = lsi_get_chan(ctx, (*msg)[2], true);
+	lsi_ucb_touch_user(ctx, (*msg)[0], true);
+	chan *c = lsi_ucb_get_chan(ctx, (*msg)[2], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[2]);
 		return 0;
 	}
 
 	if (lsi_ut_istrcmp((*msg)[3], ctx->mynick, ctx->casemap) == 0)
-		lsi_drop_chan(ctx, c);
+		lsi_ucb_drop_chan(ctx, c);
 	else {
-		user *u = lsi_get_user(ctx, (*msg)[3], true);
+		user *u = lsi_ucb_get_user(ctx, (*msg)[3], true);
 		if (u)
-			lsi_drop_memb(ctx, c, u, true, true);
+			lsi_ucb_drop_memb(ctx, c, u, true, true);
 	}
 
 	return 0;
@@ -365,10 +365,10 @@ h_NICK(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0] || nargs < 3)
 		return PROTO_ERR;
 
-	lsi_touch_user(ctx, (*msg)[0], true);
+	lsi_ucb_touch_user(ctx, (*msg)[0], true);
 
 	bool aerr;
-	if (!lsi_rename_user(ctx, (*msg)[0], (*msg)[2], &aerr)) {
+	if (!lsi_ucb_rename_user(ctx, (*msg)[0], (*msg)[2], &aerr)) {
 		E("failed renaming user '%s' ('%s')", (*msg)[0], (*msg)[2]);
 		if (aerr)
 			res |= ALLOC_ERR;
@@ -382,11 +382,11 @@ h_TOPIC(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 
-	lsi_touch_user(ctx, (*msg)[0], true);
+	lsi_ucb_touch_user(ctx, (*msg)[0], true);
 	char nick[MAX_NICK_LEN];
 	lsi_ut_ident2nick(nick, sizeof nick, (*msg)[0]);
 
-	chan *c = lsi_get_chan(ctx, (*msg)[2], true);
+	chan *c = lsi_ucb_get_chan(ctx, (*msg)[2], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[2]);
 		return 0;
@@ -410,9 +410,9 @@ h_MODE_chanmode(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 		return PROTO_ERR;
 
 	if (!strchr((*msg)[0], '.')) //servermode
-		lsi_touch_user(ctx, (*msg)[0], true);
+		lsi_ucb_touch_user(ctx, (*msg)[0], true);
 
-	chan *c = lsi_get_chan(ctx, (*msg)[2], true);
+	chan *c = lsi_ucb_get_chan(ctx, (*msg)[2], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[2]);
 		return 0;
@@ -428,13 +428,13 @@ h_MODE_chanmode(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 		char *ptr = strchr(ctx->m005modepfx[0], p[i][1]);
 		if (ptr) {
 			char sym = ctx->m005modepfx[1][ptr - ctx->m005modepfx[0]];
-			lsi_update_modepfx(ctx, c, p[i] + 3, sym, enab); //XXX chk
+			lsi_ucb_update_modepfx(ctx, c, p[i] + 3, sym, enab); //XXX chk
 		} else {
 			if (enab) {
-				if (!lsi_add_chanmode(ctx, c, p[i] + 1))
+				if (!lsi_ucb_add_chanmode(ctx, c, p[i] + 1))
 					res |= ALLOC_ERR;
 			} else
-				lsi_drop_chanmode(ctx, c, p[i] + 1);
+				lsi_ucb_drop_chanmode(ctx, c, p[i] + 1);
 		}
 	}
 
@@ -467,7 +467,7 @@ h_PRIVMSG(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 		return PROTO_ERR;
 
 	if (!logon && !strchr((*msg)[0], '.'))
-		lsi_touch_user(ctx, (*msg)[0], false);
+		lsi_ucb_touch_user(ctx, (*msg)[0], false);
 
 	return 0;
 }
@@ -479,7 +479,7 @@ h_NOTICE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 		return PROTO_ERR;
 
 	if (!logon && !strchr((*msg)[0], '.'))
-		lsi_touch_user(ctx, (*msg)[0], false);
+		lsi_ucb_touch_user(ctx, (*msg)[0], false);
 
 	return 0;
 }
@@ -493,7 +493,7 @@ h_324(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 
 	uint8_t res = 0;
 
-	chan *c = lsi_get_chan(ctx, (*msg)[3], true);
+	chan *c = lsi_ucb_get_chan(ctx, (*msg)[3], true);
 	if (!c) {
 		W("we don't know channel '%s'!", (*msg)[3]);
 		return 0;
@@ -504,15 +504,15 @@ h_324(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	if (!p)
 		return ALLOC_ERR;
 
-	lsi_clear_chanmodes(ctx, c);
+	lsi_ucb_clear_chanmodes(ctx, c);
 
 	for (size_t i = 0; i < num; i++) {
 		bool enab = p[i][0] == '+';
 		if (enab) {
-			if (!lsi_add_chanmode(ctx, c, p[i] + 1))
+			if (!lsi_ucb_add_chanmode(ctx, c, p[i] + 1))
 				res |= ALLOC_ERR;
 		} else
-			lsi_drop_chanmode(ctx, c, p[i] + 1);
+			lsi_ucb_drop_chanmode(ctx, c, p[i] + 1);
 	}
 
 	for (size_t i = 0; i < num; i++)
@@ -541,7 +541,7 @@ h_311(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0] || nargs < 8)
 		return PROTO_ERR;
 
-	user *u = lsi_get_user(ctx, (*msg)[3], false);
+	user *u = lsi_ucb_get_user(ctx, (*msg)[3], false);
 	if (!u)
 		return 0;
 
@@ -604,7 +604,7 @@ static userrep *mkuserrep(userrep *dest, user *u, const char *modepfx);
 size_t
 irc_num_chans(irc *ctx)
 {
-	return lsi_num_chans(ctx);
+	return lsi_ucb_num_chans(ctx);
 }
 
 size_t
@@ -615,13 +615,13 @@ irc_all_chans(irc *ctx, chanrep *chanarr, size_t chanarr_cnt)
 
 	size_t cnt = 0;
 
-	chan *c = lsi_first_chan(ctx);
+	chan *c = lsi_ucb_first_chan(ctx);
 	if (!c)
 		return 0;
 
 	do {
 		mkchanrep(&chanarr[cnt++], c);
-	} while (cnt < chanarr_cnt && (c = lsi_next_chan(ctx)));
+	} while (cnt < chanarr_cnt && (c = lsi_ucb_next_chan(ctx)));
 
 	return cnt;
 }
@@ -641,7 +641,7 @@ mkchanrep(chanrep *dest, chan *c)
 chanrep *
 irc_chan(irc *ctx, chanrep *dest, const char *name)
 {
-	chan *c = lsi_get_chan(ctx, name, false);
+	chan *c = lsi_ucb_get_chan(ctx, name, false);
 	if (!c)
 		return NULL;
 
@@ -652,7 +652,7 @@ irc_chan(irc *ctx, chanrep *dest, const char *name)
 size_t
 irc_num_users(irc *ctx)
 {
-	return lsi_num_users(ctx);
+	return lsi_ucb_num_users(ctx);
 }
 
 size_t
@@ -663,13 +663,13 @@ irc_all_users(irc *ctx, userrep *userarr, size_t userarr_cnt)
 
 	size_t cnt = 0;
 
-	user *u = lsi_first_user(ctx);
+	user *u = lsi_ucb_first_user(ctx);
 	if (!u)
 		return 0;
 
 	do {
 		mkuserrep(&userarr[cnt++], u, NULL);
-	} while (cnt < userarr_cnt && (u = lsi_next_user(ctx)));
+	} while (cnt < userarr_cnt && (u = lsi_ucb_next_user(ctx)));
 
 	return cnt;
 }
@@ -690,7 +690,7 @@ mkuserrep(userrep *dest, user *u, const char *modepfx)
 userrep *
 irc_user(irc *ctx, userrep *dest, const char *ident)
 {
-	user *u = lsi_get_user(ctx, ident, false);
+	user *u = lsi_ucb_get_user(ctx, ident, false);
 	if (!u)
 		return NULL;
 
@@ -701,11 +701,11 @@ irc_user(irc *ctx, userrep *dest, const char *ident)
 size_t
 irc_num_members(irc *ctx, const char *chname)
 {
-	chan *c = lsi_get_chan(ctx, chname, false);
+	chan *c = lsi_ucb_get_chan(ctx, chname, false);
 	if (!c)
 		return 0;
 
-	return lsi_num_memb(ctx, c);
+	return lsi_ucb_num_memb(ctx, c);
 }
 
 size_t
@@ -714,19 +714,19 @@ irc_all_members(irc *ctx, const char *chname, userrep *userarr, size_t userarr_c
 	if (!userarr_cnt)
 		return 0;
 
-	chan *c = lsi_get_chan(ctx, chname, false);
+	chan *c = lsi_ucb_get_chan(ctx, chname, false);
 	if (!c)
 		return 0;
 
 	size_t cnt = 0;
 
-	memb *m = lsi_first_memb(ctx, c);
+	memb *m = lsi_ucb_first_memb(ctx, c);
 	if (!m)
 		return 0;
 
 	do {
 		mkuserrep(&userarr[cnt++], m->u, m->modepfx);
-	} while (cnt < userarr_cnt && (m = lsi_next_memb(ctx, c)));
+	} while (cnt < userarr_cnt && (m = lsi_ucb_next_memb(ctx, c)));
 
 	return cnt;
 }
@@ -734,11 +734,11 @@ irc_all_members(irc *ctx, const char *chname, userrep *userarr, size_t userarr_c
 userrep *
 irc_member(irc *ctx, userrep *dest, const char *chname, const char *ident)
 {
-	chan *c = lsi_get_chan(ctx, chname, false);
+	chan *c = lsi_ucb_get_chan(ctx, chname, false);
 	if (!c)
 		return NULL;
 
-	memb *m = lsi_get_memb(ctx, c, ident, false);
+	memb *m = lsi_ucb_get_memb(ctx, c, ident, false);
 	if (!m)
 		return NULL;
 
@@ -755,21 +755,21 @@ irc_member(irc *ctx, userrep *dest, const char *chname, const char *ident)
 bool
 irc_tag_chan(irc *ctx, const char *chname, void *tag, bool autofree)
 {
-	chan *c = lsi_get_chan(ctx, chname, false);
+	chan *c = lsi_ucb_get_chan(ctx, chname, false);
 	if (!c)
 		return false;
 
-	lsi_tag_chan(c, tag, autofree);
+	lsi_ucb_tag_chan(c, tag, autofree);
 	return true;
 }
 
 bool
 irc_tag_user(irc *ctx, const char *ident, void *tag, bool autofree)
 {
-	user *u = lsi_get_user(ctx, ident, false);
+	user *u = lsi_ucb_get_user(ctx, ident, false);
 	if (!u)
 		return false;
 
-	lsi_tag_user(u, tag, autofree);
+	lsi_ucb_tag_user(u, tag, autofree);
 	return true;
 }

@@ -1,4 +1,4 @@
-/* msg.c - protocol message handlers
+/* msg.c - protocol message handler mechanism and dispatch
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
@@ -139,7 +139,7 @@ lsi_msg_handle(irc *ctx, tokarr *msg, bool logon)
 
 	if (!logon && !dispatch_uhnd(ctx, msg, ac, true)) {
 		res |= USER_ERR;
-		goto msg_handle_fail;
+		goto fail;
 	}
 
 	for (;i < ctx->msghnds_cnt; i++) {
@@ -152,17 +152,17 @@ lsi_msg_handle(irc *ctx, tokarr *msg, bool logon)
 		D("dispatch a '%s' to '%s'", (*msg)[1], ctx->msghnds[i].module);
 		res |= ctx->msghnds[i].hndfn(ctx, msg, ac, logon);
 		if (res & CANT_PROCEED)
-			goto msg_handle_fail;
+			goto fail;
 	}
 
 	if (!logon && !dispatch_uhnd(ctx, msg, ac, false)) {
 		res |= USER_ERR;
-		goto msg_handle_fail;
+		goto fail;
 	}
 
 	return res;
 
-msg_handle_fail:;
+fail:;
 	uint8_t r = res & ~CANT_PROCEED;
 
 	if (r & USER_ERR) {

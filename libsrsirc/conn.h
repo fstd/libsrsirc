@@ -2,8 +2,8 @@
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-15, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
-#ifndef LIBSRSIRC_ICONN_H
-#define LIBSRSIRC_ICONN_H 1
+#ifndef LIBSRSIRC_CONN_H
+#define LIBSRSIRC_CONN_H 1
 
 
 #include <stdbool.h>
@@ -38,4 +38,4 @@ int lsi_conn_sockfd(iconn *ctx);
 
 void irc_conn_dump(iconn *ctx);
 
-#endif /* LIBSRSIRC_ICONN_H */
+#endif /* LIBSRSIRC_CONN_H */

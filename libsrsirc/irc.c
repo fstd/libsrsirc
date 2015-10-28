@@ -32,7 +32,6 @@
 
 
 static bool send_logon(irc *ctx);
-static void printstr(const void *arg); // valop for lsi_skmap_dump()
 static void reset_state(irc *ctx);
 
 irc *
@@ -43,10 +42,10 @@ irc_init(void)
 	int preverrno = errno;
 	errno = 0;
 	if (!(con = lsi_conn_init()))
-		goto irc_init_fail;
+		goto fail;
 
 	if (!(r = lsi_com_malloc(sizeof *r)))
-		goto irc_init_fail;
+		goto fail;
 
 	r->pass = r->nick = r->uname = r->fname = r->serv_dist
 	    = r->serv_info = r->lasterr = r->banmsg = NULL;
@@ -64,18 +63,18 @@ irc_init(void)
 		r->m005modepfx[i] = NULL;
 
 	if (!(r->m005chantypes = lsi_com_malloc(MAX_005_CHTYP)))
-		goto irc_init_fail;
+		goto fail;
 
 	for (size_t i = 0; i < COUNTOF(r->m005chanmodes); i++)
 		if (!(r->m005chanmodes[i] = lsi_com_malloc(MAX_005_CHMD)))
-			goto irc_init_fail;
+			goto fail;
 
 	for (size_t i = 0; i < COUNTOF(r->m005modepfx); i++)
 		if (!(r->m005modepfx[i] = lsi_com_malloc(MAX_005_MDPFX)))
-			goto irc_init_fail;
+			goto fail;
 
 	if (!(r->m005attrs = lsi_skmap_init(256, CMAP_ASCII)))
-		goto irc_init_fail;
+		goto fail;
 
 	lsi_com_strNcpy(r->m005chantypes, "#&", MAX_005_CHTYP);
 	lsi_com_strNcpy(r->m005chanmodes[0], "b", MAX_005_CHMD);
@@ -87,31 +86,31 @@ irc_init(void)
 
 	size_t len = strlen(DEF_NICK);
 	if (!(r->nick = lsi_com_malloc((len > 9 ? len : 9) + 1)))
-		goto irc_init_fail;
+		goto fail;
 	strcpy(r->nick, DEF_NICK);
 
 	if ((!(r->uname = lsi_b_strdup(DEF_UNAME)))
 	    || (!(r->fname = lsi_b_strdup(DEF_FNAME)))
 	    || (!(r->serv_dist = lsi_b_strdup(DEF_SERV_DIST)))
 	    || (!(r->serv_info = lsi_b_strdup(DEF_SERV_INFO))))
-		goto irc_init_fail;
+		goto fail;
 
 	r->msghnds_cnt = 64;
 	if (!(r->msghnds = malloc(r->msghnds_cnt * sizeof *r->msghnds)))
-		goto irc_init_fail;
+		goto fail;
 
 	for (size_t i = 0; i < r->msghnds_cnt; i++)
 		r->msghnds[i].cmd[0] = '\0';
 
 	r->uprehnds_cnt = 8;
 	if (!(r->uprehnds = malloc(r->uprehnds_cnt * sizeof *r->uprehnds)))
-		goto irc_init_fail;
+		goto fail;
 	for (size_t i = 0; i < r->uprehnds_cnt; i++)
 		r->uprehnds[i].cmd[0] = '\0';
 
 	r->uposthnds_cnt = 8;
 	if (!(r->uposthnds = malloc(r->uposthnds_cnt * sizeof *r->uposthnds)))
-		goto irc_init_fail;
+		goto fail;
 	for (size_t i = 0; i < r->uposthnds_cnt; i++)
 		r->uposthnds[i].cmd[0] = '\0';
 
@@ -131,13 +130,14 @@ irc_init(void)
 	r->hcto_us = DEF_HCTO_US;
 	r->dumb = false;
 	r->tracking_enab = r->tracking = false;
+	r->endofnames = false;
 
 	reset_state(r);
 
-	D("(%p) IRC context initialized (backend: %p)", (void *)r, (void *)r->con);
+	D("IRC context initialized (%p)", (void *)r->con);
 	return r;
 
-irc_init_fail:
+fail:
 	EE("failed to initialize IRC context");
 	if (r) {
 		free(r->pass);
@@ -200,7 +200,7 @@ irc_dispose(irc *ctx)
 
 	lsi_skmap_dispose(ctx->m005attrs);
 
-	D("(%p) disposed", (void *)ctx);
+	D("disposed");
 	free(ctx);
 	return;
 }
@@ -233,15 +233,15 @@ irc_connect(irc *ctx)
 	if (!lsi_conn_connect(ctx->con, ctx->scto_us, ctx->hcto_us))
 		return false;
 
-	I("(%p) connection established", (void *)ctx);
+	I("connection established");
 
 	if (ctx->dumb)
 		return true;
 
 	if (!send_logon(ctx))
-		goto irc_connect_fail;
+		goto fail;
 
-	I("(%p) IRC logon sequence sent", (void *)ctx);
+	I("IRC logon sequence sent");
 
 	lsi_com_strNcpy(ctx->mynick, ctx->nick, sizeof ctx->mynick);
 	tokarr msg;
@@ -251,20 +251,20 @@ irc_connect(irc *ctx)
 	int r;
 	do {
 		if (lsi_com_check_timeout(tend, &trem)) {
-			W("(%p) timeout waiting for 004", (void *)ctx);
-			goto irc_connect_fail;
+			W("timeout waiting for 004");
+			goto fail;
 		}
 
 		if ((r = lsi_conn_read(ctx->con, &msg, trem)) < 0)
-			goto irc_connect_fail;
+			goto fail;
 
 		if (r == 0)
 			continue;
 
 		if (ctx->cb_con_read &&
 		    !ctx->cb_con_read(&msg, ctx->tag_con_read)) {
-			W("(%p) logon prohibited by conread", (void *)ctx);
-			goto irc_connect_fail;
+			W("logon prohibited by conread");
+			goto fail;
 		}
 
 		size_t ac = 2;
@@ -278,17 +278,17 @@ irc_connect(irc *ctx)
 		uint8_t flags = lsi_msg_handle(ctx, &msg, true);
 
 		if (flags & CANT_PROCEED)
-			goto irc_connect_fail;
+			goto fail;
 
 		if (flags & LOGON_COMPLETE)
 			success = true;
 
 	} while (!success);
 
-	N("(%p) logged on to IRC", (void *)ctx);
+	N("logged on to IRC");
 	return true;
 
-irc_connect_fail:
+fail:
 	irc_reset(ctx);
 	return false;
 }
@@ -402,6 +402,12 @@ irc_regcb_mutnick(irc *ctx, fp_mut_nick cb)
 	return;
 }
 
+bool
+irc_reg_msghnd(irc *ctx, const char *cmd, uhnd_fn hndfn, bool pre)
+{
+	return lsi_msg_reguhnd(ctx, cmd, hndfn, pre);
+}
+
 void
 irc_dump(irc *ctx)
 {
@@ -476,11 +482,4 @@ reset_state(irc *ctx)
 	lsi_com_strNcpy(ctx->m005chanmodes[3], "psitnm", MAX_005_CHMD);
 	lsi_com_strNcpy(ctx->m005modepfx[0], "ov", MAX_005_MDPFX);
 	lsi_com_strNcpy(ctx->m005modepfx[1], "@+", MAX_005_MDPFX);
-}
-
-static void
-printstr(const void *arg)
-{
-	fprintf(stderr, "'%s'", (const char *)arg);
-	return;
 }

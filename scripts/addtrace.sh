@@ -1,5 +1,11 @@
 #!/bin/sh
 
+noreturns=false
+if [ "x$1" = "x-n" ]; then
+	noreturns=true
+	shift
+fi
+
 if ! [ -d ./tracer ]; then
 	echo "please run from top-level directory" >&2
 	exit 1
@@ -32,6 +38,10 @@ find tracer -name 'tracer@*' | while read -r f; do
 	cat "$file" | sed -n "$((lno+1)),\$p" >>$tmp
 	cat $tmp >$file
 done
+
+if $noreturns; then
+	exit 0
+fi
 
 find libsrsirc platform src -name '*.c' | grep -vF -e 'base_log.c' -e 'helloworld.c' -e 'base_time.c' | while read -r f; do
 	echo "doing returns for $f" >&2

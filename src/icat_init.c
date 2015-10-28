@@ -402,32 +402,32 @@ sighnd(int s)
 static void
 init_logger(void)
 {
-	ircdbg_init();
-	ircdbg_setlvl(MOD_ICATINIT, DEF_LOGLVL);
-	ircdbg_setlvl(MOD_ICATCORE, DEF_LOGLVL);
-	ircdbg_setlvl(MOD_ICATSERV, DEF_LOGLVL);
-	ircdbg_setlvl(MOD_ICATUSER, DEF_LOGLVL);
-	ircdbg_setlvl(MOD_ICATMISC, DEF_LOGLVL);
+	lsi_log_init();
+	lsi_log_setlvl(MOD_ICATINIT, DEF_LOGLVL);
+	lsi_log_setlvl(MOD_ICATCORE, DEF_LOGLVL);
+	lsi_log_setlvl(MOD_ICATSERV, DEF_LOGLVL);
+	lsi_log_setlvl(MOD_ICATUSER, DEF_LOGLVL);
+	lsi_log_setlvl(MOD_ICATMISC, DEF_LOGLVL);
 	/* no return; here, we're not tracing this */
 }
 
 static void
 update_logger(int verb, int fancy)
 {
-	int v = ircdbg_getlvl(MOD_ICATINIT) + verb;
+	int v = lsi_log_getlvl(MOD_ICATINIT) + verb;
 	if (v < 0)
 		v = 0;
 
 	if (fancy == -1)
-		fancy = ircdbg_getfancy();
+		fancy = lsi_log_getfancy();
 
-	ircdbg_setfancy(fancy);
+	lsi_log_setfancy(fancy);
 
-	ircdbg_setlvl(MOD_ICATINIT, v);
-	ircdbg_setlvl(MOD_ICATCORE, v);
-	ircdbg_setlvl(MOD_ICATSERV, v);
-	ircdbg_setlvl(MOD_ICATUSER, v);
-	ircdbg_setlvl(MOD_ICATMISC, v);
+	lsi_log_setlvl(MOD_ICATINIT, v);
+	lsi_log_setlvl(MOD_ICATCORE, v);
+	lsi_log_setlvl(MOD_ICATSERV, v);
+	lsi_log_setlvl(MOD_ICATUSER, v);
+	lsi_log_setlvl(MOD_ICATMISC, v);
 
 	return;
 }

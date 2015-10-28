@@ -60,14 +60,14 @@ lsi_skmap_init(size_t bsz, int cmap)
 
 	h->buck = lsi_com_malloc(h->bsz * sizeof *h->buck);
 	if (!h->buck)
-		goto skmap_init_fail;
+		goto fail;
 
 	for (size_t i = 0; i < h->bsz; i++)
 		h->buck[i] = NULL;
 
 	return h;
 
-skmap_init_fail:
+fail:
 	if (h)
 		free(h->buck);
 	free(h);
@@ -123,17 +123,17 @@ lsi_skmap_put(skmap *h, const char *key, void *elem)
 	if (!kl) {
 		allocated = true;
 		if (!(kl = h->buck[ind] = lsi_bucklist_init(h->cmap)))
-			goto skmap_put_fail;
+			goto fail;
 	}
 
 	void *e = lsi_bucklist_find(kl, key, NULL);
 	if (!e) {
 		kd = lsi_b_strdup(key);
 		if (!kd)
-			goto skmap_put_fail;
+			goto fail;
 
 		if (!lsi_bucklist_insert(kl, 0, kd, elem))
-			goto skmap_put_fail;
+			goto fail;
 
 		h->count++;
 	} else
@@ -141,7 +141,7 @@ lsi_skmap_put(skmap *h, const char *key, void *elem)
 
 	return true;
 
-skmap_put_fail:
+fail:
 	if (allocated) {
 		lsi_bucklist_dispose(kl);
 		h->buck[ind] = NULL;

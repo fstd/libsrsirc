@@ -288,10 +288,10 @@ lsi_ut_parse_MODE(irc *ctx, tokarr *msg, size_t *num, bool is324)
 
 	char **modearr = lsi_com_malloc(nummodes * sizeof *modearr);
 	if (!modearr)
-		goto ut_parse_005_cmodes_fail;
+		goto fail;
 
 	for (size_t i = 0; i < nummodes; i++)
-		modearr[i] = NULL; //for safe lsi_cleanup
+		modearr[i] = NULL; //for safe cleanup
 
 	size_t i = 4 + is324;
 	int j = 0, cl;
@@ -344,7 +344,7 @@ lsi_ut_parse_MODE(irc *ctx, tokarr *msg, size_t *num, bool is324)
 
 		modearr[j] = lsi_com_malloc((3 + (arg ? strlen(arg) + 1 : 0)));
 		if (!modearr[j])
-			goto ut_parse_005_cmodes_fail;
+			goto fail;
 
 		modearr[j][0] = enable ? '+' : '-';
 		modearr[j][1] = c;
@@ -364,7 +364,7 @@ lsi_ut_parse_MODE(irc *ctx, tokarr *msg, size_t *num, bool is324)
 	free(modes);
 	return modearr;
 
-ut_parse_005_cmodes_fail:
+fail:
 	if (modearr)
 		for (i = 0; i < nummodes; i++)
 			free(modearr[i]);
@@ -414,13 +414,13 @@ lsi_ut_clonearr(tokarr *arr)
 	for (size_t i = 0; i < COUNTOF(*arr); i++) {
 		if ((*arr)[i]) {
 			if (!((*res)[i] = lsi_b_strdup((*arr)[i])))
-				goto clonearr_fail;
+				goto fail;
 		} else
 			(*res)[i] = NULL;
 	}
 	return res;
 
-clonearr_fail:
+fail:
 
 	lsi_ut_freearr(res);
 	return NULL;

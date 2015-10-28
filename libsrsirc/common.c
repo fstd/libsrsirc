@@ -34,15 +34,23 @@ static int tryhost(struct addrlist *ai, char *remaddr, size_t remaddr_sz,
 void
 lsi_com_strNcat(char *dest, const char *src, size_t destsz)
 {
+	const char *osrc = src;
 	size_t len = strlen(dest);
-	if (len + 1 >= destsz)
+	if (len + 1 >= destsz) {
+		W("Buffer already full, cannot concatenate '%s'", src);
 		return;
+	}
+
 	size_t rem = destsz - (len + 1);
 
 	char *ptr = dest + len;
 	while (rem-- && *src) {
 		*ptr++ = *src++;
 	}
+
+	if (rem + 1 == 0 && *src)
+		W("Buffer was too small for '%s', result truncated", osrc);
+
 	*ptr = '\0';
 	return;
 }
@@ -62,10 +70,15 @@ char *
 lsi_com_strNcpy(char *dst, const char *src, size_t dst_sz)
 {
 	char *orig = dst;
+	const char *osrc = src;
 	dst[dst_sz-1] = '\0';
 	while (--dst_sz)
 		if (!(*dst++ = *src++))
 			break;
+
+	if (!dst_sz)
+		W("Buffer was too small for '%s', result truncated", osrc);
+
 	return orig;
 }
 
@@ -123,7 +136,7 @@ tryhost(struct addrlist *ai, char *remaddr, size_t remaddr_sz,
 	if (r == 1)
 		return sck;
 	else if (r == -1)
-		goto tryhost_fail;
+		goto fail;
 
 	r = lsi_b_select(&sck, 1, true, false, to_us);
 
@@ -144,7 +157,7 @@ tryhost(struct addrlist *ai, char *remaddr, size_t remaddr_sz,
 	}
 
 	/* fall-thru */
-tryhost_fail:
+fail:
 	if (sck != -1)
 		lsi_b_close(sck);
 	return -1;
@@ -197,7 +210,7 @@ lsi_com_malloc(size_t sz)
 
 /*dumb heuristic to tell apart domain name/ip4/ip6 addr XXX FIXME */
 enum hosttypes
-lsi_guess_hosttype(const char *host)
+lsi_com_guess_hosttype(const char *host)
 {
 	if (strchr(host, '['))
 		return HOSTTYPE_IPV6;

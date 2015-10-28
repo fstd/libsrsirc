@@ -47,7 +47,7 @@ lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok, uint64_t to_us)
 	uint64_t tnow, trem = 0;
 
 	V("Wanna read with%s timeout (%"PRIu64"). %zu bytes in buffer: '%.*s'",
-	    tend?"":" no", tend, rctx->eptr - rctx->wptr,
+	    tend?"":" no", to_us, rctx->eptr - rctx->wptr,
 	    (int)(rctx->eptr - rctx->wptr), rctx->wptr);
 
 	while (rctx->wptr < rctx->eptr && ISDELIM(*rctx->wptr))

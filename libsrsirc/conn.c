@@ -45,12 +45,12 @@ lsi_conn_init(void)
 	errno = 0;
 
 	if (!(r = lsi_com_malloc(sizeof *r)))
-		goto conn_init_fail;
+		goto fail;
 
 	r->host = NULL;
 
 	if (!(r->host = lsi_b_strdup(DEF_HOST)))
-		goto conn_init_fail;
+		goto fail;
 
 	errno = preverrno;
 	r->rctx.wptr = r->rctx.eptr = r->rctx.workbuf;
@@ -66,11 +66,11 @@ lsi_conn_init(void)
 	r->sh.sck = -1;
 	r->sctx = NULL;
 
-	D("(%p) iconn initialized", (void *)r);
+	D("Connection context initialized (%p)", (void *)r);
 
 	return r;
 
-conn_init_fail:
+fail:
 	EE("failed to initialize iconn handle");
 	if (r) {
 		free(r->host);
@@ -83,16 +83,16 @@ conn_init_fail:
 void
 lsi_conn_reset(iconn *ctx)
 {
-	D("(%p) resetting", (void *)ctx);
+	D("resetting");
 
 	if (ctx->ssl && ctx->sh.shnd) {
-		D("(%p) shutting down ssl", (void *)ctx);
+		D("shutting down ssl");
 		lsi_b_sslfin(ctx->sh.shnd);
 		ctx->sh.shnd = NULL;
 	}
 
 	if (ctx->sh.sck != -1) {
-		D("(%p) closing socket %d", (void *)ctx, ctx->sh.sck);
+		D("closing socket %d", ctx->sh.sck);
 		lsi_b_close(ctx->sh.sck);
 	}
 
@@ -112,7 +112,7 @@ lsi_conn_dispose(iconn *ctx)
 	free(ctx->host);
 	free(ctx->phost);
 
-	D("(%p) disposed", (void *)ctx);
+	D("disposed");
 	free(ctx);
 	return;
 }
@@ -141,9 +141,9 @@ lsi_conn_connect(iconn *ctx, uint64_t softto_us, uint64_t hardto_us)
 			snprintf(ps, sizeof ps, " via %s:%s:%" PRIu16,
 			    lsi_px_typestr(ctx->ptype), ctx->phost, ctx->pport);
 
-		I("(%p) wanna connect to %s:%"PRIu16"%s, "
+		I("wanna connect to %s:%"PRIu16"%s, "
 		    "sto: %"PRIu64"us, hto: %"PRIu64"us",
-		    (void *)ctx, ctx->host, realport, ps, softto_us, hardto_us);
+		    ctx->host, realport, ps, softto_us, hardto_us);
 	}
 
 	char peerhost[256];
@@ -155,34 +155,32 @@ lsi_conn_connect(iconn *ctx, uint64_t softto_us, uint64_t hardto_us)
 	sh.shnd = NULL;
 
 	if (sh.sck < 0) {
-		W("(%p) lsi_com_consocket failed for %s:%"PRIu16"",
-		    (void *)ctx, host, port);
+		W("lsi_com_consocket failed for %s:%"PRIu16"", host, port);
 		return false;
 	}
 
-	D("(%p) connected socket %d for %s:%"PRIu16"",
-	    (void *)ctx, sh.sck, host, port);
+	D("connected socket %d for %s:%"PRIu16"", sh.sck, host, port);
 
 	ctx->sh = sh; //must be set here for px_logon
 
 	uint64_t trem = 0;
 	if (ctx->ptype != -1) {
 		if (lsi_com_check_timeout(tend, &trem)) {
-			W("(%p) timeout", (void *)ctx);
+			W("timeout");
 			lsi_b_close(sh.sck);
 			ctx->sh.sck = -1;
 			return false;
 		}
 
 		if (!lsi_b_blocking(sh.sck, false)) {
-			WE("(%p) failed to set nonblocking mode", (void *)ctx);
+			WE("failed to set nonblocking mode");
 			lsi_b_close(sh.sck);
 			ctx->sh.sck = -1;
 			return false;
 		}
 
 		bool ok = false;
-		D("(%p) logging on to proxy", (void *)ctx);
+		D("logging on to proxy");
 		if (ctx->ptype == IRCPX_HTTP)
 			ok = lsi_px_logon_http(ctx->sh.sck, ctx->host,
 			    realport, trem);
@@ -194,20 +192,20 @@ lsi_conn_connect(iconn *ctx, uint64_t softto_us, uint64_t hardto_us)
 			    realport, trem);
 
 		if (!ok) {
-			W("(%p) proxy logon failed", (void *)ctx);
+			W("proxy logon failed");
 			lsi_b_close(sh.sck);
 			ctx->sh.sck = -1;
 			return false;
 		}
-		D("(%p) sent proxy logon sequence", (void *)ctx);
+		D("sent proxy logon sequence");
 
 	}
 	
 	if (ctx->ssl) {
-		D("(%p) setting to blocking mode for ssl connect", (void *)ctx);
+		D("setting to blocking mode for ssl connect");
 
 		if (!lsi_b_blocking(sh.sck, true)) {
-			WE("(%p) failed to set blocking mode", (void *)ctx);
+			WE("failed to set blocking mode");
 			lsi_b_close(sh.sck);
 			ctx->sh.sck = -1;
 			return false;
@@ -220,10 +218,10 @@ lsi_conn_connect(iconn *ctx, uint64_t softto_us, uint64_t hardto_us)
 			return false;
 		}
 
-		D("(%p) setting to nonblocking mode after ssl connect", (void *)ctx);
+		D("setting to nonblocking mode after ssl connect");
 
 		if (!lsi_b_blocking(sh.sck, false)) {
-			WE("(%p) failed to clear blocking mode", (void *)ctx);
+			WE("failed to clear blocking mode");
 			lsi_b_close(sh.sck);
 			ctx->sh.sck = -1;
 			return false;
@@ -232,8 +230,7 @@ lsi_conn_connect(iconn *ctx, uint64_t softto_us, uint64_t hardto_us)
 
 	ctx->online = true;
 
-	D("(%p) %s connection to ircd established",
-	    (void *)ctx, ctx->ptype == -1?"TCP":"proxy");
+	D("%s connection to ircd established", ctx->ptype == -1?"TCP":"proxy");
 
 	return true;
 }
@@ -251,7 +248,7 @@ lsi_conn_read(iconn *ctx, tokarr *tok, uint64_t to_us)
 		return 0; /* timeout */
 
 	if (n < 0) {
-		W("(%p) lsi_io_read %s", (void *)ctx, n == -1 ? "failed":"EOF");
+		W("lsi_io_read %s", n == -1 ? "failed":"EOF");
 		lsi_conn_reset(ctx);
 		ctx->eof = n == -2;
 		return -1;
@@ -263,7 +260,7 @@ lsi_conn_read(iconn *ctx, tokarr *tok, uint64_t to_us)
 	if (last > 2)
 		ctx->colon_trail = (*tok)[last-1][-1] == ':';
 
-	D("(%p) got a msg ('%s', %zu args)", (void *)ctx, (*tok)[1], last);
+	D("got a msg ('%s', %zu args)", (*tok)[1], last);
 
 	return 1;
 }
@@ -277,13 +274,13 @@ lsi_conn_write(iconn *ctx, const char *line)
 	}
 
 	if (!lsi_io_write(ctx->sh, line)) {
-		W("(%p) failed to write '%s'", (void *)ctx, line);
+		W("failed to write '%s'", line);
 		lsi_conn_reset(ctx);
 		ctx->eof = false;
 		return false;
 	}
 
-	D("(%p) wrote: '%s'", (void *)ctx, line);
+	D("wrote: '%s'", line);
 	return true;
 }
 
@@ -323,7 +320,7 @@ lsi_conn_set_px(iconn *ctx, const char *host, uint16_t port, int ptype)
 	case IRCPX_SOCKS4:
 	case IRCPX_SOCKS5:
 		if (!host || !port) { //XXX `most' default port per type?
-			E("Missing host or port for proxy");
+			E("Missing %s for proxy", host ? "port" : "hostname");
 			return false;
 		}
 

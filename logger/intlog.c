@@ -77,14 +77,14 @@ static int s_calldepth = 0;
 static const char *lvlnam(int lvl);
 static const char *lvlcol(int lvl);
 static int getenv_m(const char *nam, char *dest, size_t destsz);
-static bool lsi_isdigitstr(const char *p);
+static bool isdigitstr(const char *p);
 
 
 // ----- public interface implementation -----
 
 
 void
-ircdbg_syslog(const char *ident)
+lsi_log_syslog(const char *ident)
 {
 	if (s_open)
 		lsi_b_closelog();
@@ -103,7 +103,7 @@ ircdbg_syslog(const char *ident)
 
 
 void
-ircdbg_stderr(void)
+lsi_log_stderr(void)
 {
 	if (s_open)
 		lsi_b_closelog();
@@ -113,7 +113,7 @@ ircdbg_stderr(void)
 
 
 void
-ircdbg_setfancy(bool fancy)
+lsi_log_setfancy(bool fancy)
 {
 	if (!s_stderr)
 		return; //don't send color sequences to syslog
@@ -122,30 +122,30 @@ ircdbg_setfancy(bool fancy)
 
 
 bool
-ircdbg_getfancy(void)
+lsi_log_getfancy(void)
 {
 	return s_stderr && s_fancy;
 }
 
 
 void
-ircdbg_setlvl(int mod, int lvl)
+lsi_log_setlvl(int mod, int lvl)
 {
 	s_lvlarr[mod] = lvl;
 }
 
 int
-ircdbg_getlvl(int mod)
+lsi_log_getlvl(int mod)
 {
 	return s_lvlarr[mod];
 }
 
 void
-ircdbg_log(int mod, int lvl, int errn, const char *file, int line,
+lsi_log_log(int mod, int lvl, int errn, const char *file, int line,
     const char *func, const char *fmt, ...)
 {
 	if (!s_init)
-		ircdbg_init();
+		lsi_log_init();
 
 	bool always = lvl == INT_MIN;
 
@@ -227,7 +227,7 @@ ircdbg_log(int mod, int lvl, int errn, const char *file, int line,
 }
 
 void
-ircdbg_init(void)
+lsi_log_init(void)
 {
 	int deflvl = DEF_LVL;
 	for (size_t i = 0; i < COUNTOF(s_lvlarr); i++)
@@ -238,7 +238,7 @@ ircdbg_init(void)
 		for (char *tok = strtok(v, " "); tok; tok = strtok(NULL, " ")) {
 			char *eq = strchr(tok, '=');
 			if (eq) {
-				if (tok[0] == '=' || !lsi_isdigitstr(eq+1))
+				if (tok[0] == '=' || !isdigitstr(eq+1))
 					continue;
 
 				*eq = '\0';
@@ -256,7 +256,7 @@ ircdbg_init(void)
 			}
 			eq = strchr(tok, ':');
 			if (eq) {
-				if (tok[0] == ':' || !lsi_isdigitstr(eq+1))
+				if (tok[0] == ':' || !isdigitstr(eq+1))
 					continue;
 
 				*eq = '\0';
@@ -274,7 +274,7 @@ ircdbg_init(void)
 				*eq = ':';
 				continue;
 			}
-			if (lsi_isdigitstr(tok)) {
+			if (isdigitstr(tok)) {
 				/* special case: a stray number
 				 * means set default loglevel */
 				deflvl = (int)strtol(tok, NULL, 10);
@@ -288,21 +288,21 @@ ircdbg_init(void)
 
 	const char *vv = getenv("LIBSRSIRC_DEBUG_TARGET");
 	if (vv && strcmp(vv, "syslog") == 0)
-		ircdbg_syslog("libsrsirc");
+		lsi_log_syslog("libsrsirc");
 	else
-		ircdbg_stderr();
+		lsi_log_stderr();
 
 	vv = getenv("LIBSRSIRC_DEBUG_FANCY");
 	if (vv && vv[0] != '0')
-		ircdbg_setfancy(true);
+		lsi_log_setfancy(true);
 	else
-		ircdbg_setfancy(false);
+		lsi_log_setfancy(false);
 
 	s_init = true;
 }
 
 void
-ircdbg_tret(void)
+lsi_log_tret(void)
 {
 	if (s_calldepth == 0) {
 		fprintf(stderr, "call depth would be <0\n");
@@ -312,7 +312,7 @@ ircdbg_tret(void)
 }
 
 void
-ircdbg_tcall(void) {
+lsi_log_tcall(void) {
 	s_calldepth++;
 }
 
@@ -346,7 +346,7 @@ lvlcol(int lvl)
 }
 
 static bool
-lsi_isdigitstr(const char *p)
+isdigitstr(const char *p)
 {
 	while (*p)
 		if (!isdigit((unsigned char)*p++))

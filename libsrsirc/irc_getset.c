@@ -225,6 +225,12 @@ irc_get_ssl(irc *ctx)
 	return lsi_conn_get_ssl(ctx->con);
 }
 
+bool
+irc_get_dumb(irc *ctx)
+{
+	return ctx->dumb;
+}
+
 
 /* Setters - set library parameters (none of these takes effect before the
  * next call to irc_connect() is done */
@@ -320,21 +326,9 @@ irc_set_ssl(irc *ctx, bool on)
 	return lsi_conn_set_ssl(ctx->con, on);
 }
 
-bool
-irc_get_dumb(irc *ctx)
-{
-	return ctx->dumb;
-}
-
 void
 irc_set_dumb(irc *ctx, bool dumbmode)
 {
 	ctx->dumb = dumbmode;
 	return;
-}
-
-bool
-irc_reg_msghnd(irc *ctx, const char *cmd, uhnd_fn hndfn, bool pre)
-{
-	return lsi_msg_reguhnd(ctx, cmd, hndfn, pre);
 }

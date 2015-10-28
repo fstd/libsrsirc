@@ -36,7 +36,7 @@ struct bucklist {
 	const uint8_t *cmap;
 };
 
-static bool lsi_pfxeq(const char *n1, const char *n2, const uint8_t *cmap);
+static bool pfxeq(const char *n1, const char *n2, const uint8_t *cmap);
 
 bucklist *
 lsi_bucklist_init(const uint8_t *cmap)
@@ -145,7 +145,7 @@ lsi_bucklist_replace(bucklist *l, const char *key, void *val)
 
 	struct pl_node *n = l->head;
 	while (n) {
-		if (lsi_pfxeq(n->key, key, l->cmap)) {
+		if (pfxeq(n->key, key, l->cmap)) {
 			n->val = val;
 			return true;
 		}
@@ -161,7 +161,7 @@ lsi_bucklist_remove(bucklist *l, const char *key, char **origkey)
 	struct pl_node *n = l->head;
 	struct pl_node *prev = NULL;
 	while (n) {
-		if (lsi_pfxeq(n->key, key, l->cmap)) {
+		if (pfxeq(n->key, key, l->cmap)) {
 			if (origkey)
 				*origkey = n->key;
 			void *val = n->val;
@@ -208,7 +208,7 @@ lsi_bucklist_find(bucklist *l, const char *key, char **origkey)
 {
 	struct pl_node *n = l->head;
 	while (n) {
-		if (lsi_pfxeq(n->key, key, l->cmap)) {
+		if (pfxeq(n->key, key, l->cmap)) {
 			if (origkey)
 				*origkey = n->key;
 			return n->val;
@@ -286,8 +286,8 @@ lsi_bucklist_dump(bucklist *l, bucklist_op_fn op)
 }
 
 
-bool
-lsi_pfxeq(const char *n1, const char *n2, const uint8_t *cmap)
+static bool
+pfxeq(const char *n1, const char *n2, const uint8_t *cmap)
 {
 	unsigned char c1, c2;
 	while ((c1 = cmap[(unsigned char)*n1]) & /* avoid short circuit */
