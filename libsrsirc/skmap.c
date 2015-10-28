@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <platform/base_misc.h>
 #include <platform/base_string.h>
 
 #include <logger/intlog.h>
@@ -48,7 +49,7 @@ static size_t strhash_mid(const char *s, const uint8_t *cmap);
 skmap *
 lsi_skmap_init(size_t bsz, int cmap)
 {
-	skmap *h = lsi_com_malloc(sizeof *h);
+	skmap *h = MALLOC(sizeof *h);
 	if (!h)
 		return NULL;
 
@@ -58,7 +59,7 @@ lsi_skmap_init(size_t bsz, int cmap)
 	h->cmap = g_cmap[cmap];
 	h->hfn = bsz <= 256 ? strhash_small : strhash_mid;
 
-	h->buck = lsi_com_malloc(h->bsz * sizeof *h->buck);
+	h->buck = MALLOC(h->bsz * sizeof *h->buck);
 	if (!h->buck)
 		goto fail;
 
@@ -128,7 +129,7 @@ lsi_skmap_put(skmap *h, const char *key, void *elem)
 
 	void *e = lsi_bucklist_find(kl, key, NULL);
 	if (!e) {
-		kd = lsi_b_strdup(key);
+		kd = STRDUP(key);
 		if (!kd)
 			goto fail;
 

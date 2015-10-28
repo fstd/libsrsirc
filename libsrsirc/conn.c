@@ -21,6 +21,7 @@
 #include <string.h>
 
 
+#include <platform/base_misc.h>
 #include <platform/base_string.h>
 #include <platform/base_time.h>
 
@@ -44,12 +45,12 @@ lsi_conn_init(void)
 	int preverrno = errno;
 	errno = 0;
 
-	if (!(r = lsi_com_malloc(sizeof *r)))
+	if (!(r = MALLOC(sizeof *r)))
 		goto fail;
 
 	r->host = NULL;
 
-	if (!(r->host = lsi_b_strdup(DEF_HOST)))
+	if (!(r->host = STRDUP(DEF_HOST)))
 		goto fail;
 
 	errno = preverrno;
@@ -324,7 +325,7 @@ lsi_conn_set_px(iconn *ctx, const char *host, uint16_t port, int ptype)
 			return false;
 		}
 
-		if (!(n = lsi_b_strdup(host)))
+		if (!(n = STRDUP(host)))
 			return false;
 
 		ctx->pport = port;
@@ -346,7 +347,7 @@ bool
 lsi_conn_set_server(iconn *ctx, const char *host, uint16_t port)
 {
 	char *n;
-	if (!(n = lsi_b_strdup(host?host:DEF_HOST)))
+	if (!(n = STRDUP(host?host:DEF_HOST)))
 		return false;
 
 	free(ctx->host);

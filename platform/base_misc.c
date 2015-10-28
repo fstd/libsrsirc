@@ -18,6 +18,8 @@
 # include <unistd.h>
 #endif
 
+#include <platform/base_misc.h>
+
 #include <logger/intlog.h>
 
 void
@@ -84,4 +86,14 @@ lsi_b_regsig(int sig, void (*sigfn)(int))
 	W("No signal support; use a real OS for that");
 #endif
 	return;
+}
+
+void *
+lsi_b_malloc(size_t sz, const char *file, int line, const char *func)
+{
+	void *r = malloc(sz);
+	if (!r)
+		/* NOTE: This does NOT call exit() or anything */
+		EE("malloc in %s() at %s:%d", func, file, line);
+	return r;
 }

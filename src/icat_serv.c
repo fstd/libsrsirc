@@ -182,18 +182,18 @@ icat_serv_printf(const char *fmt, ...)
 	struct outline_s *ptr = s_outQ;
 
 	if (!ptr) {
-		if (!(ptr = s_outQ = malloc(sizeof *s_outQ)))
+		if (!(ptr = s_outQ = MALLOC(sizeof *s_outQ)))
 			CE("malloc failed");
 	} else {
 		while (ptr->next)
 			ptr = ptr->next;
-		if (!(ptr->next = malloc(sizeof *ptr->next)))
+		if (!(ptr->next = MALLOC(sizeof *ptr->next)))
 			CE("malloc failed");
 		ptr = ptr->next;
 	}
 
 	ptr->next = NULL;
-	if (!(ptr->line = lsi_b_strdup(buf)))
+	if (!(ptr->line = STRDUP(buf)))
 		CE("strdup failed");
 
 	D("Queued line '%s'", buf);

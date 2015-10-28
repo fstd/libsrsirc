@@ -1,0 +1,1 @@
+{ TC("sz=%zu, file='%s', line=%d, func='%s'", sz, file, line, func);

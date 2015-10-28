@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <platform/base_misc.h>
 #include <platform/base_string.h>
 
 #include <logger/intlog.h>
@@ -44,7 +45,7 @@ lsi_ucb_init(irc *ctx)
 chan *
 lsi_ucb_add_chan(irc *ctx, const char *name)
 {
-	chan *c = lsi_com_malloc(sizeof *c);
+	chan *c = MALLOC(sizeof *c);
 	if (!c)
 		goto fail;
 
@@ -60,7 +61,7 @@ lsi_ucb_add_chan(irc *ctx, const char *name)
 		goto fail;
 
 	c->modes_sz = 16; //grows
-	if (!(c->modes = lsi_com_malloc(c->modes_sz * sizeof *c->modes)))
+	if (!(c->modes = MALLOC(c->modes_sz * sizeof *c->modes)))
 		goto fail;
 
 	for (size_t i = 0; i < c->modes_sz; i++)
@@ -229,7 +230,7 @@ lsi_ucb_clear_memb(irc *ctx, chan *c)
 memb *
 lsi_ucb_alloc_memb(irc *ctx, user *u, const char *mpfxstr)
 {
-	memb *m = lsi_com_malloc(sizeof *m);
+	memb *m = MALLOC(sizeof *m);
 	if (!m)
 		goto fail;
 
@@ -317,7 +318,7 @@ lsi_ucb_add_chanmode(irc *ctx, chan *c, const char *modestr)
 
 	if (ind == c->modes_sz) {
 		size_t nsz = c->modes_sz * 2;
-		char **nmodes = lsi_com_malloc(nsz * sizeof *nmodes);
+		char **nmodes = MALLOC(nsz * sizeof *nmodes);
 		if (!nmodes)
 			return false;
 
@@ -333,7 +334,7 @@ lsi_ucb_add_chanmode(irc *ctx, chan *c, const char *modestr)
 		c->modes_sz = nsz;
 	}
 
-	return (c->modes[ind] = lsi_b_strdup(modestr));
+	return (c->modes[ind] = STRDUP(modestr));
 }
 
 bool
@@ -386,13 +387,13 @@ lsi_ucb_touch_user_int(user *u, const char *ident)
 	if (!u->uname && strchr(ident, '!')) {
 		char unam[MAX_UNAME_LEN];
 		lsi_ut_ident2uname(unam, sizeof unam, ident);
-		u->uname = lsi_b_strdup(unam); //pointless to check
+		u->uname = STRDUP(unam); //pointless to check
 	}
 
 	if (!u->host && strchr(ident, '@')) {
 		char host[MAX_HOST_LEN];
 		lsi_ut_ident2host(host, sizeof host, ident);
-		u->host = lsi_b_strdup(host); //pointless to check
+		u->host = STRDUP(host); //pointless to check
 	}
 	return;
 }
@@ -413,7 +414,7 @@ lsi_ucb_add_user(irc *ctx, const char *ident) //ident may be a nick, or nick!una
 	char nick[MAX_NICK_LEN];
 	lsi_ut_ident2nick(nick, sizeof nick, ident);
 
-	user *u = lsi_com_malloc(sizeof *u);
+	user *u = MALLOC(sizeof *u);
 	if (!u)
 		goto fail;
 
@@ -422,7 +423,7 @@ lsi_ucb_add_user(irc *ctx, const char *ident) //ident may be a nick, or nick!una
 	u->tag = NULL;
 	u->freetag = false;
 
-	if (!(u->nick = lsi_b_strdup(nick)))
+	if (!(u->nick = STRDUP(nick)))
 		goto fail;
 
 	if (!lsi_skmap_put(ctx->users, nick, u))
@@ -619,7 +620,7 @@ lsi_ucb_rename_user(irc *ctx, const char *ident, const char *newnick, bool *allo
 		lsi_com_strNcpy(u->nick, newnick, strlen(u->nick) + 1);
 		return true;
 	} else {
-		if (!(nn = lsi_b_strdup(newnick)))
+		if (!(nn = STRDUP(newnick)))
 			return false; //oh shit.
 		free(u->nick);
 		u->nick = nn;

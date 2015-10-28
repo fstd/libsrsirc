@@ -168,7 +168,7 @@ bool
 lsi_com_update_strprop(char **field, const char *val)
 {
 	char *n = NULL;
-	if (val && !(n = lsi_b_strdup(val)))
+	if (val && !(n = STRDUP(val)))
 		return false;
 
 	free(*field);
@@ -197,15 +197,6 @@ lsi_com_check_timeout(uint64_t tend, uint64_t *trem)
 		*trem = tend - now;
 
 	return false;
-}
-
-void *
-lsi_com_malloc(size_t sz)
-{
-	void *r = malloc(sz);
-	if (!r)
-		EE("malloc"); /* NOTE: This does NOT call exit() or anything */
-	return r;
 }
 
 /*dumb heuristic to tell apart domain name/ip4/ip6 addr XXX FIXME */

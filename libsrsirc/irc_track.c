@@ -190,7 +190,7 @@ h_332(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 		return 0;
 	}
 	free(c->topic);
-	if (!(c->topic = lsi_b_strdup((*msg)[4])))
+	if (!(c->topic = STRDUP((*msg)[4])))
 		return ALLOC_ERR;
 
 	return 0;
@@ -208,7 +208,7 @@ h_333(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 		return 0;
 	}
 	free(c->topicnick);
-	if (!(c->topicnick = lsi_b_strdup((*msg)[4])))
+	if (!(c->topicnick = STRDUP((*msg)[4])))
 		return ALLOC_ERR;
 
 	c->tstopic = (uint64_t)strtoull((*msg)[5], NULL, 10);
@@ -394,8 +394,8 @@ h_TOPIC(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	free(c->topic);
 	free(c->topicnick);
 	c->topicnick = NULL;
-	if (!(c->topic = lsi_b_strdup((*msg)[3]))
-	    || !(c->topicnick = lsi_b_strdup(nick)))
+	if (!(c->topic = STRDUP((*msg)[3]))
+	    || !(c->topicnick = STRDUP(nick)))
 		return ALLOC_ERR;
 
 	return 0;

@@ -188,7 +188,7 @@ handle_465(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	ctx->banned = true;
 	free(ctx->banmsg);
-	ctx->banmsg = lsi_b_strdup((*msg)[3] ? (*msg)[3] : "");
+	ctx->banmsg = STRDUP((*msg)[3] ? (*msg)[3] : "");
 
 	W("we're banned (%s)", ctx->banmsg);
 
@@ -207,7 +207,7 @@ static uint8_t
 handle_ERROR(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	free(ctx->lasterr);
-	ctx->lasterr = lsi_b_strdup((*msg)[2] ? (*msg)[2] : "");
+	ctx->lasterr = STRDUP((*msg)[2] ? (*msg)[2] : "");
 	W("sever said ERROR: '%s'", ctx->lasterr);
 	/* not strictly a case for CANT_PROCEED.  We certainly could
 	 * proceed, it's the server that doesn't seem willing to */
@@ -356,9 +356,9 @@ handle_005(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 		char *tmp = strchr(nam, '=');
 		if (tmp) {
 			*tmp = '\0';
-			val = lsi_b_strdup(tmp + 1);
+			val = STRDUP(tmp + 1);
 		} else
-			val = lsi_b_strdup("");
+			val = STRDUP("");
 
 		free(lsi_skmap_get(ctx->m005attrs, nam));
 		lsi_skmap_del(ctx->m005attrs, nam);

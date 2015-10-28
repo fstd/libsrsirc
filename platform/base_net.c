@@ -50,6 +50,8 @@
 #endif
 
 
+#include <platform/base_misc.h>
+
 #include <logger/intlog.h>
 
 #include "base_string.h"
@@ -587,7 +589,7 @@ lsi_b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res)
 
 	struct addrlist *head = NULL, *node = NULL, *tmp;
 	for (struct addrinfo *ai = ai_list; ai; ai = ai->ai_next) {
-		tmp = malloc(sizeof *head);
+		tmp = MALLOC(sizeof *head);
 		if (node)
 			node->next = tmp;
 		node = tmp;
@@ -633,7 +635,7 @@ lsi_b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res)
 	struct addrlist *head = NULL, *node = NULL, *tmp;
 	int i = 0;
 	while (he->h_addr_list[i]) {
-		tmp = malloc(sizeof *head);
+		tmp = MALLOC(sizeof *head);
 		if (node)
 			node->next = tmp;
 		node = tmp;
@@ -667,7 +669,7 @@ lsi_b_mkaddrlist(const char *host, uint16_t port, struct addrlist **res)
 		ip6addr = true;
 
 	if (ip4addr || ip6addr) {
-		struct addrlist *node = malloc(sizeof *node);
+		struct addrlist *node = MALLOC(sizeof *node);
 		node->next = NULL;
 		STRACPY(node->reqname, host);
 		STRACPY(node->addrstr, host);

@@ -1,1 +1,1 @@
-{ TC("s='%s'", s);
+{ TC("s='%s', file='%s', line=%d, func='%s'", s, file, line, func);

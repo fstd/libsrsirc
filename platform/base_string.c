@@ -18,6 +18,8 @@
 
 #include "base_string.h"
 
+#include <platform/base_misc.h>
+
 #include <logger/intlog.h>
 
 
@@ -90,13 +92,11 @@ lsi_b_strncasecmp(const char *a, const char *b, size_t n)
 }
 
 char *
-lsi_b_strdup(const char *s)
+lsi_b_strdup(const char *s, const char *file, int line, const char *func)
 {
 	char *r = NULL;
-	r = malloc(strlen(s)+1);
-	if (!r)
-		EE("malloc");
-	else
+	r = MALLOC(strlen(s)+1);
+	if (r)
 		strcpy(r, s);
 
 	return r;

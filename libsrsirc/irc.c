@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <platform/base_misc.h>
 #include <platform/base_string.h>
 #include <platform/base_time.h>
 
@@ -44,7 +45,7 @@ irc_init(void)
 	if (!(con = lsi_conn_init()))
 		goto fail;
 
-	if (!(r = lsi_com_malloc(sizeof *r)))
+	if (!(r = MALLOC(sizeof *r)))
 		goto fail;
 
 	r->pass = r->nick = r->uname = r->fname = r->serv_dist
@@ -62,15 +63,15 @@ irc_init(void)
 	for (size_t i = 0; i < COUNTOF(r->m005modepfx); i++)
 		r->m005modepfx[i] = NULL;
 
-	if (!(r->m005chantypes = lsi_com_malloc(MAX_005_CHTYP)))
+	if (!(r->m005chantypes = MALLOC(MAX_005_CHTYP)))
 		goto fail;
 
 	for (size_t i = 0; i < COUNTOF(r->m005chanmodes); i++)
-		if (!(r->m005chanmodes[i] = lsi_com_malloc(MAX_005_CHMD)))
+		if (!(r->m005chanmodes[i] = MALLOC(MAX_005_CHMD)))
 			goto fail;
 
 	for (size_t i = 0; i < COUNTOF(r->m005modepfx); i++)
-		if (!(r->m005modepfx[i] = lsi_com_malloc(MAX_005_MDPFX)))
+		if (!(r->m005modepfx[i] = MALLOC(MAX_005_MDPFX)))
 			goto fail;
 
 	if (!(r->m005attrs = lsi_skmap_init(256, CMAP_ASCII)))
@@ -85,31 +86,31 @@ irc_init(void)
 	lsi_com_strNcpy(r->m005modepfx[1], "@+", MAX_005_MDPFX);
 
 	size_t len = strlen(DEF_NICK);
-	if (!(r->nick = lsi_com_malloc((len > 9 ? len : 9) + 1)))
+	if (!(r->nick = MALLOC((len > 9 ? len : 9) + 1)))
 		goto fail;
 	strcpy(r->nick, DEF_NICK);
 
-	if ((!(r->uname = lsi_b_strdup(DEF_UNAME)))
-	    || (!(r->fname = lsi_b_strdup(DEF_FNAME)))
-	    || (!(r->serv_dist = lsi_b_strdup(DEF_SERV_DIST)))
-	    || (!(r->serv_info = lsi_b_strdup(DEF_SERV_INFO))))
+	if ((!(r->uname = STRDUP(DEF_UNAME)))
+	    || (!(r->fname = STRDUP(DEF_FNAME)))
+	    || (!(r->serv_dist = STRDUP(DEF_SERV_DIST)))
+	    || (!(r->serv_info = STRDUP(DEF_SERV_INFO))))
 		goto fail;
 
 	r->msghnds_cnt = 64;
-	if (!(r->msghnds = malloc(r->msghnds_cnt * sizeof *r->msghnds)))
+	if (!(r->msghnds = MALLOC(r->msghnds_cnt * sizeof *r->msghnds)))
 		goto fail;
 
 	for (size_t i = 0; i < r->msghnds_cnt; i++)
 		r->msghnds[i].cmd[0] = '\0';
 
 	r->uprehnds_cnt = 8;
-	if (!(r->uprehnds = malloc(r->uprehnds_cnt * sizeof *r->uprehnds)))
+	if (!(r->uprehnds = MALLOC(r->uprehnds_cnt * sizeof *r->uprehnds)))
 		goto fail;
 	for (size_t i = 0; i < r->uprehnds_cnt; i++)
 		r->uprehnds[i].cmd[0] = '\0';
 
 	r->uposthnds_cnt = 8;
-	if (!(r->uposthnds = malloc(r->uposthnds_cnt * sizeof *r->uposthnds)))
+	if (!(r->uposthnds = MALLOC(r->uposthnds_cnt * sizeof *r->uposthnds)))
 		goto fail;
 	for (size_t i = 0; i < r->uposthnds_cnt; i++)
 		r->uposthnds[i].cmd[0] = '\0';

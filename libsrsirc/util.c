@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <platform/base_misc.h>
 #include <platform/base_string.h>
 
 #include <logger/intlog.h>
@@ -278,7 +279,7 @@ lsi_ut_parse_MODE(irc *ctx, tokarr *msg, size_t *num, bool is324)
 	while (ac < COUNTOF(*msg) && (*msg)[ac])
 		ac++;
 
-	char *modes = lsi_b_strdup((*msg)[3 + is324]);
+	char *modes = STRDUP((*msg)[3 + is324]);
 	if (!modes)
 		return NULL;
 
@@ -286,7 +287,7 @@ lsi_ut_parse_MODE(irc *ctx, tokarr *msg, size_t *num, bool is324)
 	size_t nummodes = strlen(modes) - (lsi_com_strCchr(modes,'-')
 	    + lsi_com_strCchr(modes,'+'));
 
-	char **modearr = lsi_com_malloc(nummodes * sizeof *modearr);
+	char **modearr = MALLOC(nummodes * sizeof *modearr);
 	if (!modearr)
 		goto fail;
 
@@ -342,7 +343,7 @@ lsi_ut_parse_MODE(irc *ctx, tokarr *msg, size_t *num, bool is324)
 		if (arg)
 			D("arg is '%s'", arg);
 
-		modearr[j] = lsi_com_malloc((3 + (arg ? strlen(arg) + 1 : 0)));
+		modearr[j] = MALLOC((3 + (arg ? strlen(arg) + 1 : 0)));
 		if (!modearr[j])
 			goto fail;
 
@@ -407,13 +408,13 @@ lsi_ut_mut_nick(char *nick, size_t nick_sz)
 tokarr *
 lsi_ut_clonearr(tokarr *arr)
 {
-	tokarr *res = lsi_com_malloc(sizeof *res);
+	tokarr *res = MALLOC(sizeof *res);
 	if (!res)
 		return NULL;
 
 	for (size_t i = 0; i < COUNTOF(*arr); i++) {
 		if ((*arr)[i]) {
-			if (!((*res)[i] = lsi_b_strdup((*arr)[i])))
+			if (!((*res)[i] = STRDUP((*arr)[i])))
 				goto fail;
 		} else
 			(*res)[i] = NULL;

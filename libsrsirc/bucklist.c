@@ -17,6 +17,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <platform/base_misc.h>
+
 #include <logger/intlog.h>
 
 #include "cmap.h"
@@ -41,7 +43,7 @@ static bool pfxeq(const char *n1, const char *n2, const uint8_t *cmap);
 bucklist *
 lsi_bucklist_init(const uint8_t *cmap)
 {
-	struct bucklist *l = lsi_com_malloc(sizeof *l);
+	struct bucklist *l = MALLOC(sizeof *l);
 	if (!l)
 		return NULL;
 
@@ -103,7 +105,7 @@ lsi_bucklist_insert(bucklist *l, size_t i, char *key, void *val)
 	struct pl_node *n = l->head;
 	struct pl_node *prev = NULL;
 
-	struct pl_node *newnode = lsi_com_malloc(sizeof *newnode);
+	struct pl_node *newnode = MALLOC(sizeof *newnode);
 	if (!newnode)
 		return false;
 

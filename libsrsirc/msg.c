@@ -17,6 +17,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <platform/base_misc.h>
+
 #include <logger/intlog.h>
 
 #include "common.h"
@@ -38,7 +40,7 @@ lsi_msg_reghnd(irc *ctx, const char *cmd, hnd_fn hndfn, const char *module)
 	if (i == ctx->msghnds_cnt) {
 		size_t ncnt = ctx->msghnds_cnt * 2;
 		struct msghnd *narr;
-		if (!(narr = malloc(ncnt * sizeof *narr)))
+		if (!(narr = MALLOC(ncnt * sizeof *narr)))
 			return false;
 
 		memcpy(narr, ctx->msghnds, ctx->msghnds_cnt * sizeof *narr);
@@ -71,7 +73,7 @@ lsi_msg_reguhnd(irc *ctx, const char *cmd, uhnd_fn hndfn, bool pre)
 	if (i == hcnt) {
 		size_t ncnt = hcnt * 2;
 		struct umsghnd *narr;
-		if (!(narr = malloc(ncnt * sizeof *narr)))
+		if (!(narr = MALLOC(ncnt * sizeof *narr)))
 			return false;
 
 		memcpy(narr, harr, hcnt * sizeof *narr);

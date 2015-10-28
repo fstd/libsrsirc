@@ -157,7 +157,7 @@ process_args(int *argc, char ***argv)
 			g_sett.trgmode = true;
 		break;case 'T':
 			{
-			char *arg = lsi_b_strdup(lsi_b_optarg());
+			char *arg = STRDUP(lsi_b_optarg());
 			if (!arg)
 				CE("strdup failed");
 
@@ -177,7 +177,7 @@ process_args(int *argc, char ***argv)
 			}
 		break;case 'C':
 			{
-			char *str = lsi_b_strdup(lsi_b_optarg());
+			char *str = STRDUP(lsi_b_optarg());
 			if (!str)
 				CE("strdup failed");
 			char *tok = strtok(str, " ");
@@ -202,7 +202,7 @@ process_args(int *argc, char ***argv)
 			free(str);
 			}
 		break;case 'E':
-			if (!(g_sett.esc = lsi_b_strdup(lsi_b_optarg())))
+			if (!(g_sett.esc = STRDUP(lsi_b_optarg())))
 				CE("strdup failed");
 		break;case 'l':
 			g_sett.linedelay =
@@ -266,11 +266,11 @@ process_args(int *argc, char ***argv)
 
 		/* we choke on all other sorts of invalid addr/names later */
 
-		struct srvlist_s *node = malloc(sizeof *node);
+		struct srvlist_s *node = MALLOC(sizeof *node);
 		if (!node)
 			CE("malloc failed");
 
-		if (!(node->host = lsi_b_strdup(host)))
+		if (!(node->host = STRDUP(host)))
 			CE("strdup failed");
 		node->port = port;
 		node->ssl = ssl;

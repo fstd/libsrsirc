@@ -20,8 +20,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <platform/base_string.h>
 #include <platform/base_misc.h>
+#include <platform/base_string.h>
 #include <platform/base_time.h>
 
 #include <logger/intlog.h>
@@ -130,7 +130,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			}
 		break;case 'T':
 			{
-			char *arg = lsi_b_strdup(lsi_b_optarg());
+			char *arg = STRDUP(lsi_b_optarg());
 			if (!arg)
 				CE("strdup failed");
 
@@ -208,11 +208,11 @@ init(int *argc, char ***argv, struct settings_s *sett)
 
 		/* we choke on all other sorts of invalid addrs/hosts later */
 
-		struct srvlist_s *node = malloc(sizeof *node);
+		struct srvlist_s *node = MALLOC(sizeof *node);
 		if (!node)
 			CE("malloc failed");
 
-		node->host = lsi_b_strdup(host);
+		node->host = STRDUP(host);
 		node->port = port;
 		node->ssl = ssl;
 		node->next = NULL;

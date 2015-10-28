@@ -32,9 +32,6 @@ int lsi_com_consocket(const char *host, uint16_t port, char *remaddr,
 
 bool lsi_com_update_strprop(char **field, const char *val);
 
-void *lsi_com_malloc(size_t sz);
-char *com_strdup(const char *s);
-
 enum hosttypes lsi_com_guess_hosttype(const char *host);
 
 #endif /* LIBSRSIRC_COMMON_H */
