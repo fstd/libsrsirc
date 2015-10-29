@@ -372,6 +372,7 @@ cleanup(void)
 		free(n);
 		n = next;
 	}
+	free(g_sett.esc);
 	I("Cleanup done");
 	return;
 }

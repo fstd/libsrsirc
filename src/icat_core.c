@@ -265,5 +265,6 @@ dump_info(void)
 {
 	fprintf(stderr, "icat: %sline; read %uln wrote %uln\n",
 	    icat_serv_online()?"on":"off", s_readcnt, s_writecnt);
+	icat_serv_dump();
 	return;
 }

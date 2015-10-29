@@ -233,6 +233,13 @@ icat_serv_attention_at(void)
 	return attat;
 }
 
+void
+icat_serv_dump(void)
+{
+	irc_dump(s_irc);
+	return;
+}
+
 static bool
 handle_PING(irc *irchnd, tokarr *tok, size_t nargs, bool pre)
 {

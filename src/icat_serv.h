@@ -28,5 +28,6 @@ int icat_serv_casemap(void);
 uint64_t icat_serv_sentquit(void);
 uint64_t icat_serv_attention_at(void);
 
+void icat_serv_dump(void);
 
 #endif /* LIBSRSIRC_ICAT_SERV_H */
