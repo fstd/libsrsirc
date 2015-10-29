@@ -29,6 +29,7 @@
 #include "msg.h"
 #include "skmap.h"
 
+#include <libsrsirc/irc_track.h>
 #include <libsrsirc/util.h>
 
 
@@ -199,6 +200,9 @@ irc_dispose(irc *ctx)
 	for (size_t i = 0; i < COUNTOF(ctx->m005modepfx); i++)
 		free(ctx->m005modepfx[i]);
 
+	void *v;
+	if (lsi_skmap_first(ctx->m005attrs, NULL, &v))
+		do free(v); while (lsi_skmap_next(ctx->m005attrs, NULL, &v));
 	lsi_skmap_dispose(ctx->m005attrs);
 
 	D("disposed");
@@ -462,6 +466,8 @@ irc_dump(irc *ctx)
 	//fp_mut_nick cb_mut_nick
 	//struct msghnd msghnds[64]
 	//struct iconn_s *con
+	if (ctx->tracking_enab)
+		lsi_trk_dump(ctx, true);
 	N("--- end of IRC context dump ---");
 	return;
 }

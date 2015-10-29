@@ -366,18 +366,18 @@ handle_005(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 		if (!val || !lsi_skmap_put(ctx->m005attrs, nam, val))
 			E("Out of memory, m005attrs will be incomplete");
 
-		if (tmp)
-			*tmp = '='; // Others might want to handle this tokarr
-
-		if (lsi_b_strcasecmp((*msg)[z], "CASEMAPPING") == 0) {
+		if (lsi_b_strcasecmp(nam, "CASEMAPPING") == 0) {
 			ret |= handle_005_CASEMAPPING(ctx, val);
 			have_casemap = true;
-		} else if (lsi_b_strcasecmp((*msg)[z], "PREFIX") == 0)
+		} else if (lsi_b_strcasecmp(nam, "PREFIX") == 0)
 			ret |= handle_005_PREFIX(ctx, val);
-		else if (lsi_b_strcasecmp((*msg)[z], "CHANMODES") == 0)
+		else if (lsi_b_strcasecmp(nam, "CHANMODES") == 0)
 			ret |= handle_005_CHANMODES(ctx, val);
-		else if (lsi_b_strcasecmp((*msg)[z], "CHANTYPES") == 0)
+		else if (lsi_b_strcasecmp(nam, "CHANTYPES") == 0)
 			ret |= handle_005_CHANTYPES(ctx, val);
+
+		if (tmp)
+			*tmp = '='; // Others might want to handle this tokarr
 
 		if (ret & CANT_PROCEED)
 			return ret;

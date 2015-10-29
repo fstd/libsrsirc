@@ -409,7 +409,10 @@ h_MODE_chanmode(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 
-	if (!strchr((*msg)[0], '.')) //servermode
+	char nick[MAX_NICK_LEN];
+	lsi_ut_ident2nick(nick, sizeof nick, (*msg)[0]);
+
+	if (!strchr(nick, '.')) //servermode
 		lsi_ucb_touch_user(ctx, (*msg)[0], true);
 
 	chan *c = lsi_ucb_get_chan(ctx, (*msg)[2], true);
@@ -466,7 +469,10 @@ h_PRIVMSG(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 
-	if (!logon && !strchr((*msg)[0], '.'))
+	char nick[MAX_NICK_LEN];
+	lsi_ut_ident2nick(nick, sizeof nick, (*msg)[0]);
+
+	if (!logon && !strchr(nick, '.'))
 		lsi_ucb_touch_user(ctx, (*msg)[0], false);
 
 	return 0;
@@ -478,7 +484,10 @@ h_NOTICE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
 
-	if (!logon && !strchr((*msg)[0], '.'))
+	char nick[MAX_NICK_LEN];
+	lsi_ut_ident2nick(nick, sizeof nick, (*msg)[0]);
+
+	if (!logon && !strchr(nick, '.'))
 		lsi_ucb_touch_user(ctx, (*msg)[0], false);
 
 	return 0;
