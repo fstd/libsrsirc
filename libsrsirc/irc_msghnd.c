@@ -348,6 +348,7 @@ handle_005(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	uint8_t ret = 0;
 	bool have_casemap = false;
+	D("handing a 005 with %zu args", nargs);
 
 	/* last arg is "are supported by this server" or equivalent */
 	for (size_t z = 3; z < nargs - 1; ++z) {
@@ -359,6 +360,8 @@ handle_005(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 			val = STRDUP(tmp + 1);
 		} else
 			val = STRDUP("");
+
+		D("005 nam: '%s', val: '%s'", nam, val);
 
 		free(lsi_skmap_get(ctx->m005attrs, nam));
 		lsi_skmap_del(ctx->m005attrs, nam);
