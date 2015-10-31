@@ -14,3 +14,5 @@ irc_cmodes -> irc_004chanmodes; then irc_cmodes dispatches to 004 or
 mention SSL, proxies, ipv6 in README
 
 Convenience functions for the typical client-issued commands
+
+when in target mode, rejoin all channels we're in, after disconnect
