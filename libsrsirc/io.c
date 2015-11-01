@@ -61,9 +61,6 @@ lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok, uint64_t to_us)
 	char *delim;
 	char *linestart;
 	do {
-		V("Trying to find a delim in %zu bytes worth of buffer: '%.*s'",
-		    (size_t)(rctx->eptr - rctx->wptr),
-		    (int)(rctx->eptr - rctx->wptr), rctx->wptr);
 		while (!(delim = find_delim(rctx))) {
 			if (tend) {
 				tnow = lsi_b_tstamp_us();
@@ -81,10 +78,6 @@ lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok, uint64_t to_us)
 		V("Delim found, linelen %zu", linelen);
 	} while (linelen == 0);
 	rctx->wptr += linelen;
-
-	V("Now: %zu bytes buffered: '%.*s'",
-	    (size_t)(rctx->eptr - rctx->wptr),
-	    (int)(rctx->eptr - rctx->wptr), rctx->wptr);
 
 	*delim = '\0';
 

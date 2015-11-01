@@ -452,6 +452,7 @@ lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, uint64_t to_us)
 	uint64_t tnow, trem = 0;
 
 	V("Wanna read from ssl socket %p (bufsz: %zu)", (void *)ssl, sz);
+	int ret = 0;
 	int r;
 	do {
 		V("SSL_read()ing from ssl socket %p (bufsz: %zu)", (void *)ssl, sz);
@@ -474,6 +475,7 @@ lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, uint64_t to_us)
 				")", trem);
 				r = lsi_b_select(&sck, 1, true, rdbl, trem);
 				if (r <= 0) {
+					ret = -1;
 					V("select: %d", r);
 					break;
 				}
@@ -486,18 +488,20 @@ lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, uint64_t to_us)
 			else
 				E("SSL_read() returned %d, error code %d", r, errc);
 
-			r = -1;
+			ret = -1;
 		} else if (r == 0) {
 			W("SSL_read(): EOF");
-			r = -2;
-		} else
+			ret = -2;
+		} else {
 			V("SSL_read(): %d (ssl socket %p)", r, (void *)ssl);
+			ret = r;
+		}
 
 		break;
 	} while (lsi_b_tstamp_us() < tend);
 
-	V("ssl read overall result: %d", r);
-	return (long)r;
+	V("ssl read overall result: %d", ret);
+	return ret;
 #else
 	E("SSL read attempted, but we haven't been compiled with SSL support");
 	return -1L;
