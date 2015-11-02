@@ -52,10 +52,15 @@ lsi_b_strNcpy(char *dest, const char *src, size_t destsz)
 	if (!destsz)
 		return;
 
-	while (destsz-- && (*dest++ = *src++))
-		;
+	do {
+		destsz--;
+		if (!(*dest++ = *src++))
+			break;
+	} while (destsz);
 
-	dest[-!destsz] = '\0';
+	if (!destsz)
+		dest[-1] = '\0';
+
 	return;
 }
 
