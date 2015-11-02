@@ -475,7 +475,7 @@ lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, uint64_t to_us)
 				")", trem);
 				r = lsi_b_select(&sck, 1, true, rdbl, trem);
 				if (r <= 0) {
-					ret = -1;
+					ret = r == 0 ? 0 : -1;
 					V("select: %d", r);
 					break;
 				}
