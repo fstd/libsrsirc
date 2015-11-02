@@ -44,7 +44,7 @@ handle_001(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	/* 001 is the first (guaranteed) numeric we'll see, and numerics have
 	 * our nickname as the first argument.  We use this to determine what
 	 * our nickname ended up as. */
-	lsi_com_strNcpy(ctx->mynick, (*msg)[2], sizeof ctx->mynick);
+	STRACPY(ctx->mynick, (*msg)[2]);
 	D("Our nickname is '%s', it's official!", ctx->mynick);
 
 	return 0;
@@ -89,10 +89,10 @@ handle_004(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	lsi_ut_freearr(ctx->logonconv[3]);
 	ctx->logonconv[3] = lsi_ut_clonearr(msg);
 
-	lsi_com_strNcpy(ctx->myhost, (*msg)[3], sizeof ctx->myhost);
-	lsi_com_strNcpy(ctx->umodes, (*msg)[5], sizeof ctx->umodes);
-	lsi_com_strNcpy(ctx->cmodes, (*msg)[6], sizeof ctx->cmodes);
-	lsi_com_strNcpy(ctx->ver, (*msg)[4], sizeof ctx->ver);
+	STRACPY(ctx->myhost, (*msg)[3]);
+	STRACPY(ctx->umodes, (*msg)[5]);
+	STRACPY(ctx->cmodes, (*msg)[6]);
+	STRACPY(ctx->ver, (*msg)[4]);
 	D("004 seen! myhost: '%s', umodes: '%s', cmodes '%s', ver: '%s'",
 	    ctx->myhost, ctx->umodes, ctx->cmodes, ctx->ver);
 
@@ -159,15 +159,14 @@ handle_383(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	if (nargs < 3 || !logon)
 		return PROTO_ERR;
 
-	lsi_com_strNcpy(ctx->mynick, (*msg)[2],sizeof ctx->mynick);
+	STRACPY(ctx->mynick, (*msg)[2]);
 	D("Our nickname is '%s', it's official!", ctx->mynick);
 
-	lsi_com_strNcpy(ctx->myhost, (*msg)[0] ? (*msg)[0] : ctx->con->host,
-	    sizeof ctx->myhost);
+	STRACPY(ctx->myhost, (*msg)[0] ? (*msg)[0] : ctx->con->host);
 	W("Obtained myhost from prefix '%s'", ctx->myhost);
 
-	lsi_com_strNcpy(ctx->umodes, DEF_UMODES, sizeof ctx->umodes);
-	lsi_com_strNcpy(ctx->cmodes, DEF_CMODES, sizeof ctx->cmodes);
+	STRACPY(ctx->umodes, DEF_UMODES);
+	STRACPY(ctx->cmodes, DEF_CMODES);
 	ctx->ver[0] = '\0';
 	ctx->service = true;
 	D("got beloved 383");
@@ -224,7 +223,7 @@ handle_NICK(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	lsi_ut_ident2nick(nick, sizeof nick, (*msg)[0]);
 
 	if (!lsi_ut_istrcmp(nick, ctx->mynick, ctx->casemap)) {
-		lsi_com_strNcpy(ctx->mynick, (*msg)[2], sizeof ctx->mynick);
+		STRACPY(ctx->mynick, (*msg)[2]);
 		N("Our nickname is now '%s'", ctx->mynick);
 	}
 
@@ -264,7 +263,7 @@ handle_MODE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 			}
 		} else {
 			char mch[] = {c, '\0'};
-			lsi_com_strNcat(ctx->myumodes, mch, sizeof ctx->myumodes);
+			STRACAT(ctx->myumodes, mch);
 		}
 	}
 
@@ -295,7 +294,7 @@ handle_005_PREFIX(irc *ctx, const char *val)
 	if (!val[0])
 		return PROTO_ERR;
 
-	lsi_com_strNcpy(str, val + 1, sizeof str);
+	STRACPY(str, val + 1);
 	char *p = strchr(str, ')');
 	if (!p)
 		return PROTO_ERR;
@@ -306,8 +305,8 @@ handle_005_PREFIX(irc *ctx, const char *val)
 	if (slen == 0 || slen != strlen(p))
 		return PROTO_ERR;
 
-	lsi_com_strNcpy(ctx->m005modepfx[0], str, MAX_005_MDPFX);
-	lsi_com_strNcpy(ctx->m005modepfx[1], p, MAX_005_MDPFX);
+	lsi_b_strNcpy(ctx->m005modepfx[0], str, MAX_005_MDPFX);
+	lsi_b_strNcpy(ctx->m005modepfx[1], p, MAX_005_MDPFX);
 
 	return 0;
 }
@@ -320,12 +319,12 @@ handle_005_CHANMODES(irc *ctx, const char *val)
 
 	int c = 0;
 	char argbuf[64];
-	lsi_com_strNcpy(argbuf, val, sizeof argbuf);
+	STRACPY(argbuf, val);
 	char *ptr = strtok(argbuf, ",");
 
 	while (ptr) {
 		if (c < 4)
-			lsi_com_strNcpy(ctx->m005chanmodes[c++], ptr,
+			lsi_b_strNcpy(ctx->m005chanmodes[c++], ptr,
 			    MAX_005_CHMD);
 		ptr = strtok(NULL, ",");
 	}
@@ -339,7 +338,7 @@ handle_005_CHANMODES(irc *ctx, const char *val)
 static uint8_t
 handle_005_CHANTYPES(irc *ctx, const char *val)
 {
-	lsi_com_strNcpy(ctx->m005chantypes, val, MAX_005_CHTYP);
+	lsi_b_strNcpy(ctx->m005chantypes, val, MAX_005_CHTYP);
 	return 0;
 }
 

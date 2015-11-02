@@ -249,7 +249,7 @@ h_353(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 		if (len >= sizeof nick)
 			len = sizeof nick - 1;
 
-		lsi_com_strNcpy(nick, p, len + 1);
+		lsi_b_strNcpy(nick, p, len + 1);
 
 		user *u = lsi_ucb_get_user(ctx, nick, false);
 		bool uadd = false;

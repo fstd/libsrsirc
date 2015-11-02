@@ -26,15 +26,22 @@
 void
 lsi_b_strNcat(char *dest, const char *src, size_t destsz)
 {
+	const char *osrc = src;
 	size_t len = strlen(dest);
-	if (len + 1 >= destsz)
+	if (len + 1 >= destsz) {
+		W("Buffer already full, cannot concatenate '%s'", osrc);
 		return;
+	}
 	size_t rem = destsz - (len + 1);
 
 	char *ptr = dest + len;
 	while (rem-- && *src) {
 		*ptr++ = *src++;
 	}
+
+	if (rem + 1 == 0 && *src)
+		W("Buffer was too small for '%s', result truncated", osrc);
+
 	*ptr = '\0';
 	return;
 }

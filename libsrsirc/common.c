@@ -31,29 +31,6 @@
 static int tryhost(struct addrlist *ai, char *remaddr, size_t remaddr_sz,
     uint16_t *peerport, uint64_t to_us);
 
-void
-lsi_com_strNcat(char *dest, const char *src, size_t destsz)
-{
-	const char *osrc = src;
-	size_t len = strlen(dest);
-	if (len + 1 >= destsz) {
-		W("Buffer already full, cannot concatenate '%s'", src);
-		return;
-	}
-
-	size_t rem = destsz - (len + 1);
-
-	char *ptr = dest + len;
-	while (rem-- && *src) {
-		*ptr++ = *src++;
-	}
-
-	if (rem + 1 == 0 && *src)
-		W("Buffer was too small for '%s', result truncated", osrc);
-
-	*ptr = '\0';
-	return;
-}
 
 size_t
 lsi_com_strCchr(const char *str, char c)
@@ -65,22 +42,6 @@ lsi_com_strCchr(const char *str, char c)
 	return r;
 }
 
-
-char *
-lsi_com_strNcpy(char *dst, const char *src, size_t dst_sz)
-{
-	char *orig = dst;
-	const char *osrc = src;
-	dst[dst_sz-1] = '\0';
-	while (--dst_sz)
-		if (!(*dst++ = *src++))
-			break;
-
-	if (!dst_sz)
-		W("Buffer was too small for '%s', result truncated", osrc);
-
-	return orig;
-}
 
 int
 lsi_com_consocket(const char *host, uint16_t port, char *remaddr,

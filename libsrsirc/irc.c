@@ -78,13 +78,13 @@ irc_init(void)
 	if (!(r->m005attrs = lsi_skmap_init(256, CMAP_ASCII)))
 		goto fail;
 
-	lsi_com_strNcpy(r->m005chantypes, "#&", MAX_005_CHTYP);
-	lsi_com_strNcpy(r->m005chanmodes[0], "b", MAX_005_CHMD);
-	lsi_com_strNcpy(r->m005chanmodes[1], "k", MAX_005_CHMD);
-	lsi_com_strNcpy(r->m005chanmodes[2], "l", MAX_005_CHMD);
-	lsi_com_strNcpy(r->m005chanmodes[3], "psitnm", MAX_005_CHMD);
-	lsi_com_strNcpy(r->m005modepfx[0], "ov", MAX_005_MDPFX);
-	lsi_com_strNcpy(r->m005modepfx[1], "@+", MAX_005_MDPFX);
+	lsi_b_strNcpy(r->m005chantypes, "#&", MAX_005_CHTYP);
+	lsi_b_strNcpy(r->m005chanmodes[0], "b", MAX_005_CHMD);
+	lsi_b_strNcpy(r->m005chanmodes[1], "k", MAX_005_CHMD);
+	lsi_b_strNcpy(r->m005chanmodes[2], "l", MAX_005_CHMD);
+	lsi_b_strNcpy(r->m005chanmodes[3], "psitnm", MAX_005_CHMD);
+	lsi_b_strNcpy(r->m005modepfx[0], "ov", MAX_005_MDPFX);
+	lsi_b_strNcpy(r->m005modepfx[1], "@+", MAX_005_MDPFX);
 
 	size_t len = strlen(DEF_NICK);
 	if (!(r->nick = MALLOC((len > 9 ? len : 9) + 1)))
@@ -248,7 +248,7 @@ irc_connect(irc *ctx)
 
 	I("IRC logon sequence sent");
 
-	lsi_com_strNcpy(ctx->mynick, ctx->nick, sizeof ctx->mynick);
+	STRACPY(ctx->mynick, ctx->nick);
 	tokarr msg;
 
 	bool success = false;
@@ -480,13 +480,13 @@ reset_state(irc *ctx)
 	ctx->casemap = CMAP_RFC1459;
 	lsi_com_update_strprop(&ctx->lasterr, NULL);
 	lsi_com_update_strprop(&ctx->banmsg, NULL);
-	lsi_com_strNcpy(ctx->umodes, DEF_UMODES, sizeof ctx->umodes);
-	lsi_com_strNcpy(ctx->cmodes, DEF_CMODES, sizeof ctx->cmodes);
-	lsi_com_strNcpy(ctx->m005chantypes, "#&", MAX_005_CHTYP);
-	lsi_com_strNcpy(ctx->m005chanmodes[0], "b", MAX_005_CHMD);
-	lsi_com_strNcpy(ctx->m005chanmodes[1], "k", MAX_005_CHMD);
-	lsi_com_strNcpy(ctx->m005chanmodes[2], "l", MAX_005_CHMD);
-	lsi_com_strNcpy(ctx->m005chanmodes[3], "psitnm", MAX_005_CHMD);
-	lsi_com_strNcpy(ctx->m005modepfx[0], "ov", MAX_005_MDPFX);
-	lsi_com_strNcpy(ctx->m005modepfx[1], "@+", MAX_005_MDPFX);
+	STRACPY(ctx->umodes, DEF_UMODES);
+	STRACPY(ctx->cmodes, DEF_CMODES);
+	lsi_b_strNcpy(ctx->m005chantypes, "#&", MAX_005_CHTYP);
+	lsi_b_strNcpy(ctx->m005chanmodes[0], "b", MAX_005_CHMD);
+	lsi_b_strNcpy(ctx->m005chanmodes[1], "k", MAX_005_CHMD);
+	lsi_b_strNcpy(ctx->m005chanmodes[2], "l", MAX_005_CHMD);
+	lsi_b_strNcpy(ctx->m005chanmodes[3], "psitnm", MAX_005_CHMD);
+	lsi_b_strNcpy(ctx->m005modepfx[0], "ov", MAX_005_MDPFX);
+	lsi_b_strNcpy(ctx->m005modepfx[1], "@+", MAX_005_MDPFX);
 }

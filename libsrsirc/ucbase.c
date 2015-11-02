@@ -49,7 +49,7 @@ lsi_ucb_add_chan(irc *ctx, const char *name)
 	if (!c)
 		goto fail;
 
-	lsi_com_strNcpy(c->name, name, sizeof c->name);
+	STRACPY(c->name, name);
 	c->topic = c->topicnick = NULL;
 	c->tscreate = c->tstopic = 0;
 	c->desync = false;
@@ -235,7 +235,7 @@ lsi_ucb_alloc_memb(irc *ctx, user *u, const char *mpfxstr)
 		goto fail;
 
 	m->u = u;
-	lsi_com_strNcpy(m->modepfx, mpfxstr, sizeof m->modepfx);
+	STRACPY(m->modepfx, mpfxstr);
 
 	return m;
 
@@ -617,7 +617,7 @@ lsi_ucb_rename_user(irc *ctx, const char *ident, const char *newnick, bool *allo
 
 	char *nn = NULL;
 	if (justcase) {
-		lsi_com_strNcpy(u->nick, newnick, strlen(u->nick) + 1);
+		lsi_b_strNcpy(u->nick, newnick, strlen(u->nick) + 1);
 		return true;
 	} else {
 		if (!(nn = STRDUP(newnick)))

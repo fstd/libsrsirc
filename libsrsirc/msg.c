@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include <platform/base_misc.h>
+#include <platform/base_string.h>
 
 #include <logger/intlog.h>
 
@@ -55,7 +56,7 @@ lsi_msg_reghnd(irc *ctx, const char *cmd, hnd_fn hndfn, const char *module)
 
 	ctx->msghnds[i].module = module;
 	ctx->msghnds[i].hndfn = hndfn;
-	lsi_com_strNcpy(ctx->msghnds[i].cmd, cmd, sizeof ctx->msghnds[i].cmd);
+	STRACPY(ctx->msghnds[i].cmd, cmd);
 	return true;
 }
 
@@ -94,7 +95,7 @@ lsi_msg_reguhnd(irc *ctx, const char *cmd, uhnd_fn hndfn, bool pre)
 	}
 
 	harr[i].hndfn = hndfn;
-	lsi_com_strNcpy(harr[i].cmd, cmd, sizeof harr[i].cmd);
+	STRACPY(harr[i].cmd, cmd);
 	return true;
 }
 

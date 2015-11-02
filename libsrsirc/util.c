@@ -37,7 +37,7 @@ lsi_ut_ident2nick(char *dest, size_t dest_sz, const char *pfx)
 	if (!dest_sz)
 		return;
 
-	lsi_com_strNcpy(dest, pfx, dest_sz);
+	lsi_b_strNcpy(dest, pfx, dest_sz);
 
 	char *ptr = strchr(dest, '@');
 	if (ptr)
@@ -55,7 +55,7 @@ lsi_ut_ident2uname(char *dest, size_t dest_sz, const char *pfx)
 	if (!dest_sz)
 		return;
 
-	lsi_com_strNcpy(dest, pfx, dest_sz);
+	lsi_b_strNcpy(dest, pfx, dest_sz);
 
 	char *ptr = strchr(dest, '@');
 	if (ptr)
@@ -75,7 +75,7 @@ lsi_ut_ident2host(char *dest, size_t dest_sz, const char *pfx)
 	if (!dest_sz)
 		return;
 
-	lsi_com_strNcpy(dest, pfx, dest_sz);
+	lsi_b_strNcpy(dest, pfx, dest_sz);
 
 	char *ptr = strchr(dest, '@');
 	if (ptr)
@@ -161,7 +161,7 @@ lsi_ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz,
     uint16_t *port, const char *pxspec)
 {
 	char linebuf[128];
-	lsi_com_strNcpy(linebuf, pxspec, sizeof linebuf);
+	STRACPY(linebuf, pxspec);
 
 	char *ptr = strchr(linebuf, ':');
 	if (!ptr)
@@ -171,7 +171,7 @@ lsi_ut_parse_pxspec(int *ptype, char *hoststr, size_t hoststr_sz,
 	size_t num = (size_t)(ptr - linebuf) < sizeof pxtypestr ?
 	    (size_t)(ptr - linebuf) : sizeof pxtypestr - 1;
 
-	lsi_com_strNcpy(pxtypestr, linebuf, num + 1);
+	lsi_b_strNcpy(pxtypestr, linebuf, num + 1);
 
 	int p = lsi_px_typenum(pxtypestr);
 	if (p == -1)
@@ -190,7 +190,7 @@ lsi_ut_parse_hostspec(char *hoststr, size_t hoststr_sz, uint16_t *port,
 	if (ssl)
 		*ssl = false;
 
-	lsi_com_strNcpy(hoststr, hostspec + (hostspec[0] == '['), hoststr_sz);
+	lsi_b_strNcpy(hoststr, hostspec + (hostspec[0] == '['), hoststr_sz);
 
 	char *ptr = strstr(hoststr, "/ssl");
 	if (!ptr)
@@ -227,11 +227,11 @@ lsi_ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr)
 
 	size_t i = 2;
 	while (i < COUNTOF(*msg) && (*msg)[i]) {
-		lsi_com_strNcat(dest, " ", destsz);
+		lsi_b_strNcat(dest, " ", destsz);
 		if ((i+1 == COUNTOF(*msg) || !(*msg)[i+1])
 		    && (coltr || strchr((*msg)[i], ' ')))
-			lsi_com_strNcat(dest, ":", destsz);
-		lsi_com_strNcat(dest, (*msg)[i], destsz);
+			lsi_b_strNcat(dest, ":", destsz);
+		lsi_b_strNcat(dest, (*msg)[i], destsz);
 		i++;
 	}
 
@@ -247,9 +247,9 @@ lsi_ut_sndumpmsg(char *dest, size_t dest_sz, void *tag, tokarr *msg)
 	for (size_t i = 2; i < COUNTOF(*msg); i++) {
 		if (!(*msg)[i])
 			break;
-		lsi_com_strNcat(dest, " '", dest_sz);
-		lsi_com_strNcat(dest, (*msg)[i], dest_sz);
-		lsi_com_strNcat(dest, "'", dest_sz);
+		lsi_b_strNcat(dest, " '", dest_sz);
+		lsi_b_strNcat(dest, (*msg)[i], dest_sz);
+		lsi_b_strNcat(dest, "'", dest_sz);
 	}
 
 	return dest;
