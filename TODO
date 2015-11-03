@@ -11,6 +11,4 @@ accessor for all 005 attributes
 irc_cmodes -> irc_004chanmodes; then irc_cmodes dispatches to 004 or
 005 depending on whether 005 was there.  how to handle classes tho?
 
-mention SSL, proxies, ipv6 in README
-
 Convenience functions for the typical client-issued commands
