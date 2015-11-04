@@ -11,3 +11,4 @@
 2015/10/12 - 0.0.10 release -- another big refactor with huge backwards compatibility implications; added a helloworld-style example because icat/iwat are just too big
 2015/10/15 - 0.0.11 release -- there's a port to windows now...shudder.
 2015/10/25 - 0.0.12 release -- fixed a few glitches, improved SSL, improved icat
+2015/11/04 - 0.0.13 release -- pretty solid right now
