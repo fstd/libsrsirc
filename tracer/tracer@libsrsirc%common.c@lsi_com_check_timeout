@@ -1,1 +1,1 @@
-{ TC("tsend=%"PRIu64", trem=%p", tsend, (void *)trem);
+{ TC("tend=%"PRIu64", trem=%p", tend, (void *)trem);

@@ -1,1 +1,0 @@
-{ TC("dst=%p, src='%s', dst_sz=%zu", (void *)dst, src, dst_sz);
