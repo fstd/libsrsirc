@@ -201,7 +201,7 @@ lsi_conn_connect(iconn *ctx, uint64_t softto_us, uint64_t hardto_us)
 		D("sent proxy logon sequence");
 
 	}
-	
+
 	if (ctx->ssl) {
 		D("setting to blocking mode for ssl connect");
 

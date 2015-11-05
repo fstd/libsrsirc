@@ -84,7 +84,7 @@ icat_core_run(void)
 			int r = icat_serv_read(&tok, 1);
 			if (r < 0)
 				continue;
-			
+
 			if (r == 1) {
 				lsi_ut_sndumpmsg(ln, sizeof ln, NULL, &tok);
 

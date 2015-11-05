@@ -226,7 +226,7 @@ icat_serv_attention_at(void)
 	uint64_t attat = 0;
 	if (g_sett.hbeat_us)
 		attat = s_nexthb;
-	
+
 	if (s_outQ && (!attat || s_nextsend < attat))
 		attat = s_nextsend;
 

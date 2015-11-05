@@ -256,7 +256,7 @@ lsi_b_select(int *fds, size_t nfds, bool noresult, bool rdbl, uint64_t to_us)
 				for (size_t i = 0; i < nfds; i++)
 					if (!FD_ISSET(fds[i], &fdset))
 						fds[i] = -1;
-			
+
 			V("Selected (%d)!", r);
 			return r;
 		}
@@ -459,7 +459,7 @@ lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, uint64_t to_us)
 		r = SSL_read(ssl, buf, sz);
 		if (r < 0) {
 			int errc = SSL_get_error(ssl, r);
-			V("Error: %d (errc: %d)", r, errc); 
+			V("Error: %d (errc: %d)", r, errc);
 			if (errc == SSL_ERROR_WANT_READ
 			    || errc == SSL_ERROR_WANT_WRITE) {
 				bool rdbl = errc == SSL_ERROR_WANT_READ;
