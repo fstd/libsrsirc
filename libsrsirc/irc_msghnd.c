@@ -33,7 +33,7 @@
 static uint8_t
 handle_001(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	if (nargs < 3 || !logon)
+	if (nargs < 3 || (!ctx->dumb && !logon))
 		return PROTO_ERR;
 
 	V("Handling a 001 (%s, '%s')", (*msg)[2], (*msg)[3]);
@@ -53,7 +53,7 @@ handle_001(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_002(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	if (!logon)
+	if (!ctx->dumb && !logon)
 		return PROTO_ERR;
 
 	V("Handling a 002");
@@ -67,7 +67,7 @@ handle_002(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_003(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	if (!logon)
+	if (!ctx->dumb && !logon)
 		return PROTO_ERR;
 
 	V("Handling a 003");
@@ -81,7 +81,7 @@ handle_003(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_004(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	if (nargs < 7 || !logon)
+	if (nargs < 7 || (!ctx->dumb && !logon))
 		return PROTO_ERR;
 
 	V("Handling a 004");
@@ -156,7 +156,7 @@ handle_464(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 static uint8_t
 handle_383(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	if (nargs < 3 || !logon)
+	if (nargs < 3 || (!ctx->dumb && !logon))
 		return PROTO_ERR;
 
 	STRACPY(ctx->mynick, (*msg)[2]);
