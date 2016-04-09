@@ -8,6 +8,7 @@ fi
 newver="$(grep '^AC_INIT' configure.ac | grep -o '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*')"
 echo "Be on the devel branch." >&2
 echo "Manually update AND STAGE all version references, but do not commit yet." >&2
+echo "Be sure to not have any unstaged changes to files under version control." >&2
 echo "Then, run this script." >&2
 echo "Have you done that, and is $newver the correct (new) version? (Answer YES)" >&2
 read -r ans
