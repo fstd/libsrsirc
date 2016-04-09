@@ -394,11 +394,15 @@ lsi_b_write(int sck, const void *buf, size_t len)
 	V("send()ing %zu bytes over sck %d", len, sck);
 	while (bc < len) {
 		int s;
-		while ((s = lsi_b_select(&sck, 1, true, false, 10000)) == 0)
-			;
 
-		if (s == -1)
-			return -1;
+		/* XXX FIXME we can get stuck here.  should query socket
+		 * state or select for read/except, i guess. taking it
+		 * out for now... */
+		// while ((s = lsi_b_select(&sck, 1, true, false, 10000)) == 0)
+		//	;
+		//
+		//if (s == -1)
+		//	return -1;
 
 # if HAVE_LIBWS2_32
 		int r = send(sck, (const unsigned char *)buf + bc, (int)(len - bc), flags);

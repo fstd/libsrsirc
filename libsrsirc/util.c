@@ -100,7 +100,7 @@ lsi_ut_istrncmp(const char *n1, const char *n2, size_t len, int casemap)
 	if (len == 0)
 		return 0;
 
-	while (*n1 && *n2) {
+	while (len && *n1 && *n2) {
 		char c1 = lsi_ut_tolower(*n1, casemap);
 		char c2 = lsi_ut_tolower(*n2, casemap);
 		if (c1 != c2)
@@ -108,8 +108,11 @@ lsi_ut_istrncmp(const char *n1, const char *n2, size_t len, int casemap)
 
 		n1++;
 		n2++;
+		len--;
 	}
 
+	if (!len)
+		return 0;
 	if (*n1)
 		return 1;
 	if (*n2)
