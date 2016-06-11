@@ -208,7 +208,7 @@ typedef bool (*fp_con_read)(tokarr *msg, void *tag);
  * \param   nick   Buffer that contains the nickname that was not available.
  *                 The callback function's job is to modify the nickname stored
  *                 in this buffer, which will then be tried as an alternative
- * \param   nick_sz   Size of the buffer pointer to by `nick`.
+ * \param   nick_sz   Size of the buffer pointed to by `nick`.
  *
  * \sa irc_regcb_mutnick()
  */ //XXX return true or false to proceed/abort?
