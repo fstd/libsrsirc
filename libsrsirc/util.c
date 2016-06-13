@@ -238,6 +238,8 @@ lsi_ut_snrcmsg(char *dest, size_t destsz, tokarr *msg, bool coltr)
 		i++;
 	}
 
+	lsi_b_strNcat(dest, "\r\n", destsz);
+
 	return dest;
 }
 
