@@ -676,7 +676,7 @@ user *
 lsi_ucb_first_user(irc *ctx)
 {
 	void *e;
-	if (!lsi_skmap_next(ctx->users, NULL, &e))
+	if (!lsi_skmap_first(ctx->users, NULL, &e))
 		return NULL;
 	return e;
 }
@@ -694,7 +694,7 @@ memb *
 lsi_ucb_first_memb(irc *ctx, chan *c)
 {
 	void *e;
-	if (!lsi_skmap_next(c->memb, NULL, &e))
+	if (!lsi_skmap_first(c->memb, NULL, &e))
 		return NULL;
 	return e;
 }
