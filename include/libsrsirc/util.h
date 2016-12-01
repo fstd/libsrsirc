@@ -54,10 +54,12 @@
 void lsi_ut_ident2nick(char *dest, size_t dest_sz, const char *ident);
 
 /** \brief does the same as lsi_ut_ident2nick, just for the `user` part
+ *
  * If there is no user part, `dest` will point to an empty string */
 void lsi_ut_ident2uname(char *dest, size_t dest_sz, const char *ident);
 
 /** \brief does the same as lsi_ut_ident2nick, just for the `host` part
+ *
  * If there is no host part, `dest` will point to an empty string */
 void lsi_ut_ident2host(char *dest, size_t dest_sz, const char *ident);
 
