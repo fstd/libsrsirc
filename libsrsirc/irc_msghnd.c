@@ -30,7 +30,7 @@
 #include <libsrsirc/util.h>
 
 
-static uint8_t
+static uint16_t
 handle_001(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (nargs < 3 || (!ctx->dumb && !logon))
@@ -50,7 +50,7 @@ handle_001(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_002(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!ctx->dumb && !logon)
@@ -64,7 +64,7 @@ handle_002(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_003(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!ctx->dumb && !logon)
@@ -78,7 +78,7 @@ handle_003(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_004(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (nargs < 7 || (!ctx->dumb && !logon))
@@ -99,7 +99,67 @@ handle_004(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return LOGON_COMPLETE;
 }
 
-static uint8_t
+static uint16_t
+handle_903(irc *ctx, tokarr *msg, size_t nargs, bool logon)
+{
+	if ((!ctx->dumb && !logon) || (!(ctx->sasl_mech && ctx->sasl_msg)))
+		return PROTO_ERR;
+
+	V("Handling a 903");
+
+	return lsi_conn_write(ctx->con, "CAP END\r\n") ? SASL_COMPLETE : IO_ERR;
+}
+
+static uint16_t
+handle_904(irc *ctx, tokarr *msg, size_t nargs, bool logon)
+{
+	if ((!ctx->dumb && !logon) || (!(ctx->sasl_mech && ctx->sasl_msg)))
+		return PROTO_ERR;
+
+	V("Handling a 904");
+
+	return SASL_ERR;
+}
+
+static uint16_t
+handle_CAP(irc *ctx, tokarr *msg, size_t nargs, bool logon)
+{
+	V("Handling a CAP");
+
+	if (nargs != 5 || strncmp((*msg)[4], "sasl", 4))
+		return 0;
+
+	if ((!ctx->dumb && !logon) || (!(ctx->sasl_mech && ctx->sasl_msg)))
+		return PROTO_ERR;
+
+	if (!strcmp((*msg)[3], "ACK")) {
+		char buf[256];
+		snprintf(buf, sizeof buf, "AUTHENTICATE %s\r\n", ctx->sasl_mech);
+		return lsi_conn_write(ctx->con, buf) ? 0 : IO_ERR;
+	} else if (!strcmp((*msg)[3], "NAK")) {
+		return NO_SASL;
+	}
+
+	return 0;
+}
+
+static uint16_t
+handle_AUTHENTICATE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
+{
+	if (nargs != 3 || strcmp((*msg)[2], "+"))
+		return 0;
+
+	if ((!ctx->dumb && !logon) || (!(ctx->sasl_mech && ctx->sasl_msg)))
+		return PROTO_ERR;
+
+	char buf[256];
+	snprintf(buf, sizeof buf, "AUTHENTICATE %.*s\r\n",
+           (int) ctx->sasl_msg_len, ctx->sasl_msg);
+
+	return lsi_conn_write(ctx->con, buf) ? 0 : IO_ERR;
+}
+
+static uint16_t
 handle_PING(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	/* We only handle PINGs at logon. It's the user's job afterwards. */
@@ -118,7 +178,7 @@ handle_PING(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 
 /* This handles 432, 433, 436 and 437 all of which signal us that
  * we can't have the nickname we wanted */
-static uint8_t
+static uint16_t
 handle_bad_nick(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!logon)
@@ -141,7 +201,7 @@ handle_bad_nick(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return lsi_conn_write(ctx->con, buf) ? 0 : IO_ERR;
 }
 
-static uint8_t
+static uint16_t
 handle_464(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!logon)
@@ -153,7 +213,7 @@ handle_464(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 
 /* Successful service logon.  I guess we don't get to see a 004, but haven't
  * really tried this yet */
-static uint8_t
+static uint16_t
 handle_383(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (nargs < 3 || (!ctx->dumb && !logon))
@@ -174,7 +234,7 @@ handle_383(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return LOGON_COMPLETE;
 }
 
-static uint8_t
+static uint16_t
 handle_484(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	ctx->restricted = true;
@@ -182,7 +242,7 @@ handle_484(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_465(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	ctx->banned = true;
@@ -194,7 +254,7 @@ handle_465(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0; /* well if we are, the server will sure disconnect us */
 }
 
-static uint8_t
+static uint16_t
 handle_466(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	W("we will be banned");
@@ -202,7 +262,7 @@ handle_466(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0; /* so what, bitch? */
 }
 
-static uint8_t
+static uint16_t
 handle_ERROR(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	free(ctx->lasterr);
@@ -213,7 +273,7 @@ handle_ERROR(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_NICK(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (nargs < 3 || !(*msg)[0])
@@ -231,7 +291,7 @@ handle_NICK(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 }
 
 /* Deals only wih user modes */
-static uint8_t
+static uint16_t
 handle_MODE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (nargs < 4)
@@ -271,7 +331,7 @@ handle_MODE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 }
 
 
-static uint8_t
+static uint16_t
 handle_005_CASEMAPPING(irc *ctx, const char *val)
 {
 	if (lsi_b_strcasecmp(val, "ascii") == 0)
@@ -287,7 +347,7 @@ handle_005_CASEMAPPING(irc *ctx, const char *val)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_005_PREFIX(irc *ctx, const char *val)
 {
 	char str[32];
@@ -311,7 +371,7 @@ handle_005_PREFIX(irc *ctx, const char *val)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_005_CHANMODES(irc *ctx, const char *val)
 {
 	for (int z = 0; z < 4; ++z)
@@ -335,17 +395,17 @@ handle_005_CHANMODES(irc *ctx, const char *val)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_005_CHANTYPES(irc *ctx, const char *val)
 {
 	lsi_b_strNcpy(ctx->m005chantypes, val, MAX_005_CHTYP);
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_005(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	uint8_t ret = 0;
+	uint16_t ret = 0;
 	bool have_casemap = false;
 	D("handing a 005 with %zu args", nargs);
 
@@ -411,11 +471,14 @@ lsi_imh_regall(irc *ctx, bool dumb)
 		 * PING and we also don't pay attention to 464 (Wrong server
 		 * password).  This is all left to the user */
 		fail = fail || !lsi_msg_reghnd(ctx, "PING", handle_PING, "core");
+		fail = fail || !lsi_msg_reghnd(ctx, "CAP", handle_CAP, "core");
+		fail = fail || !lsi_msg_reghnd(ctx, "AUTHENTICATE", handle_AUTHENTICATE, "core");
 		fail = fail || !lsi_msg_reghnd(ctx, "432", handle_bad_nick, "core");
 		fail = fail || !lsi_msg_reghnd(ctx, "433", handle_bad_nick, "core");
 		fail = fail || !lsi_msg_reghnd(ctx, "436", handle_bad_nick, "core");
 		fail = fail || !lsi_msg_reghnd(ctx, "437", handle_bad_nick, "core");
 		fail = fail || !lsi_msg_reghnd(ctx, "464", handle_464, "core");
+		fail = fail || !lsi_msg_reghnd(ctx, "903", handle_903, "core");
 	}
 
 	fail = fail || !lsi_msg_reghnd(ctx, "NICK", handle_NICK, "core");

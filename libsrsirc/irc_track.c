@@ -29,22 +29,22 @@
 #include "ucbase.h"
 #include "irc_track_int.h"
 
-static uint8_t h_JOIN(irc *ctx, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_311(irc *ctx, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_332(irc *ctx, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_333(irc *ctx, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_352(irc *ctx, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_353(irc *ctx, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_366(irc *ctx, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_PART(irc *ctx, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_QUIT(irc *ctx, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_NICK(irc *ctx, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_KICK(irc *ctx, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_MODE(irc *ctx, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_PRIVMSG(irc *ctx, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_NOTICE(irc *ctx, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_324(irc *ctx, tokarr *msg, size_t nargs, bool logon);
-static uint8_t h_TOPIC(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t h_JOIN(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t h_311(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t h_332(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t h_333(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t h_352(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t h_353(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t h_366(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t h_PART(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t h_QUIT(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t h_NICK(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t h_KICK(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t h_MODE(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t h_PRIVMSG(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t h_NOTICE(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t h_324(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t h_TOPIC(irc *ctx, tokarr *msg, size_t nargs, bool logon);
 
 bool
 lsi_trk_init(irc *ctx)
@@ -85,7 +85,7 @@ lsi_trk_deinit(irc *ctx)
 }
 
 
-static uint8_t
+static uint16_t
 h_JOIN(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 3)
@@ -133,7 +133,7 @@ h_JOIN(irc *ctx, tokarr *msg, size_t nargs, bool logon)
  */
 
 /*:rajaniemi.freenode.net 352 nvmme CHAN UNAME HOST SRV NICK H :0 irc netcat*/
-static uint8_t
+static uint16_t
 h_352(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 10)
@@ -175,10 +175,10 @@ h_352(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 }
 
 /*:rajaniemi.freenode.net 315 nvmme #fstd :End of /WHO list.*/
-//static uint8_t
+//static uint16_t
 //h_315(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 
-static uint8_t
+static uint16_t
 h_332(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 5)
@@ -196,7 +196,7 @@ h_332(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 h_333(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 6)
@@ -216,7 +216,7 @@ h_333(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 h_353(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 6)
@@ -273,7 +273,7 @@ h_353(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 h_366(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 4)
@@ -291,7 +291,7 @@ h_366(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 h_PART(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 3)
@@ -318,7 +318,7 @@ h_PART(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 h_QUIT(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0])
@@ -333,7 +333,7 @@ h_QUIT(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 h_KICK(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 4)
@@ -357,10 +357,10 @@ h_KICK(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 h_NICK(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	uint8_t res = 0;
+	uint16_t res = 0;
 
 	if (!(*msg)[0] || nargs < 3)
 		return PROTO_ERR;
@@ -376,7 +376,7 @@ h_NICK(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return res;
 }
 
-static uint8_t
+static uint16_t
 h_TOPIC(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 4)
@@ -401,10 +401,10 @@ h_TOPIC(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 h_MODE_chanmode(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	uint8_t res = 0;
+	uint16_t res = 0;
 
 	if (!(*msg)[0] || nargs < 4)
 		return PROTO_ERR;
@@ -449,7 +449,7 @@ h_MODE_chanmode(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return res;
 }
 
-static uint8_t
+static uint16_t
 h_MODE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 4)
@@ -463,7 +463,7 @@ h_MODE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 h_PRIVMSG(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 4)
@@ -478,7 +478,7 @@ h_PRIVMSG(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 h_NOTICE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 4)
@@ -494,13 +494,13 @@ h_NOTICE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 }
 
 
-static uint8_t
+static uint16_t
 h_324(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 5)
 		return PROTO_ERR;
 
-	uint8_t res = 0;
+	uint16_t res = 0;
 
 	chan *c = lsi_ucb_get_chan(ctx, (*msg)[3], true);
 	if (!c) {
@@ -536,7 +536,7 @@ h_324(irc *ctx, tokarr *msg, size_t nargs, bool logon)
  * ":*1<reply> *( " " <reply> )"
  * reply = nickname [ "*" ] "=" ( "+" / "-" ) hostname
  */
-//static uint8_t
+//static uint16_t
 //h_302(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 //{
 //}
@@ -544,7 +544,7 @@ h_324(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 /* 311    RPL_WHOISUSER
  * "<nick> <user> <host> * :<real name>"
  */
-static uint8_t
+static uint16_t
 h_311(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!(*msg)[0] || nargs < 8)

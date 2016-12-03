@@ -49,8 +49,10 @@ irc_init(void)
 	if (!(r = MALLOC(sizeof *r)))
 		goto fail;
 
-	r->pass = r->nick = r->uname = r->fname = r->serv_dist
-	    = r->serv_info = r->lasterr = r->banmsg = NULL;
+	r->pass = r->nick = r->uname = r->fname = r->sasl_mech = r->sasl_msg
+	   = r->serv_dist = r->serv_info = r->lasterr = r->banmsg = NULL;
+
+	r->sasl_msg_len = 0;
 
 	r->msghnds = NULL;
 	r->uprehnds = r->uposthnds = NULL;
@@ -183,6 +185,8 @@ irc_dispose(irc *ctx)
 	free(ctx->nick);
 	free(ctx->uname);
 	free(ctx->fname);
+	free(ctx->sasl_mech);
+	free(ctx->sasl_msg);
 	free(ctx->serv_dist);
 	free(ctx->serv_info);
 	free(ctx->msghnds);
@@ -251,7 +255,9 @@ irc_connect(irc *ctx)
 	STRACPY(ctx->mynick, ctx->nick);
 	tokarr msg;
 
-	bool success = false;
+	bool logged_on = false;
+	bool using_sasl = ctx->sasl_mech && ctx->sasl_msg;
+	bool sasl_authed = false;
 	uint64_t trem = 0;
 	int r;
 	do {
@@ -280,15 +286,18 @@ irc_connect(irc *ctx)
 		 * seeing 004 or 383 makes us consider ourselves logged on
 		 * note that we do not wait for 005, but we will later
 		 * parse it as we ran across it. */
-		uint8_t flags = lsi_msg_handle(ctx, &msg, true);
+		uint16_t flags = lsi_msg_handle(ctx, &msg, true);
 
 		if (flags & CANT_PROCEED)
 			goto fail;
 
 		if (flags & LOGON_COMPLETE)
-			success = true;
+			logged_on = true;
 
-	} while (!success);
+		if (flags & SASL_COMPLETE)
+			sasl_authed = true;
+
+	} while (!logged_on || (using_sasl && !sasl_authed));
 
 	N("logged on to IRC");
 	return true;
@@ -354,7 +363,7 @@ send_logon(irc *ctx)
 {
 	if (!lsi_conn_online(ctx->con))
 		return false;
-	char aBuf[256];
+	char aBuf[512];
 	char *pBuf = aBuf;
 	aBuf[0] = '\0';
 	size_t rem = sizeof aBuf;
@@ -365,6 +374,17 @@ send_logon(irc *ctx)
 		if (r > (int)rem)
 			r = rem;
 
+		rem -= r;
+		pBuf += r;
+	}
+
+	if (!rem)
+		return false;
+
+	if (ctx->sasl_mech && ctx->sasl_msg) {
+		r = snprintf(pBuf, rem, "CAP REQ :sasl\r\n");
+		if (r > (int)rem)
+			r = rem;
 		rem -= r;
 		pBuf += r;
 	}

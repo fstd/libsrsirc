@@ -21,7 +21,10 @@
 # define IO_ERR        (CANT_PROCEED|(1<<4)) // i/o failure (lsi_conn_write())
 # define ALLOC_ERR     (CANT_PROCEED|(1<<5)) // out of memory
 # define USER_ERR      (CANT_PROCEED|(1<<6)) // user msg handler failed
-#define LOGON_COMPLETE (1<<7) // we now consider ourselves logged on
+# define SASL_ERR      (CANT_PROCEED|(1<<7)) // SASL authentication failed
+# define NO_SASL       (CANT_PROCEED|(1<<8)) // the server doesn't support SASL
+#define LOGON_COMPLETE (1<<9) // we now consider ourselves logged on
+#define SASL_COMPLETE  (1<<10) // SASL authentication succeeded
 
 bool lsi_msg_reghnd(irc *ctx, const char *cmd, hnd_fn hndfn, const char *module);
 void lsi_msg_unregall(irc *ctx, const char *module);
@@ -31,7 +34,7 @@ bool lsi_msg_reguhnd(irc *ctx, const char *cmd, uhnd_fn hndfn, bool pre);
 
 /* returns the bitwise OR of one or more of the above
  * bitmasks, or 0 for nothing special */
-uint8_t lsi_msg_handle(irc *ctx, tokarr *msg, bool logon);
+uint16_t lsi_msg_handle(irc *ctx, tokarr *msg, bool logon);
 
 
 #endif /* LIBSRSIRC_IMSG_H */

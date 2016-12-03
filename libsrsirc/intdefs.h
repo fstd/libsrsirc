@@ -53,7 +53,7 @@ struct readctx {
 
 
 /* protocol message handler function pointers */
-typedef uint8_t (*hnd_fn)(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+typedef uint16_t (*hnd_fn)(irc *ctx, tokarr *msg, size_t nargs, bool logon);
 struct msghnd {
 	char cmd[32];
 	hnd_fn hndfn;
@@ -114,19 +114,22 @@ struct irc_s {
 	/* These are set by their respective irc_set_*() functions and
 	 * generally changes to these don't take effect before the next
 	 * call to irc_connect() */
-	char *pass;       // Server password set by irc_set_pass()
-	char *nick;       // Nickname set by irc_set_nick()
-	char *uname;      // Username set by irc_set_uname()
-	char *fname;      // Full name set by irc_set_fname()
-	uint8_t conflags; // USER flags for logging on
-	bool serv_con;    // Do we want to be service? irc_set_service_connect()
-	char *serv_dist;  // Service logon information (distribution)
-	long serv_type;   // Service logon information (service type)
-	char *serv_info;  // Service logon information (service info)
-	uint64_t hcto_us; // Overall irc_connect() timeout (0=inf)
-	uint64_t scto_us; // Socket connect() timeout per A/AAAA record (0=inf)
-	bool tracking;    // Do we want chan/user tracking? by irc_set_track()
-	bool dumb;        // Connect only, leave logon sequence to the user
+	char *pass;           // Server password set by irc_set_pass()
+	char *nick;           // Nickname set by irc_set_nick()
+	char *uname;          // Username set by irc_set_uname()
+	char *fname;          // Full name set by irc_set_fname()
+	char *sasl_mech;      // SASL mechanism set by irc_set_sasl()
+	char *sasl_msg;       // SASL auth string set by irc_set_sasl()
+	size_t sasl_msg_len;  // size (in bytes) of the SASL message
+	uint8_t conflags;     // USER flags for logging on
+	bool serv_con;        // Do we want to be service? irc_set_service_connect()
+	char *serv_dist;      // Service logon information (distribution)
+	long serv_type;       // Service logon information (service type)
+	char *serv_info;      // Service logon information (service info)
+	uint64_t hcto_us;     // Overall irc_connect() timeout (0=inf)
+	uint64_t scto_us;     // Socket connect() timeout per A/AAAA record (0=inf)
+	bool tracking;        // Do we want chan/user tracking? by irc_set_track()
+	bool dumb;            // Connect only, leave logon sequence to the user
 
 
 
