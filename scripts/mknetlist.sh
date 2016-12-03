@@ -32,7 +32,6 @@ grep='pcregrep'
 command -v "$grep" >/dev/null 2>/dev/null || grep="grep -P"
 
 wget -qO - http://$site/networks/ | grep -o 'href="/networks/[^/]*/"' | sed -n 's,href="/networks/\([^/]*\)/",\1,p' | sort | uniq >"$netnames"
-cat /tmp/nl >"$netnames"
 
 c=0
 while read -r netname; do
