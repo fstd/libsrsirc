@@ -13,6 +13,7 @@
 
 #define COUNTOF(ARR) (sizeof (ARR) / sizeof (ARR)[0])
 
+#define MIN(A, B) ((A) < (B) ? (A) : (B))
 
 enum hosttypes {
 	HOSTTYPE_IPV4,
@@ -31,5 +32,8 @@ int lsi_com_consocket(const char *host, uint16_t port, char *remaddr,
 bool lsi_com_update_strprop(char **field, const char *val);
 
 enum hosttypes lsi_com_guess_hosttype(const char *host);
+
+size_t lsi_com_base64(char *dest, size_t destsz,
+    const uint8_t *input, size_t len);
 
 #endif /* LIBSRSIRC_COMMON_H */

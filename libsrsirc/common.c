@@ -176,3 +176,45 @@ lsi_com_guess_hosttype(const char *host)
 	}
 	return dc == 3 ? HOSTTYPE_IPV4 : HOSTTYPE_DNS;
 }
+
+static const char *b64_alpha =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+static void
+b64_core(char *outquad, const uint8_t *intrip, size_t ntrip)
+{
+	uint8_t t[3] = {0};
+	size_t i;
+	for (i = 0; i < ntrip; i++)
+		t[i] = intrip[i];
+
+	uint8_t q[4];
+	size_t nquad = ntrip + 1;  /* dangerously relies on 1 <= ntrip <= 3 */
+
+	q[0] = t[0] >> 2;
+	q[1] = (t[0]&0x03) << 4 | (t[1]&0xf0) >> 4;
+	q[2] = (t[1]&0x0f) << 2 | (t[2]&0xc0) >> 6;
+	q[3] = t[2]&0x3f;
+
+	for (i = 0; i < nquad; i++)
+		outquad[i] = b64_alpha[q[i]];
+
+	for (; i < 4; i++)
+		outquad[i] = '=';
+}
+
+size_t
+lsi_com_base64(char *dest, size_t destsz, const uint8_t *input, size_t len)
+{
+	size_t reslen = ((len + 2) / 3) * 4;
+	if (reslen >= destsz)
+		return 0; /* too big */
+
+	const uint8_t *iptr = input;
+	char *optr = dest;
+
+	for (size_t i = 0; i < len; i += 3, iptr += 3, optr += 4)
+		b64_core(optr, iptr, MIN(len - i, 3));
+
+	return reslen;
+}
