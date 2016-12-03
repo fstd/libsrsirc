@@ -31,7 +31,7 @@ bool lsi_msg_reguhnd(irc *ctx, const char *cmd, uhnd_fn hndfn, bool pre);
 
 /* returns the bitwise OR of one or more of the above
  * bitmasks, or 0 for nothing special */
-uint8_t lsi_msg_handle(irc *ctx, tokarr *msg, bool logon);
+uint16_t lsi_msg_handle(irc *ctx, tokarr *msg, bool logon);
 
 
 #endif /* LIBSRSIRC_IMSG_H */

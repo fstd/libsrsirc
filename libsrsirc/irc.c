@@ -280,7 +280,7 @@ irc_connect(irc *ctx)
 		 * seeing 004 or 383 makes us consider ourselves logged on
 		 * note that we do not wait for 005, but we will later
 		 * parse it as we ran across it. */
-		uint8_t flags = lsi_msg_handle(ctx, &msg, true);
+		uint16_t flags = lsi_msg_handle(ctx, &msg, true);
 
 		if (flags & CANT_PROCEED)
 			goto fail;

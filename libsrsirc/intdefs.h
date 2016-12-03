@@ -53,7 +53,7 @@ struct readctx {
 
 
 /* protocol message handler function pointers */
-typedef uint8_t (*hnd_fn)(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+typedef uint16_t (*hnd_fn)(irc *ctx, tokarr *msg, size_t nargs, bool logon);
 struct msghnd {
 	char cmd[32];
 	hnd_fn hndfn;

@@ -131,10 +131,10 @@ dispatch_uhnd(irc *ctx, tokarr *msg, size_t ac, bool pre)
 	return true;
 }
 
-uint8_t
+uint16_t
 lsi_msg_handle(irc *ctx, tokarr *msg, bool logon)
 {
-	uint8_t res = 0;
+	uint16_t res = 0;
 	size_t i = 0;
 	size_t ac = 2;
 	while (ac < COUNTOF(*msg) && (*msg)[ac])
@@ -166,7 +166,7 @@ lsi_msg_handle(irc *ctx, tokarr *msg, bool logon)
 	return res;
 
 fail:;
-	uint8_t r = res & ~CANT_PROCEED;
+	uint16_t r = res & ~CANT_PROCEED;
 
 	if (r & USER_ERR) {
 		E("user-registered message handler denied proceeding");

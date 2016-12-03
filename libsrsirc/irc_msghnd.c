@@ -30,7 +30,7 @@
 #include <libsrsirc/util.h>
 
 
-static uint8_t
+static uint16_t
 handle_001(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (nargs < 3 || (!ctx->dumb && !logon))
@@ -50,7 +50,7 @@ handle_001(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_002(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!ctx->dumb && !logon)
@@ -64,7 +64,7 @@ handle_002(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_003(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!ctx->dumb && !logon)
@@ -78,7 +78,7 @@ handle_003(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_004(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (nargs < 7 || (!ctx->dumb && !logon))
@@ -118,7 +118,7 @@ handle_PING(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 
 /* This handles 432, 433, 436 and 437 all of which signal us that
  * we can't have the nickname we wanted */
-static uint8_t
+static uint16_t
 handle_bad_nick(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!logon)
@@ -141,7 +141,7 @@ handle_bad_nick(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return lsi_conn_write(ctx->con, buf) ? 0 : IO_ERR;
 }
 
-static uint8_t
+static uint16_t
 handle_464(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (!logon)
@@ -153,7 +153,7 @@ handle_464(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 
 /* Successful service logon.  I guess we don't get to see a 004, but haven't
  * really tried this yet */
-static uint8_t
+static uint16_t
 handle_383(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (nargs < 3 || (!ctx->dumb && !logon))
@@ -174,7 +174,7 @@ handle_383(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return LOGON_COMPLETE;
 }
 
-static uint8_t
+static uint16_t
 handle_484(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	ctx->restricted = true;
@@ -182,7 +182,7 @@ handle_484(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_465(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	ctx->banned = true;
@@ -194,7 +194,7 @@ handle_465(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0; /* well if we are, the server will sure disconnect us */
 }
 
-static uint8_t
+static uint16_t
 handle_466(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	W("we will be banned");
@@ -202,7 +202,7 @@ handle_466(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0; /* so what, bitch? */
 }
 
-static uint8_t
+static uint16_t
 handle_ERROR(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	free(ctx->lasterr);
@@ -213,7 +213,7 @@ handle_ERROR(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_NICK(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (nargs < 3 || !(*msg)[0])
@@ -231,7 +231,7 @@ handle_NICK(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 }
 
 /* Deals only wih user modes */
-static uint8_t
+static uint16_t
 handle_MODE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
 	if (nargs < 4)
@@ -271,7 +271,7 @@ handle_MODE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 }
 
 
-static uint8_t
+static uint16_t
 handle_005_CASEMAPPING(irc *ctx, const char *val)
 {
 	if (lsi_b_strcasecmp(val, "ascii") == 0)
@@ -287,7 +287,7 @@ handle_005_CASEMAPPING(irc *ctx, const char *val)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_005_PREFIX(irc *ctx, const char *val)
 {
 	char str[32];
@@ -311,7 +311,7 @@ handle_005_PREFIX(irc *ctx, const char *val)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_005_CHANMODES(irc *ctx, const char *val)
 {
 	for (int z = 0; z < 4; ++z)
@@ -335,17 +335,17 @@ handle_005_CHANMODES(irc *ctx, const char *val)
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_005_CHANTYPES(irc *ctx, const char *val)
 {
 	lsi_b_strNcpy(ctx->m005chantypes, val, MAX_005_CHTYP);
 	return 0;
 }
 
-static uint8_t
+static uint16_t
 handle_005(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	uint8_t ret = 0;
+	uint16_t ret = 0;
 	bool have_casemap = false;
 	D("handing a 005 with %zu args", nargs);
 
