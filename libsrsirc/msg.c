@@ -172,6 +172,10 @@ fail:;
 		E("user-registered message handler denied proceeding");
 	} else if (r & AUTH_ERR) {
 		E("failed to authenticate");
+	} else if (r & SASL_ERR) {
+		E("SASL authentication failed");
+	} else if (r & NO_SASL) {
+		E("the server does not support SASL");
 	} else if (r & IO_ERR) {
 		E("i/o error");
 	} else if (r & ALLOC_ERR) {

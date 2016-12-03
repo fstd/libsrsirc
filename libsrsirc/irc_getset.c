@@ -11,6 +11,9 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
+#include <string.h>
+
+#include <platform/base_misc.h>
 
 #include <logger/intlog.h>
 
@@ -258,6 +261,24 @@ bool
 irc_set_fname(irc *ctx, const char *fname)
 {
 	return lsi_com_update_strprop(&ctx->fname, fname);
+}
+
+bool
+irc_set_sasl(irc *ctx, const char *mech, const void *msg, size_t n)
+{
+	if  (!lsi_com_update_strprop(&ctx->sasl_mech, mech))
+		return false;
+
+	if (!(ctx->sasl_msg = MALLOC(n))) {
+		free(ctx->sasl_mech);
+		ctx->sasl_mech = NULL;
+		return false;
+	}
+
+	memcpy(ctx->sasl_msg, msg, n);
+	ctx->sasl_msg_len = n;
+
+	return true;
 }
 
 bool
