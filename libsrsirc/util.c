@@ -536,6 +536,7 @@ bool
 lsi_ut_sasl_mkplauth(void *dest, size_t *destsz,
     const char *name, const char *pass, bool base64)
 {
+	bool ret = false;
 	uint8_t *tmpbuf = MALLOC(*destsz);
 	if (!tmpbuf)
 		return false;
@@ -558,9 +559,9 @@ lsi_ut_sasl_mkplauth(void *dest, size_t *destsz,
 		*destsz = (size_t)r;
 	}
 
-	return true;
+	ret = true;
 
 fail:
 	free(tmpbuf);
-	return false;
+	return ret;
 }
