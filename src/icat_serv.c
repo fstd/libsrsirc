@@ -75,6 +75,16 @@ icat_serv_init(void)
 	if (g_sett.pass[0])
 		irc_set_pass(s_irc, g_sett.pass);
 
+	if (g_sett.saslname[0] && g_sett.saslpass[0]) {
+		char authstr[256];
+		size_t authstrsz = sizeof authstr;
+		if (!lsi_ut_sasl_mkplauth(authstr, &authstrsz,
+		    g_sett.saslname, g_sett.saslpass, true))
+			C("Failed to produce SASL auth string, check your -S");
+
+		irc_set_sasl(s_irc, "PLAIN", authstr, authstrsz);
+	}
+
 	irc_regcb_conread(s_irc, conread, 0);
 	irc_reg_msghnd(s_irc, "PING", handle_PING, true);
 	irc_reg_msghnd(s_irc, "PONG", handle_PONG, true);

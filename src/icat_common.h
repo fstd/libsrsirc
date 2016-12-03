@@ -49,6 +49,9 @@ struct settings_s {
 	uint16_t pxport;
 	int pxtype;
 
+	char saslname[128];
+	char saslpass[128];
+
 	bool trgmode;
 	uint64_t cto_soft_us;
 	uint64_t cto_hard_us;

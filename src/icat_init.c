@@ -89,6 +89,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	BH("\t-n <str>: Use <str> as nick. Subject to mutilation if N/A");
 	LH("\t-u <str>: Use <str> as (IRC) username/ident");
 	LH("\t-f <str>: Use <str> as (IRC) fullname");
+	LH("\t-S <str>: SASL-PLAIN/base64 auth. <str> should be 'name:pass'.");
 	LH("\t-F <int>: Specify USER flags. 0=None, 8=usermode +i");
 	LH("\t-Q <str>: Use <str> as quit message");
 	LH("\t-W <int>: Wait <int> ms between attempts to connect."
@@ -135,7 +136,7 @@ process_args(int *argc, char ***argv)
 	char *a0 = (*argv)[0];
 
 	for (int ch; (ch = lsi_b_getopt(*argc, *argv,
-	    "vqchHn:u:f:F:Q:p:P:tT:C:kw:l:L:b:W:rNjiIE:V")) != -1;) {
+	    "vqchHn:u:f:F:Q:p:P:S:tT:C:kw:l:L:b:W:rNjiIE:V")) != -1;) {
 		switch (ch) {
 		      case 'n':
 			STRACPY(g_sett.nick, lsi_b_optarg());
@@ -153,6 +154,16 @@ process_args(int *argc, char ***argv)
 			if (!lsi_ut_parse_pxspec(&g_sett.pxtype, g_sett.pxhost,
 			    sizeof g_sett.pxhost, &g_sett.pxport, lsi_b_optarg()))
 				C("Failed to parse pxspec '%s'", lsi_b_optarg());
+		break;case 'S':
+			{
+			const char *pass = strchr(lsi_b_optarg(), ':');
+			if (!pass)
+				C("Arg to -S must be 'name:password'");
+
+			STRACPY(g_sett.saslname, lsi_b_optarg());
+			*strchr(g_sett.saslname, ':') = '\0';
+			STRACPY(g_sett.saslpass, pass + 1);
+			}
 		break;case 't':
 			g_sett.trgmode = true;
 		break;case 'T':
@@ -299,6 +310,8 @@ set_defaults(void)
 	g_sett.pxhost[0] = '\0';
 	g_sett.pxport = 0;
 	g_sett.pxtype = -1;
+	g_sett.saslname[0] = '\0';
+	g_sett.saslpass[0] = '\0';
 	g_sett.trgmode = false;
 	g_sett.cto_soft_us = DEF_CONTO_SOFT_MS * 1000u;
 	g_sett.cto_hard_us = DEF_CONTO_HARD_MS * 1000u;
@@ -331,6 +344,8 @@ dump_settings(void)
 	D("pxhost: '%s'", g_sett.pxhost);
 	D("pxport: %"PRIu16, g_sett.pxport);
 	D("pxtype: %d", g_sett.pxtype);
+	D("saslname: '%s'", g_sett.saslname);
+	D("saslpass: '%s'", g_sett.saslpass);
 	D("trgmode: %s", g_sett.trgmode?"yes":"no");
 	D("cto_soft_us: %"PRIu64, g_sett.cto_soft_us);
 	D("cto_hard_us: %"PRIu64, g_sett.cto_hard_us);
