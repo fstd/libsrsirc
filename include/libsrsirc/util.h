@@ -262,6 +262,26 @@ const char *lsi_ut_casemap_nam(int cm);
  */
 bool lsi_ut_ischan(irc *ctx, const char *str);
 
+/** \brief Produce a SASL authentication (non-)string suitable for use with the
+ * PLAIN mechanism
+ *
+ * Given a username and a password, a blob of the following format is written
+ * into `dest`: "username\0username\0password"
+ *
+ * \param dest Buffer to hold the resulting auth blob
+ * \param destsz Input-output parameter that should contain the size of
+ *               `dest` when this function is called, and will upon returning
+ *               reflect the length of the produced auth blob.
+ * \param name Username to go into the result
+ * \param pass Password to go into the result
+ * \param base64 If true, base64 the result (as some IRC servers seem to prefer)
+ *
+ * \return true if everything went fine, false if we didn't have enough buffer
+ *              space to store the result.
+ */
+bool lsi_ut_sasl_mkplauth(void *dest, size_t *destsz,
+    const char *name, const char *pass, bool base64);
+
 /** @} */
 
 #endif /* LIBSRSIRC_IRC_UTIL_H */

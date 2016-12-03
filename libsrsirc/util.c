@@ -528,3 +528,39 @@ lsi_ut_ischan(irc *ctx, const char *str)
 
 	return strchr(ctx->m005chantypes, str[0]);
 }
+
+/* note: `*destsz` should be the size of what is pointed to by `dest` when
+ *       calling this, before returning it is set to the actual size of the
+ *       resulting auth blob. */
+bool
+lsi_ut_sasl_mkplauth(void *dest, size_t *destsz,
+    const char *name, const char *pass, bool base64)
+{
+	uint8_t *tmpbuf = MALLOC(*destsz);
+	if (!tmpbuf)
+		return false;
+
+	int r = snprintf((char *)tmpbuf, *destsz,
+	    "%s%c%s%c%s", name, '\0', name, '\0', pass);
+
+	if (r < 0 || (size_t)r >= *destsz) {
+		E("Could not create auth string (too big?)");
+		goto fail;
+	}
+
+	if (base64) {
+		size_t s = lsi_com_base64(dest, *destsz, tmpbuf, r);
+		if (!s)
+			goto fail;
+		*destsz = s;
+	} else {
+		memcpy(dest, tmpbuf, r);
+		*destsz = (size_t)r;
+	}
+
+	return true;
+
+fail:
+	free(tmpbuf);
+	return false;
+}
