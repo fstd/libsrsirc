@@ -201,6 +201,7 @@ b64_core(char *outquad, const uint8_t *intrip, size_t ntrip)
 
 	for (; i < 4; i++)
 		outquad[i] = '=';
+	return;
 }
 
 size_t

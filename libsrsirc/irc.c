@@ -509,4 +509,5 @@ reset_state(irc *ctx)
 	lsi_b_strNcpy(ctx->m005chanmodes[3], "psitnm", MAX_005_CHMD);
 	lsi_b_strNcpy(ctx->m005modepfx[0], "ov", MAX_005_MDPFX);
 	lsi_b_strNcpy(ctx->m005modepfx[1], "@+", MAX_005_MDPFX);
+	return;
 }
