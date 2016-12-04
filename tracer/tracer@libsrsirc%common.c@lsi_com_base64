@@ -1,0 +1,1 @@
+{ TC("dest=%p, destsz=%zu, input=%p, len=%zu", (void *)dest, destsz, (void *)input, len);

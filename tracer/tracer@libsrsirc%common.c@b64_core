@@ -1,0 +1,1 @@
+{ TC("outquad=%p, intrip=%p, ntrip=%zu", (void *)outquad, (void *)intrip, ntrip);

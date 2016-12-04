@@ -1,0 +1,1 @@
+{ TC("dest=%p, destsz=%p (%zu), name='%s', pass='%s', base64=%d", (void *)dest, destsz, *destsz, name, pass, base64);
