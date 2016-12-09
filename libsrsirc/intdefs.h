@@ -36,6 +36,8 @@
 #define MAX_005_CHTYP 16
 #define MAX_CHAN_LEN 256
 #define MAX_MODEPFX 8
+#define MAX_V3TAGS 16 // IRCv3 message tags
+#define MAX_V3TAGLEN 512
 
 
 /* this allows us to handle both plaintext and ssl connections the same way */
@@ -64,6 +66,12 @@ struct msghnd {
 struct umsghnd {
 	char cmd[32];
 	uhnd_fn hndfn;
+};
+
+struct v3tag
+{
+	const char *key;
+	const char *value;
 };
 
 /* this is a relict of the former design */
@@ -109,7 +117,10 @@ struct irc_s {
 	char *m005chantypes;    // Supported channel types as per 005
 	skmap *m005attrs;       // Stores all seen 005 attributes
 
-
+	char *v3tags_raw[MAX_V3TAGS]; // IRCv3 tags of the last-read msg
+	size_t v3ntags;         // Number of tags in the last-read msg
+	char *v3tags_dec[MAX_V3TAGS]; // Decoded tag cache
+	struct v3tag v3tags[MAX_V3TAGS]; // Pointers into v3tags_dec
 
 	/* These are set by their respective irc_set_*() functions and
 	 * generally changes to these don't take effect before the next

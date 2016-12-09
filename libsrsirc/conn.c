@@ -237,7 +237,8 @@ lsi_conn_connect(iconn *ctx, uint64_t softto_us, uint64_t hardto_us)
 }
 
 int
-lsi_conn_read(iconn *ctx, tokarr *tok, uint64_t to_us)
+lsi_conn_read(iconn *ctx, tokarr *tok, char **tags, size_t *ntags,
+    uint64_t to_us)
 {
 	if (!ctx->online) {
 		E("Can't read while offline");
@@ -245,7 +246,8 @@ lsi_conn_read(iconn *ctx, tokarr *tok, uint64_t to_us)
 	}
 
 	int n;
-	if (!(n = lsi_io_read(ctx->sh, &ctx->rctx, tok, to_us)))
+	if (!(n = lsi_io_read(ctx->sh, &ctx->rctx, tok,
+	    tags, ntags, to_us)))
 		return 0; /* timeout */
 
 	if (n < 0) {

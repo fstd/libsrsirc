@@ -163,6 +163,11 @@ const char *irc_lasterror(irc *ctx);
  */
 const char *irc_banmsg(irc *ctx);
 
+/* XXX document */
+size_t irc_v3tags_cnt(irc *ctx);
+bool irc_v3tag(irc *ctx, size_t ind, const char **key, const char **value);
+bool irc_v3tag_bykey(irc *ctx, const char *key, const char **value);
+
 /** \brief Determine whether we are banned, if the server was polite enough to
  *         let us know.
  *

@@ -52,7 +52,7 @@ irc_init(void)
 	r->pass = r->nick = r->uname = r->fname = r->sasl_mech = r->sasl_msg
 	   = r->serv_dist = r->serv_info = r->lasterr = r->banmsg = NULL;
 
-	r->sasl_msg_len = 0;
+	r->sasl_msg_len = r->v3ntags = 0;
 
 	r->msghnds = NULL;
 	r->uprehnds = r->uposthnds = NULL;
@@ -66,6 +66,12 @@ irc_init(void)
 	for (size_t i = 0; i < COUNTOF(r->m005modepfx); i++)
 		r->m005modepfx[i] = NULL;
 
+	for (size_t i = 0; i < COUNTOF(r->v3tags_raw); i++)
+		r->v3tags_raw[i] = NULL;
+
+	for (size_t i = 0; i < COUNTOF(r->v3tags_dec); i++)
+		r->v3tags_dec[i] = NULL;
+
 	if (!(r->m005chantypes = MALLOC(MAX_005_CHTYP)))
 		goto fail;
 
@@ -76,6 +82,12 @@ irc_init(void)
 	for (size_t i = 0; i < COUNTOF(r->m005modepfx); i++)
 		if (!(r->m005modepfx[i] = MALLOC(MAX_005_MDPFX)))
 			goto fail;
+
+	for (size_t i = 0; i < COUNTOF(r->v3tags_dec); i++) {
+		if (!(r->v3tags_dec[i] = MALLOC(MAX_V3TAGLEN)))
+			goto fail;
+		r->v3tags_dec[i][0] = '\0';
+	}
 
 	if (!(r->m005attrs = lsi_skmap_init(256, CMAP_ASCII)))
 		goto fail;
@@ -158,6 +170,8 @@ fail:
 			free(r->m005chanmodes[i]);
 		for (size_t i = 0; i < COUNTOF(r->m005modepfx); i++)
 			free(r->m005modepfx[i]);
+		for (size_t i = 0; i < COUNTOF(r->v3tags_dec); i++)
+			free(r->v3tags_dec[i]);
 		lsi_skmap_dispose(r->m005attrs);
 	}
 
@@ -203,6 +217,9 @@ irc_dispose(irc *ctx)
 
 	for (size_t i = 0; i < COUNTOF(ctx->m005modepfx); i++)
 		free(ctx->m005modepfx[i]);
+
+	for (size_t i = 0; i < COUNTOF(ctx->v3tags_dec); i++)
+		free(ctx->v3tags_dec[i]);
 
 	void *v;
 	if (lsi_skmap_first(ctx->m005attrs, NULL, &v))
@@ -266,7 +283,7 @@ irc_connect(irc *ctx)
 			goto fail;
 		}
 
-		if ((r = lsi_conn_read(ctx->con, &msg, trem)) < 0)
+		if ((r = lsi_conn_read(ctx->con, &msg, NULL, NULL, trem)) < 0)
 			goto fail;
 
 		if (r == 0)
@@ -315,7 +332,12 @@ irc_read(irc *ctx, tokarr *tok, uint64_t to_us)
 	if (!tok)
 		tok = &dummy;
 
-	int r = lsi_conn_read(ctx->con, tok, to_us);
+	for (size_t i = 0; i < COUNTOF(ctx->v3tags_dec); i++)
+		ctx->v3tags_dec[i][0] = '\0';
+	ctx->v3ntags = COUNTOF(ctx->v3tags_raw);
+
+	int r = lsi_conn_read(ctx->con, tok, ctx->v3tags_raw, &ctx->v3ntags, to_us);
+
 	if (r == 0)
 		return 0;
 
@@ -472,6 +494,11 @@ irc_dump(irc *ctx)
 	N("tracking: %d", ctx->tracking);
 	N("tracking_enab: %d", ctx->tracking_enab);
 	N("endofnames: %d", ctx->endofnames);
+	N("v3ntags: %zu", ctx->v3ntags);
+	for (size_t i = 0; i < COUNTOF(ctx->v3tags_raw); i++)
+		N("v3tags_raw[%zu]: '%s'", i, ctx->v3tags_raw[i]);
+	for (size_t i = 0; i < COUNTOF(ctx->v3tags_dec); i++)
+		N("v3tags_dec[%zu]: '%s'", i, ctx->v3tags_dec[i]);
 	for (size_t i = 0; i < COUNTOF(ctx->logonconv); i++) {
 		if (!ctx->logonconv[i])
 			continue;
@@ -509,5 +536,10 @@ reset_state(irc *ctx)
 	lsi_b_strNcpy(ctx->m005chanmodes[3], "psitnm", MAX_005_CHMD);
 	lsi_b_strNcpy(ctx->m005modepfx[0], "ov", MAX_005_MDPFX);
 	lsi_b_strNcpy(ctx->m005modepfx[1], "@+", MAX_005_MDPFX);
+	for (size_t i = 0; i < COUNTOF(ctx->v3tags_raw); i++)
+		ctx->v3tags_raw[i] = NULL;
+	for (size_t i = 0; i < COUNTOF(ctx->v3tags_dec); i++)
+		ctx->v3tags_dec[i][0] = '\0';
+	ctx->v3ntags = 0;
 	return;
 }

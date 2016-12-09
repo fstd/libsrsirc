@@ -41,7 +41,8 @@ static long send_wrap(sckhld sh, const void *buf, size_t len);
 
 /* Documented in io.h */
 int
-lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok, uint64_t to_us)
+lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok,
+    char **tags, size_t *ntags, uint64_t to_us)
 {
 	uint64_t tend = to_us ? lsi_b_tstamp_us() + to_us : 0;
 	uint64_t tnow, trem = 0;
@@ -82,6 +83,17 @@ lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok, uint64_t to_us)
 	*delim = '\0';
 
 	I("Read: '%s'", linestart);
+
+	if (linestart[0] == '@') {
+		linestart = lsi_ut_extract_tags(linestart + 1,
+		    tags, ntags);
+
+		if (!linestart || !linestart[0]) {
+			E("protocol error (just tags?)");
+			return -1;
+		}
+	} else if (ntags)
+		*ntags = 0;
 
 	return lsi_ut_tokenize(linestart, tok) ? 1 : -1;
 }

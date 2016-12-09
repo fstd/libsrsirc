@@ -284,4 +284,7 @@ bool lsi_ut_sasl_mkplauth(void *dest, size_t *destsz,
 
 /** @} */
 
+/* XXX */
+char *lsi_ut_extract_tags(char *line, char **dest, size_t *ndest);
+
 #endif /* LIBSRSIRC_IRC_UTIL_H */

@@ -29,7 +29,8 @@
  *
  * Returns 1 on success; 0 on timeout; -1 on failure
  */
-int lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok, uint64_t to_us);
+int lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok,
+    char **tags, size_t *ntags, uint64_t to_us); // XXX
 
 /* lsi_io_write
  * Send a message to the ircd

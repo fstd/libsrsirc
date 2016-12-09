@@ -484,6 +484,29 @@ lsi_ut_tokenize(char *buf, tokarr *tok)
 	return true;
 }
 
+char *
+lsi_ut_extract_tags(char *line, char **dest, size_t *ndest)
+{
+	size_t destmax = ndest ? *ndest : 0;
+	size_t tc = 0;
+	char *end = strchr(line, ' ');
+	if (!end)
+		return NULL;
+	*end = '\0';
+
+	do {
+		if (tc < destmax)
+			dest[tc++] = line;
+	} while ((line = next_tok(line, ';')));
+
+	if (ndest)
+		*ndest = tc;
+
+	return end + 1;
+}
+/*
+*/
+
 /* \0-terminate the (to-be)-token `buf' points to, then locate the next token,
  * if any, and return pointer to it (or NULL) */
 static char *
