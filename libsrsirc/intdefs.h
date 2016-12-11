@@ -37,7 +37,10 @@
 #define MAX_CHAN_LEN 256
 #define MAX_MODEPFX 8
 #define MAX_V3TAGS 16 // IRCv3 message tags
+#define MAX_V3CAPS 16
 #define MAX_V3TAGLEN 512
+#define MAX_V3CAPLEN 128
+#define MAX_V3CAPLINE 512
 
 
 /* this allows us to handle both plaintext and ssl connections the same way */
@@ -72,6 +75,15 @@ struct v3tag
 {
 	const char *key;
 	const char *value;
+};
+
+struct v3cap
+{
+	char name[MAX_V3CAPLEN];
+	char adddata[MAX_V3CAPLEN];
+	bool musthave;
+	bool offered;
+	bool enabled;
 };
 
 /* this is a relict of the former design */
@@ -121,6 +133,10 @@ struct irc_s {
 	size_t v3ntags;         // Number of tags in the last-read msg
 	char *v3tags_dec[MAX_V3TAGS]; // Decoded tag cache
 	struct v3tag v3tags[MAX_V3TAGS]; // Pointers into v3tags_dec
+
+	struct v3cap *v3caps[MAX_V3CAPS];
+	char v3capreq[MAX_V3CAPLINE];
+	//char *v3caps[MAX_V3CAPS];
 
 	/* These are set by their respective irc_set_*() functions and
 	 * generally changes to these don't take effect before the next

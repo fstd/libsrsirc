@@ -174,8 +174,8 @@ fail:;
 		E("failed to authenticate");
 	} else if (r & SASL_ERR) {
 		E("SASL authentication failed");
-	} else if (r & NO_SASL) {
-		E("the server does not support SASL");
+	} else if (r & CAP_ERR) {
+		E("Capability negotiation failed");
 	} else if (r & IO_ERR) {
 		E("i/o error");
 	} else if (r & ALLOC_ERR) {

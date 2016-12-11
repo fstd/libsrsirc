@@ -22,6 +22,7 @@
 #include "conn.h"
 #include "msg.h"
 #include "skmap.h"
+#include "v3.h"
 
 
 /* Determiners - read-only access to information we keep track of */
@@ -349,12 +350,16 @@ irc_set_fname(irc *ctx, const char *fname)
 	return lsi_com_update_strprop(&ctx->fname, fname);
 }
 
+
 bool
-irc_set_sasl(irc *ctx, const char *mech, const void *msg, size_t n)
+irc_set_sasl(irc *ctx, const char *mech, const void *msg, size_t n,
+    bool musthave)
 {
-	if  (!lsi_com_update_strprop(&ctx->sasl_mech, mech))
+	if (!lsi_com_update_strprop(&ctx->sasl_mech, mech))
 		return false;
 
+	lsi_v3_clear_cap(ctx, "sasl");
+	free(ctx->sasl_msg);
 	if (!(ctx->sasl_msg = MALLOC(n))) {
 		free(ctx->sasl_mech);
 		ctx->sasl_mech = NULL;
@@ -363,6 +368,7 @@ irc_set_sasl(irc *ctx, const char *mech, const void *msg, size_t n)
 
 	memcpy(ctx->sasl_msg, msg, n);
 	ctx->sasl_msg_len = n;
+	lsi_v3_want_cap(ctx, "sasl", musthave);
 
 	return true;
 }

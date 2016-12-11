@@ -46,6 +46,7 @@ const char *modnames[NUM_MODS] = {
 	[MOD_PLST] = "libsrsirc/plst",
 	[MOD_TRACK] = "libsrsirc/track",
 	[MOD_UCBASE] = "libsrsirc/ucbase",
+	[MOD_V3] = "libsrsirc/v3",
 	[MOD_BASEIO] = "libsrsirc/base-io",
 	[MOD_BASENET] = "libsrsirc/base-net",
 	[MOD_BASETIME] = "libsrsirc/base-time",

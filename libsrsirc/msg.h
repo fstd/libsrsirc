@@ -22,9 +22,10 @@
 # define ALLOC_ERR     (CANT_PROCEED|(1<<5)) // out of memory
 # define USER_ERR      (CANT_PROCEED|(1<<6)) // user msg handler failed
 # define SASL_ERR      (CANT_PROCEED|(1<<7)) // SASL authentication failed
-# define NO_SASL       (CANT_PROCEED|(1<<8)) // the server doesn't support SASL
+# define CAP_ERR       (CANT_PROCEED|(1<<8)) // >= 1 'musthave'-CAP unavailable
 #define LOGON_COMPLETE (1<<9) // we now consider ourselves logged on
 #define SASL_COMPLETE  (1<<10) // SASL authentication succeeded
+#define MORE_CAPS      (1<<11) // multiline reply to CAP LS
 
 bool lsi_msg_reghnd(irc *ctx, const char *cmd, hnd_fn hndfn, const char *module);
 void lsi_msg_unregall(irc *ctx, const char *module);

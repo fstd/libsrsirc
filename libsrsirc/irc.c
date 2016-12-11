@@ -28,6 +28,7 @@
 #include "irc_track_int.h"
 #include "msg.h"
 #include "skmap.h"
+#include "v3.h"
 
 #include <libsrsirc/irc_track.h>
 #include <libsrsirc/util.h>
@@ -59,6 +60,8 @@ irc_init(void)
 	r->chans = r->users = NULL;
 	r->m005chantypes = NULL;
 	r->m005attrs = NULL;
+
+	lsi_v3_reset_caps(r);
 
 	for (size_t i = 0; i < COUNTOF(r->m005chanmodes); i++)
 		r->m005chanmodes[i] = NULL;
@@ -221,6 +224,8 @@ irc_dispose(irc *ctx)
 	for (size_t i = 0; i < COUNTOF(ctx->v3tags_dec); i++)
 		free(ctx->v3tags_dec[i]);
 
+	lsi_v3_reset_caps(ctx);
+
 	void *v;
 	if (lsi_skmap_first(ctx->m005attrs, NULL, &v))
 		do free(v); while (lsi_skmap_next(ctx->m005attrs, NULL, &v));
@@ -242,6 +247,10 @@ irc_connect(irc *ctx)
 
 	lsi_imh_unregall(ctx);
 	if (!lsi_imh_regall(ctx, ctx->dumb))
+		return false;
+
+	lsi_v3_unregall(ctx);
+	if (!lsi_v3_regall(ctx, ctx->dumb))
 		return false;
 
 	reset_state(ctx);
@@ -391,8 +400,9 @@ send_logon(irc *ctx)
 	size_t rem = sizeof aBuf;
 	int r;
 
-	if (ctx->pass && strlen(ctx->pass) > 0) {
-		r = snprintf(pBuf, rem, "PASS :%s\r\n", ctx->pass);
+	/* XXX use strNcat? STRACAT? invent STRAPRINTF?  this clearly sucks */
+	if (lsi_v3_want_caps(ctx)) {
+		r = snprintf(pBuf, rem, "CAP LS 302\r\n");
 		if (r > (int)rem)
 			r = rem;
 
@@ -403,10 +413,11 @@ send_logon(irc *ctx)
 	if (!rem)
 		return false;
 
-	if (ctx->sasl_mech && ctx->sasl_msg) {
-		r = snprintf(pBuf, rem, "CAP REQ :sasl\r\n");
+	if (ctx->pass && strlen(ctx->pass) > 0) {
+		r = snprintf(pBuf, rem, "PASS :%s\r\n", ctx->pass);
 		if (r > (int)rem)
 			r = rem;
+
 		rem -= r;
 		pBuf += r;
 	}
@@ -522,7 +533,9 @@ irc_dump(irc *ctx)
 static void
 reset_state(irc *ctx)
 {
-	ctx->mynick[0] = ctx->myhost[0] = ctx->myumodes[0] = ctx->ver[0] = '\0';
+	ctx->mynick[0] = ctx->myhost[0] = ctx->myumodes[0] = ctx->ver[0]
+	    = ctx->v3capreq[0] = '\0';
+
 	ctx->restricted = ctx->banned = ctx->service = false;
 	ctx->casemap = CMAP_RFC1459;
 	lsi_com_update_strprop(&ctx->lasterr, NULL);
