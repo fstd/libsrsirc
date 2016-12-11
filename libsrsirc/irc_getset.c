@@ -266,21 +266,25 @@ irc_set_fname(irc *ctx, const char *fname)
 }
 
 bool
-irc_set_starttls(irc *ctx, bool on, bool musthave)
+irc_set_starttls(irc *ctx, int mode, bool musthave)
 {
 	if (!lsi_b_have_ssl()) {
 		E("no ssl support compiled in");
 		return false;
-	} else if (ctx->con->ssl && on) {
+	} else if (ctx->con->ssl && mode) {
 		E("cannot enable STARTTLS after irc_set_ssl()");
 		return false;
 	}
 
 	lsi_v3_clear_cap(ctx, "tls");
 	ctx->starttls = false;
-	if (on) {
-		if (!lsi_v3_want_cap(ctx, "tls", musthave))
-			return false;
+	if (mode) {
+		if (mode == 1) {
+			if (!lsi_v3_want_cap(ctx, "tls", musthave))
+				return false;
+		} else {
+			ctx->starttls_first = true;
+		}
 		ctx->starttls = true;
 	}
 

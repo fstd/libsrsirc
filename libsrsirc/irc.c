@@ -54,7 +54,7 @@ irc_init(void)
 	   = r->serv_dist = r->serv_info = r->lasterr = r->banmsg = NULL;
 
 	r->sasl_msg_len = r->v3ntags = 0;
-	r->starttls = false;
+	r->starttls = r->starttls_first = false;
 
 	r->msghnds = NULL;
 	r->uprehnds = r->uposthnds = NULL;
@@ -274,10 +274,16 @@ irc_connect(irc *ctx)
 	if (ctx->dumb)
 		return true;
 
-	if (!send_logon(ctx))
-		goto fail;
-
-	I("IRC logon sequence sent");
+	bool logon_sent = false;
+	if (ctx->starttls_first) {
+		if (!lsi_conn_write(ctx->con, "STARTTLS\r\n"))
+			goto fail;
+	} else {
+		logon_sent = true;
+		if (!send_logon(ctx))
+			goto fail;
+		I("IRC logon sequence sent");
+	}
 
 	STRACPY(ctx->mynick, ctx->nick);
 	tokarr msg;
@@ -323,6 +329,12 @@ irc_connect(irc *ctx)
 
 		if (flags & SASL_COMPLETE)
 			sasl_authed = true;
+
+		if (flags & STARTTLS_OVER && !logon_sent) {
+			if (!send_logon(ctx))
+				goto fail;
+			logon_sent = true;
+		}
 
 	} while (!logged_on || (using_sasl && !sasl_authed));
 

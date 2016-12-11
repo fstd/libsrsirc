@@ -415,6 +415,9 @@ handle_691(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 		return IO_ERR;
 	W("Continuing anyway...");
 
+	if (ctx->starttls_first)
+		return STARTTLS_OVER;
+
 	return conclude_sasl_cap(ctx) ? 0 : IO_ERR;
 }
 
@@ -452,6 +455,9 @@ handle_670(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	}
 
 	ctx->con->ssl = true;
+
+	if (ctx->starttls_first)
+		return STARTTLS_OVER;
 
 	return conclude_sasl_cap(ctx) ? 0 : IO_ERR;
 }

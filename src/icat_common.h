@@ -53,6 +53,7 @@ struct settings_s {
 	char saslpass[128];
 	bool starttls;
 	bool starttls_req;
+	int starttls_mode;
 
 	bool trgmode;
 	uint64_t cto_soft_us;

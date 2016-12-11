@@ -26,6 +26,7 @@
 #define LOGON_COMPLETE (1<<9) // we now consider ourselves logged on
 #define SASL_COMPLETE  (1<<10) // SASL authentication succeeded
 #define MORE_CAPS      (1<<11) // multiline reply to CAP LS
+#define STARTTLS_OVER  (1<<12) // early starttls finished (or failed)
 
 bool lsi_msg_reghnd(irc *ctx, const char *cmd, hnd_fn hndfn, const char *module);
 void lsi_msg_unregall(irc *ctx, const char *module);

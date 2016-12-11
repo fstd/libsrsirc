@@ -189,7 +189,7 @@ bool irc_v3tag_bykey(irc *ctx, const char *key, const char **value);
 bool irc_set_sasl(irc *ctx, const char *mech, const void *msg, size_t n);
 
 /* XXX document */
-bool irc_set_starttls(irc *ctx, bool on, bool musthave);
+bool irc_set_starttls(irc *ctx, int mode, bool musthave);
 
 
 /** \brief Determine whether we are banned, if the server was polite enough to
