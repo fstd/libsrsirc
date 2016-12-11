@@ -393,11 +393,11 @@ lsi_b_write(int sck, const void *buf, size_t len)
 	size_t bc = 0;
 	V("send()ing %zu bytes over sck %d", len, sck);
 	while (bc < len) {
-		int s;
 
 		/* XXX FIXME we can get stuck here.  should query socket
 		 * state or select for read/except, i guess. taking it
 		 * out for now... */
+		// int s;
 		// while ((s = lsi_b_select(&sck, 1, true, false, 10000)) == 0)
 		//	;
 		//
