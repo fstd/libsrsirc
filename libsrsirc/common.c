@@ -219,3 +219,24 @@ lsi_com_base64(char *dest, size_t destsz, const uint8_t *input, size_t len)
 
 	return reslen;
 }
+
+/* \0-terminate the (to-be)-token `buf' points to, then locate the next token,
+ * if any, and return pointer to it (or NULL) */
+char *
+lsi_com_next_tok(char *buf, char delim)
+{
+	while (*buf && *buf != delim) /* walk until end of (former) token */
+		buf++;
+
+	if (!*buf)
+		return NULL; /* there's no next token */
+
+	while (*buf == delim) /* walk over token delimiter, zero it out */
+		*buf++ = '\0';
+
+	if (!*buf)
+		return NULL; /* trailing whitespace, but no next token */
+
+	return buf; /* return pointer to beginning of the next token */
+}
+

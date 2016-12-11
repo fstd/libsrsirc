@@ -29,8 +29,6 @@
 #include "px.h"
 
 
-static char *next_tok(char *buf, char delim);
-
 void
 lsi_ut_ident2nick(char *dest, size_t dest_sz, const char *pfx)
 {
@@ -457,7 +455,7 @@ lsi_ut_tokenize(char *buf, tokarr *tok)
 
 	if (*buf == ':') { /* message has a prefix */
 		(*tok)[0] = buf + 1; /* disregard the colon */
-		if (!(buf = next_tok(buf, ' '))) {
+		if (!(buf = lsi_com_next_tok(buf, ' '))) {
 			E("protocol error (no more tokens after prefix)");
 			return false;
 		}
@@ -472,7 +470,7 @@ lsi_ut_tokenize(char *buf, tokarr *tok)
 	(*tok)[1] = buf; /* command */
 
 	size_t argc = 2;
-	while (argc < COUNTOF(*tok) && (buf = next_tok(buf, ' '))) {
+	while (argc < COUNTOF(*tok) && (buf = lsi_com_next_tok(buf, ' '))) {
 		if (*buf == ':') { /* `trailing' arg */
 			(*tok)[argc++] = buf + 1; /* disregard the colon */
 			break;
@@ -497,7 +495,7 @@ lsi_ut_extract_tags(char *line, char **dest, size_t *ndest)
 	do {
 		if (tc < destmax)
 			dest[tc++] = line;
-	} while ((line = next_tok(line, ';')));
+	} while ((line = lsi_com_next_tok(line, ';')));
 
 	if (ndest)
 		*ndest = tc;
@@ -506,26 +504,6 @@ lsi_ut_extract_tags(char *line, char **dest, size_t *ndest)
 }
 /*
 */
-
-/* \0-terminate the (to-be)-token `buf' points to, then locate the next token,
- * if any, and return pointer to it (or NULL) */
-static char *
-next_tok(char *buf, char delim)
-{
-	while (*buf && *buf != delim) /* walk until end of (former) token */
-		buf++;
-
-	if (!*buf)
-		return NULL; /* there's no next token */
-
-	while (*buf == delim) /* walk over token delimiter, zero it out */
-		*buf++ = '\0';
-
-	if (!*buf)
-		return NULL; /* trailing whitespace, but no next token */
-
-	return buf; /* return pointer to beginning of the next token */
-}
 
 const char *
 lsi_ut_casemap_nam(int cm)

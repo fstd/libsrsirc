@@ -36,4 +36,6 @@ enum hosttypes lsi_com_guess_hosttype(const char *host);
 size_t lsi_com_base64(char *dest, size_t destsz,
     const uint8_t *input, size_t len);
 
+char * lsi_com_next_tok(char *buf, char delim);
+
 #endif /* LIBSRSIRC_COMMON_H */
