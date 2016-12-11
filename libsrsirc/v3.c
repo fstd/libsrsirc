@@ -30,8 +30,11 @@ static uint16_t handle_CAP_LS(irc *ctx, tokarr *msg, size_t nargs, bool logon);
 static uint16_t handle_AUTHENTICATE(irc *ctx, tokarr *msg, size_t nargs,
     bool logon);
 static uint16_t handle_903(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t handle_670(irc *ctx, tokarr *msg, size_t nargs, bool logon);
+static uint16_t handle_691(irc *ctx, tokarr *msg, size_t nargs, bool logon);
 static uint16_t handle_saslerr(irc *ctx, tokarr *msg, size_t nargs, bool logon);
 static struct v3cap *find_cap(irc *ctx, const char *cap);
+static bool conclude_sasl_cap(irc *ctx);
 
 
 bool
@@ -147,23 +150,6 @@ handle_CAP_LS(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 }
 
 
-
-//	if (nargs != 5 || strncmp((*msg)[4], "sasl", 4))
-//		return 0;
-//
-//	if ((!ctx->dumb && !logon) || (!(ctx->sasl_mech && ctx->sasl_msg)))
-//		return PROTO_ERR;
-//
-//	if (!strcmp((*msg)[3], "ACK")) {
-//		char buf[256];
-//		snprintf(buf, sizeof buf, "AUTHENTICATE %s\r\n", ctx->sasl_mech);
-//		return lsi_conn_write(ctx->con, buf) ? 0 : IO_ERR;
-//	} else if (!strcmp((*msg)[3], "NAK")) {
-//		return NO_SASL;
-//	}
-//
-//	return 0;
-
 static uint16_t
 handle_CAP(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
@@ -198,17 +184,18 @@ handle_CAP(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 		r = handle_CAP_ACK(ctx, msg, nargs, logon);
 		if (r & CANT_PROCEED)
 			return r;
+		/* if we want to STARTTLS, do that first */
+		struct v3cap *c = find_cap(ctx, "tls");
+		if (c && c->enabled) {
+			if (!lsi_conn_write(ctx->con, "STARTTLS\r\n"))
+				return IO_ERR;
+			return 0;
+			/* the sasl code is duplicated elsewhere... */
+		}
+
 		/* SASL is special in that it delays the CAP END until
 		 * authentication is through, so no CAP END when we SASL... */
-		struct v3cap *c = find_cap(ctx, "sasl");
-		if (c && c->enabled) {
-			char buf[256];
-			snprintf(buf, sizeof buf, "AUTHENTICATE %s\r\n",
-			    ctx->sasl_mech);
-			if (!lsi_conn_write(ctx->con, buf))
-				return IO_ERR;
-		} else if (!lsi_conn_write(ctx->con, "CAP END\r\n"))
-			return IO_ERR;
+		return conclude_sasl_cap(ctx) ? IO_ERR : 0;
 	} else if (strcmp(subcmd, "NAK") == 0) {
 		r = handle_CAP_NAK(ctx, msg, nargs, logon);
 		if (r & CANT_PROCEED)
@@ -320,15 +307,39 @@ lsi_v3_update_caps(irc *ctx, const char *capsline, bool offered)
 	char *next;
 	do {
 		next = lsi_com_next_tok(cap, ' ');
+		char *eq = strchr(cap, '=');
+		char *adddata = NULL;
+		if (eq) {
+			*eq = '\0';
+			adddata = eq+1;
+		}
+
 		struct v3cap *c = find_cap(ctx, cap);
 		if (c) {
 			if (offered)
 				c->offered = true;
 			else
 				c->enabled = true;
+
+			if (adddata)
+				STRACPY(c->adddata, adddata);
 		}
 		cap = next;
 	} while (cap);
+}
+
+static bool
+conclude_sasl_cap(irc *ctx)
+{
+	char buf[512];
+	struct v3cap *c = find_cap(ctx, "sasl");
+	if (c && c->enabled)
+		snprintf(buf, sizeof buf, "AUTHENTICATE %s\r\n",
+		    ctx->sasl_mech);
+	else
+		snprintf(buf, sizeof buf, "CAP END\r\n");
+
+	return lsi_conn_write(ctx->con, buf);
 }
 
 bool
@@ -338,6 +349,8 @@ lsi_v3_regall(irc *ctx, bool dumb)
 	if (dumb)
 		return true;
 
+	fail = fail || !lsi_msg_reghnd(ctx, "670", handle_670, "v3");
+	fail = fail || !lsi_msg_reghnd(ctx, "691", handle_691, "v3");
 	fail = fail || !lsi_msg_reghnd(ctx, "903", handle_903, "v3");
 	fail = fail || !lsi_msg_reghnd(ctx, "902", handle_saslerr, "v3");
 	fail = fail || !lsi_msg_reghnd(ctx, "904", handle_saslerr, "v3");
@@ -376,6 +389,9 @@ handle_903(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 static uint16_t
 handle_saslerr(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
+	if (nargs < 2)
+		return PROTO_ERR;
+
 	if (!(ctx->sasl_mech && ctx->sasl_msg))
 		return 0; //ignore
 
@@ -385,3 +401,57 @@ handle_saslerr(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	return SASL_ERR;
 }
 
+/* STARTTLS error */
+static uint16_t
+handle_691(irc *ctx, tokarr *msg, size_t nargs, bool logon)
+{
+	if (nargs < 4)
+		return PROTO_ERR;
+
+	V("Handling a 691");
+	E("STARTTLS failed: '%s'", (*msg)[3]);
+	struct v3cap *c = find_cap(ctx, "tls");
+	if (c && c->musthave)
+		return IO_ERR;
+	W("Continuing anyway...");
+
+	return conclude_sasl_cap(ctx) ? IO_ERR : 0;
+}
+
+/* go aheadst with thy STARTTLS */
+static uint16_t
+handle_670(irc *ctx, tokarr *msg, size_t nargs, bool logon)
+{
+	D("setting to blocking mode for ssl connect");
+
+	V("Handling a 670");
+
+	struct sckhld *sh = &ctx->con->sh;
+
+	if (!lsi_b_blocking(sh->sck, true)) {
+		EE("failed to set blocking mode");
+		return IO_ERR;
+	}
+
+	if (!(ctx->con->sctx = lsi_b_mksslctx())) {
+		E("could not create ssl context, ssl not enabled!");
+		return IO_ERR;
+	}
+
+	if (!(sh->shnd = lsi_b_sslize(sh->sck, ctx->con->sctx))) {
+		E("connect bailing out; couldn't initiate ssl");
+		return IO_ERR;
+	}
+
+	D("setting to nonblocking mode after ssl connect");
+
+	if (!lsi_b_blocking(sh->sck, false)) {
+		/* This would actually suck */
+		EE("failed to clear blocking mode");
+		return IO_ERR;
+	}
+
+	ctx->con->ssl = true;
+
+	return conclude_sasl_cap(ctx) ? IO_ERR : 0;
+}

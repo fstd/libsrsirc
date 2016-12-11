@@ -89,6 +89,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	BH("\t-n <str>: Use <str> as nick. Subject to mutilation if N/A");
 	LH("\t-u <str>: Use <str> as (IRC) username/ident");
 	LH("\t-f <str>: Use <str> as (IRC) fullname");
+	LH("\t-s <int>: Use STARTTLS, mandatory if <int> is non-zero.");
 	LH("\t-S <str>: SASL-PLAIN/base64 auth. <str> should be 'name:pass'.");
 	LH("\t-F <int>: Specify USER flags. 0=None, 8=usermode +i");
 	LH("\t-Q <str>: Use <str> as quit message");
@@ -136,7 +137,7 @@ process_args(int *argc, char ***argv)
 	char *a0 = (*argv)[0];
 
 	for (int ch; (ch = lsi_b_getopt(*argc, *argv,
-	    "vqchHn:u:f:F:Q:p:P:S:tT:C:kw:l:L:b:W:rNjiIE:V")) != -1;) {
+	    "vqchHn:u:f:F:Q:p:P:s:S:tT:C:kw:l:L:b:W:rNjiIE:V")) != -1;) {
 		switch (ch) {
 		      case 'n':
 			STRACPY(g_sett.nick, lsi_b_optarg());
@@ -154,6 +155,10 @@ process_args(int *argc, char ***argv)
 			if (!lsi_ut_parse_pxspec(&g_sett.pxtype, g_sett.pxhost,
 			    sizeof g_sett.pxhost, &g_sett.pxport, lsi_b_optarg()))
 				C("Failed to parse pxspec '%s'", lsi_b_optarg());
+		break;case 's':
+			g_sett.starttls = true;
+			g_sett.starttls_req =
+			    icat_strtou64(lsi_b_optarg(), NULL, 10);
 		break;case 'S':
 			{
 			const char *pass = strchr(lsi_b_optarg(), ':');
@@ -329,6 +334,8 @@ set_defaults(void)
 	g_sett.chanlist[0] = '\0';
 	g_sett.keylist[0] = '\0';
 	g_sett.esc = NULL;
+	g_sett.starttls = false;
+	g_sett.starttls_req = false;
 	STRACPY(g_sett.qmsg, DEF_QMSG);
 	return;
 }

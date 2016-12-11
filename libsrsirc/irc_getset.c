@@ -350,6 +350,12 @@ irc_set_fname(irc *ctx, const char *fname)
 	return lsi_com_update_strprop(&ctx->fname, fname);
 }
 
+bool
+irc_set_starttls(irc *ctx, bool on, bool musthave)
+{
+	lsi_v3_clear_cap(ctx, "tls");
+	return on && lsi_v3_want_cap(ctx, "tls", musthave);
+}
 
 bool
 irc_set_sasl(irc *ctx, const char *mech, const void *msg, size_t n,

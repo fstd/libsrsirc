@@ -47,6 +47,11 @@ handle_001(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	STRACPY(ctx->mynick, (*msg)[2]);
 	D("Our nickname is '%s', it's official!", ctx->mynick);
 
+	if (!lsi_v3_check_caps(ctx, false)) {
+		E("Didn't get some must-have CAPs");
+		return CAP_ERR;
+	}
+
 	return 0;
 }
 

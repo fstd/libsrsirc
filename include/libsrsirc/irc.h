@@ -405,6 +405,9 @@ bool irc_set_fname(irc *ctx, const char *fname);
  */
 bool irc_set_sasl(irc *ctx, const char *mech, const void *msg, size_t n);
 
+/* XXX document */
+bool irc_set_starttls(irc *ctx, bool on, bool musthave);
+
 /** \brief set IRC 'nickname' for the next connection.
  *
  * The nickname is the primary means to identify users on IRC.
