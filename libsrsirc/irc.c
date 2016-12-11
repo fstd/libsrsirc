@@ -54,6 +54,7 @@ irc_init(void)
 	   = r->serv_dist = r->serv_info = r->lasterr = r->banmsg = NULL;
 
 	r->sasl_msg_len = r->v3ntags = 0;
+	r->starttls = false;
 
 	r->msghnds = NULL;
 	r->uprehnds = r->uposthnds = NULL;

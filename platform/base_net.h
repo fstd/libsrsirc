@@ -47,6 +47,7 @@ bool lsi_b_sock_ok(int sck);
 long lsi_b_read(int sck, void *buf, size_t sz, uint64_t to_us);
 long lsi_b_write(int sck, const void *buf, size_t len);
 
+bool lsi_b_have_ssl(void);
 long lsi_b_read_ssl(SSLTYPE ssl, void *buf, size_t sz, uint64_t to_us);
 long lsi_b_write_ssl(SSLTYPE ssl, const void *buf, size_t len);
 

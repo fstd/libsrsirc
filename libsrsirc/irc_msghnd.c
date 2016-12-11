@@ -25,6 +25,7 @@
 #include "conn.h"
 #include "irc_track_int.h"
 #include "msg.h"
+#include "v3.h"
 
 #include <libsrsirc/defs.h>
 #include <libsrsirc/util.h>

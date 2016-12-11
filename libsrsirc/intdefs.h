@@ -136,7 +136,7 @@ struct irc_s {
 
 	struct v3cap *v3caps[MAX_V3CAPS];
 	char v3capreq[MAX_V3CAPLINE];
-	//char *v3caps[MAX_V3CAPS];
+	bool starttls;
 
 	/* These are set by their respective irc_set_*() functions and
 	 * generally changes to these don't take effect before the next

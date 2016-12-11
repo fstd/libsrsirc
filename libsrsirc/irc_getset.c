@@ -353,8 +353,23 @@ irc_set_fname(irc *ctx, const char *fname)
 bool
 irc_set_starttls(irc *ctx, bool on, bool musthave)
 {
+	if (!lsi_b_have_ssl()) {
+		E("no ssl support compiled in");
+		return false;
+	} else if (ctx->con->ssl && on) {
+		E("cannot enable STARTTLS after irc_set_ssl()");
+		return false;
+	}
+
 	lsi_v3_clear_cap(ctx, "tls");
-	return on && lsi_v3_want_cap(ctx, "tls", musthave);
+	ctx->starttls = false;
+	if (on) {
+		if (!lsi_v3_want_cap(ctx, "tls", musthave))
+			return false;
+		ctx->starttls = true;
+	}
+
+	return true;
 }
 
 bool
@@ -442,6 +457,14 @@ irc_set_connect_timeout(irc *ctx, uint64_t soft, uint64_t hard)
 bool
 irc_set_ssl(irc *ctx, bool on)
 {
+	if (!lsi_b_have_ssl()) {
+		E("no ssl support compiled in");
+		return false;
+	} else if (ctx->starttls && on) {
+		E("cannot enable SSL after irc_set_starttls()");
+		return false;
+	}
+
 	return lsi_conn_set_ssl(ctx->con, on);
 }
 

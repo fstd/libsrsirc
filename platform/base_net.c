@@ -708,6 +708,15 @@ lsi_b_freeaddrlist(struct addrlist *al)
 	return;
 }
 
+bool
+lsi_b_have_ssl(void)
+{
+#ifdef WITH_SSL
+	return true;
+#else
+	return false;
+#endif
+}
 
 SSLCTXTYPE
 lsi_b_mksslctx(void)
