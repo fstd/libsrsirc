@@ -168,6 +168,30 @@ size_t irc_v3tags_cnt(irc *ctx);
 bool irc_v3tag(irc *ctx, size_t ind, const char **key, const char **value);
 bool irc_v3tag_bykey(irc *ctx, const char *key, const char **value);
 
+/** \brief set SASL mechanism and authentication string for the next connection.
+ *
+ * This setting will take effect not before the next call to irc_connect().
+ *
+ * \param ctx   IRC context as obtained by irc_init()
+ * \param mech   The mechanism to use for SASL authentication (e.g., 'PLAIN'). \n
+ *                We do *not* depend on this pointer to remain valid after
+ *                we return, i.e. we do make a copy.
+ * \param msg   The message that will serve as the SASL authentication string
+ *                (e.g., '+' if 'mech' is 'EXTERNAL') \n
+ *                We do *not* depend on this pointer to remain valid after
+ *                we return, i.e. we do make a copy.
+ * \param n   The size of the message (in bytes).
+ *
+ * \return true on success, false on failure (which means we're out of memory).
+ *
+ * In case of failure, the old value is left unchanged.
+ */
+bool irc_set_sasl(irc *ctx, const char *mech, const void *msg, size_t n);
+
+/* XXX document */
+bool irc_set_starttls(irc *ctx, bool on, bool musthave);
+
+
 /** \brief Determine whether we are banned, if the server was polite enough to
  *         let us know.
  *
