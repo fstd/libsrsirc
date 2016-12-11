@@ -75,16 +75,14 @@ icat_serv_init(void)
 	if (g_sett.pass[0])
 		irc_set_pass(s_irc, g_sett.pass);
 
-	if (g_sett.starttls && !irc_set_starttls(s_irc, true,
-	    g_sett.starttls_req)) {
-
+	if (g_sett.starttls
+	    && !irc_set_starttls(s_irc, true, g_sett.starttls_req)) {
 		if (g_sett.starttls_req)
 			C("Failed to enable STARTTLS");
 		else
 			E("Failed to enable STARTTLS (but continuing anyway)");
 	}
 
-	
 	if (g_sett.saslname[0] && g_sett.saslpass[0]) {
 		char authstr[256];
 		size_t authstrsz = sizeof authstr;
