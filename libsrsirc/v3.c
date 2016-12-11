@@ -195,7 +195,7 @@ handle_CAP(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 
 		/* SASL is special in that it delays the CAP END until
 		 * authentication is through, so no CAP END when we SASL... */
-		return conclude_sasl_cap(ctx) ? IO_ERR : 0;
+		return conclude_sasl_cap(ctx) ? 0 : IO_ERR;
 	} else if (strcmp(subcmd, "NAK") == 0) {
 		r = handle_CAP_NAK(ctx, msg, nargs, logon);
 		if (r & CANT_PROCEED)
@@ -415,7 +415,7 @@ handle_691(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 		return IO_ERR;
 	W("Continuing anyway...");
 
-	return conclude_sasl_cap(ctx) ? IO_ERR : 0;
+	return conclude_sasl_cap(ctx) ? 0 : IO_ERR;
 }
 
 /* go aheadst with thy STARTTLS */
@@ -453,7 +453,7 @@ handle_670(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 
 	ctx->con->ssl = true;
 
-	return conclude_sasl_cap(ctx) ? IO_ERR : 0;
+	return conclude_sasl_cap(ctx) ? 0 : IO_ERR;
 }
 
 size_t
