@@ -62,7 +62,7 @@ irc_init(void)
 	r->m005chantypes = NULL;
 	r->m005attrs = NULL;
 
-	lsi_v3_reset_caps(r);
+	lsi_v3_init_caps(r);
 
 	for (size_t i = 0; i < COUNTOF(r->m005chanmodes); i++)
 		r->m005chanmodes[i] = NULL;

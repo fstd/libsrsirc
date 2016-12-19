@@ -514,6 +514,13 @@ mkv3tag(irc *ctx, size_t ind)
 		ctx->v3tags[ind].value = NULL;
 }
 
+void
+lsi_v3_init_caps(irc *ctx)
+{
+	for (size_t i = 0; i < COUNTOF(ctx->v3caps); i++)
+		ctx->v3caps[i] = NULL;
+}
+
 
 bool
 irc_v3tag_bykey(irc *ctx, const char *key, const char **value)

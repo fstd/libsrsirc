@@ -12,6 +12,7 @@
 #include <libsrsirc/defs.h>
 #include "intdefs.h"
 
+void lsi_v3_init_caps(irc *ctx);
 void lsi_v3_reset_caps(irc *ctx);
 bool lsi_v3_want_caps(irc *ctx);
 bool lsi_v3_want_cap(irc *ctx, const char *cap, bool musthave);
