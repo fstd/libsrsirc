@@ -186,7 +186,8 @@ bool irc_v3tag_bykey(irc *ctx, const char *key, const char **value);
  *
  * In case of failure, the old value is left unchanged.
  */
-bool irc_set_sasl(irc *ctx, const char *mech, const void *msg, size_t n);
+bool irc_set_sasl(irc *ctx, const char *mech, const void *msg, size_t n,
+    bool musthave);
 
 /* XXX document */
 bool irc_set_starttls(irc *ctx, int mode, bool musthave);

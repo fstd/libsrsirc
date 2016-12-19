@@ -90,7 +90,7 @@ icat_serv_init(void)
 		    g_sett.saslname, g_sett.saslpass, true))
 			C("Failed to produce SASL auth string, check your -S");
 
-		irc_set_sasl(s_irc, "PLAIN", authstr, authstrsz);
+		irc_set_sasl(s_irc, "PLAIN", authstr, authstrsz, true /* XXX for now */);
 	}
 
 	irc_regcb_conread(s_irc, conread, 0);
