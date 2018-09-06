@@ -1,5 +1,5 @@
 /* v3.c - IRCv3 protocol support
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-16, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-18, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #define LOG_MODULE MOD_V3

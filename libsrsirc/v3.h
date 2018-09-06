@@ -1,5 +1,5 @@
 /* v3.h - v3 protocol support internal interface
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-16, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-18, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #ifndef LIBSRSIRC_V3_H

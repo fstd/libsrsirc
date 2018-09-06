@@ -1,5 +1,5 @@
 /* icat_misc.c - Miscellaneous routines used in icat
- * icat - IRC netcat on top of libsrsirc - (C) 2012-15, Timo Buhrmester
+ * icat - IRC netcat on top of libsrsirc - (C) 2012-18, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #define LOG_MODULE MOD_ICATMISC

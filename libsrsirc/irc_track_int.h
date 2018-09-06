@@ -1,5 +1,5 @@
 /* irc_track_int.h - chan/user tracking, internal helpers
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-15, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-18, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #ifndef LIBSRSIRC_IRC_TRACK_INT_H

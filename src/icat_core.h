@@ -1,5 +1,5 @@
 /* icat_core.h - icat core, mainly links together icat_serv and icat_user
- * icat - IRC netcat on top of libsrsirc - (C) 2012-15, Timo Buhrmester
+ * icat - IRC netcat on top of libsrsirc - (C) 2012-18, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #ifndef LIBSRSIRC_ICAT_CORE_H
