@@ -55,7 +55,7 @@ lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok,
 		rctx->wptr++; /* skip leading line delimiters */
 	if (rctx->wptr == rctx->eptr) { /* empty buffer, use the opportunity.. */
 		rctx->wptr = rctx->eptr = rctx->workbuf;
-		V("Opportunistical buffer reset");
+		V("Opportunistic buffer reset");
 	}
 
 	size_t linelen;
