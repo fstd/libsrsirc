@@ -8,7 +8,7 @@ Interface documentation: http://penenen.de/libsrsirc/doxygen/modules.html
 Some highlights:
 ----------------
   - Lightweight:  libsrsirc is small and uses very little resources; most of
-                  the protcol handling is essentially zero-copy.  It does not
+                  the protocol handling is essentially zero-copy.  It does not
                   try to offer every conceivable feature an IRC lib could
                   possibly have, if the costs would outweight the gains.
                   This allows creating thousands of independent instances.

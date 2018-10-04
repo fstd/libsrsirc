@@ -168,7 +168,7 @@ typedef struct irc_s irc;
  *
  * In other words, tok[1] will *always* be the "command" part of the message.
  *
- * RFC1459/2812 specify that a protcol message may consist of up to 17 fields;
+ * RFC1459/2812 specify that a protocol message may consist of up to 17 fields;
  * we have room for one more to guarantee a NULL sentinel after the last one
  */
 typedef char *tokarr[18];
