@@ -80,6 +80,10 @@ void
 lsi_skmap_clear(skmap *h)
 {
 	char *k;
+
+	if (!h)
+		return;
+
 	for (size_t i = 0; i < h->bsz; i++) {
 		if (!h->buck[i])
 			continue;
@@ -113,7 +117,7 @@ lsi_skmap_dispose(skmap *h)
 bool
 lsi_skmap_put(skmap *h, const char *key, void *elem)
 {
-	if (!key || !elem)
+	if (!h || !key || !elem)
 		return false;
 
 	bool allocated = false;
@@ -156,6 +160,9 @@ fail:
 void *
 lsi_skmap_get(skmap *h, const char *key)
 {
+	if (!h)
+		return NULL;
+
 	size_t ind = h->hfn(key, h->cmap) % h->bsz;
 
 	bucklist *kl = h->buck[ind];
@@ -168,6 +175,9 @@ lsi_skmap_get(skmap *h, const char *key)
 void *
 lsi_skmap_del(skmap *h, const char *key)
 {
+	if (!h)
+		return NULL;
+
 	size_t ind = h->hfn(key, h->cmap) % h->bsz;
 
 	bucklist *kl = h->buck[ind];
@@ -188,12 +198,18 @@ lsi_skmap_del(skmap *h, const char *key)
 size_t
 lsi_skmap_count(skmap *h)
 {
+	if (!h)
+		return 0;
+
 	return h->count;
 }
 
 bool
 lsi_skmap_first(skmap *h, char **key, void **val)
 {
+	if (!h)
+		return false;
+
 	h->bit = 0;
 	while (h->bit < h->bsz &&
 	    (!h->buck[h->bit] || lsi_bucklist_isempty(h->buck[h->bit])))
@@ -214,7 +230,7 @@ lsi_skmap_first(skmap *h, char **key, void **val)
 bool
 lsi_skmap_next(skmap *h, char **key, void **val)
 {
-	if (!h->iterating)
+	if (!h || !h->iterating)
 		return false;
 
 	if (lsi_bucklist_next(h->buck[h->bit], key, val))
@@ -240,7 +256,7 @@ lsi_skmap_next(skmap *h, char **key, void **val)
 void
 lsi_skmap_del_iter(skmap *h)
 {
-	if (h->iterating)
+	if (h && h->iterating)
 		lsi_bucklist_del_iter(h->buck[h->bit]);
 	return;
 }
