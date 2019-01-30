@@ -1,5 +1,5 @@
 /* icat_user.c - User I/O (i.e. stdin/stdout) handling
- * icat - IRC netcat on top of libsrsirc - (C) 2012-18, Timo Buhrmester
+ * icat - IRC netcat on top of libsrsirc - (C) 2012-19, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #define LOG_MODULE MOD_ICATUSER
