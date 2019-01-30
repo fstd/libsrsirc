@@ -407,6 +407,23 @@ bool irc_set_fname(irc *ctx, const char *fname);
  */
 bool irc_set_nick(irc *ctx, const char *nick);
 
+/** \brief Specify local address to bind to and (optionally) source port
+ *
+ * This setting will take effect not before the next call to irc_connect()
+ *
+ * \param ctx   IRC context as obtained by irc_init()
+ * \param host   Local address to bind to.  NULL chooses the address
+ *               family's default. \n
+ *               We do *not* depend on this pointer to remain valid after
+ *               we return, i.e. we do make a copy.
+ * \param port   Local port (0 uses default (OS-dependent))
+ *
+ * \return true on success, false on failure (which means we're out of memory).
+ *
+ * In case of failure, the old value is left unchanged.
+ */
+bool irc_set_localaddr(irc *ctx, const char *addr, uint16_t port);
+
 /** \brief Dump state for debugging purposes.
  *
  * This function is intended for debugging and will puke out a dump of all

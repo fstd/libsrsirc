@@ -188,6 +188,51 @@ lsi_b_connect(int sck, const struct addrlist *srv)
 	return -1;
 }
 
+bool
+lsi_b_bind(int sck, const char *addr, uint16_t port, bool ipv6)
+{
+	struct addrlist al;
+	if (!addr)
+		addr = ipv6?"::":"0.0.0.0";
+	lsi_b_strNcpy(al.addrstr, addr, sizeof al.addrstr);
+	al.reqname[0] = '\0';
+	al.port = port;
+	al.ipv6 = ipv6;
+	al.next = NULL;
+
+#if HAVE_STRUCT_SOCKADDR_STORAGE || HAVE_LIBWS2_32
+	struct sockaddr_storage sa;
+	memset(&sa, 0, sizeof sa); // :S XXX
+	size_t addrlen = 0;
+
+	if (!sockaddr_from_addr((struct sockaddr *)&sa, &addrlen, &al)) {
+		E("Could not make sockaddr from '%s' port %"PRIu16"'",
+		    al.addrstr, al.port);
+		return false;
+	}
+
+# if HAVE_BIND || HAVE_LIBWS2_32
+	D("bind()ing sck %d to '%s' port %"PRIu16"'...",
+	    sck, al.addrstr, al.port);
+
+	int r = bind(sck, (struct sockaddr *)&sa, addrlen);
+	if (r == 0) {
+		D("bound!");
+		return true;
+	}
+
+	EE("bind() sck %d to '%s' port %"PRIu16"'",
+	    sck, al.addrstr, al.port);
+# else
+# error "We need something like bind()"
+# endif
+
+#else
+# error "We need something like struct sockaddr_storage"
+#endif
+
+	return false;
+}
 
 int
 lsi_b_close(int sck)

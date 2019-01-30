@@ -28,9 +28,8 @@
 #include <libsrsirc/defs.h>
 
 
-static int tryhost(struct addrlist *ai, char *remaddr, size_t remaddr_sz,
-    uint16_t *peerport, uint64_t to_us);
-
+static int tryhost(struct addrlist *ai, const char *laddr, uint16_t lport,
+    char *remaddr, size_t remaddr_sz, uint16_t *peerport, uint64_t to_us);
 
 size_t
 lsi_com_strCchr(const char *str, char c)
@@ -44,8 +43,9 @@ lsi_com_strCchr(const char *str, char c)
 
 
 int
-lsi_com_consocket(const char *host, uint16_t port, char *remaddr,
-    size_t remaddr_sz, uint16_t *peerport, uint64_t softto, uint64_t hardto)
+lsi_com_consocket(const char *host, uint16_t port, const char *laddr,
+    uint16_t lport, char *remaddr, size_t remaddr_sz, uint16_t *peerport,
+    uint64_t softto, uint64_t hardto)
 {
 	uint64_t hardtend = hardto ? lsi_b_tstamp_us() + hardto : 0;
 
@@ -69,7 +69,8 @@ lsi_com_consocket(const char *host, uint16_t port, char *remaddr,
 		if (trem > softto)
 			trem = softto;
 
-		sck = tryhost(ai, remaddr, remaddr_sz, peerport, trem);
+		sck = tryhost(ai, laddr, lport, remaddr, remaddr_sz, peerport,
+		              trem);
 
 		if (sck != -1)
 			break;
@@ -81,14 +82,17 @@ lsi_com_consocket(const char *host, uint16_t port, char *remaddr,
 }
 
 static int
-tryhost(struct addrlist *ai, char *remaddr, size_t remaddr_sz,
-    uint16_t *peerport, uint64_t to_us)
+tryhost(struct addrlist *ai, const char *laddr, uint16_t lport, char *remaddr,
+    size_t remaddr_sz, uint16_t *peerport, uint64_t to_us)
 {
 	D("trying host '%s' ('%s')", ai->reqname, ai->addrstr);
 	int sck = lsi_b_socket(ai->ipv6);
 
 	if (sck == -1)
 		return -1;
+
+	if ((laddr || lport) && !lsi_b_bind(sck, laddr, lport, ai->ipv6))
+		C("can't bind to %s:%"PRIu16, laddr?laddr:"(default)", lport);
 
 	if (!lsi_b_blocking(sck, false))
 		W("failed to set socket non-blocking, timeout will not work");

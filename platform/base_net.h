@@ -37,6 +37,7 @@ typedef void *SSLCTXTYPE;
 
 int lsi_b_socket(bool ipv6);
 int lsi_b_connect(int sck, const struct addrlist *srv);
+bool lsi_b_bind(int sck, const char *addr, uint16_t port, bool ipv6);
 int lsi_b_close(int sck);
 int lsi_b_select(int *fds, size_t nfds, bool noresult, bool rdbl,
     uint64_t to_us);

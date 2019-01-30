@@ -59,6 +59,8 @@ lsi_conn_init(void)
 	r->phost = NULL;
 	r->pport = 0;
 	r->ptype = -1;
+	r->laddr = NULL;
+	r->lport = 0;
 	r->online = false;
 	r->eof = false;
 	r->colon_trail = false;
@@ -112,6 +114,7 @@ lsi_conn_dispose(iconn *ctx)
 
 	free(ctx->host);
 	free(ctx->phost);
+	free(ctx->laddr);
 
 	D("disposed");
 	free(ctx);
@@ -151,8 +154,8 @@ lsi_conn_connect(iconn *ctx, uint64_t softto_us, uint64_t hardto_us)
 	uint16_t peerport;
 
 	sckhld sh;
-	sh.sck = lsi_com_consocket(host, port, peerhost, sizeof peerhost,
-	    &peerport, softto_us, hardto_us);
+	sh.sck = lsi_com_consocket(host, port, ctx->laddr, ctx->lport, peerhost,
+	    sizeof peerhost, &peerport, softto_us, hardto_us);
 	sh.shnd = NULL;
 
 	if (sh.sck < 0) {
@@ -342,6 +345,20 @@ lsi_conn_set_px(iconn *ctx, const char *host, uint16_t port, int ptype)
 		return false;
 	}
 
+	return true;
+}
+
+bool
+lsi_conn_set_localaddr(iconn *ctx, const char *addr, uint16_t port)
+{
+	char *n = NULL;
+	if (addr && !(n = STRDUP(addr)))
+		return false;
+
+	free(ctx->laddr);
+	if (addr) ctx->laddr = n;
+	ctx->lport = port;
+	I("set local addr:port to %s:%"PRIu16, n?n:"(none)", port);
 	return true;
 }
 

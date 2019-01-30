@@ -30,6 +30,7 @@ uint16_t lsi_conn_get_px_port(iconn *ctx);
 int lsi_conn_get_px_type(iconn *ctx);
 bool lsi_conn_set_server(iconn *ctx, const char *host, uint16_t port);
 bool lsi_conn_set_px(iconn *ctx, const char *host, uint16_t port, int ptype);
+bool lsi_conn_set_localaddr(iconn *ctx, const char *addr, uint16_t port);
 bool lsi_conn_set_ssl(iconn *ctx, bool on);
 bool lsi_conn_get_ssl(iconn *ctx);
 

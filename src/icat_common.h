@@ -49,6 +49,9 @@ struct settings_s {
 	uint16_t pxport;
 	int pxtype;
 
+	char laddr[64];
+	uint16_t lport;
+
 	char saslname[128];
 	char saslpass[128];
 	bool starttls;

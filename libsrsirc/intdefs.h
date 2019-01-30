@@ -91,6 +91,8 @@ typedef struct iconn_s iconn;
 struct iconn_s {
 	char *host;
 	uint16_t port;
+	char *laddr;
+	uint16_t lport;
 
 	char *phost;
 	uint16_t pport;

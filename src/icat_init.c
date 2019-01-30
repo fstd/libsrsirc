@@ -100,6 +100,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	BH("\t-p <str>: Use <str> as server password");
 	fprintf(str, "\t-P <pxspec>: Use <pxspec> as proxy. "
 	    "See %s for format\n", sh?"man page":"below");
+	LH("\t-B <addr[:port]>: Use addr as source address, port as src port.");
 	BH("\t-T <int>[:<int>]: Connect/Logon hard[:soft]-timeout in ms."
 	    "[def: "XSTR(DEF_CONTO_HARD_MS)":"XSTR(DEF_CONTO_SOFT_MS)"]");
 	fprintf(str, "\t-C <chanlst>: List of chans to join + keys. "
@@ -137,7 +138,7 @@ process_args(int *argc, char ***argv)
 	char *a0 = (*argv)[0];
 
 	for (int ch; (ch = lsi_b_getopt(*argc, *argv,
-	    "vqchHn:u:f:F:Q:p:P:s:S:tT:C:kw:l:L:b:W:rNjiIE:V")) != -1;) {
+	    "vqchHn:u:f:F:Q:p:P:s:S:tT:C:kw:l:L:b:B:W:rNjiIE:V")) != -1;) {
 		switch (ch) {
 		      case 'n':
 			STRACPY(g_sett.nick, lsi_b_optarg());
@@ -155,6 +156,9 @@ process_args(int *argc, char ***argv)
 			if (!lsi_ut_parse_pxspec(&g_sett.pxtype, g_sett.pxhost,
 			    sizeof g_sett.pxhost, &g_sett.pxport, lsi_b_optarg()))
 				C("Failed to parse pxspec '%s'", lsi_b_optarg());
+		break;case 'B':
+			lsi_ut_parse_hostspec(g_sett.laddr, sizeof g_sett.laddr,
+			    &g_sett.lport, NULL, lsi_b_optarg());
 		break;case 's':
 			g_sett.starttls = true;
 			g_sett.starttls_req =
@@ -315,6 +319,8 @@ set_defaults(void)
 	g_sett.pxhost[0] = '\0';
 	g_sett.pxport = 0;
 	g_sett.pxtype = -1;
+	g_sett.laddr[0] = '\0';
+	g_sett.lport = 0;
 	g_sett.saslname[0] = '\0';
 	g_sett.saslpass[0] = '\0';
 	g_sett.trgmode = false;

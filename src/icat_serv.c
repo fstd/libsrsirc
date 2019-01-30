@@ -75,6 +75,9 @@ icat_serv_init(void)
 	if (g_sett.pass[0])
 		irc_set_pass(s_irc, g_sett.pass);
 
+	if (g_sett.laddr[0])
+		irc_set_localaddr(s_irc, g_sett.laddr, g_sett.lport);
+
 	if (g_sett.starttls
 	    && !irc_set_starttls(s_irc, true, g_sett.starttls_req)) {
 		if (g_sett.starttls_req)

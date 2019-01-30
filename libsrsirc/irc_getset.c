@@ -320,6 +320,12 @@ irc_set_nick(irc *ctx, const char *nick)
 }
 
 bool
+irc_set_localaddr(irc *ctx, const char *host, uint16_t port)
+{
+	return lsi_conn_set_localaddr(ctx->con, host, port);
+}
+
+bool
 irc_set_px(irc *ctx, const char *host, uint16_t port, int ptype)
 {
 	return lsi_conn_set_px(ctx->con, host, port, ptype);
