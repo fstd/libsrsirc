@@ -1,4 +1,4 @@
-/* helloworld.c - trivial libsrsirc example. Join a chan, write a Message
+/* helloworld.c - trivial libsrsirc example. Join a chan, write a message
  * libsrsirc - a lightweight serious IRC lib - (C) 2012-19, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 

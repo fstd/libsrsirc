@@ -81,7 +81,7 @@ lsi_v3_update_cap(irc *ctx, const char *cap, const char *adddata,
     int offered, int enabled) //-1: don't upd
 {
 	for (size_t i = 0; i < COUNTOF(ctx->v3caps); i++) {
-		if (!ctx->v3caps)
+		if (!ctx->v3caps[i])
 			break;
 
 		if (strcmp(ctx->v3caps[i]->name, cap) == 0) {
