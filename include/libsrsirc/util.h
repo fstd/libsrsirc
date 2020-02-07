@@ -1,5 +1,5 @@
 /* util.h - Interface to misc. useful functions related to IRC
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-19, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-20, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #ifndef LIBSRSIRC_IRC_UTIL_H

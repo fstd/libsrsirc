@@ -1,5 +1,5 @@
 /* base_net.h -
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-19, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-20, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #ifndef LIBSRSIRC_BASE_NET_H

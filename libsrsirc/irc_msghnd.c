@@ -1,5 +1,5 @@
 /* irc_ext.c - core message handlers (uses msg.[ch])
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-19, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-20, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #define LOG_MODULE MOD_IRC

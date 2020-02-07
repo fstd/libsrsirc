@@ -1,5 +1,5 @@
 /* px.h - Proxy subroutines (socks4/socks5/http)
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-19, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-20, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #ifndef LIBSRSIRC_PROXY_H

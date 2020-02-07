@@ -1,5 +1,5 @@
 /* ucbase.h - user and channel base, interface (lib-internal)
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-19, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-20, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #ifndef LIBSRSIRC_UCBASE_H
