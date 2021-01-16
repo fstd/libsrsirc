@@ -282,11 +282,13 @@ handle_AUTHENTICATE(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 	if (strcmp((*msg)[2], "+") != 0)
 		W("Unexpected arg in AUTHENTICATE '%s'", (*msg)[2]);
 
-	char buf[512];
-	snprintf(buf, sizeof buf, "AUTHENTICATE %s\r\n", ctx->sasl_msg);
+        bool suc = lsi_conn_write_raw(ctx->con, "AUTHENTICATE ", 13)
+                && lsi_conn_write_raw(ctx->con, ctx->sasl_msg, ctx->sasl_msg_len)
+                && lsi_conn_write(ctx->con, "\r\n");
 
-	return lsi_conn_write(ctx->con, buf) ? 0 : IO_ERR;
+        return suc ? 0 : IO_ERR;
 }
+
 static struct v3cap *
 find_cap(irc *ctx, const char *cap)
 {

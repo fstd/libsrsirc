@@ -272,22 +272,34 @@ lsi_conn_read(iconn *ctx, tokarr *tok, char **tags, size_t *ntags,
 }
 
 bool
-lsi_conn_write(iconn *ctx, const char *line)
+lsi_conn_write_raw(iconn *ctx, const void *buf, size_t n)
 {
 	if (!ctx->online) {
 		E("Can't write while offline");
 		return false;
 	}
 
-	if (!lsi_io_write(ctx->sh, line)) {
-		W("failed to write '%s'", line);
+	if (!lsi_io_write(ctx->sh, buf, n)) {
+		W("failed to write '%.*s'", (int) n, (const char *) buf);
 		lsi_conn_reset(ctx);
 		ctx->eof = false;
 		return false;
 	}
 
-	D("wrote: '%s'", line);
+	D("wrote: '%.*s'", (int) n, (const char *) buf);
 	return true;
+}
+
+bool
+lsi_conn_write(iconn *ctx, const char *line)
+{
+	size_t len = strlen(line);
+	char crlf[] = "\r\n";
+
+	bool needbr = (len < 2) || strcmp(line + len - 2, crlf) != 0;
+
+	return lsi_conn_write_raw(ctx, line, len)
+	    && lsi_conn_write_raw(ctx, crlf, 2 * needbr);
 }
 
 bool
