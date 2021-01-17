@@ -100,24 +100,17 @@ lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok,
 
 /* Documented in io.h */
 bool
-lsi_io_write(sckhld sh, const char *line)
+lsi_io_write(sckhld sh, const void *buf, size_t n)
 {
-	size_t len = strlen(line);
-	int needbr = len < 2 || line[len-2] != '\r' || line[len-1] != '\n';
-
-	V("Wanna write: '%s%s'", line, needbr ? "\r\n" : "");
-
-	bool suc = write_str(sh, line) && (!needbr || write_str(sh, "\r\n"));
+	bool suc = send_wrap(sh, buf, n) == n;
 
 	if (suc)
-		I("Wrote: '%s%s'", line, needbr ? "\r\n" : "");
+		I("Wrote (%zu bytes): '%.*s'", n, (int) n, (const char *) buf);
 	else
-		W("Failed to write '%s%s'", line, needbr ? "\r\n" : "");
+		W("Failed to write '%.*s'", (int) n, (const char *) buf);
 
 	return suc;
 }
-
-
 
 /* return pointer to first line delim in our receive buffer, or NULL if none */
 static char *

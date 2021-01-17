@@ -33,16 +33,16 @@ int lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok,
     char **tags, size_t *ntags, uint64_t to_us); // XXX
 
 /* lsi_io_write
- * Send a message to the ircd
+ * Send buffer contents to the ircd
  *
- * Params: `sh':   Structure holding socket and, if enabled, SSL handle
- *         `line': Data to send, typically a single IRC protocol line (but may
- *                     be multiple if properly separated by \r\n).
- *                     If the line does not end in \r\n, it will be appended.
+ * Params: `sh':  Structure holding socket and, if enabled, SSL handle
+ *         `buf': Data to send. Typically all or part of a single IRC protocol
+*                 line (but may be multiple if properly separated by \r\n).
+ *	   `n':   Size of the buffer specified by `buf' in bytes.
  *
  * Returns true on success, false on failure
  */
-bool lsi_io_write(sckhld sh, const char *line);
+bool lsi_io_write(sckhld sh, const void *buf, size_t n);
 
 
 #endif /* LIBSRSIRC_IO_H */
