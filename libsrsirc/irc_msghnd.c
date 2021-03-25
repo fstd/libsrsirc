@@ -87,8 +87,14 @@ handle_003(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 static uint16_t
 handle_004(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 {
-	if (nargs < 7 || (!ctx->dumb && !logon))
+	if (nargs < 7 || (!ctx->dumb && !logon)) {
+		if (strstr((*msg)[0], "twitch.tv")) {
+			// XXX twitch sends a nonconforming 004: ":tmi.twitch.tv 004 fstd :-"
+			W("ignoring bad 004 from twitch");
+			return LOGON_COMPLETE;
+		}
 		return PROTO_ERR;
+	}
 
 	V("Handling a 004");
 
