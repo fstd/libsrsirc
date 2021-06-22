@@ -288,7 +288,7 @@ usage(FILE *str, const char *a0, int ec)
 	LH("\t\tpxspec   := pxtype:hostspec");
 	LH("\t\tpxtype   := 'HTTP' | 'SOCKS4' | 'SOCKS5'");
 	LH("");
-	LH("(C) 2012-20, Timo Buhrmester (contact: #fstd @ irc.freenode.org)");
+	LH("(C) 2012-20, Timo Buhrmester (contact: #fstd @ irc.libera.chat)");
 	#undef LH
 	#undef STR
 	#undef XSTR

@@ -123,7 +123,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	LH("\t\tkey      := 'verysecret'");
 	SH("!! Try -H for a more complete usage statement. !!");
 	BH("");
-	BH("(C) 2012-20, Timo Buhrmester (contact: #fstd @ irc.freenode.org)");
+	BH("(C) 2012-20, Timo Buhrmester (contact: #fstd @ irc.libera.chat)");
 	#undef SH
 	#undef LH
 	#undef BH

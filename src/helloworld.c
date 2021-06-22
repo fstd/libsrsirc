@@ -10,7 +10,7 @@
 #include <libsrsirc/irc.h>
 
 
-#define IRC_SERVER "irc.freenode.org"
+#define IRC_SERVER "irc.libera.chat"
 #define IRC_PORT 6667
 #define IRC_CHANNEL "#fstd"
 #define IRC_NICK "libsrsirc"
