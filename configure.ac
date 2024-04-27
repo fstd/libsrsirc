@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.69])
+AC_PREREQ([2.71])
 AC_INIT([libsrsirc],[0.0.14],[fstd+libsrsirc@pr0.tips])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([src/icat_core.c])
@@ -13,12 +13,16 @@ AM_PROG_AR
 LT_INIT
 
 # Checks for programs.
-AC_PROG_CC_C99
+AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
-AC_HEADER_STDC
+# Autoupdate added the next two lines to ensure that your configure
+# script's behavior did not change.  They are probably safe to remove.
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_EGREP
+
 
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdbool.h stddef.h stdlib.h string.h strings.h sys/select.h sys/socket.h sys/time.h sys/types.h syslog.h unistd.h windows.h winsock2.h])
 AC_ARG_WITH(ssl,
@@ -34,7 +38,8 @@ dnl **
 dnl ** check for ssl
 dnl **
 if test "x$want_ssl" = "xyes"; then
-	AC_CHECK_LIB([ssl], [SSL_new], [], [AC_MSG_ERROR([no crypto lib for ssl installed?])])
+	AC_CHECK_LIB([ssl], [SSL_new], [], [AC_MSG_ERROR([no ssl lib for ssl installed?])])
+	AC_CHECK_LIB([crypto], [ERR_print_errors_fp], [], [AC_MSG_ERROR([no crypto lib for ssl installed?])])
 	AC_DEFINE(WITH_SSL,, Build with SSL support)
 #	AC_CHECK_LIB([ssl], [SSL_new], [
 #		LIBS="$LIBS -lssl"
