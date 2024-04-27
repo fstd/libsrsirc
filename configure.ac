@@ -34,7 +34,8 @@ dnl **
 dnl ** check for ssl
 dnl **
 if test "x$want_ssl" = "xyes"; then
-	AC_CHECK_LIB([ssl], [SSL_new], [], [AC_MSG_ERROR([no crypto lib for ssl installed?])])
+	AC_CHECK_LIB([ssl], [SSL_new], [], [AC_MSG_ERROR([no ssl lib for ssl installed?])])
+	AC_CHECK_LIB([crypto], [ERR_print_errors_fp], [], [AC_MSG_ERROR([no crypto lib for ssl installed?])])
 	AC_DEFINE(WITH_SSL,, Build with SSL support)
 #	AC_CHECK_LIB([ssl], [SSL_new], [
 #		LIBS="$LIBS -lssl"
