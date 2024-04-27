@@ -1,5 +1,5 @@
 /* base_misc.c -
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-20, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-2024, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #if HAVE_CONFIG_H

@@ -1,5 +1,5 @@
 /* icat_init.c - Parse command line, initialize icat core
- * icat - IRC netcat on top of libsrsirc - (C) 2012-20, Timo Buhrmester
+ * icat - IRC netcat on top of libsrsirc - (C) 2012-2024, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #define LOG_MODULE MOD_ICATINIT
@@ -123,7 +123,7 @@ usage(FILE *str, const char *a0, int ec, bool sh)
 	LH("\t\tkey      := 'verysecret'");
 	SH("!! Try -H for a more complete usage statement. !!");
 	BH("");
-	BH("(C) 2012-20, Timo Buhrmester (contact: #fstd @ irc.libera.chat)");
+	BH("(C) 2012-2024, Timo Buhrmester (contact: #fstd @ irc.libera.chat)");
 	#undef SH
 	#undef LH
 	#undef BH

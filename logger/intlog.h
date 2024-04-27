@@ -1,5 +1,5 @@
 /* intlog.h - library debugging interface
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-20, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-2024, Timo Buhrmester
 * See README for contact-, COPYING for license information. */
 
 #ifndef LIBSRSIRC_INTLOG_H

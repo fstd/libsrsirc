@@ -1,5 +1,5 @@
 /* irc_track.c - (optionally) track users and channels
- * libsrsirc - a lightweight serious IRC lib - (C) 2012-20, Timo Buhrmester
+ * libsrsirc - a lightweight serious IRC lib - (C) 2012-2024, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #define LOG_MODULE MOD_TRACK

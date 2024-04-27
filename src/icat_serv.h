@@ -1,5 +1,5 @@
 /* icat_serv.h - Server I/O (i.e. IRC) handling
- * icat - IRC netcat on top of libsrsirc - (C) 2012-20, Timo Buhrmester
+ * icat - IRC netcat on top of libsrsirc - (C) 2012-2024, Timo Buhrmester
  * See README for contact-, COPYING for license information. */
 
 #ifndef LIBSRSIRC_ICAT_SERV_H
