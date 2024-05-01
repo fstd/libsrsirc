@@ -26,7 +26,7 @@ AC_PROG_EGREP
 
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdbool.h stddef.h stdlib.h string.h strings.h sys/select.h sys/socket.h sys/time.h sys/types.h syslog.h unistd.h windows.h winsock2.h])
 AC_ARG_WITH(ssl,
-[  --with-ssl            Build with SSL support],
+	AS_HELP_STRING([--with-ssl], [Build with SSL support]),
 	if test x$withval = xno; then
 		want_ssl=no
 	else
