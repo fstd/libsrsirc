@@ -153,7 +153,7 @@ lsi_log_log(int mod, int lvl, int errn, const char *file, int line,
 	if (lvl > s_lvlarr[mod])
 		return;
 
-	char resmsg[4096];
+	char resmsg[8192];
 
 	char payload[4096];
 	va_list vl;

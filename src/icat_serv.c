@@ -381,7 +381,7 @@ tryconnect(struct srvlist_s *s)
 			s_gotpong = true;
 
 			if (!g_sett.nojoin && g_sett.chanlist[0]) {
-				char jmsg[512];
+				char jmsg[2*MAX_CHANLIST + 9];
 				snprintf(jmsg, sizeof jmsg, "JOIN %s %s\r\n",
 				    g_sett.chanlist, g_sett.keylist);
 				to_srv(jmsg);

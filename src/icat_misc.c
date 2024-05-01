@@ -41,7 +41,7 @@ icat_strtou64(const char *nptr, char **endptr, int base)
 bool
 icat_ismychan(const char *chan)
 {
-	char chans[512];
+	char chans[sizeof g_sett.chanlist+2];
 	char search[512];
 	snprintf(chans, sizeof chans, ",%s,", g_sett.chanlist);
 	snprintf(search, sizeof search, ",%s,", chan);

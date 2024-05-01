@@ -148,7 +148,7 @@ handle_bad_nick(irc *ctx, tokarr *msg, size_t nargs, bool logon)
 
 	N("Mutilated nick to '%s'", ctx->mynick);
 
-	char buf[MAX_NICK_LEN];
+	char buf[MAX_NICK_LEN+8];
 	snprintf(buf, sizeof buf, "NICK %s\r\n", ctx->mynick);
 	return lsi_conn_write(ctx->con, buf) ? 0 : IO_ERR;
 }
