@@ -102,7 +102,8 @@ lsi_io_read(sckhld sh, struct readctx *rctx, tokarr *tok,
 bool
 lsi_io_write(sckhld sh, const void *buf, size_t n)
 {
-	bool suc = send_wrap(sh, buf, n) == n;
+	long r = send_wrap(sh, buf, n);
+	bool suc = r >= 0 && (size_t)r == n;
 
 	if (suc)
 		I("Wrote (%zu bytes): '%.*s'", n, (int) n, (const char *) buf);
