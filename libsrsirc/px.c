@@ -322,7 +322,7 @@ lsi_px_logon_socks5(int sck, const char *host, uint16_t port, uint64_t to_us)
 		if (n <= 0) {
 			if (n == 0)
 				W(DBGSPEC" timeout 2 hit", sck, host, port);
-			else if (n == 0)
+			else if (n == -2)
 				W(DBGSPEC" unexpected EOF", sck, host, port);
 			else
 				WE(DBGSPEC" read failed", sck, host, port);
